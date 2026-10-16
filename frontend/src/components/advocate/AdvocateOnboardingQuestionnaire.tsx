@@ -18,6 +18,7 @@ export interface AdvocateOnboardingData {
   customWorkplaceType?: string;
   practiceAreas: string[];
   primaryUseCases: string[];
+  barCouncilEnrollmentNumber?: string;
   completedAt?: string;
 }
 

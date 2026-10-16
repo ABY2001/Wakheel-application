@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import citizenRoutes from "./routes/citizenRoutes.js";
 import advocateRoutes from "./routes/advocateRoutes.js";
+import copilotRoutes from "./routes/copilotRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -39,6 +40,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/citizen", citizenRoutes);
 app.use("/api/advocate", advocateRoutes);
+app.use("/api/copilot", copilotRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

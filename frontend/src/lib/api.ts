@@ -637,4 +637,69 @@ export const advocateApi = {
   },
 };
 
+// ============================================================================
+// 10. AI LEGAL COPILOT SUITE API (Milestone 3)
+// ============================================================================
+export const copilotApi = {
+  async translate(data: {
+    text: string;
+    sourceLang?: "ml" | "en";
+    targetLang?: "en" | "ml";
+    documentType?: string;
+    advocateName?: string;
+    barCouncilNumber?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async summarizeJudgment(data: {
+    citation?: string;
+    caseTitle?: string;
+    rawText?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/summarize-judgment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async draftPleading(data: {
+    type: string;
+    parameters?: Record<string, any>;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/draft`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getTemplates() {
+    const res = await fetch(`${API_BASE_URL}/copilot/templates`);
+    return await res.json();
+  },
+
+  async query(data: {
+    prompt: string;
+    mode?: string;
+    isAgentMode?: boolean;
+    isDeepResearch?: boolean;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+};
+
 

@@ -1,0 +1,64 @@
+[
+  {
+    "_id": "doc_1792131354549",
+    "citizenId": "default_citizen",
+    "matterId": "mat_wpc_19482",
+    "title": "Interim Stay Order WP(C) 19482/2024 (True Copy)",
+    "category": "Certified Court Order",
+    "fileName": "HighCourt_Stay_Order_WPC19482_2024.pdf",
+    "fileSize": "1.2 MB",
+    "isSigned": true,
+    "signedAt": "2026-10-16T06:15:54.550Z",
+    "uploadedBy": "Adv. Meera Krishnan",
+    "createdAt": "2026-10-16T06:15:54.550Z"
+  },
+  {
+    "_id": "doc_1792066361486",
+    "citizenId": "default_citizen",
+    "title": "Settlement Agreement Draft",
+    "category": "Contract",
+    "fileName": "Settlement_Agreement_Draft_Attested.pdf",
+    "fileSize": "1.2 MB",
+    "fileType": "application/pdf",
+    "isSigned": false,
+    "createdAt": "2026-10-15T12:12:41.487Z"
+  },
+  {
+    "_id": "doc_501",
+    "citizenId": "default_citizen",
+    "title": "Writ Petition (Civil) Synopsis & Certified Grounds",
+    "category": "Court Petition / Writ",
+    "fileName": "WPC_19482_2024_Grounds_Verified.pdf",
+    "fileSize": "2.4 MB",
+    "isSigned": true,
+    "signedAt": "2026-09-27T10:40:39.186Z"
+  },
+  {
+    "_id": "doc_502",
+    "citizenId": "default_citizen",
+    "title": "Title Deed & Encumbrance Certificate (Kanjirappally Village)",
+    "category": "Property Deed / Revenue",
+    "fileName": "TitleDeed_Doc_248_2016.pdf",
+    "fileSize": "5.1 MB",
+    "isSigned": false
+  },
+  {
+    "_id": "doc_503",
+    "citizenId": "default_citizen",
+    "title": "Vakalatnama & Power of Attorney (Adv. Meera Krishnan)",
+    "category": "Vakalatnama",
+    "fileName": "Vakalatnama_Adv_Meera_Krishnan.pdf",
+    "fileSize": "840 KB",
+    "isSigned": true,
+    "signedAt": "2026-09-25T10:40:39.186Z"
+  },
+  {
+    "_id": "doc_504",
+    "citizenId": "default_citizen",
+    "title": "Advocate Commissioner Inspection Mahazar & Site Sketch",
+    "category": "Certified Court Order",
+    "fileName": "Commissioner_Report_OS_412_2023.pdf",
+    "fileSize": "3.7 MB",
+    "isSigned": false
+  }
+]

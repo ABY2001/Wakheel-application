@@ -1,0 +1,94 @@
+[
+  {
+    "_id": "mat_wpc_19482",
+    "citizenId": "default_citizen",
+    "advocateName": "Adv. Meera Krishnan",
+    "matterTitle": "WP(C) 19482/2024 — Gopakumar v. Kerala State Electricity Board & Anr.",
+    "matterType": "Writ Petition (Civil)",
+    "caseNumber": "WP(C) 19482/2024",
+    "cnrNumber": "KLHC01-019482-2024",
+    "courtForum": "High Court of Kerala (Ernakulam)",
+    "courtHall": "Court Hall 2A (Division Bench)",
+    "status": "active",
+    "nextHearingDate": "2026-10-25T10:40:39.178Z",
+    "statutoryActs": [
+      "Indian Telegraph Act, 1885 (Section 10 & 16)",
+      "Electricity Act, 2003",
+      "Article 226 of the Constitution of India"
+    ],
+    "timeline": [
+      {
+        "date": "18-Oct-2024",
+        "title": "Writ Petition (Civil) E-Filing Completed",
+        "remarks": "Verified true copy grounds submitted with High Court Registry",
+        "stage": "Completed"
+      },
+      {
+        "date": "22-Oct-2024",
+        "title": "Notice Before Admission Issued",
+        "remarks": "Division bench directed standing counsel to file counter-affidavit within 10 days",
+        "stage": "Completed"
+      },
+      {
+        "date": "26-Oct-2024",
+        "title": "Counter-Affidavit Filed by KSEB Executive Engineer",
+        "remarks": "Board contends route was surveyed as per gazette scheme",
+        "stage": "Completed"
+      },
+      {
+        "date": "02-Nov-2024",
+        "title": "Interim Stay Hearing Listed",
+        "remarks": "Listed as Item #14 in Court Hall 2A before Bench 2A",
+        "stage": "Upcoming"
+      },
+      {
+        "date": "16 Oct 2026",
+        "title": "Interim Stay Extended by Division Bench",
+        "remarks": "High Court Bench 2A granted 3-week extension on interim injunction against tree felling.",
+        "stage": "Interim Relief Active"
+      }
+    ],
+    "totalFeesBilled": 25000,
+    "feesPaid": 15000,
+    "updatedAt": "2026-10-16T06:15:54.536Z"
+  },
+  {
+    "_id": "mat_os_412",
+    "citizenId": "default_citizen",
+    "advocateName": "Adv. Rajesh V. Varma",
+    "matterTitle": "OS 412/2023 — Gopakumar v. Varghese Builders & Developers",
+    "matterType": "Civil Appeal",
+    "caseNumber": "OS 412/2023",
+    "cnrNumber": "KLER02-000412-2023",
+    "courtForum": "Sub Court, Ernakulam",
+    "courtHall": "Court Hall 1",
+    "status": "notice_issued",
+    "nextHearingDate": "2026-11-08T10:40:39.186Z",
+    "statutoryActs": [
+      "Specific Relief Act, 1963",
+      "Transfer of Property Act, 1882"
+    ],
+    "timeline": [
+      {
+        "date": "10-Dec-2023",
+        "title": "Plaint Filed for Injunction & Title Demarcation",
+        "remarks": "Suit registered under Section 38 of Specific Relief Act",
+        "stage": "Completed"
+      },
+      {
+        "date": "15-Jan-2024",
+        "title": "Advocate Commissioner Appointed",
+        "remarks": "Advocate Commissioner inspected property and prepared site sketch",
+        "stage": "Completed"
+      },
+      {
+        "date": "18-Nov-2024",
+        "title": "Defendant Written Statement Hearing",
+        "remarks": "Final opportunity granted to respondents",
+        "stage": "Upcoming"
+      }
+    ],
+    "totalFeesBilled": 40000,
+    "feesPaid": 20000
+  }
+]

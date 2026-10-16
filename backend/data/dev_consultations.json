@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "con_1792067603128",
+    "citizenId": "dev_1791778051045",
+    "advocateName": "Adv. Meera Krishnan",
+    "consultationType": "video",
+    "scheduledDate": "2026-10-15",
+    "timeSlot": "10:30 AM",
+    "durationMinutes": 45,
+    "meetingLink": "https://meet.wakheel.law/chambers-krishnan-09",
+    "subject": "Legal Consultation with Adv. Meera Krishnan",
+    "clientNotes": "",
+    "feeAmount": 1500,
+    "paymentStatus": "paid",
+    "status": "scheduled",
+    "createdAt": "2026-10-15T12:33:23.128Z"
+  },
+  {
+    "_id": "con_1792065340888",
+    "citizenId": "default_citizen",
+    "advocateName": "Adv. Sarah Jenkins",
+    "consultationType": "video",
+    "scheduledDate": "2026-10-20",
+    "timeSlot": "11:00 AM",
+    "durationMinutes": 45,
+    "meetingLink": "https://meet.wakheel.law/chambers-krishnan-09",
+    "subject": "Property boundary dispute advice",
+    "clientNotes": "",
+    "feeAmount": 2500,
+    "paymentStatus": "paid",
+    "status": "scheduled",
+    "createdAt": "2026-10-15T11:55:40.888Z"
+  },
+  {
+    "_id": "con_901",
+    "citizenId": "default_citizen",
+    "advocateName": "Adv. Meera Krishnan",
+    "consultationType": "video",
+    "scheduledDate": "2026-10-18T10:40:39.186Z",
+    "timeSlot": "10:30 AM - 11:15 AM",
+    "durationMinutes": 45,
+    "meetingLink": "https://meet.wakheel.law/chambers-krishnan-09",
+    "subject": "Discussion on WP(C) 19482/2024 Counter-Affidavit Rejoinder & Precedent Citations",
+    "feeAmount": 1500,
+    "paymentStatus": "paid",
+    "status": "scheduled"
+  },
+  {
+    "_id": "con_902",
+    "citizenId": "default_citizen",
+    "advocateName": "Adv. Rajesh V. Varma",
+    "consultationType": "chamber",
+    "scheduledDate": "2026-10-03T10:40:39.186Z",
+    "timeSlot": "04:00 PM - 04:45 PM",
+    "durationMinutes": 45,
+    "meetingLink": "",
+    "subject": "Initial Strategy Consultation on Sub Court OS 412/2023 Property Demarcation",
+    "feeAmount": 2500,
+    "paymentStatus": "paid",
+    "status": "completed"
+  }
+]

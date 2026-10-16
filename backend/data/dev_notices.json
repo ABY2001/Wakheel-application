@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "not_701",
+    "citizenId": "default_citizen",
+    "noticeType": "Cheque Bounce Demand (Sec 138 NI Act)",
+    "title": "Statutory Demand Notice for Dishonoured Cheque of ₹4,50,000",
+    "recipientName": "Coastal Logistics & Infra Ltd",
+    "recipientAddress": "Plot 12, Port Trust Road, Willingdon Island, Kochi 682003",
+    "statutoryNoticeDays": 15,
+    "dispatchDate": "2026-10-06T10:40:39.186Z",
+    "speedPostTrackingNumber": "EK948102391IN",
+    "deliveryStatus": "Item Delivered",
+    "daysRemaining": 6
+  },
+  {
+    "_id": "not_702",
+    "citizenId": "default_citizen",
+    "noticeType": "Recovery of Money & Outstanding Invoices",
+    "title": "Notice for Settlement of Outstanding Retainer Dues",
+    "recipientName": "Malabar Trading Enterprises",
+    "recipientAddress": "Broadway, Ernakulam, Kerala 682031",
+    "statutoryNoticeDays": 30,
+    "dispatchDate": "2026-10-13T10:40:39.186Z",
+    "speedPostTrackingNumber": "KL094812304IN",
+    "deliveryStatus": "Dispatched",
+    "daysRemaining": 28
+  }
+]

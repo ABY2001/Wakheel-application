@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-serif: var(--font-jakarta), system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --color-advocate-black: #0A0A0A;
+  --color-advocate-white: #FFFFFF;
+  --color-advocate-card: #FAFAFA;
+  --color-advocate-border: #E5E5E5;
+}
+
+:root {
+  /* Advocate Black & White Editorial Palette - Light Mode */
+  --background: #FFFFFF;
+  --foreground: #0A0A0A;
+  --card-bg: #FAFAFA;
+  --card-border: #E5E5E5;
+  --accent-primary: #0A0A0A;
+  --accent-hover: #262626;
+  --accent-contrast: #FFFFFF;
+}
+
+.dark, html.dark, body.dark {
+  /* Advocate Black & White Palette - Dark Mode */
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card-bg: #0F0F0F;
+  --card-border: #262626;
+  --accent-primary: #FFFFFF;
+  --accent-hover: #E5E5E5;
+  --accent-contrast: #0A0A0A;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html:not(.dark), body:not(.dark) {
+  background-color: #FFFFFF;
+  color: #0A0A0A;
+}
+
+/* Simple Font for All Headings, Matters, and Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+.font-serif {
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+/* High-contrast Monochrome selection */
+::selection {
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+}
+
+.dark ::selection {
+  background-color: #FFFFFF;
+  color: #0A0A0A;
+}
+
+/* Custom Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}

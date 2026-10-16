@@ -1,0 +1,67 @@
+[
+  {
+    "_id": "note_1792124983978",
+    "advocateId": "adv_1",
+    "matterId": "",
+    "matterTitle": "General Chamber Memo",
+    "title": "High Court Bench Hearing Memo: Telegraph Act Sec 16",
+    "content": "Section 16 requires mandatory District Magistrate order before entering rubber plantation. Valsamma precedent applies squarely.",
+    "category": "hearing_memo",
+    "isConfidential": true,
+    "tags": [
+      "Telegraph Act",
+      "High Court",
+      "Valsamma"
+    ],
+    "createdAt": "2026-10-16T04:29:43.978Z"
+  },
+  {
+    "_id": "note_101",
+    "advocateId": "adv_1",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    "title": "Precedent Note: Valsamma v. KSEB on Telegraph Act Sec 16",
+    "content": "Crucial High Court of Kerala precedent: Division bench held that licensee cannot enter private plantation without explicit District Magistrate sanction when landowner registers objection under Section 16(1). Emphasize lack of DM order during Friday hearing before Court Hall 2A.",
+    "category": "precedent_notes",
+    "isConfidential": true,
+    "tags": [
+      "Telegraph Act",
+      "Section 16",
+      "Valsamma Precedent",
+      "Division Bench"
+    ],
+    "createdAt": "2026-10-12T04:17:50.495Z"
+  },
+  {
+    "_id": "note_102",
+    "advocateId": "adv_1",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    "title": "Chamber Conference with Client (Gopakumar) & Land Surveyor",
+    "content": "Client verified that survey sketches produced by KSEB deviate by 14 meters from the sanctioned alignment plan published in the 2023 Gazette notification. True copy of Village Officer demarcated sketch to be annexed to Reply Affidavit.",
+    "category": "client_instructions",
+    "isConfidential": true,
+    "tags": [
+      "Survey Sketch",
+      "Village Officer",
+      "Gazette Alignment"
+    ],
+    "createdAt": "2026-10-14T04:17:50.495Z"
+  },
+  {
+    "_id": "note_103",
+    "advocateId": "adv_1",
+    "matterId": "mat_arb_041",
+    "matterTitle": "Apex Logistics v. Marine Exports Ltd",
+    "title": "Section 9 Interim Injunction Hearing Memo",
+    "content": "Prepare arguments on Perkins Eastman doctrine regarding unilateral arbitrator appointment clause in Master Services Agreement Clause 18. Seek immediate injunction restraining encumbrance of warehouse assets.",
+    "category": "hearing_memo",
+    "isConfidential": true,
+    "tags": [
+      "Arbitration",
+      "Perkins Eastman",
+      "Interim Relief"
+    ],
+    "createdAt": "2026-10-15T04:17:50.495Z"
+  }
+]

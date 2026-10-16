@@ -1,0 +1,2216 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Home,
+  LayoutDashboard,
+  Briefcase,
+  History,
+  Activity,
+  ListChecks,
+  Sparkles,
+  FileEdit,
+  MessageSquare,
+  Languages,
+  AlignLeft,
+  Search,
+  BookOpen,
+  Bot,
+  FolderLock,
+  Stamp,
+  FileText,
+  Layers,
+  PenTool,
+  StickyNote,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  HelpCircle,
+  FileSignature,
+  Scale,
+  Receipt,
+  Compass,
+  Users,
+  User,
+  Building2,
+  Calculator,
+  Shield,
+  ClipboardCheck,
+  Landmark,
+  BarChart3,
+  FileSpreadsheet,
+  Plus,
+  Phone,
+  Bell,
+  X,
+  PhoneCall,
+  Check,
+  ExternalLink,
+  Download,
+  Eye,
+  Filter,
+  UserCheck,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Mail,
+  FileCheck,
+  Pin,
+  PinOff,
+  ShieldCheck,
+  Settings,
+  ArrowRight,
+  Upload,
+  Send,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmission";
+import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
+import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
+import { BrandLogo } from "@/components/BrandLogo";
+import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { ElectronicConsentView } from "@/components/advocate/ElectronicConsentView";
+import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
+import { ProductivityView } from "@/components/advocate/ProductivityView";
+import { BusinessView } from "@/components/advocate/BusinessView";
+import { AnalyticsView } from "@/components/advocate/AnalyticsView";
+import { citizenApi } from "@/lib/api";
+
+interface FloatingTooltipData {
+  label: string;
+  category: string;
+  whatItDoes: string;
+  top: number;
+}
+
+export function ClientPortalView() {
+  const [sidebarSearch, setSidebarSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [newMatterModalOpen, setNewMatterModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  // Language toggle (EN | മലയാളം)
+  const [lang, setLang] = useState<"en" | "ml">("en");
+
+  // Active Matter Switcher state
+  const [selectedMatter, setSelectedMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+
+  // Collapsible Submenu States
+  const [askAiOpen, setAskAiOpen] = useState(true);
+  const [myMattersOpen, setMyMattersOpen] = useState(true);
+  const [documentsOpen, setDocumentsOpen] = useState(true);
+
+  // Rightbar hover & pin states
+  const [rightbarHovered, setRightbarHovered] = useState(false);
+  const [rightbarPinned, setRightbarPinned] = useState(false);
+  const isRightbarActive = rightbarPinned || rightbarHovered;
+
+  // Tooltip state for rightbar icons
+  const [hoveredTooltip, setHoveredTooltip] = useState<FloatingTooltipData | null>(null);
+
+  const showTooltip = (
+    e: React.MouseEvent<HTMLElement>,
+    label: string,
+    category: string,
+    whatItDoes: string
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHoveredTooltip({
+      label,
+      category,
+      whatItDoes,
+      top: rect.top + rect.height / 2,
+    });
+  };
+
+  const hideTooltip = () => {
+    setHoveredTooltip(null);
+  };
+
+  // Advocate Booking Modal State
+  const [selectedAdvocate, setSelectedAdvocate] = useState<Advocate | null>(null);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookingDefaultTab, setBookingDefaultTab] = useState<"booking" | "consultation">("booking");
+
+  const handleOpenBooking = (advocate: Advocate) => {
+    setSelectedAdvocate(advocate);
+    setBookingDefaultTab("booking");
+    setBookingModalOpen(true);
+  };
+
+  const handleOpenConsultation = (advocate: Advocate) => {
+    setSelectedAdvocate(advocate);
+    setBookingDefaultTab("consultation");
+    setBookingModalOpen(true);
+  };
+
+  // Data states from Citizen Backend / Dummy Store
+  const [matters, setMatters] = useState<any[]>([]);
+  const [consultations, setConsultations] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [legalNotices, setLegalNotices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  // Quick AI Chat State on Dashboard
+  const [dashAiInput, setDashAiInput] = useState("");
+  const [dashAiAnswer, setDashAiAnswer] = useState<string | null>(null);
+  const [isDashAiLoading, setIsDashAiLoading] = useState(false);
+
+  // Case Tracker CNR search state
+  const [trackerCnr, setTrackerCnr] = useState("KLHC01-019482-2024");
+  const [trackedMatter, setTrackedMatter] = useState<any | null>(null);
+  const [isTrackingLoading, setIsTrackingLoading] = useState(false);
+
+  // Consultations Tab View Filter
+  const [consultationFilter, setConsultationFilter] = useState<"all" | "scheduled" | "completed">("all");
+
+  // Document Upload Modal state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadDocTitle, setUploadDocTitle] = useState("");
+  const [uploadDocCategory, setUploadDocCategory] = useState("Court Petition / Writ");
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+
+  const loadCitizenData = async () => {
+    setIsLoadingData(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    try {
+      const [mattersRes, consultRes, docsRes, noticesRes, invRes] = await Promise.all([
+        citizenApi.getMatters(token).catch(() => ({ matters: [] })),
+        citizenApi.getConsultations(token).catch(() => ({ consultations: [] })),
+        citizenApi.getDocuments(token).catch(() => ({ documents: [] })),
+        citizenApi.getLegalNotices(token).catch(() => ({ notices: [] })),
+        citizenApi.getInvoices(token).catch(() => ({ invoices: [] })),
+      ]);
+
+      if (mattersRes && mattersRes.matters && mattersRes.matters.length > 0) {
+        setMatters(mattersRes.matters);
+        setTrackedMatter(mattersRes.matters[0]);
+      }
+      if (consultRes && consultRes.consultations) {
+        setConsultations(consultRes.consultations);
+      }
+      if (docsRes && docsRes.documents) {
+        setDocuments(docsRes.documents);
+      }
+      if (noticesRes && noticesRes.notices) {
+        setLegalNotices(noticesRes.notices);
+      }
+      if (invRes && invRes.invoices) {
+        setInvoices(invRes.invoices);
+      }
+    } catch (err) {
+      console.warn("Failed to load citizen data:", err);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const handlePayInvoice = async (invoiceId: string) => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    try {
+      setPayingInvoiceId(invoiceId);
+      const res = await citizenApi.payInvoice(token, invoiceId, "UPI");
+      if (res && res.success) {
+        await loadCitizenData();
+      }
+    } catch (err) {
+      console.error("Failed to pay invoice:", err);
+    } finally {
+      setPayingInvoiceId(null);
+    }
+  };
+
+  useEffect(() => {
+    loadCitizenData();
+  }, []);
+
+  const handleDashAiSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!dashAiInput.trim()) return;
+    setIsDashAiLoading(true);
+    setDashAiAnswer(null);
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    try {
+      const res = await citizenApi.askAi(token, dashAiInput, lang);
+      if (res && res.answer) {
+        setDashAiAnswer(res.answer);
+      }
+    } catch {
+      setDashAiAnswer("Our AI copilot is processing your query with simulated Kerala High Court rules. Please verify with your advocate.");
+    } finally {
+      setIsDashAiLoading(false);
+    }
+  };
+
+  const handleTrackDocket = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!trackerCnr.trim()) return;
+    setIsTrackingLoading(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    try {
+      const res = await citizenApi.getMatterByCnr(token, trackerCnr.trim());
+      if (res && res.matter) {
+        setTrackedMatter(res.matter);
+      } else {
+        const found = matters.find((m) => m.cnrNumber?.toLowerCase() === trackerCnr.trim().toLowerCase());
+        setTrackedMatter(found || null);
+      }
+    } catch {
+      const found = matters.find((m) => m.cnrNumber?.toLowerCase() === trackerCnr.trim().toLowerCase());
+      setTrackedMatter(found || null);
+    } finally {
+      setIsTrackingLoading(false);
+    }
+  };
+
+  const handleUploadDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadDocTitle.trim()) return;
+    setIsUploadingDoc(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    try {
+      await citizenApi.uploadDocument(token, {
+        title: uploadDocTitle,
+        category: uploadDocCategory,
+        fileName: `${uploadDocTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Attested.pdf`,
+        fileSize: "1.2 MB",
+        fileType: "application/pdf",
+      });
+      setUploadDocTitle("");
+      setUploadModalOpen(false);
+      await loadCitizenData();
+    } catch (err) {
+      console.warn("Upload document error:", err);
+    } finally {
+      setIsUploadingDoc(false);
+    }
+  };
+
+  // =========================================================================
+  // EXACT USER MENU STRUCTURE
+  // =========================================================================
+  const menuSections = [
+    {
+      category: "CORE CITIZEN SERVICES",
+      items: [
+        {
+          id: "dashboard",
+          label: "Dashboard",
+          subtitle: "Case overview & Kerala legal desk",
+          whatItDoes: "Displays active matters, upcoming court hearings, and quick legal access.",
+          icon: LayoutDashboard,
+        },
+      ],
+    },
+    {
+      category: "AI & DISCOVERY",
+      items: [
+        {
+          id: "find-legal-help",
+          label: "Find legal Help",
+          subtitle: "Submit legal problem for triage",
+          whatItDoes: "Intake legal grievance, determine jurisdiction, and match with verified counsel.",
+          icon: HelpCircle,
+        },
+        {
+          id: "discover-advocates",
+          label: "Discover advocates",
+          subtitle: "Search verified Kerala & High Court counsels",
+          whatItDoes: "Search advocates by bar council license, court practice, and client ratings.",
+          icon: Scale,
+        },
+        {
+          id: "document-filing",
+          label: "Document filing",
+          subtitle: "Court petitions & registry submissions",
+          whatItDoes: "Prepares petitions, vakalatnama, and affidavits for court registry submission.",
+          icon: FileSignature,
+        },
+        {
+          id: "legal-notices",
+          label: "Legal Notices",
+          subtitle: "Demand notices & statutory replies",
+          whatItDoes: "Generates Section 138 NI Act notices, tenancy eviction replies, and recovery notices.",
+          icon: FileCheck,
+        },
+        {
+          id: "consultations",
+          label: "Consultations",
+          subtitle: "Video & chamber legal consults",
+          whatItDoes: "Book and manage video consultations and physical chamber appointments.",
+          icon: PhoneCall,
+        },
+        {
+          id: "inbox",
+          label: "Inbox",
+          subtitle: "Advocate messages & court summons",
+          whatItDoes: "Encrypted direct messages from your advocates, registry updates, and summons.",
+          icon: Mail,
+        },
+      ],
+    },
+    {
+      category: "PRODUCTIVITY",
+      items: [
+        {
+          id: "notes",
+          label: "Notes",
+          subtitle: "Quick legal memos & briefs",
+          whatItDoes: "Saves consultation notes, lawyer instructions, and case reminders.",
+          icon: StickyNote,
+        },
+        {
+          id: "calendar",
+          label: "Calendar",
+          subtitle: "Hearings & appointment dates",
+          whatItDoes: "Tracks hearing dates, lawyer consultation appointments, and filing deadlines.",
+          icon: Calendar,
+        },
+        {
+          id: "taskmite",
+          label: "Task Mite",
+          subtitle: "Personal tasks & document checklist",
+          whatItDoes: "Tracks required document submissions, affidavit signings, and client action items.",
+          icon: CheckCircle2,
+        },
+        {
+          id: "time-sheet",
+          label: "Time sheet",
+          subtitle: "Consultation & appearance hours",
+          whatItDoes: "Inspects advocate consultation logs, billable minutes, and appearance time sheets.",
+          icon: Clock,
+        },
+        {
+          id: "case-tracker",
+          label: "Case Tracker",
+          subtitle: "Live eCourts CNR tracking",
+          whatItDoes: "Monitors stage-by-stage litigation progress and next court hearing dates.",
+          icon: Activity,
+        },
+        {
+          id: "ask-ai",
+          label: "Ask AI",
+          subtitle: "24/7 instant legal copilot",
+          whatItDoes: "Provides instant AI guidance on procedural steps, court fees, and document checklists.",
+          icon: Bot,
+        },
+      ],
+    },
+    {
+      category: "MY WAKHEEL",
+      items: [
+        {
+          id: "my-advocates",
+          label: "My advocates",
+          subtitle: "Retained & assigned counsels",
+          whatItDoes: "View contact information and consultation history with your legal representatives.",
+          icon: Users,
+        },
+        {
+          id: "appointments",
+          label: "Appointments",
+          subtitle: "Scheduled hearings & consultations",
+          whatItDoes: "Manage upcoming advocate appointments, hearing slots, and chamber visits.",
+          icon: Calendar,
+        },
+        {
+          id: "messages",
+          label: "Messages",
+          subtitle: "Direct secure advocate communications",
+          whatItDoes: "Encrypted client-advocate messaging, file sharing, and hearing briefs.",
+          icon: MessageSquare,
+        },
+        {
+          id: "task-and-timeline",
+          label: "Task and Timeline",
+          subtitle: "Stage progression & milestones",
+          whatItDoes: "Track the chronological history and upcoming milestones of your legal matter.",
+          icon: ListChecks,
+        },
+        {
+          id: "payments-and-invoice",
+          label: "Payments and Invoice",
+          subtitle: "Retainer bills, receipts & court fees",
+          whatItDoes: "Views and downloads advocate fee invoices, court fee challans, and payment receipts.",
+          icon: Receipt,
+        },
+      ],
+    },
+    {
+      category: "BUSINESS +",
+      items: [
+        {
+          id: "business-registration",
+          label: "Business registration services",
+          subtitle: "Pvt Ltd, LLP, OPC & MSME incorporation",
+          whatItDoes: "Registers new companies, LLPs, partnerships, and startup incorporations.",
+          icon: Building2,
+        },
+        {
+          id: "tax-compliance",
+          label: "Tax and Compliances Filing",
+          subtitle: "GST, ITR, TDS & ROC annual filings",
+          whatItDoes: "Manages periodic GST returns, income tax filings, and statutory compliance calendars.",
+          icon: Calculator,
+        },
+        {
+          id: "trademark-ip",
+          label: "Trademark and IP registration",
+          subtitle: "Brand trademark, copyright & patent filing",
+          whatItDoes: "Conducts trademark searches, files TM applications, and tracks IP registry objections.",
+          icon: Shield,
+        },
+        {
+          id: "corporate-lawyer",
+          label: "Corporate Lawyer services",
+          subtitle: "M&A, shareholder agreements & advisory",
+          whatItDoes: "Provides dedicated corporate counsel for contracts, term sheets, and board advisory.",
+          icon: Briefcase,
+        },
+        {
+          id: "company-secretary",
+          label: "Company Secretary services",
+          subtitle: "ROC filings, board minutes & MCA compliance",
+          whatItDoes: "Handles secretarial audits, director KYC, share allotments, and MCA21 filings.",
+          icon: ClipboardCheck,
+        },
+        {
+          id: "auditor-ca",
+          label: "Auditor and CA services",
+          subtitle: "Statutory audit, valuation & tax certification",
+          whatItDoes: "Connects with Chartered Accountants for balance sheet audits and tax certifications.",
+          icon: Landmark,
+        },
+      ],
+    },
+    {
+      category: "MY NETWORKS",
+      items: [
+        {
+          id: "my-hub",
+          label: "My Hub",
+          subtitle: "Citizen command center & updates",
+          whatItDoes: "Central hub for all shared files, advocate messages, and hearing alerts.",
+          icon: Compass,
+        },
+        {
+          id: "my-teams",
+          label: "My teams",
+          subtitle: "Assigned advocates & legal staff",
+          whatItDoes: "Shows the assigned counsel, junior associates, and clerks handling your legal matters.",
+          icon: Users,
+        },
+      ],
+    },
+    {
+      category: "REPORTS",
+      items: [
+        {
+          id: "ai-analytics",
+          label: "AI Analytics",
+          subtitle: "Case duration & outcome insights",
+          whatItDoes: "Analyzes matter timelines, bench disposal trends, and litigation cost projections.",
+          icon: BarChart3,
+        },
+        {
+          id: "ai-reports",
+          label: "AI Reports",
+          subtitle: "Automated case & compliance reports",
+          whatItDoes: "Generates downloadable AI summary reports of your active matters and filings.",
+          icon: FileSpreadsheet,
+        },
+      ],
+    },
+  ];
+
+  // Rightbar launcher sections
+  const rightbarSections = [
+    {
+      category: "MY WAKHEEL",
+      items: [
+        {
+          id: "consultations",
+          label: "Consultations",
+          whatItDoes: "Book and launch video consultations with your assigned advocate.",
+          icon: PhoneCall,
+        },
+        {
+          id: "discover-advocates",
+          label: "Discover Advocates",
+          whatItDoes: "Browse verified advocates and law firms.",
+          icon: Scale,
+        },
+      ],
+    },
+    {
+      category: "INVOICES & MATTERS",
+      items: [
+        {
+          id: "payments-and-invoice",
+          label: "Bills & Receipts",
+          whatItDoes: "View advocate fee challans and invoices.",
+          icon: Receipt,
+        },
+        {
+          id: "case-tracker",
+          label: "Case Tracker",
+          whatItDoes: "Track live eCourts CNR status.",
+          icon: Activity,
+        },
+      ],
+    },
+    {
+      category: "AI SUITE",
+      items: [
+        {
+          id: "draft",
+          label: "AI Drafting",
+          whatItDoes: "Draft notices, affidavits & agreements.",
+          icon: FileEdit,
+        },
+        {
+          id: "translate",
+          label: "AI Translate",
+          whatItDoes: "Translate Malayalam/Tamil/Hindi documents into certified English.",
+          icon: Languages,
+        },
+      ],
+    },
+  ];
+
+  const isProductivity = [
+    "notes",
+    "calendar",
+    "taskmite",
+    "time-sheet",
+    "ask-ai",
+  ].includes(activeTab);
+
+  const isBusiness = [
+    "business-registration",
+    "tax-compliance",
+    "trademark-ip",
+    "corporate-lawyer",
+    "company-secretary",
+    "auditor-ca",
+  ].includes(activeTab);
+
+  const isAnalytics = ["ai-analytics", "ai-reports"].includes(activeTab);
+
+  return (
+    <div className="h-screen w-screen flex bg-white dark:bg-black text-black dark:text-white font-sans overflow-hidden transition-colors duration-200">
+      
+      {/* =========================================================================
+          LEFT SIDEBAR: Exact layout matching user's prompt & screenshot
+      ========================================================================= */}
+      <aside className="w-72 shrink-0 bg-white dark:bg-black text-black dark:text-white flex flex-col justify-between z-20 shadow-xs border-r border-zinc-200 dark:border-zinc-800">
+        
+        {/* Top Header: Wakheel.com Citizen - portal */}
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black">
+          <div className="flex items-center justify-between mb-3">
+            <BrandLogo size="sm" subtitleText="CITIZEN PORTAL" />
+
+            <button
+              onClick={() => {}}
+              className="p-1 rounded-md text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
+              title="Citizen Workspace Active"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* User Profile Card: (GO) Gopakumar Nambiar, Kochi, Kerala */}
+          <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
+              GO
+            </div>
+            <div className="flex flex-col truncate">
+              <span className="text-xs font-bold text-black dark:text-white truncate">
+                Gopakumar Nambiar
+              </span>
+              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                Kochi, Kerala
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Navigation Items */}
+        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 text-xs font-medium no-scrollbar">
+          
+          {/* Main Top Actions */}
+          <div className="space-y-0.5">
+            {/* Dashboard */}
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "dashboard"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              <span>Dashboard</span>
+            </button>
+
+            {/* Ask Wakheel AI ↓ (Collapsible with Draft, Translate, Summary, Research) */}
+            <div className="rounded-xl overflow-hidden">
+              <button
+                onClick={() => setAskAiOpen(!askAiOpen)}
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                  activeTab.startsWith("ai-") || activeTab === "ask-ai" || activeTab === "draft" || activeTab === "translate" || activeTab === "summary" || activeTab === "research"
+                    ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-4 h-4 text-black dark:text-white shrink-0" />
+                  <span>Ask Wakheel AI</span>
+                </div>
+                {askAiOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                )}
+              </button>
+
+              {askAiOpen && (
+                <div className="pl-9 pr-2 py-1 space-y-0.5 bg-zinc-100/70 dark:bg-zinc-900/60 rounded-b-xl">
+                  {[
+                    { id: "draft", label: "Draft", icon: FileEdit },
+                    { id: "translate", label: "Translate", icon: Languages },
+                    { id: "summary", label: "Summary", icon: AlignLeft },
+                    { id: "research", label: "Research", icon: Search },
+                  ].map((sub) => {
+                    const SubIcon = sub.icon;
+                    const isSubActive = activeTab === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => setActiveTab(sub.id)}
+                        className={`w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-left text-[11px] transition-colors cursor-pointer ${
+                          isSubActive
+                            ? "text-black dark:text-white font-bold bg-zinc-200 dark:bg-zinc-800"
+                            : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                        }`}
+                      >
+                        <SubIcon className="w-3.5 h-3.5" />
+                        <span>{sub.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Find legal Help */}
+            <button
+              onClick={() => setActiveTab("find-legal-help")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "find-legal-help"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <HelpCircle className="w-4 h-4 shrink-0" />
+              <span>Find legal Help</span>
+            </button>
+
+            {/* Discover advocates */}
+            <button
+              onClick={() => setActiveTab("discover-advocates")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "discover-advocates"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <Scale className="w-4 h-4 shrink-0" />
+              <span>Discover advocates</span>
+            </button>
+
+            {/* My Matters (Collapsible with Case tracker) */}
+            <div className="rounded-xl overflow-hidden">
+              <button
+                onClick={() => setMyMattersOpen(!myMattersOpen)}
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                  activeTab === "my-matters" || activeTab === "case-tracker"
+                    ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Briefcase className="w-4 h-4 shrink-0" />
+                  <span>My Matters</span>
+                </div>
+                {myMattersOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                )}
+              </button>
+
+              {myMattersOpen && (
+                <div className="pl-9 pr-2 py-1 space-y-0.5 bg-zinc-100/70 dark:bg-zinc-900/60 rounded-b-xl">
+                  <button
+                    onClick={() => setActiveTab("case-tracker")}
+                    className={`w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-left text-[11px] transition-colors cursor-pointer ${
+                      activeTab === "case-tracker"
+                        ? "text-black dark:text-white font-bold bg-zinc-200 dark:bg-zinc-800"
+                        : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                    }`}
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>Case tracker</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Documents (Collapsible with Case Diary, Certified true copies, contracts) */}
+            <div className="rounded-xl overflow-hidden">
+              <button
+                onClick={() => setDocumentsOpen(!documentsOpen)}
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                  activeTab === "documents" || activeTab === "case-diary" || activeTab === "certified-true-copies" || activeTab === "contracts"
+                    ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <FolderLock className="w-4 h-4 shrink-0" />
+                  <span>Documents</span>
+                </div>
+                {documentsOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                )}
+              </button>
+
+              {documentsOpen && (
+                <div className="pl-9 pr-2 py-1 space-y-0.5 bg-zinc-100/70 dark:bg-zinc-900/60 rounded-b-xl">
+                  {[
+                    { id: "case-diary", label: "Case Diary", icon: BookOpen },
+                    { id: "certified-true-copies", label: "Certified true copies", icon: Stamp },
+                    { id: "contracts", label: "contracts", icon: FileText },
+                  ].map((sub) => {
+                    const SubIcon = sub.icon;
+                    const isSubActive = activeTab === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => setActiveTab(sub.id)}
+                        className={`w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-left text-[11px] transition-colors cursor-pointer ${
+                          isSubActive
+                            ? "text-black dark:text-white font-bold bg-zinc-200 dark:bg-zinc-800"
+                            : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                        }`}
+                      >
+                        <SubIcon className="w-3.5 h-3.5" />
+                        <span>{sub.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Document filing */}
+            <button
+              onClick={() => setActiveTab("document-filing")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "document-filing"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <FileSignature className="w-4 h-4 shrink-0" />
+              <span>Document filing</span>
+            </button>
+
+            {/* Legal Notices */}
+            <button
+              onClick={() => setActiveTab("legal-notices")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "legal-notices"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <FileCheck className="w-4 h-4 shrink-0" />
+              <span>Legal Notices</span>
+            </button>
+
+            {/* Consultations */}
+            <button
+              onClick={() => setActiveTab("consultations")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "consultations"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <PhoneCall className="w-4 h-4 shrink-0" />
+              <span>Consultations</span>
+            </button>
+
+            {/* Inbox */}
+            <button
+              onClick={() => setActiveTab("inbox")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "inbox"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <Mail className="w-4 h-4 shrink-0" />
+              <span>Inbox</span>
+            </button>
+          </div>
+
+          {/* Section: PRODUCTIVITY */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              PRODUCTIVITY
+            </span>
+            {[
+              { id: "notes", label: "Notes", icon: StickyNote },
+              { id: "calendar", label: "Calendar", icon: Calendar },
+              { id: "taskmite", label: "Task Mite", icon: CheckCircle2 },
+              { id: "time-sheet", label: "Time sheet", icon: Clock },
+              { id: "case-tracker-prod", label: "Case Tracker", icon: Activity },
+              { id: "ask-ai", label: "Ask AI", icon: Bot },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: MY WAKHEEL */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              MY WAKHEEL
+            </span>
+            {[
+              { id: "my-advocates", label: "My advocates", icon: Users },
+              { id: "appointments", label: "Appointments", icon: Calendar },
+              { id: "messages", label: "Messages", icon: MessageSquare },
+              { id: "task-and-timeline", label: "Task and Timeline", icon: ListChecks },
+              { id: "payments-and-invoice", label: "Payments and Invoice", icon: Receipt },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: BUSINESS + */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              BUSINESS +
+            </span>
+            {[
+              { id: "business-registration", label: "Business registration services", icon: Building2 },
+              { id: "tax-compliance", label: "Tax and Compliances Filing", icon: Calculator },
+              { id: "trademark-ip", label: "Trademark and IP registration", icon: Shield },
+              { id: "corporate-lawyer", label: "Corporate Lawyer services", icon: Briefcase },
+              { id: "company-secretary", label: "Company Secretary services", icon: ClipboardCheck },
+              { id: "auditor-ca", label: "Auditor and CA services", icon: Landmark },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: MY NETWORKS */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              MY NETWORKS
+            </span>
+            {[
+              { id: "my-hub", label: "My Hub", icon: Compass },
+              { id: "my-teams", label: "My teams", icon: Users },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: REPORTS */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              REPORTS
+            </span>
+            {[
+              { id: "ai-analytics", label: "AI Analytics", icon: BarChart3 },
+              { id: "ai-reports", label: "AI Reports", icon: FileSpreadsheet },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: SETTINGS & PRIVACY */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={() => setActiveTab("privacy-data")}
+              className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "privacy-data"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <FolderLock className="w-4 h-4 shrink-0" />
+              <span>Privacy &amp; Data</span>
+            </button>
+
+            <button
+              onClick={() => setSettingsModalOpen(true)}
+              className="w-full flex items-center gap-3 p-2 rounded-xl text-left text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer"
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>Settings</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Sidebar Footer: Kerala / India Legal OS v1.0-fe */}
+        <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
+          <span>Kerala / India Legal OS</span>
+          <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold">
+            v1.0-fe
+          </span>
+        </div>
+
+      </aside>
+
+      {/* =========================================================================
+          MAIN CANVAS (Matching Screenshot Exactly)
+      ========================================================================= */}
+      <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-zinc-50 dark:bg-black">
+        
+        {/* Top Header Bar */}
+        <header className="px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex items-center justify-between shrink-0 shadow-xs">
+          
+          {/* Left: Active Matter Switcher */}
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white font-medium">
+              <Scale className="w-3.5 h-3.5 text-black dark:text-white" />
+              <span className="font-bold">Active Matter:</span>
+              <select
+                value={selectedMatter}
+                onChange={(e) => setSelectedMatter(e.target.value)}
+                className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white"
+              >
+                <option value="WP(C) 19482/2024 — Gopakumar v. KSEB">WP(C) 19482/2024 — Gopakumar ...</option>
+                <option value="ARB/NCLT/KOCHI/2024/041 — Malabar Infotech">ARB/NCLT/KOCHI/2024/041 — Malabar ...</option>
+                <option value="new">+ Intake New Legal Issue</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Right Controls */}
+          <div className="flex items-center gap-3">
+            {/* Citizen Demo Switcher Badge */}
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white">
+              <User className="w-3.5 h-3.5" />
+              <span>Citizen (Switch Demo)</span>
+            </div>
+
+            {/* Language Selector: EN | മലയാളം */}
+            <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 p-0.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-900">
+              <button
+                onClick={() => setLang("en")}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  lang === "en"
+                    ? "bg-white dark:bg-black text-black dark:text-white shadow-xs font-bold"
+                    : "text-zinc-500 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLang("ml")}
+                className={`px-2 py-0.5 rounded-md transition-colors ${
+                  lang === "ml"
+                    ? "bg-white dark:bg-black text-black dark:text-white shadow-xs font-bold"
+                    : "text-zinc-500 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                മലയാളം
+              </button>
+            </div>
+
+            {/* Notification Bell with micro-burgundy dot */}
+            <button
+              onClick={() => setNotificationsOpen(true)}
+              className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors relative cursor-pointer"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#800020]" />
+            </button>
+
+            {/* User Profile Pill */}
+            <div className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+              <div className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center">
+                GO
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="text-xs font-bold text-black dark:text-white leading-tight">
+                  Gopakumar Nambiar
+                </span>
+                <span className="text-[10px] text-zinc-500">Citizen</span>
+              </div>
+            </div>
+          </div>
+
+        </header>
+
+        {/* Workspace Pilot Notice Bar */}
+        <div className="px-6 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse" />
+            <span className="font-medium text-black dark:text-white">
+              Wakheel Simulated Intelligence Workspace • Kerala, India Legal Practice Pilot
+            </span>
+          </div>
+          <span className="font-mono text-[10px] uppercase text-zinc-500 font-bold">
+            NO REAL EXTERNAL API CALLS
+          </span>
+        </div>
+
+        {/* Dynamic Canvas Views */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          
+          {/* ============================================================== */}
+          {/* VIEW: Dashboard (Exact Match to Screenshot)                    */}
+          {/* ============================================================== */}
+          {activeTab === "dashboard" && (
+            <div className="max-w-7xl mx-auto space-y-6">
+              
+              {/* Hero Banner: Namaskaram, Gopakumar */}
+              <div className="p-8 rounded-3xl bg-black text-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-300">
+                  <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                  <span>Citizen Legal Services Portal • Kerala &amp; India</span>
+                </div>
+
+                <div className="space-y-1">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                    {lang === "ml" ? "നമസ്കാരം, ഗോപകുമാർ" : "Namaskaram, Gopakumar"}
+                  </h2>
+                  <p className="text-sm text-zinc-300 max-w-2xl leading-relaxed">
+                    Submit new legal grievances, track active court matters before the High Court of Kerala or Subordinate Courts, and consult with verified advocates without complicated legal jargon.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button
+                    onClick={() => setActiveTab("find-legal-help")}
+                    className="px-5 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Submit New Legal Issue</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("discover-advocates")}
+                    className="px-5 py-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Scale className="w-4 h-4" />
+                    <span>Find Verified Advocates</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* Active Matters */}
+                <div
+                  onClick={() => setActiveTab("case-tracker")}
+                  className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between cursor-pointer hover:border-black dark:hover:border-white transition-colors"
+                >
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+                      ACTIVE MATTERS
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-black dark:text-white">
+                        {matters.length > 0 ? matters.length : 2}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-medium">Kerala High Court</span>
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex items-center justify-center">
+                    <Briefcase className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Upcoming Consultations */}
+                <div
+                  onClick={() => setActiveTab("consultations")}
+                  className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between cursor-pointer hover:border-black dark:hover:border-white transition-colors"
+                >
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+                      UPCOMING CONSULTATIONS
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-black dark:text-white">
+                        {consultations.filter((c) => c.status === "scheduled").length || 2}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-medium">Video &amp; Chamber</span>
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex items-center justify-center">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Documents in Vault */}
+                <div
+                  onClick={() => setActiveTab("documents")}
+                  className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between cursor-pointer hover:border-black dark:hover:border-white transition-colors"
+                >
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+                      DOCUMENTS IN VAULT
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-black dark:text-white">
+                        {documents.length > 0 ? documents.length : 4}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-medium">256-bit Encrypted</span>
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex items-center justify-center">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Statutory Notices / Pending Actions */}
+                <div
+                  onClick={() => setActiveTab("legal-notices")}
+                  className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between cursor-pointer hover:border-black dark:hover:border-white transition-colors"
+                >
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+                      STATUTORY NOTICES
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-black dark:text-white">
+                        {legalNotices.length > 0 ? legalNotices.length : 2}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-medium">Active Timelines</span>
+                    </div>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex items-center justify-center">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* 2-Column Split: Active Legal Matters & Upcoming Appointments */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                {/* Left 8 Cols: Active Legal Matters */}
+                <div className="lg:col-span-8 space-y-4">
+                  <div className="flex items-center justify-between pb-1">
+                    <div>
+                      <h3 className="text-base font-bold text-black dark:text-white">
+                        Active Legal Matters
+                      </h3>
+                      <p className="text-xs text-zinc-500">
+                        Real-time court status and assigned advocate progress
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab("case-tracker")}
+                      className="text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>View All</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+
+                  {matters.length > 0 ? (
+                    matters.map((matter) => (
+                      <div
+                        key={matter._id}
+                        className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-black dark:text-white">
+                            {matter.caseNumber || matter.cnrNumber}
+                          </span>
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#800020]" />
+                            {matter.status === "active" ? "Admitted" : matter.status === "notice_issued" ? "Notice Issued" : "In Progress"}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <h4 className="text-base font-bold text-black dark:text-white">
+                            {matter.matterTitle}
+                          </h4>
+                          <p className="text-xs text-zinc-500">
+                            Court: {matter.courtForum} • Advocate: {matter.advocateName}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-900 text-xs">
+                          <span className="text-zinc-400 font-mono text-[11px]">
+                            Next Hearing: {matter.nextHearingDate ? new Date(matter.nextHearingDate).toLocaleDateString() : "Listed for hearing"}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setTrackerCnr(matter.cnrNumber || matter.caseNumber);
+                              setTrackedMatter(matter);
+                              setActiveTab("case-tracker");
+                            }}
+                            className="px-4 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold text-xs text-black dark:text-white cursor-pointer"
+                          >
+                            Matter Details
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-black rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                      Loading active matters from Kerala court registry...
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Right 4 Cols: Upcoming Appointments & AI Assist */}
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-black dark:text-white">
+                        Upcoming Consultations
+                      </h3>
+                      <p className="text-xs text-zinc-500">
+                        Scheduled advocate sessions
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab("consultations")}
+                      className="text-xs font-bold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
+                    >
+                      Manage
+                    </button>
+                  </div>
+
+                  {consultations.length > 0 ? (
+                    consultations.slice(0, 2).map((c) => (
+                      <div
+                        key={c._id}
+                        className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-black dark:text-white truncate max-w-[190px]">
+                            {c.subject}
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 capitalize">
+                            {c.consultationType}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500">
+                          {c.advocateName}
+                        </p>
+                        <span className="text-[11px] font-mono text-zinc-400 block">
+                          {c.scheduledDate?.split("T")[0]} • {c.timeSlot}
+                        </span>
+
+                        {c.meetingLink && c.consultationType === "video" && (
+                          <a
+                            href={c.meetingLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-1.5 px-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                          >
+                            <PhoneCall className="w-3.5 h-3.5" />
+                            <span>Join Video Chamber</span>
+                          </a>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 text-center">
+                      No consultations scheduled yet.
+                    </div>
+                  )}
+
+                  {/* Ask Wakheel AI Box */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex items-center justify-center font-bold">
+                        <Sparkles className="w-4 h-4 text-[#800020]" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-black dark:text-white">
+                        ASK WAKHEEL AI
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500 leading-snug">
+                      Instant procedural legal guidance on Indian statutes, court fees, and FIR filing.
+                    </p>
+                    <form onSubmit={handleDashAiSubmit} className="relative">
+                      <input
+                        type="text"
+                        value={dashAiInput}
+                        onChange={(e) => setDashAiInput(e.target.value)}
+                        placeholder={lang === "ml" ? "മലയാളത്തിലോ ഇംഗ്ലീഷിലോ ചോദിക്കൂ..." : "Ask in Malayalam or English..."}
+                        className="w-full pl-3 pr-16 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isDashAiLoading || !dashAiInput.trim()}
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-black text-white dark:bg-white dark:text-black text-[10px] font-bold cursor-pointer disabled:opacity-50"
+                      >
+                        {isDashAiLoading ? "..." : "Ask AI"}
+                      </button>
+                    </form>
+
+                    {dashAiAnswer && (
+                      <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-black dark:text-white pb-1 border-b border-zinc-200 dark:border-zinc-800">
+                          <span className="flex items-center gap-1 font-mono uppercase">
+                            <Sparkles className="w-3 h-3 text-[#800020]" /> Wakheel Legal Guidance
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setDashAiAnswer(null)}
+                            className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="whitespace-pre-line leading-relaxed text-[11px]">
+                          {dashAiAnswer}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Find Legal Help (Triage Form)                           */}
+          {/* ============================================================== */}
+          {activeTab === "find-legal-help" && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h3 className="text-lg font-bold text-black dark:text-white">Submit New Legal Grievance</h3>
+                  <p className="text-xs text-zinc-500">Explain your legal issue in simple words. Our AI categorizes and matches with High Court advocates.</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("dashboard")}
+                  className="px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+              <LegalProblemSubmission onSubmitted={loadCitizenData} />
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Discover Advocates / Lawyer Services                     */}
+          {/* ============================================================== */}
+          {(activeTab === "discover-advocates" || activeTab === "my-advocates") && (
+            <div className="max-w-6xl mx-auto space-y-6">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h3 className="text-lg font-bold text-black dark:text-white">
+                    {activeTab === "my-advocates" ? "Your Assigned Advocates" : "Discover Verified Advocates"}
+                  </h3>
+                  <p className="text-xs text-zinc-500">Verified Bar Council of Kerala and High Court practitioner profiles with real-time consultation slots.</p>
+                </div>
+              </div>
+              <AdvocateSearchAndMatch
+                onRequestConsultation={handleOpenConsultation}
+                onSelectAdvocateToBook={handleOpenBooking}
+              />
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Consultations & Chamber Appointments                     */}
+          {/* ============================================================== */}
+          {(activeTab === "consultations" || activeTab === "appointments") && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h3 className="text-lg font-bold text-black dark:text-white">Legal Consultations &amp; Chamber Sessions</h3>
+                  <p className="text-xs text-zinc-500">Manage virtual video consultations, physical chamber visits, and advocate appointments.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 p-0.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-900">
+                    {(["all", "scheduled", "completed"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setConsultationFilter(filter)}
+                        className={`px-3 py-1 rounded-lg transition-colors capitalize cursor-pointer ${
+                          consultationFilter === filter
+                            ? "bg-white dark:bg-black text-black dark:text-white shadow-xs font-bold"
+                            : "text-zinc-500 hover:text-black dark:hover:text-white"
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedAdvocate(mockAdvocates[0]);
+                      setBookingDefaultTab("booking");
+                      setBookingModalOpen(true);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Book Session</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {consultations
+                  .filter((c) => consultationFilter === "all" || c.status === consultationFilter)
+                  .map((c) => (
+                    <div
+                      key={c._id}
+                      className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 uppercase">
+                            {c.consultationType} Chamber
+                          </span>
+                          <h4 className="text-sm font-bold text-black dark:text-white mt-1.5">{c.subject}</h4>
+                          <p className="text-xs text-zinc-500 mt-0.5">{c.advocateName}</p>
+                        </div>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            c.status === "scheduled"
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-800"
+                          }`}
+                        >
+                          {c.status === "scheduled" ? "Confirmed" : "Completed"}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-zinc-100 dark:border-zinc-900">
+                        <div>
+                          <span className="text-[10px] text-zinc-400 block font-mono">DATE &amp; TIME</span>
+                          <span className="font-semibold text-black dark:text-white">
+                            {c.scheduledDate?.split("T")[0]} • {c.timeSlot}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-zinc-400 block font-mono">FEE</span>
+                          <span className="font-semibold text-black dark:text-white">
+                            ₹{c.feeAmount || 1500} • {c.paymentStatus || "Paid"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {c.meetingLink && c.consultationType === "video" && (
+                        <a
+                          href={c.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 px-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all hover:bg-zinc-800 dark:hover:bg-zinc-200"
+                        >
+                          <PhoneCall className="w-4 h-4" />
+                          <span>Join Secure Video Chamber</span>
+                        </a>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Statutory Legal Notices                                  */}
+          {/* ============================================================== */}
+          {activeTab === "legal-notices" && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h3 className="text-lg font-bold text-black dark:text-white">Statutory Legal Notices</h3>
+                  <p className="text-xs text-zinc-500">Track 15-day and 30-day statutory response countdowns under Indian laws.</p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("draft")}
+                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Draft New Notice</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {legalNotices.map((notice) => (
+                  <div
+                    key={notice._id}
+                    className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="text-xs font-mono font-bold text-zinc-500">{notice.noticeType}</span>
+                        <h4 className="text-base font-bold text-black dark:text-white mt-0.5">{notice.title}</h4>
+                      </div>
+                      {notice.daysRemaining !== undefined && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#800020]/10 text-[#800020] border border-[#800020]/30 inline-flex items-center gap-1.5 self-start sm:self-auto">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#800020] animate-pulse" />
+                          {notice.daysRemaining} days remaining to respond
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2 border-t border-zinc-100 dark:border-zinc-900">
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">RECIPIENT</span>
+                        <span className="font-bold text-black dark:text-white">{notice.recipientName}</span>
+                        <p className="text-[11px] text-zinc-500 truncate">{notice.recipientAddress}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">SPEED POST TRACKING</span>
+                        <span className="font-mono font-bold text-black dark:text-white">{notice.speedPostTrackingNumber}</span>
+                        <p className="text-[11px] text-zinc-500">{notice.deliveryStatus}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">STATUTORY WINDOW</span>
+                        <span className="font-bold text-black dark:text-white">{notice.statutoryNoticeDays} Days Notice Period</span>
+                        <p className="text-[11px] text-zinc-500">Dispatched: {notice.dispatchDate?.split("T")[0]}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Case Tracker (eCourts CNR Tracking)                      */}
+          {/* ============================================================== */}
+          {(activeTab === "case-tracker" || activeTab === "case-tracker-prod" || activeTab === "my-matters") && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold">
+                      <Activity className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-black dark:text-white">Live eCourts Case Tracker</h3>
+                      <p className="text-xs text-zinc-500">Track High Court of Kerala and District Court proceedings with a 16-digit CNR number.</p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    eCourts Services Bridge
+                  </span>
+                </div>
+
+                <form onSubmit={handleTrackDocket} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={trackerCnr}
+                    onChange={(e) => setTrackerCnr(e.target.value)}
+                    placeholder="Enter 16-Digit CNR Number (e.g. KLHC01-019482-2024 or KLER02-000412-2023)"
+                    className="flex-1 px-4 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isTrackingLoading}
+                    className="px-5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer disabled:opacity-50"
+                  >
+                    {isTrackingLoading ? "Tracking..." : "Track Docket"}
+                  </button>
+                </form>
+
+                {trackedMatter ? (
+                  <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] font-mono text-zinc-500">CNR: {trackedMatter.cnrNumber} • {trackedMatter.courtForum}</span>
+                        <h4 className="text-sm font-bold text-black dark:text-white mt-0.5">
+                          {trackedMatter.matterTitle}
+                        </h4>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#800020]" />
+                        {trackedMatter.status === "active" ? "Admitted / Listed" : trackedMatter.status || "In Progress"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">NEXT HEARING</span>
+                        <span className="font-bold text-black dark:text-white">
+                          {trackedMatter.nextHearingDate ? new Date(trackedMatter.nextHearingDate).toLocaleDateString() : "Listed for hearing"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">COURT HALL</span>
+                        <span className="font-bold text-black dark:text-white">{trackedMatter.courtHall || "Court Hall 2A"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">BENCH / FORUM</span>
+                        <span className="font-bold text-black dark:text-white">{trackedMatter.matterType || "High Court Bench"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block font-mono">ASSIGNED ADVOCATE</span>
+                        <span className="font-bold text-black dark:text-white">{trackedMatter.advocateName}</span>
+                      </div>
+                    </div>
+
+                    {/* Statutory Acts */}
+                    {trackedMatter.statutoryActs && (
+                      <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+                        <span className="text-[10px] font-mono text-zinc-400 block mb-1">APPLICABLE STATUTES</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {trackedMatter.statutoryActs.map((act: string, idx: number) => (
+                            <span key={idx} className="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[11px] font-mono text-zinc-700 dark:text-zinc-300">
+                              {act}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Timeline Milestones */}
+                    {trackedMatter.timeline && trackedMatter.timeline.length > 0 && (
+                      <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block">
+                          CASE PROGRESSION MILESTONES
+                        </span>
+                        <div className="space-y-2 text-xs">
+                          {trackedMatter.timeline.map((step: any, sIdx: number) => (
+                            <div key={sIdx} className="flex items-start gap-3 p-2.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800">
+                              <div className="mt-0.5">
+                                {step.stage === "Completed" ? (
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                ) : (
+                                  <Clock className="w-4 h-4 text-[#800020]" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-black dark:text-white text-xs">{step.title}</span>
+                                  <span className="text-[10px] font-mono text-zinc-400">{step.date}</span>
+                                </div>
+                                <p className="text-[11px] text-zinc-500 mt-0.5">{step.remarks}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-xs text-zinc-500">
+                    No matter found matching CNR {trackerCnr}. Try searching &quot;KLHC01-019482-2024&quot; or &quot;KLER02-000412-2023&quot;.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Documents & Certified Copies                             */}
+          {/* ============================================================== */}
+          {(activeTab === "documents" || activeTab === "document-filing" || activeTab === "case-diary" || activeTab === "certified-true-copies" || activeTab === "contracts") && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div>
+                    <h3 className="text-base font-bold text-black dark:text-white">
+                      {activeTab === "certified-true-copies" ? "Certified True Copies (CTC)" : activeTab === "case-diary" ? "Case Diary & Hearing Notes" : "Citizen Document Vault"}
+                    </h3>
+                    <p className="text-xs text-zinc-500">256-bit encrypted court orders, affidavits, and registered contracts.</p>
+                  </div>
+                  <button
+                    onClick={() => setUploadModalOpen(true)}
+                    className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer"
+                  >
+                    + Upload Document
+                  </button>
+                </div>
+
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                  {documents.length > 0 ? (
+                    documents.map((doc, idx) => (
+                      <div key={doc._id || idx} className="py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-4 h-4 text-zinc-500" />
+                          <div>
+                            <span className="font-bold text-black dark:text-white block">{doc.title || doc.name}</span>
+                            <span className="text-[10px] text-zinc-400 font-mono">
+                              {doc.category || doc.type} • {doc.fileSize || doc.size || "1.2 MB"} • {doc.isSigned || doc.signedAt ? "Digitally Signed" : "Verified Copy"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold cursor-pointer">
+                            View
+                          </button>
+                          <button className="p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer">
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-xs text-zinc-500">
+                      No documents found in vault. Click &quot;+ Upload Document&quot; to add one.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: AI Tools (Draft, Translate, Summary, Research)           */}
+          {/* ============================================================== */}
+          {["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab) && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h3 className="text-lg font-bold text-black dark:text-white">
+                    {activeTab === "draft"
+                      ? "AI Legal Drafting Assistant"
+                      : activeTab === "translate"
+                      ? "Multilingual Legal Translator (Malayalam ↔ English)"
+                      : activeTab === "summary"
+                      ? "Judgment & Case Order Summarizer"
+                      : activeTab === "research"
+                      ? "Precedent & Statute Research"
+                      : "Ask Wakheel Legal AI"}
+                  </h3>
+                  <p className="text-xs text-zinc-500">
+                    Simulated Intelligence Workspace • Kerala, India Legal Practice Pilot
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black text-white dark:bg-white dark:text-black">
+                  {activeTab}
+                </span>
+              </div>
+              <DocIntelligenceCard />
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Productivity & Business Modules                          */}
+          {/* ============================================================== */}
+          {isProductivity && (
+            <ProductivityView />
+          )}
+
+          {isBusiness && (
+            <BusinessView />
+          )}
+
+          {isAnalytics && (
+            <AnalyticsView />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: ERP & Networks Modules (My Hub / My Teams)               */}
+          {/* ============================================================== */}
+          {(activeTab === "my-hub" || activeTab === "my-teams") && (
+            <ERPDashboardView
+              onNavigateTab={(t) => setActiveTab(t)}
+              hideTopBanner={true}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Payments and Invoices (Milestone 2 Realtime Sync)         */}
+          {/* ============================================================== */}
+          {activeTab === "payments-and-invoice" && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                  <div>
+                    <h3 className="text-base font-bold text-black dark:text-white">Fee Invoices &amp; Court Fee Receipts</h3>
+                    <p className="text-xs text-zinc-500">Track advocate consultation payments, retainers, and court stamp duty receipts.</p>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-zinc-500">
+                    {invoices.length} Bills • GST Compliant
+                  </span>
+                </div>
+
+                {invoices.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-zinc-500">
+                    No billing records found for your account.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                    {invoices.map((inv) => (
+                      <div key={inv._id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <span className="font-bold text-black dark:text-white block text-sm">
+                            {inv.matterTitle || (inv.items && inv.items[0]?.description) || "Legal Retainer"}
+                          </span>
+                          <span className="text-[11px] text-zinc-500 font-mono">
+                            {inv.invoiceNumber} • {inv.advocateName || "Adv. Meera Krishnan"}
+                          </span>
+                          <div className="text-[10px] text-zinc-400">
+                            Subtotal: ₹{(inv.subtotal || 0).toLocaleString("en-IN")} + 18% GST (₹{(inv.gstAmount || 0).toLocaleString("en-IN")})
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 self-end sm:self-center">
+                          <div className="text-right">
+                            <span className="font-mono font-bold text-black dark:text-white text-base block">
+                              ₹{(inv.totalAmount || inv.subtotal || 0).toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-[10px] text-zinc-400">
+                              {inv.status === "paid" ? `Paid via ${inv.paymentMethod || "UPI"}` : "Due in 10 days"}
+                            </span>
+                          </div>
+
+                          {inv.status === "paid" ? (
+                            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Paid
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handlePayInvoice(inv._id)}
+                              disabled={payingInvoiceId === inv._id}
+                              className="px-4 py-1.5 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer shadow-xs disabled:opacity-50 transition-all"
+                            >
+                              {payingInvoiceId === inv._id ? "Processing..." : "Pay Now (UPI)"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+        </div>
+
+      </main>
+
+      {/* =========================================================================
+          RIGHT SIDEBAR DOCK (Kept Functional for Fast Access)
+      ========================================================================= */}
+      <div
+        className={`relative z-30 flex shrink-0 transition-all duration-300 ease-in-out ${
+          isRightbarActive ? "w-14" : "w-10 opacity-70 hover:opacity-100"
+        }`}
+        onMouseEnter={() => setRightbarHovered(true)}
+        onMouseLeave={() => setRightbarHovered(false)}
+      >
+        <aside className="w-full h-full bg-white dark:bg-black border-l border-zinc-200 dark:border-zinc-800 flex flex-col justify-between py-3 shadow-sm select-none">
+          
+          {/* Top Pin Toggle */}
+          <div className="flex items-center justify-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={() => setRightbarPinned(!rightbarPinned)}
+              title={rightbarPinned ? "Unpin Quick Dock" : "Pin Quick Dock"}
+              className="p-1 rounded-lg text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+            >
+              {rightbarPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {/* Middle Fast Launcher Icons */}
+          <div className="flex-1 overflow-y-auto no-scrollbar w-full flex flex-col items-center gap-1.5 px-1 py-1">
+            {rightbarSections.map((sec, secIdx) => (
+              <React.Fragment key={secIdx}>
+                {secIdx > 0 && <div className="w-4 h-px bg-zinc-200 dark:border-zinc-800 my-1" />}
+                {sec.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      onMouseEnter={(e) =>
+                        showTooltip(e, item.label, sec.category, item.whatItDoes)
+                      }
+                      onMouseLeave={hideTooltip}
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                          : "text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Bottom Settings & Theme */}
+          <div className="flex flex-col items-center gap-1 w-full px-1 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={() => setSettingsModalOpen(true)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+              title="Settings"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+            <ThemeToggle />
+          </div>
+
+        </aside>
+      </div>
+
+      {/* Floating Tooltip Card */}
+      {hoveredTooltip && (
+        <div
+          style={{ top: hoveredTooltip.top }}
+          className="fixed right-16 -translate-y-1/2 w-64 p-3 bg-black dark:bg-white text-white dark:text-black rounded-xl shadow-2xl z-50 border border-zinc-700 dark:border-zinc-300 pointer-events-none transition-all duration-150"
+        >
+          <div className="flex items-center justify-between pb-1 mb-1 border-b border-zinc-700 dark:border-zinc-300">
+            <span className="font-bold text-xs">{hoveredTooltip.label}</span>
+            <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-zinc-800 dark:bg-zinc-200 text-zinc-300 dark:text-zinc-700 font-bold">
+              {hoveredTooltip.category}
+            </span>
+          </div>
+          <p className="text-[11px] text-zinc-300 dark:text-zinc-700 leading-snug">
+            {hoveredTooltip.whatItDoes}
+          </p>
+        </div>
+      )}
+
+      {/* Modals */}
+      {/* Settings Modal */}
+      {settingsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-black dark:text-white">Citizen Portal Settings</h3>
+              <button onClick={() => setSettingsModalOpen(false)} className="cursor-pointer">
+                <X className="w-4 h-4 text-zinc-400" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold block mb-1">Notification Channel</label>
+                <select className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <option>WhatsApp + SMS + In-App (Recommended)</option>
+                  <option>Email &amp; In-App Only</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-bold block mb-1">Primary State Jurisdiction</label>
+                <select className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <option>Kerala (High Court of Kerala)</option>
+                  <option>Delhi (Delhi High Court)</option>
+                  <option>Maharashtra (Bombay High Court)</option>
+                </select>
+              </div>
+            </div>
+            <div className="pt-2 flex justify-end gap-2">
+              <button
+                onClick={() => setSettingsModalOpen(false)}
+                className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setSettingsModalOpen(false)}
+                className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications Modal */}
+      {notificationsOpen && (
+        <div className="fixed top-16 right-6 z-50 w-80 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-4 shadow-2xl space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+            <span className="text-xs font-bold text-black dark:text-white">Portal Alerts</span>
+            <button onClick={() => setNotificationsOpen(false)}>
+              <X className="w-3.5 h-3.5 text-zinc-400" />
+            </button>
+          </div>
+          <div className="space-y-2 text-xs">
+            <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <span className="font-bold block">WP(C) 19482/2024 Listed</span>
+              <p className="text-[11px] text-zinc-500">Court Hall 2A item listed for 15 Nov 2026.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Document Modal */}
+      {uploadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-black dark:text-white">Upload to Encrypted Vault</h3>
+              <button onClick={() => setUploadModalOpen(false)} className="cursor-pointer">
+                <X className="w-4 h-4 text-zinc-400" />
+              </button>
+            </div>
+            <form onSubmit={handleUploadDocument} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold block mb-1">Document Title</label>
+                <input
+                  type="text"
+                  required
+                  value={uploadDocTitle}
+                  onChange={(e) => setUploadDocTitle(e.target.value)}
+                  placeholder="e.g. Electricity Board Bill Exhibit P2, Land Title Deed"
+                  className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-bold block mb-1">Category</label>
+                <select
+                  value={uploadDocCategory}
+                  onChange={(e) => setUploadDocCategory(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                >
+                  <option>Court Petition / Writ</option>
+                  <option>Property Deed / Revenue</option>
+                  <option>Vakalatnama</option>
+                  <option>Certified Court Order</option>
+                  <option>Statutory Demand Notice</option>
+                </select>
+              </div>
+              <div className="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-center space-y-1">
+                <Upload className="w-5 h-5 mx-auto text-zinc-400" />
+                <span className="text-zinc-500 block font-medium">Select PDF or Document scan</span>
+                <span className="text-[10px] text-zinc-400">PDF, JPG, PNG up to 25MB</span>
+              </div>
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUploadModalOpen(false)}
+                  className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUploadingDoc || !uploadDocTitle.trim()}
+                  className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold disabled:opacity-50 cursor-pointer"
+                >
+                  {isUploadingDoc ? "Uploading..." : "Save to Vault"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Consultation Modal */}
+      <ConsultationAndBookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => {
+          setBookingModalOpen(false);
+          loadCitizenData();
+        }}
+        advocate={selectedAdvocate}
+        defaultTab={bookingDefaultTab}
+      />
+
+    </div>
+  );
+}

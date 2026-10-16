@@ -1,0 +1,63 @@
+[
+  {
+    "_id": "grv_1792065324446",
+    "citizenId": "default_citizen",
+    "title": "Land Encroachment along boundary wall in Aluva",
+    "description": "Neighbour has constructed a shed exceeding our registered boundary and blocked natural rainwater drainage. We have title deed and survey map from 2018.",
+    "category": "property_boundary",
+    "jurisdictionDistrict": "Ernakulam",
+    "preferredCourt": "High Court of Kerala / District Court",
+    "urgencyLevel": "Medium (Standard Filing)",
+    "status": "triage_analyzed",
+    "aiTriage": {
+      "summary": "Prima facie real estate & immovable property issue within Ernakulam. Discovered potential violations regarding title verification and boundaries.",
+      "applicableActs": [
+        "Kerala Land Reforms Act, 1963 (Section 85)",
+        "Specific Relief Act, 1963 (Section 5 & 6 for recovery of possession)",
+        "Transfer of Property Act, 1882",
+        "Indian Telegraph Act, 1885 (Section 10/16 if utility lines involved)"
+      ],
+      "suggestedRemedies": [
+        "Issue formal statutory Legal Notice to adversary prior to institution of suit",
+        "File Suit for Permanent Prohibitory Injunction before the Munsiff Court",
+        "Apply for Advocate Commissioner inspection to prepare mahazar and sketch"
+      ],
+      "estimatedCourtFee": "₹1,500 - ₹5,000 as per Kerala Court Fees and Suits Valuation Act, 1959",
+      "recommendedSpecialization": "Civil & Land Reforms Advocate",
+      "jurisdictionForum": "Munsiff Court / Sub Court, Ernakulam",
+      "riskScore": "Moderate"
+    },
+    "evidenceDocs": [],
+    "createdAt": "2026-10-15T11:55:24.446Z"
+  },
+  {
+    "_id": "grv_101",
+    "citizenId": "default_citizen",
+    "title": "Drawing 110kV Transmission Line Across Rubber Plantation Without Prior Notice",
+    "description": "KSEB contractors entered agricultural property in Kanjirappally Village and initiated tree clearing for 110kV overhead line without serving mandatory notice under Section 10/16 of Telegraph Act.",
+    "category": "Property & Land Disputes",
+    "jurisdictionDistrict": "Ernakulam",
+    "preferredCourt": "High Court of Kerala (Ernakulam)",
+    "urgencyLevel": "High (Upcoming Deadline)",
+    "status": "matter_opened",
+    "aiTriage": {
+      "summary": "Violates procedural protections under Indian Telegraph Act 1885 and Kerala High Court ruling in Valsamma v. KSEB. Unilateral entry without District Magistrate order under Section 16 is actionable.",
+      "applicableActs": [
+        "Indian Telegraph Act, 1885 (Section 10 & 16)",
+        "Electricity Act, 2003",
+        "Kerala Land Reforms Act, 1963",
+        "Article 226 of the Constitution of India"
+      ],
+      "suggestedRemedies": [
+        "File Urgent Writ Petition (Civil) seeking interim stay on tree felling",
+        "Serve legal notice to Executive Engineer, Transmission Division",
+        "Apply for District Court determination of land diminution and yield loss compensation"
+      ],
+      "estimatedCourtFee": "₹1,500 - ₹2,500 (High Court Writ Stamp & Process Fees)",
+      "recommendedSpecialization": "Constitutional Writs & Land Reforms Counsel",
+      "jurisdictionForum": "High Court of Kerala (Ernakulam)",
+      "riskScore": "High"
+    },
+    "createdAt": "2026-10-01T11:54:25.586Z"
+  }
+]

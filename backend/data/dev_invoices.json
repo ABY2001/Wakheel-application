@@ -1,0 +1,121 @@
+[
+  {
+    "_id": "inv_1792124984042",
+    "invoiceNumber": "INV-2026/KL-004",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "citizenId": "default_citizen",
+    "clientName": "Gopakumar Nambiar",
+    "clientPhone": "",
+    "matterId": "",
+    "matterTitle": "WP(C) 19482/2024 - High Court Representation",
+    "items": [
+      {
+        "description": "High Court Senior Appearance Fee",
+        "amount": 15000
+      },
+      {
+        "description": "Urgent Interim Stay Application Drafting",
+        "amount": 7500
+      }
+    ],
+    "subtotal": 22500,
+    "gstRate": 18,
+    "gstAmount": 4050,
+    "totalAmount": 26550,
+    "status": "paid",
+    "dueDate": "2026-10-31T04:29:44.042Z",
+    "paymentMethod": "UPI",
+    "createdAt": "2026-10-16T04:29:44.042Z",
+    "paidAt": "2026-10-16T06:15:54.375Z"
+  },
+  {
+    "_id": "inv_2026_041",
+    "invoiceNumber": "INV-2026/KL-041",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "citizenId": "default_citizen",
+    "clientName": "Gopakumar Nambiar",
+    "clientPhone": "+91 94471 28400",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+    "items": [
+      {
+        "description": "High Court E-Filing & Senior Drafting Fee",
+        "amount": 15000
+      },
+      {
+        "description": "Court Hall 2A Senior Appearance (Interim Injunction)",
+        "amount": 10000
+      }
+    ],
+    "subtotal": 25000,
+    "gstRate": 18,
+    "gstAmount": 4500,
+    "totalAmount": 29500,
+    "status": "partially_paid",
+    "dueDate": "2026-10-26T04:17:50.495Z",
+    "paidAt": "2026-10-13T04:17:50.495Z",
+    "paymentMethod": "UPI",
+    "createdAt": "2026-10-11T04:17:50.495Z"
+  },
+  {
+    "_id": "inv_2026_019",
+    "invoiceNumber": "INV-2026/KL-019",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "citizenId": "client_ananya",
+    "clientName": "Ananya Deshmukh",
+    "clientPhone": "+91 98200 44112",
+    "matterId": "mat_arb_041",
+    "matterTitle": "Commercial Arbitration Retainer & Section 9 Petition",
+    "items": [
+      {
+        "description": "Arbitration Notice Drafting & Chamber Briefing",
+        "amount": 20000
+      },
+      {
+        "description": "NCLT Urgent Mentioning & Indexing",
+        "amount": 12000
+      }
+    ],
+    "subtotal": 32000,
+    "gstRate": 18,
+    "gstAmount": 5760,
+    "totalAmount": 37760,
+    "status": "paid",
+    "dueDate": "2026-10-11T04:17:50.495Z",
+    "paidAt": "2026-10-11T04:17:50.495Z",
+    "paymentMethod": "NEFT/RTGS",
+    "createdAt": "2026-10-01T04:17:50.495Z"
+  },
+  {
+    "_id": "inv_2026_058",
+    "invoiceNumber": "INV-2026/KL-058",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "citizenId": "client_rohit",
+    "clientName": "Rohit Menon",
+    "clientPhone": "+91 97455 33201",
+    "matterId": "mat_rera_102",
+    "matterTitle": "K-RERA Delay Possession Complaint & Title Verification",
+    "items": [
+      {
+        "description": "Legal Scrutiny of Encumbrance & Builder Agreement",
+        "amount": 12000
+      },
+      {
+        "description": "K-RERA Form M Application Filing",
+        "amount": 8000
+      }
+    ],
+    "subtotal": 20000,
+    "gstRate": 18,
+    "gstAmount": 3600,
+    "totalAmount": 23600,
+    "status": "unpaid",
+    "dueDate": "2026-10-23T04:17:50.495Z",
+    "paymentMethod": "Portal_Escrow",
+    "createdAt": "2026-10-14T04:17:50.495Z"
+  }
+]

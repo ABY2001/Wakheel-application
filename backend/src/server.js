@@ -18,10 +18,20 @@ const app = express();
 // Middlewares
 app.use(
   cors({
-    origin: [
-      process.env.CLIENT_URL || "http://localhost:3000",
-      "http://127.0.0.1:3000",
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = [
+        process.env.CLIENT_URL,
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://wakheel-application.vercel.app",
+      ].filter(Boolean);
+
+      if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );

@@ -286,16 +286,20 @@ export function AdvocateWorkspaceView() {
     let isMounted = true;
     async function loadMattersAndLeads() {
       try {
-        const [leadsRes, mattersRes] = await Promise.all([
+        const [leadsRes, mattersRes] = await Promise.allSettled([
           advocateApi.getIncomingLeads(),
           advocateApi.getMatters(),
         ]);
         if (isMounted) {
-          if (leadsRes.success) setLiveLeads(leadsRes.leads || []);
-          if (mattersRes.success) setLiveMatters(mattersRes.matters || []);
+          if (leadsRes.status === "fulfilled" && leadsRes.value?.success) {
+            setLiveLeads(leadsRes.value.leads || []);
+          }
+          if (mattersRes.status === "fulfilled" && mattersRes.value?.success) {
+            setLiveMatters(mattersRes.value.matters || []);
+          }
         }
       } catch (err) {
-        console.error("Failed to load matters or leads:", err);
+        console.warn("Failed to load matters or leads:", err);
       }
     }
     loadMattersAndLeads();
@@ -308,13 +312,17 @@ export function AdvocateWorkspaceView() {
     try {
       setAcceptingLeadId(leadId);
       const res = await advocateApi.acceptLead(leadId);
-      if (res.success) {
-        const [leadsRes, mattersRes] = await Promise.all([
+      if (res && res.success) {
+        const [leadsRes, mattersRes] = await Promise.allSettled([
           advocateApi.getIncomingLeads(),
           advocateApi.getMatters(),
         ]);
-        if (leadsRes.success) setLiveLeads(leadsRes.leads || []);
-        if (mattersRes.success) setLiveMatters(mattersRes.matters || []);
+        if (leadsRes.status === "fulfilled" && leadsRes.value?.success) {
+          setLiveLeads(leadsRes.value.leads || []);
+        }
+        if (mattersRes.status === "fulfilled" && mattersRes.value?.success) {
+          setLiveMatters(mattersRes.value.matters || []);
+        }
       }
     } catch (err) {
       console.error("Failed to accept lead:", err);

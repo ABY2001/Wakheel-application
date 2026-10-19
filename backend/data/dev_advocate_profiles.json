@@ -32,5 +32,36 @@
     "availableToday": true,
     "bio": "Practicing Advocate before the High Court of Kerala with 12+ years of expertise in constitutional writ petitions, infrastructure property disputes, and commercial arbitration.",
     "upiId": "meera.krishnan@okaxis"
+  },
+  {
+    "_id": "prof_dev_1791778051045",
+    "userId": "dev_1791778051045",
+    "fullName": "Adv. gggg",
+    "email": "abyworkmail123@gmail.com",
+    "phone": "+91 98470 12345",
+    "barCouncilNumber": "K/001429/2024",
+    "experienceYears": 10,
+    "primaryCourt": "High Court of Kerala (Ernakulam)",
+    "secondaryCourts": [
+      "District Court, Ernakulam",
+      "Sub Court, Ernakulam"
+    ],
+    "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+    "specializations": [
+      "Constitutional Writs",
+      "Land Reforms & Property",
+      "Commercial Arbitration"
+    ],
+    "languages": [
+      "English",
+      "Malayalam"
+    ],
+    "consultationFee": 1500,
+    "rating": 4.9,
+    "reviewCount": 38,
+    "isVerified": true,
+    "availableToday": true,
+    "bio": "Practicing Advocate registered with the Bar Council.",
+    "upiId": "abyworkmail123@okaxis"
   }
 ]

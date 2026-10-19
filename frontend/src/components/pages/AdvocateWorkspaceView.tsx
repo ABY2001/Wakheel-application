@@ -182,6 +182,7 @@ export function AdvocateWorkspaceView() {
   const [copilotDeepResearch, setCopilotDeepResearch] = useState(false);
   const [copilotAttachments, setCopilotAttachments] = useState<Array<{ name: string; size: string }>>([]);
   const copilotFileInputRef = useRef<HTMLInputElement>(null);
+  const [copilotPlusMenuOpen, setCopilotPlusMenuOpen] = useState(false);
   const [isCopilotExecuting, setIsCopilotExecuting] = useState(false);
   const [copilotConversation, setCopilotConversation] = useState<CopilotMessage[]>([
     {
@@ -2607,9 +2608,9 @@ export function AdvocateWorkspaceView() {
 
                 {/* Action Toolbar inside the prompt console */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-900">
-                  {/* Left Action Tools: 1. Upload attachment, 2. Agent mode, 3. Deep Research */}
+                  {/* Left: Plus Button with Popup Menu (1. Upload attachment, 2. Agent mode, 3. Deep research) */}
                   <div className="flex flex-wrap items-center gap-2">
-                    {/* 1. Upload attachment */}
+                    {/* Hidden file input */}
                     <input
                       type="file"
                       ref={copilotFileInputRef}
@@ -2618,71 +2619,143 @@ export function AdvocateWorkspaceView() {
                       onChange={handleFileAttach}
                       className="hidden"
                     />
-                    <button
-                      type="button"
-                      onClick={() => copilotFileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-zinc-50 dark:bg-zinc-900/60"
-                      title="Upload case papers, petitions, orders or contracts"
-                    >
-                      <Paperclip className="w-3.5 h-3.5 shrink-0" />
-                      <span>Upload attachment</span>
-                      {copilotAttachments.length > 0 && (
-                        <span className="w-4 h-4 rounded-full bg-black text-white dark:bg-white dark:text-black text-[10px] font-bold flex items-center justify-center">
-                          {copilotAttachments.length}
-                        </span>
-                      )}
-                    </button>
 
-                    {/* Quick Sample File Chip */}
-                    {copilotAttachments.length === 0 && (
+                    {/* The '+' Symbol Button with Popover */}
+                    <div className="relative">
                       <button
                         type="button"
-                        onClick={() => {
-                          setCopilotAttachments([
-                            { name: "WP(C)_19482_2024_Pleadings_Bundle.pdf", size: "2.4 MB" },
-                          ]);
-                        }}
-                        className="text-[10px] text-zinc-400 hover:text-black dark:hover:text-white font-mono underline cursor-pointer hidden sm:inline"
+                        onClick={() => setCopilotPlusMenuOpen(!copilotPlusMenuOpen)}
+                        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+                          copilotPlusMenuOpen
+                            ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs"
+                            : "border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white bg-zinc-50 dark:bg-zinc-900"
+                        }`}
+                        title="Add context (Attachment, Agent mode, Deep research)"
                       >
-                        + Attach WP(C) 19482 PDF
+                        <Plus className={`w-4 h-4 transition-transform duration-200 ${copilotPlusMenuOpen ? "rotate-45" : ""}`} />
                       </button>
+
+                      {/* Dropdown Menu Popup */}
+                      {copilotPlusMenuOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-20"
+                            onClick={() => setCopilotPlusMenuOpen(false)}
+                          />
+                          <div className="absolute bottom-full left-0 mb-2 w-64 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1.5 z-30 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                            {/* 1. Upload attachment */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopilotPlusMenuOpen(false);
+                                copilotFileInputRef.current?.click();
+                              }}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-black dark:text-white cursor-pointer group"
+                            >
+                              <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                                <Paperclip className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="flex-1">
+                                <span className="block font-bold">1. Upload attachment</span>
+                                <span className="text-[10px] text-zinc-500 font-normal">PDF, case brief, pleadings, deed</span>
+                              </div>
+                            </button>
+
+                            {/* 2. Agent mode */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopilotAgentMode(!copilotAgentMode);
+                                setCopilotPlusMenuOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-black dark:text-white cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                                  <Bot className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                  <span className="block font-bold">2. Agent mode</span>
+                                  <span className="text-[10px] text-zinc-500 font-normal">Multi-step autonomous execution</span>
+                                </div>
+                              </div>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                copilotAgentMode
+                                  ? "bg-black dark:bg-white border-black dark:border-white text-white dark:text-black"
+                                  : "border-zinc-300 dark:border-zinc-700"
+                              }`}>
+                                {copilotAgentMode && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                            </button>
+
+                            {/* 3. Deep research */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopilotDeepResearch(!copilotDeepResearch);
+                                setCopilotPlusMenuOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-black dark:text-white cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                                  <Compass className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                  <span className="block font-bold">3. Deep research</span>
+                                  <span className="text-[10px] text-zinc-500 font-normal">Precedent &amp; ratio verification</span>
+                                </div>
+                              </div>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                copilotDeepResearch
+                                  ? "bg-black dark:bg-white border-black dark:border-white text-white dark:text-black"
+                                  : "border-zinc-300 dark:border-zinc-700"
+                              }`}>
+                                {copilotDeepResearch && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Active Mode Pills (shown when toggled on) */}
+                    {copilotAgentMode && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs">
+                        <Bot className="w-3.5 h-3.5" />
+                        <span>Agent Mode</span>
+                        <button
+                          type="button"
+                          onClick={() => setCopilotAgentMode(false)}
+                          className="hover:opacity-75 cursor-pointer ml-0.5"
+                          title="Disable Agent Mode"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
                     )}
 
-                    {/* 2. Agent Mode Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setCopilotAgentMode(!copilotAgentMode)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        copilotAgentMode
-                          ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold ring-1 ring-black dark:ring-white"
-                          : "border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white bg-zinc-50 dark:bg-zinc-900/60"
-                      }`}
-                      title="Enable autonomous multi-step legal reasoning & verification workflow"
-                    >
-                      <Bot className="w-3.5 h-3.5 shrink-0" />
-                      <span>Agent mode</span>
-                      {copilotAgentMode && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#800020] animate-pulse ml-0.5" />
-                      )}
-                    </button>
+                    {copilotDeepResearch && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs">
+                        <Compass className="w-3.5 h-3.5" />
+                        <span>Deep Research</span>
+                        <button
+                          type="button"
+                          onClick={() => setCopilotDeepResearch(false)}
+                          className="hover:opacity-75 cursor-pointer ml-0.5"
+                          title="Disable Deep Research"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
 
-                    {/* 3. Deep Research Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => setCopilotDeepResearch(!copilotDeepResearch)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        copilotDeepResearch
-                          ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold ring-1 ring-black dark:ring-white"
-                          : "border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white bg-zinc-50 dark:bg-zinc-900/60"
-                      }`}
-                      title="Conduct exhaustive precedent discovery, ratio analysis & negative treatment check"
-                    >
-                      <Compass className="w-3.5 h-3.5 shrink-0" />
-                      <span>Deep Research</span>
-                      {copilotDeepResearch && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#800020] animate-pulse ml-0.5" />
-                      )}
-                    </button>
+                    {/* If no feature active, subtle helper hint */}
+                    {!copilotAgentMode && !copilotDeepResearch && copilotAttachments.length === 0 && (
+                      <span className="text-[11px] text-zinc-400 select-none hidden sm:inline">
+                        Click + to attach files, enable Agent mode, or Deep research
+                      </span>
+                    )}
                   </div>
 
                   {/* Right: Execute Button */}

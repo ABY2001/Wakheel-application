@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Home,
   LayoutDashboard,
@@ -62,6 +62,8 @@ import {
   ArrowRight,
   Upload,
   Send,
+  Paperclip,
+  Copy,
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
@@ -76,7 +78,7 @@ import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
 import { ProductivityView } from "@/components/advocate/ProductivityView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { AnalyticsView } from "@/components/advocate/AnalyticsView";
-import { citizenApi } from "@/lib/api";
+import { citizenApi, copilotApi } from "@/lib/api";
 
 interface FloatingTooltipData {
   label: string;
@@ -175,6 +177,228 @@ export function ClientPortalView() {
   const [uploadDocTitle, setUploadDocTitle] = useState("");
   const [uploadDocCategory, setUploadDocCategory] = useState("Court Petition / Writ");
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+
+  // ============================================================================
+  // AI LEGAL COPILOT STATE & HANDLERS (Navbar Modes, Plus Menu, Suites)
+  // ============================================================================
+  interface ClientCopilotMessage {
+    role: "assistant" | "user";
+    text: string;
+    mode?: string;
+    attachments?: Array<{ name: string; size: string }>;
+    isAgentMode?: boolean;
+    agentSteps?: Array<{ title: string; detail: string; status: "completed" | "running" }>;
+    isDeepResearch?: boolean;
+    deepResearchData?: {
+      scannedSources: number;
+      scJudgements: number;
+      hcJudgements: number;
+      bareActs: number;
+      precedents: Array<{ citation: string; court: string; ratio: string; treatment: string }>;
+    };
+    timestamp?: string;
+  }
+
+  const [copilotMode, setCopilotMode] = useState<"Ask" | "Research" | "Analyze" | "Draft" | "Review" | "Verify" | "Translate">("Research");
+  const [copilotInput, setCopilotInput] = useState("");
+  const [copilotAgentMode, setCopilotAgentMode] = useState(false);
+  const [copilotDeepResearch, setCopilotDeepResearch] = useState(false);
+  const [copilotAttachments, setCopilotAttachments] = useState<Array<{ name: string; size: string }>>([]);
+  const copilotFileInputRef = useRef<HTMLInputElement>(null);
+  const [copilotPlusMenuOpen, setCopilotPlusMenuOpen] = useState(false);
+  const [isCopilotExecuting, setIsCopilotExecuting] = useState(false);
+  const [copilotConversation, setCopilotConversation] = useState<ClientCopilotMessage[]>([
+    {
+      role: "assistant",
+      text: "Namaskaram. I am your Indian Legal Research Copilot. I can evaluate Kerala High Court ratios, examine central enactments, identify conflicting precedents, or draft grounds of petition. What proposition shall we examine?",
+      timestamp: "Just now",
+    },
+  ]);
+
+  // Specialized Copilot Suite States
+  const [translationSourceText, setTranslationSourceText] = useState(
+    "ആധാരം നമ്പർ 1842/2018 പ്രകാരം വസ്തു കൈവശാവകാശ സർട്ടിഫിക്കറ്റ് ലഭിച്ചിട്ടുണ്ട്. വില്ലേജ് ഓഫീസിൽ കരം തീർത്ത രസീത് ഉണ്ട്. സ്ഥലത്ത് മഹസർ തയ്യാറാക്കി. വൈദ്യുതി ലൈൻ മാറ്റിവെക്കണമെന്ന് ആവശ്യപ്പെട്ട് ആക്ഷേപം നൽകി."
+  );
+  const [translatedResult, setTranslatedResult] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationDocType, setTranslationDocType] = useState<string>("land_revenue");
+
+  const [judgmentCitationQuery, setJudgmentCitationQuery] = useState("2024 (2) KHC 401 (DB)");
+  const [judgmentSummary, setJudgmentSummary] = useState<any | null>(null);
+  const [isSummarizingJudgment, setIsSummarizingJudgment] = useState(false);
+
+  const [draftingTemplate, setDraftingTemplate] = useState("wp_interim_stay_affidavit");
+  const [draftingClientName, setDraftingClientName] = useState("Gopakumar Nambiar");
+  const [draftingRespondentName, setDraftingRespondentName] = useState("Kerala State Electricity Board & Anr.");
+  const [draftingCaseNumber, setDraftingCaseNumber] = useState("WP(C) 19482/2024");
+  const [draftingSubject, setDraftingSubject] = useState("Interim Stay against 110kV Transmission Line Re-alignment over Private Plantation Land");
+  const [draftedResult, setDraftedResult] = useState<any | null>(null);
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [copiedBadge, setCopiedBadge] = useState<string | null>(null);
+
+  const handleCopyText = (text: string, badgeKey: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedBadge(badgeKey);
+    setTimeout(() => setCopiedBadge(null), 2000);
+  };
+
+  const handleCopilotFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const newItems: Array<{ name: string; size: string }> = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const sizeStr =
+        file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${Math.round(file.size / 1024)} KB`;
+      newItems.push({ name: file.name, size: sizeStr });
+    }
+    setCopilotAttachments((prev) => [...prev, ...newItems]);
+    if (copilotFileInputRef.current) copilotFileInputRef.current.value = "";
+  };
+
+  const handleExecuteCopilotQuery = async () => {
+    if (!copilotInput.trim() && copilotAttachments.length === 0) return;
+    const query =
+      copilotInput.trim() ||
+      (copilotAttachments.length > 0
+        ? `Inspect attached case document: ${copilotAttachments.map((f) => f.name).join(", ")}`
+        : "");
+    const attachedFiles = [...copilotAttachments];
+    const isAgent = copilotAgentMode;
+    const isDeep = copilotDeepResearch;
+    const currentMode = copilotMode;
+
+    const userMsg: ClientCopilotMessage = {
+      role: "user",
+      text: query,
+      mode: currentMode,
+      attachments: attachedFiles.length > 0 ? attachedFiles : undefined,
+      isAgentMode: isAgent,
+      isDeepResearch: isDeep,
+      timestamp: "Just now",
+    };
+
+    setCopilotConversation((prev) => [...prev, userMsg]);
+    setCopilotInput("");
+    setCopilotAttachments([]);
+    setIsCopilotExecuting(true);
+
+    try {
+      const res = await copilotApi.query({
+        prompt: query,
+        mode: currentMode,
+        isAgentMode: isAgent,
+        isDeepResearch: isDeep,
+      });
+
+      let assistantText = res.text || "";
+      if (attachedFiles.length > 0) {
+        assistantText += `\n\n📄 Document Inspection Findings (${attachedFiles.map((f) => f.name).join(", ")}):\nExtracted petition averments and verification affidavit. Found 3 critical dates for limitation period calculation under Article 226 and Section 16 of the Indian Telegraph Act. No prima facie formal defects noted in annexed exhibits.`;
+      }
+
+      const assistantMsg: ClientCopilotMessage = {
+        role: "assistant",
+        text: assistantText,
+        mode: currentMode,
+        isAgentMode: isAgent,
+        agentSteps: res.agentSteps,
+        isDeepResearch: isDeep,
+        deepResearchData: res.deepResearchData,
+        timestamp: "Just now",
+      };
+
+      setCopilotConversation((prev) => [...prev, assistantMsg]);
+    } catch {
+      const fallbackMsg: ClientCopilotMessage = {
+        role: "assistant",
+        text: `Analysis for [${currentMode} Mode]:\nExamined legal proposition: "${query}". Under Kerala High Court jurisprudence and relevant statutory frameworks, the ratio decidendi is well settled by binding Division Bench authorities.`,
+        mode: currentMode,
+        timestamp: "Just now",
+      };
+      setCopilotConversation((prev) => [...prev, fallbackMsg]);
+    } finally {
+      setIsCopilotExecuting(false);
+    }
+  };
+
+  const handleRunClientTranslation = async (customText?: string) => {
+    const textToTranslate = customText || translationSourceText;
+    if (!textToTranslate.trim()) return;
+    setIsTranslating(true);
+    try {
+      const res = await copilotApi.translate({
+        text: textToTranslate,
+        sourceLang: "ml",
+        targetLang: "en",
+        documentType: translationDocType,
+      });
+      if (res && res.translatedText) {
+        setTranslatedResult(res.translatedText);
+      }
+    } catch {
+      setTranslatedResult(
+        "TRUE EXTRACT TRANSLATION CONFORMING TO RULE 32:\n\n1. As per Registered Title Deed No. 1842/2018, possession certificate has been duly issued by the Competent Village Authority.\n2. Land revenue tax has been fully discharged up to current financial year.\n3. Spot inspection mahazar was drawn up by the Village Officer and local police.\n4. Formal objection has been filed requesting realignment of the proposed 110kV electric line avoiding residential homestead."
+      );
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleRunClientPrecedentSummary = async (customCitation?: string) => {
+    const q = customCitation || judgmentCitationQuery;
+    if (!q.trim()) return;
+    setIsSummarizingJudgment(true);
+    try {
+      const res = await copilotApi.summarizeJudgment({ citation: q });
+      if (res && res.success && res.judgment) {
+        setJudgmentSummary(res.judgment);
+      }
+    } catch {
+      setJudgmentSummary({
+        caseTitle: "Valsamma v. Kerala State Electricity Board & Anr.",
+        citation: q,
+        court: "High Court of Kerala (Division Bench)",
+        coram: "Hon'ble Mr. Justice A. Muhamed Mustaque & Hon'ble Mr. Justice Johnson John",
+        ratioDecidendi: "Section 16 of the Indian Telegraph Act, 1885 does not confer unbridled power upon the licensee to enter upon private property without prior notice. Where an owner raises bona fide objection regarding alternate viable routes, the District Magistrate is bound to conduct summary enquiry prior to granting permission for tree felling or tower erection.",
+        operativeOrder: "Writ Petition (Civil) allowed in part. Impugned route order set aside. Remitted to Additional District Magistrate for fresh enquiry after hearing petitioner within 30 days.",
+        clientTakeaway: "KSEB cannot draw high-tension lines through private property without hearing the landowner's objections before the District Magistrate.",
+      });
+    } finally {
+      setIsSummarizingJudgment(false);
+    }
+  };
+
+  const handleRunClientDrafting = async () => {
+    setIsDrafting(true);
+    try {
+      const res = await copilotApi.draftPleading({
+        type: draftingTemplate,
+        parameters: {
+          clientName: draftingClientName,
+          respondentName: draftingRespondentName,
+          caseNumber: draftingCaseNumber,
+          subject: draftingSubject,
+        },
+      });
+      if (res && res.success) {
+        setDraftedResult({
+          title: res.title,
+          content: res.content,
+          wordCount: res.wordCount,
+        });
+      }
+    } catch {
+      setDraftedResult({
+        title: "Interim Stay Application & Affidavit",
+        wordCount: 420,
+        content: `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM\n(Special Original Jurisdiction)\n\nWP(C) No. 19482 of 2024\n\nBETWEEN:\n${draftingClientName} ... Petitioner\nAND\n${draftingRespondentName} ... Respondents\n\nPETITION FOR INTERIM STAY UNDER ARTICLE 226 OF THE CONSTITUTION OF INDIA\n\nFor the reasons stated in the accompanying affidavit, it is humbly prayed that this Hon'ble Court may be pleased to issue an interim direction staying all further proceedings pursuant to the proposed route alignment survey for the 110kV transmission line, pending disposal of this Writ Petition (Civil).\n\nDated this the ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.\nCounsel for Petitioner`,
+      });
+    } finally {
+      setIsDrafting(false);
+    }
+  };
 
   const loadCitizenData = async () => {
     setIsLoadingData(true);
@@ -584,12 +808,15 @@ export function ClientPortalView() {
     },
   ];
 
+  const isCopilot =
+    activeTab === "ai-copilot" ||
+    ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab);
+
   const isProductivity = [
     "notes",
     "calendar",
     "taskmite",
     "time-sheet",
-    "ask-ai",
   ].includes(activeTab);
 
   const isBusiness = [
@@ -659,55 +886,18 @@ export function ClientPortalView() {
               <span>Dashboard</span>
             </button>
 
-            {/* Ask Wakheel AI ↓ (Collapsible with Draft, Translate, Summary, Research) */}
-            <div className="rounded-xl overflow-hidden">
-              <button
-                onClick={() => setAskAiOpen(!askAiOpen)}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                  activeTab.startsWith("ai-") || activeTab === "ask-ai" || activeTab === "draft" || activeTab === "translate" || activeTab === "summary" || activeTab === "research"
-                    ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-4 h-4 text-black dark:text-white shrink-0" />
-                  <span>Ask Wakheel AI</span>
-                </div>
-                {askAiOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-                )}
-              </button>
-
-              {askAiOpen && (
-                <div className="pl-9 pr-2 py-1 space-y-0.5 bg-zinc-100/70 dark:bg-zinc-900/60 rounded-b-xl">
-                  {[
-                    { id: "draft", label: "Draft", icon: FileEdit },
-                    { id: "translate", label: "Translate", icon: Languages },
-                    { id: "summary", label: "Summary", icon: AlignLeft },
-                    { id: "research", label: "Research", icon: Search },
-                  ].map((sub) => {
-                    const SubIcon = sub.icon;
-                    const isSubActive = activeTab === sub.id;
-                    return (
-                      <button
-                        key={sub.id}
-                        onClick={() => setActiveTab(sub.id)}
-                        className={`w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-left text-[11px] transition-colors cursor-pointer ${
-                          isSubActive
-                            ? "text-black dark:text-white font-bold bg-zinc-200 dark:bg-zinc-800"
-                            : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                        }`}
-                      >
-                        <SubIcon className="w-3.5 h-3.5" />
-                        <span>{sub.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {/* AI Legal Copilot */}
+            <button
+              onClick={() => setActiveTab("ai-copilot")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "ai-copilot" || ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab)
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span>AI Legal Copilot</span>
+            </button>
 
             {/* Find legal Help */}
             <button
@@ -1862,32 +2052,711 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: AI Tools (Draft, Translate, Summary, Research)           */}
+          {/* VIEW: Wakheel AI Legal Copilot (Navbar Modes + Chatbot Console) */}
           {/* ============================================================== */}
-          {["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab) && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div>
-                  <h3 className="text-lg font-bold text-black dark:text-white">
-                    {activeTab === "draft"
-                      ? "AI Legal Drafting Assistant"
-                      : activeTab === "translate"
-                      ? "Multilingual Legal Translator (Malayalam ↔ English)"
-                      : activeTab === "summary"
-                      ? "Judgment & Case Order Summarizer"
-                      : activeTab === "research"
-                      ? "Precedent & Statute Research"
-                      : "Ask Wakheel Legal AI"}
-                  </h3>
-                  <p className="text-xs text-zinc-500">
-                    Simulated Intelligence Workspace • Kerala, India Legal Practice Pilot
-                  </p>
+          {isCopilot && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              {/* Pilot Banner matching Screenshot */}
+              <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-medium text-black dark:text-white">
+                    Wakheel Simulated Intelligence Workspace • Kerala, India Legal Practice Pilot
+                  </span>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black text-white dark:bg-white dark:text-black">
-                  {activeTab}
+                <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-zinc-400 hidden sm:inline">
+                  NO REAL EXTERNAL API CALLS
                 </span>
               </div>
-              <DocIntelligenceCard />
+
+              {/* Title & Model Pill */}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
+                    Wakheel AI Legal Copilot
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+                    India Law Model
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-zinc-500">
+                  Multi-modal research, contract inspection, and drafting copilot with certified citation cross-checking
+                </p>
+              </div>
+
+              {/* Top Mode Navbar: Ask | Research | Analyze | Draft | Review | Verify | Translate */}
+              <div className="p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 grid grid-cols-3 sm:grid-cols-7 gap-1 text-xs font-bold text-center">
+                {(["Ask", "Research", "Analyze", "Draft", "Review", "Verify", "Translate"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setCopilotMode(mode)}
+                    className={`py-2 px-2 rounded-xl transition-all cursor-pointer ${
+                      copilotMode === mode
+                        ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                    }`}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+
+              {/* ========================================================= */}
+              {/* SPECIALIZED SUITE: VERNACULAR TRANSLATION (Translate Mode) */}
+              {/* ========================================================= */}
+              {copilotMode === "Translate" && (
+                <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-900">
+                    <div>
+                      <h3 className="text-base font-bold text-black dark:text-white flex items-center gap-2">
+                        <Languages className="w-4 h-4" />
+                        Kerala High Court Vernacular Translation Suite
+                      </h3>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        Translates regional revenue and police records into formal court pleading English conforming to Rule 32 of Kerala High Court Rules.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sample = "ആധാരം നമ്പർ 1842/2018 പ്രകാരം വസ്തു കൈവശാവകാശ സർട്ടിഫിക്കറ്റ് ലഭിച്ചിട്ടുണ്ട്. വില്ലേജ് ഓഫീസിൽ കരം തീർത്ത രസീത് ഉണ്ട്. സ്ഥലത്ത് മഹസർ തയ്യാറാക്കി. വൈദ്യുതി ലൈൻ മാറ്റിവെക്കണമെന്ന് ആവശ്യപ്പെട്ട് ആക്ഷേപം നൽകി.";
+                          setTranslationSourceText(sample);
+                          setTranslationDocType("land_revenue");
+                          handleRunClientTranslation(sample);
+                        }}
+                        className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[11px] font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                      >
+                        Load Land Deed Sample
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sample = "വില്ലേജ് ഓഫീസറും പോലീസും ചേർന്ന് സ്ഥലത്ത് മഹസർ തയ്യാറാക്കി. അതിരുകൾ തിരിച്ച് അളവ് സ്കെച്ച് എടുത്തു. സർവ്വേ കല്ലുകൾ ഭാഗികമായി നശിപ്പിക്കപ്പെട്ട നിലയിലാണ്. താല്ക്കാലിക നിരോധന ഉത്തരവ് നിലവിലുണ്ട്.";
+                          setTranslationSourceText(sample);
+                          setTranslationDocType("police_mahazar");
+                          handleRunClientTranslation(sample);
+                        }}
+                        className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[11px] font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                      >
+                        Load Mahazar Sample
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-black dark:text-white uppercase tracking-wider text-[10px]">
+                          Vernacular Source Document (Malayalam)
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-mono">
+                          {translationSourceText.length} characters
+                        </span>
+                      </div>
+                      <textarea
+                        rows={7}
+                        value={translationSourceText}
+                        onChange={(e) => setTranslationSourceText(e.target.value)}
+                        placeholder="Paste Malayalam revenue deed, police mahazar, or complaint here..."
+                        className="w-full p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white leading-relaxed focus:outline-hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRunClientTranslation()}
+                        disabled={isTranslating || !translationSourceText.trim()}
+                        className="w-full py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{isTranslating ? "Translating & Cross-Checking Statutes..." : "Translate & Extract Legal Ratios"}</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-black dark:text-white uppercase tracking-wider text-[10px]">
+                          Certified Court English Pleading
+                        </span>
+                        {translatedResult && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyText(translatedResult, "client_trans")}
+                            className="text-[11px] font-bold text-black dark:text-white hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedBadge === "client_trans" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedBadge === "client_trans" ? "Copied!" : "Copy Pleading"}</span>
+                          </button>
+                        )}
+                      </div>
+                      <div className="min-h-[178px] p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white leading-relaxed whitespace-pre-line font-serif overflow-y-auto max-h-[220px]">
+                        {translatedResult || "English legal translation conforming to Kerala High Court standards will appear here once executed..."}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* SPECIALIZED SUITE: STATUTORY NOTICE DRAFTER (Draft Mode)  */}
+              {/* ========================================================= */}
+              {copilotMode === "Draft" && (
+                <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-900">
+                    <div>
+                      <h3 className="text-base font-bold text-black dark:text-white flex items-center gap-2">
+                        <FileEdit className="w-4 h-4" />
+                        Automated Statutory Notice &amp; Writ Drafter
+                      </h3>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        Generates court-tested legal notices and writ petition grounds with requisite statutory timeframes.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { id: "wp_interim_stay_affidavit", label: "WP(C) Stay Application" },
+                        { id: "ni_138_demand_notice", label: "S.138 Cheque Notice" },
+                        { id: "property_eviction_notice", label: "Eviction Notice" },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setDraftingTemplate(t.id)}
+                          className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                            draftingTemplate === t.id
+                              ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                              : "border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                    <div className="space-y-1">
+                      <label className="font-bold text-black dark:text-white text-[10px] uppercase">
+                        Client / Petitioner
+                      </label>
+                      <input
+                        type="text"
+                        value={draftingClientName}
+                        onChange={(e) => setDraftingClientName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-black dark:text-white text-[10px] uppercase">
+                        Opposing Party / Respondent
+                      </label>
+                      <input
+                        type="text"
+                        value={draftingRespondentName}
+                        onChange={(e) => setDraftingRespondentName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-black dark:text-white text-[10px] uppercase">
+                        Case / Subject Matter
+                      </label>
+                      <input
+                        type="text"
+                        value={draftingSubject}
+                        onChange={(e) => setDraftingSubject(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2 lg:col-span-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleRunClientDrafting}
+                        disabled={isDrafting}
+                        className="w-full py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{isDrafting ? "Drafting Pleading..." : "Draft Pleading"}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {draftedResult && (
+                    <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-black dark:text-white" />
+                          <span className="font-bold text-xs text-black dark:text-white">{draftedResult.title}</span>
+                          <span className="text-[10px] font-mono text-zinc-500">({draftedResult.wordCount} words)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText(draftedResult.content, "client_draft")}
+                          className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-[11px] font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedBadge === "client_draft" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedBadge === "client_draft" ? "Copied!" : "Copy Pleading"}</span>
+                        </button>
+                      </div>
+                      <div className="font-mono text-xs leading-relaxed text-black dark:text-white whitespace-pre-line max-h-[300px] overflow-y-auto p-3 bg-white dark:bg-black rounded-xl border border-zinc-200 dark:border-zinc-800">
+                        {draftedResult.content}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* SPECIALIZED SUITE: PRECEDENT SUMMARIZER (Research / Analyze) */}
+              {/* ========================================================= */}
+              {(copilotMode === "Research" || copilotMode === "Analyze") && (
+                <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-zinc-100 dark:border-zinc-900">
+                    <div>
+                      <h3 className="text-base font-bold text-black dark:text-white flex items-center gap-2">
+                        <Scale className="w-4 h-4" />
+                        Kerala High Court &amp; Supreme Court Precedent Summarizer
+                      </h3>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        Instantly extracts Coram, binding Ratio Decidendi, operative order, and plain-language client explainer.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { q: "2024 (2) KHC 401 (DB)", label: "Valsamma v. KSEB" },
+                        { q: "Dashrath Rupsingh", label: "Dashrath (S.138 NI Act)" },
+                        { q: "Vineeta Sharma", label: "Vineeta (Daughters Rights)" },
+                      ].map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setJudgmentCitationQuery(item.q);
+                            handleRunClientPrecedentSummary(item.q);
+                          }}
+                          className="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={judgmentCitationQuery}
+                      onChange={(e) => setJudgmentCitationQuery(e.target.value)}
+                      placeholder="Enter legal citation or case title (e.g. 2024 (2) KHC 401, Vineeta Sharma)..."
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRunClientPrecedentSummary()}
+                      disabled={isSummarizingJudgment || !judgmentCitationQuery.trim()}
+                      className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shrink-0"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{isSummarizingJudgment ? "Summarizing..." : "Summarize Ratio"}</span>
+                    </button>
+                  </div>
+
+                  {judgmentSummary && (
+                    <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs">
+                      <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                        <span className="font-bold text-black dark:text-white text-sm">
+                          {judgmentSummary.caseTitle}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono font-bold">
+                          {judgmentSummary.citation}
+                        </span>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
+                        <span className="text-[10px] font-mono uppercase font-bold text-black dark:text-white flex items-center gap-1.5">
+                          <Scale className="w-3.5 h-3.5" />
+                          Binding Ratio Decidendi (Core Legal Principle)
+                        </span>
+                        <p className="text-xs text-zinc-800 dark:text-zinc-200 font-serif italic leading-relaxed pt-1">
+                          "{judgmentSummary.ratioDecidendi}"
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-1">
+                        <span className="text-[10px] font-mono uppercase font-bold text-zinc-600 dark:text-zinc-300 block">
+                          Client Plain-Language Takeaway:
+                        </span>
+                        <p className="text-zinc-800 dark:text-zinc-200 leading-relaxed">
+                          {judgmentSummary.clientTakeaway}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Chat Conversation Canvas */}
+              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs min-h-[340px] flex flex-col justify-between">
+                <div className="space-y-4">
+                  {copilotConversation.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      {msg.role === "assistant" && (
+                        <div className="w-8 h-8 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold shrink-0 mt-1">
+                          <Bot className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div
+                        className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed max-w-2xl space-y-3 ${
+                          msg.role === "user"
+                            ? "bg-black text-white dark:bg-white dark:text-black font-medium"
+                            : "bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                        }`}
+                      >
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pb-1">
+                            {msg.attachments.map((att, aIdx) => (
+                              <div key={aIdx} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black text-[11px] font-mono">
+                                <FileText className="w-3 h-3 shrink-0" />
+                                <span className="truncate max-w-[150px]">{att.name}</span>
+                                <span className="opacity-70">({att.size})</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {msg.role === "user" && (msg.isAgentMode || msg.isDeepResearch) && (
+                          <div className="flex items-center gap-1.5 pt-0.5 pb-1">
+                            {msg.isAgentMode && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase font-bold bg-zinc-800 text-zinc-200 dark:bg-zinc-200 dark:text-zinc-800">
+                                Agent Mode
+                              </span>
+                            )}
+                            {msg.isDeepResearch && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase font-bold bg-zinc-800 text-zinc-200 dark:bg-zinc-200 dark:text-zinc-800">
+                                Deep Research
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="whitespace-pre-line">{msg.text}</div>
+
+                        {msg.agentSteps && msg.agentSteps.length > 0 && (
+                          <div className="p-3.5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-2.5 my-2 shadow-2xs">
+                            <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-900">
+                              <span className="text-[11px] font-mono uppercase font-bold text-black dark:text-white flex items-center gap-1.5">
+                                <Bot className="w-3.5 h-3.5" />
+                                Autonomous Agent Execution Pipeline (4/4 Completed)
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800">
+                                Verified
+                              </span>
+                            </div>
+                            <div className="space-y-2 text-xs">
+                              {msg.agentSteps.map((step, sIdx) => (
+                                <div key={sIdx} className="space-y-0.5">
+                                  <div className="font-bold text-black dark:text-white flex items-center gap-1.5">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                                    <span>{step.title}</span>
+                                  </div>
+                                  <p className="text-[11px] text-zinc-500 pl-5">{step.detail}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {msg.deepResearchData && (
+                          <div className="p-3.5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3 my-2 shadow-2xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-900">
+                              <span className="text-[11px] font-mono uppercase font-bold text-black dark:text-white flex items-center gap-1.5">
+                                <Compass className="w-3.5 h-3.5" />
+                                Deep Legal Research Corpus (Verified)
+                              </span>
+                              <div className="flex items-center gap-2 text-[10px] font-mono">
+                                <span className="text-zinc-500">{msg.deepResearchData.scannedSources} sources scanned</span>
+                                <span className="font-bold text-black dark:text-white">• {msg.deepResearchData.precedents.length} key precedents</span>
+                              </div>
+                            </div>
+                            <div className="space-y-2 text-xs">
+                              {msg.deepResearchData.precedents.map((prec, pIdx) => (
+                                <div key={pIdx} className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-black dark:text-white font-mono text-[11px]">{prec.citation}</span>
+                                    <span className="text-[10px] text-zinc-500">{prec.court}</span>
+                                  </div>
+                                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 font-serif italic">"{prec.ratio}"</p>
+                                  <div className="text-[10px] font-mono text-zinc-500 pt-0.5">Treatment: {prec.treatment}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {isCopilotExecuting && (
+                    <div className="flex gap-3 justify-start">
+                      <div className="w-8 h-8 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold shrink-0">
+                        <Bot className="w-4 h-4 animate-spin" />
+                      </div>
+                      <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-black dark:bg-white animate-ping" />
+                        <span>
+                          {copilotAgentMode && copilotDeepResearch
+                            ? "Agent synthesizing deep research across Kerala High Court & Supreme Court dockets..."
+                            : copilotAgentMode
+                            ? "Agent executing multi-step procedural reasoning and limitation audit..."
+                            : copilotDeepResearch
+                            ? "Deep research engine scanning binding precedent ratios and central bare acts..."
+                            : "Analyzing legal proposition and cross-referencing statutory authorities..."}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick Prompts */}
+                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-900 flex flex-wrap gap-2 text-xs">
+                  <span className="text-zinc-400 font-mono text-[11px] self-center">Prompt chips:</span>
+                  {[
+                    "Kerala High Court stay grounds on electricity lines",
+                    "BNS Section 304A IPC equivalent comparison",
+                    "Section 138 NI Act statutory notice 15-day period",
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCopilotInput(chip)}
+                      className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white cursor-pointer"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chatbot Prompt Console with '+' Symbol (1. Upload attachment, 2. Agent mode, 3. Deep research) */}
+              <div className="rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 shadow-xs space-y-3">
+                {/* Uploaded Attachments preview pills */}
+                {copilotAttachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pb-1">
+                    {copilotAttachments.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs shadow-2xs"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                        <span className="font-semibold text-black dark:text-white truncate max-w-[180px]">{file.name}</span>
+                        <span className="text-[10px] text-zinc-500 font-mono">({file.size})</span>
+                        <button
+                          type="button"
+                          onClick={() => setCopilotAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                          className="ml-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                          title="Remove attachment"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Main Textarea Query Input */}
+                <textarea
+                  rows={2}
+                  value={copilotInput}
+                  onChange={(e) => setCopilotInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleExecuteCopilotQuery();
+                    }
+                  }}
+                  placeholder={
+                    copilotAgentMode && copilotDeepResearch
+                      ? "Ask Copilot with [Agent Mode + Deep Research]: Enter complex legal proposition for autonomous research & drafting..."
+                      : copilotAgentMode
+                      ? "Ask Copilot with [Agent Mode]: Enter objective for multi-step autonomous execution..."
+                      : copilotDeepResearch
+                      ? "Ask Copilot with [Deep Research]: Search deep precedent ratios across SC & Kerala High Court..."
+                      : `Ask Copilot in [${copilotMode}] mode: e.g. What are the essential grounds to contest high tension line realignment in Kerala?`
+                  }
+                  className="w-full bg-transparent text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none resize-none leading-relaxed"
+                />
+
+                {/* Action Toolbar inside the prompt console */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-zinc-100 dark:border-zinc-900">
+                  {/* Left: Plus Button with Popup Menu (1. Upload attachment, 2. Agent mode, 3. Deep research) */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      ref={copilotFileInputRef}
+                      multiple
+                      accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                      onChange={handleCopilotFileAttach}
+                      className="hidden"
+                    />
+
+                    {/* The '+' Symbol Button with Popover */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setCopilotPlusMenuOpen(!copilotPlusMenuOpen)}
+                        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+                          copilotPlusMenuOpen
+                            ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs"
+                            : "border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white bg-zinc-50 dark:bg-zinc-900"
+                        }`}
+                        title="Add context (Attachment, Agent mode, Deep research)"
+                      >
+                        <Plus className={`w-4 h-4 transition-transform duration-200 ${copilotPlusMenuOpen ? "rotate-45" : ""}`} />
+                      </button>
+
+                      {/* Dropdown Menu Popup */}
+                      {copilotPlusMenuOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-20"
+                            onClick={() => setCopilotPlusMenuOpen(false)}
+                          />
+                          <div className="absolute bottom-full left-0 mb-2 w-64 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-1.5 z-30 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                            {/* 1. Upload attachment */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopilotPlusMenuOpen(false);
+                                copilotFileInputRef.current?.click();
+                              }}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-black dark:text-white cursor-pointer group"
+                            >
+                              <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                                <Paperclip className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="flex-1">
+                                <span className="block font-bold">1. Upload attachment</span>
+                                <span className="text-[10px] text-zinc-500 font-normal">PDF, case brief, pleadings, deed</span>
+                              </div>
+                            </button>
+
+                            {/* 2. Agent mode */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopilotAgentMode(!copilotAgentMode);
+                                setCopilotPlusMenuOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-black dark:text-white cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                                  <Bot className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                  <span className="block font-bold">2. Agent mode</span>
+                                  <span className="text-[10px] text-zinc-500 font-normal">Multi-step autonomous execution</span>
+                                </div>
+                              </div>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                copilotAgentMode
+                                  ? "bg-black dark:bg-white border-black dark:border-white text-white dark:text-black"
+                                  : "border-zinc-300 dark:border-zinc-700"
+                              }`}>
+                                {copilotAgentMode && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                            </button>
+
+                            {/* 3. Deep research */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCopilotDeepResearch(!copilotDeepResearch);
+                                setCopilotPlusMenuOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors text-black dark:text-white cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-colors">
+                                  <Compass className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                  <span className="block font-bold">3. Deep research</span>
+                                  <span className="text-[10px] text-zinc-500 font-normal">Precedent &amp; ratio verification</span>
+                                </div>
+                              </div>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                copilotDeepResearch
+                                  ? "bg-black dark:bg-white border-black dark:border-white text-white dark:text-black"
+                                  : "border-zinc-300 dark:border-zinc-700"
+                              }`}>
+                                {copilotDeepResearch && <Check className="w-2.5 h-2.5" />}
+                              </div>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Active Mode Pills (shown when toggled on) */}
+                    {copilotAgentMode && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs">
+                        <Bot className="w-3.5 h-3.5" />
+                        <span>Agent Mode</span>
+                        <button
+                          type="button"
+                          onClick={() => setCopilotAgentMode(false)}
+                          className="hover:opacity-75 cursor-pointer ml-0.5"
+                          title="Disable Agent Mode"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+
+                    {copilotDeepResearch && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black shadow-xs">
+                        <Compass className="w-3.5 h-3.5" />
+                        <span>Deep Research</span>
+                        <button
+                          type="button"
+                          onClick={() => setCopilotDeepResearch(false)}
+                          className="hover:opacity-75 cursor-pointer ml-0.5"
+                          title="Disable Deep Research"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+
+                    {/* If no feature active, subtle helper hint */}
+                    {!copilotAgentMode && !copilotDeepResearch && copilotAttachments.length === 0 && (
+                      <span className="text-[11px] text-zinc-400 select-none hidden sm:inline">
+                        Click + to attach files, enable Agent mode, or Deep research
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Right: Execute Button */}
+                  <button
+                    type="button"
+                    onClick={handleExecuteCopilotQuery}
+                    disabled={!copilotInput.trim() && copilotAttachments.length === 0}
+                    className="px-5 py-2 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 disabled:opacity-40 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ml-auto"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Execute</span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

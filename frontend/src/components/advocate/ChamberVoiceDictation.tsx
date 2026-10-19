@@ -123,16 +123,20 @@ export function ChamberVoiceDictation({
   const [activePlaybackId, setActivePlaybackId] = useState<string | null>(null);
   const [isPlayingRecorded, setIsPlayingRecorded] = useState(false);
 
-  // Stored notes list
-  const [savedNotes, setSavedNotes] = useState<AudioNote[]>(() => {
+  // Stored notes list (client-side hydration safe)
+  const [savedNotes, setSavedNotes] = useState<AudioNote[]>(SAMPLE_NOTES);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load persisted notes on client mount
+  useEffect(() => {
     try {
       const local = localStorage.getItem("wakheel_chamber_dictations");
       if (local) {
-        return JSON.parse(local);
+        setSavedNotes(JSON.parse(local));
       }
     } catch {}
-    return SAMPLE_NOTES;
-  });
+    setIsLoaded(true);
+  }, []);
 
   // MediaRecorder refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -142,10 +146,11 @@ export function ChamberVoiceDictation({
 
   // Persist notes
   useEffect(() => {
+    if (!isLoaded) return;
     try {
       localStorage.setItem("wakheel_chamber_dictations", JSON.stringify(savedNotes));
     } catch {}
-  }, [savedNotes]);
+  }, [savedNotes, isLoaded]);
 
   // Clean up audio blob URL on unmount
   useEffect(() => {

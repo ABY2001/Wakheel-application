@@ -1429,7 +1429,7 @@ export function AdvocateWorkspaceView() {
           {/* VIEW 1: Chamber Audit History & Activity Logs (Screenshot 1)   */}
           {/* ============================================================== */}
           {activeTab === "audit-history" && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
                   Chamber Audit History &amp; Activity Logs
@@ -1943,7 +1943,7 @@ export function AdvocateWorkspaceView() {
           {/* VIEW 3: Wakheel AI Legal Copilot (Screenshot 3)                */}
           {/* ============================================================== */}
           {isCopilot && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -1961,7 +1961,7 @@ export function AdvocateWorkspaceView() {
               </div>
 
               {/* The 7 Copilot Mode Tabs: Ask | Research | Analyze | Draft | Review | Verify | Translate */}
-              <div className="p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 grid grid-cols-3 sm:grid-cols-7 gap-1 text-xs font-bold text-center">
+              <div className="p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 grid grid-cols-3 sm:grid-cols-7 gap-1.5 text-xs sm:text-sm font-bold text-center">
                 {(["Ask", "Research", "Analyze", "Draft", "Review", "Verify", "Translate"] as const).map((mode) => (
                   <button
                     key={mode}
@@ -2401,10 +2401,10 @@ export function AdvocateWorkspaceView() {
                         </div>
                       )}
                       <div
-                        className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed max-w-2xl space-y-3 ${
+                        className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed space-y-3 ${
                           msg.role === "user"
-                            ? "bg-black text-white dark:bg-white dark:text-black font-medium"
-                            : "bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                            ? "bg-black text-white dark:bg-white dark:text-black font-medium max-w-2xl sm:max-w-3xl ml-auto"
+                            : "bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white flex-1 w-full max-w-5xl xl:max-w-6xl"
                         }`}
                       >
                         {/* If User message has attachments */}
@@ -2485,18 +2485,20 @@ export function AdvocateWorkspaceView() {
 
                             <div className="space-y-2 text-xs">
                               <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Binding Precedent Ratios:</span>
-                              {msg.deepResearchData.precedents.map((prec, pIdx) => (
-                                <div key={pIdx} className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-bold text-black dark:text-white text-xs">{prec.citation}</span>
-                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 font-semibold text-black dark:text-white">
-                                      {prec.court}
-                                    </span>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                {msg.deepResearchData.precedents.map((prec, pIdx) => (
+                                  <div key={pIdx} className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-bold text-black dark:text-white text-xs">{prec.citation}</span>
+                                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 font-semibold text-black dark:text-white">
+                                        {prec.court}
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">{prec.ratio}</p>
+                                    <span className="text-[10px] font-mono text-zinc-400 block pt-0.5">{prec.treatment}</span>
                                   </div>
-                                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">{prec.ratio}</p>
-                                  <span className="text-[10px] font-mono text-zinc-400 block pt-0.5">{prec.treatment}</span>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
 
                             <div className="pt-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -2852,7 +2854,7 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW 6: Communications (Inbox, Messages, Chats, Video Meet)    */}
           {isCommunications && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
                   Chamber Communications &amp; Virtual Consults
@@ -2894,7 +2896,7 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW 7: AI Legal Agents (Work Flows & Chamber Skills)          */}
           {isAgents && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
                   AI Legal Agents &amp; Automated Pipelines
@@ -2929,7 +2931,7 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW 8: Knowledge Base (Play Books, Library, Articles)         */}
           {isKnowledgeBase && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="space-y-1">
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
                   Chamber Knowledge Base &amp; Precedent Library
@@ -3202,7 +3204,7 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW: Documentation & Vault                                    */}
           {["legal-drafting", "contract-intelligence", "case-preparation", "chronology-facts", "vault", "office-suite", "compliance"].includes(activeTab) && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-5">
                 <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
                   <div>

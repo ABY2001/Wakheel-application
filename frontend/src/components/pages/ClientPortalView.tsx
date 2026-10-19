@@ -1715,7 +1715,7 @@ export function ClientPortalView() {
           {/* VIEW: Consultations & Chamber Appointments                     */}
           {/* ============================================================== */}
           {(activeTab === "consultations" || activeTab === "appointments") && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
                 <div>
                   <h3 className="text-lg font-bold text-black dark:text-white">Legal Consultations &amp; Chamber Sessions</h3>
@@ -1814,7 +1814,7 @@ export function ClientPortalView() {
           {/* VIEW: Statutory Legal Notices                                  */}
           {/* ============================================================== */}
           {activeTab === "legal-notices" && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
                 <div>
                   <h3 className="text-lg font-bold text-black dark:text-white">Statutory Legal Notices</h3>
@@ -2055,7 +2055,7 @@ export function ClientPortalView() {
           {/* VIEW: Wakheel AI Legal Copilot (Navbar Modes + Chatbot Console) */}
           {/* ============================================================== */}
           {isCopilot && (
-            <div className="max-w-5xl mx-auto space-y-6">
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               {/* Pilot Banner matching Screenshot */}
               <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
@@ -2085,7 +2085,7 @@ export function ClientPortalView() {
               </div>
 
               {/* Top Mode Navbar: Ask | Research | Analyze | Draft | Review | Verify | Translate */}
-              <div className="p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 grid grid-cols-3 sm:grid-cols-7 gap-1 text-xs font-bold text-center">
+              <div className="p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 grid grid-cols-3 sm:grid-cols-7 gap-1.5 text-xs sm:text-sm font-bold text-center">
                 {(["Ask", "Research", "Analyze", "Draft", "Review", "Verify", "Translate"] as const).map((mode) => (
                   <button
                     key={mode}
@@ -2414,10 +2414,10 @@ export function ClientPortalView() {
                         </div>
                       )}
                       <div
-                        className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed max-w-2xl space-y-3 ${
+                        className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed space-y-3 ${
                           msg.role === "user"
-                            ? "bg-black text-white dark:bg-white dark:text-black font-medium"
-                            : "bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                            ? "bg-black text-white dark:bg-white dark:text-black font-medium max-w-2xl sm:max-w-3xl ml-auto"
+                            : "bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white flex-1 w-full max-w-5xl xl:max-w-6xl"
                         }`}
                       >
                         {msg.attachments && msg.attachments.length > 0 && (
@@ -2486,7 +2486,7 @@ export function ClientPortalView() {
                                 <span className="font-bold text-black dark:text-white">• {msg.deepResearchData.precedents.length} key precedents</span>
                               </div>
                             </div>
-                            <div className="space-y-2 text-xs">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
                               {msg.deepResearchData.precedents.map((prec, pIdx) => (
                                 <div key={pIdx} className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
                                   <div className="flex items-center justify-between">

@@ -9,6 +9,7 @@ import {
 } from "@/components/advocate/AdvocateOnboardingQuestionnaire";
 import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
 import { CaseChronologyBuilder } from "@/components/advocate/CaseChronologyBuilder";
+import { ChamberVoiceDictation } from "@/components/advocate/ChamberVoiceDictation";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ElectronicConsentView } from "@/components/advocate/ElectronicConsentView";
 import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
@@ -107,6 +108,7 @@ import {
   Paperclip,
   Copy,
   Check,
+  Mic,
 } from "lucide-react";
 
 interface FloatingTooltipData {
@@ -638,10 +640,10 @@ export function AdvocateWorkspaceView() {
         },
         {
           id: "recordings",
-          label: "Recordings",
-          subtitle: "Archived hearings & dictations",
-          whatItDoes: "Stores audio/video dictations, witness briefings, and virtual hearing archives.",
-          icon: Award,
+          label: "Voice Dictation",
+          subtitle: "Instant audio notes & speech-to-text",
+          whatItDoes: "Instant courtroom audio dictations, speech-to-text legal transcripts, and hearing memos.",
+          icon: Mic,
         },
       ],
     },
@@ -984,7 +986,8 @@ export function AdvocateWorkspaceView() {
   const isResearch = ["indian-legal-research", "top-stories", "news-updates", "research-articles", "wakheel-digest"].includes(activeTab);
   const isCopilot = ["ai-copilot", "ask", "copilot"].includes(activeTab);
   const isAgents = ["workflows", "chamber-skills"].includes(activeTab);
-  const isCommunications = ["inbox", "messages", "chats", "video-meet", "recordings"].includes(activeTab);
+  const isRecordings = ["recordings", "voice-dictation", "audio-memos"].includes(activeTab);
+  const isCommunications = ["inbox", "messages", "chats", "video-meet"].includes(activeTab);
   const isKnowledgeBase = ["playbooks", "kb-articles", "library", "kb-research"].includes(activeTab);
 
   const displayFullName = advocateProfile
@@ -2861,7 +2864,15 @@ export function AdvocateWorkspaceView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW 6: Communications (Inbox, Messages, Chats, Video Meet)    */}
+          {/* VIEW 6A: Chamber Voice Dictations & Audio Notes               */}
+          {isRecordings && (
+            <ChamberVoiceDictation
+              currentMatter={selectedMatter}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW 6B: Communications (Inbox, Messages, Chats, Video Meet)   */}
           {isCommunications && (
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="space-y-1">
@@ -2878,9 +2889,19 @@ export function AdvocateWorkspaceView() {
                   <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500">
                     LIVE COMMUNICATION CHANNELS
                   </span>
-                  <button className="px-4 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-                    Start Video Consultation
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("recordings")}
+                      className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Mic className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Record Dictation</span>
+                    </button>
+                    <button className="px-4 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
+                      Start Video Consultation
+                    </button>
+                  </div>
                 </div>
 
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-900 text-xs">

@@ -64,6 +64,29 @@ export function AuthModal({
                 "wakheel_user",
                 JSON.stringify({ email, fullName, role: "advocate" })
               );
+
+              const registered = JSON.parse(localStorage.getItem("wakheel_registered_advocates") || "[]");
+              let cleanAdvName = (fullName || email.split("@")[0] || "Advocate").trim();
+              if (!cleanAdvName.toLowerCase().startsWith("adv.") && !cleanAdvName.toLowerCase().startsWith("adv ")) {
+                cleanAdvName = `Adv. ${cleanAdvName}`;
+              }
+              const advItem = {
+                id: `adv_${Date.now()}`,
+                name: cleanAdvName,
+                title: "Advocate • High Court of Kerala",
+                location: "Ernakulam, Kerala",
+                experience: "10+ Years Experience",
+                rating: 5.0,
+                reviewsCount: 1,
+                matchScore: 99,
+                specialties: ["Civil Litigation", "Constitutional Writs", "Commercial Law"],
+                fee: "₹1,500 / session",
+                email: email.trim(),
+                barCouncilNumber: "K/001429/2024",
+                isCurrentUser: true,
+              };
+              const updatedList = [advItem, ...registered.filter((a: any) => a.email !== email.trim())];
+              localStorage.setItem("wakheel_registered_advocates", JSON.stringify(updatedList));
             }
           } catch {
             // ignore

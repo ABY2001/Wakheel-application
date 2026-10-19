@@ -322,6 +322,33 @@ export function AdvocateOnboardingQuestionnaire({
       try {
         localStorage.setItem("wakheel_advocate_profile", JSON.stringify(finalData));
         localStorage.setItem("wakheel_advocate_onboarded", "true");
+
+        // Sync into registered advocates directory
+        const registered = JSON.parse(localStorage.getItem("wakheel_registered_advocates") || "[]");
+        const fullName = `${finalData.firstName || ""} ${finalData.lastName || ""}`.trim() || email.split("@")[0];
+        let cleanAdvName = fullName.trim();
+        if (!cleanAdvName.toLowerCase().startsWith("adv.") && !cleanAdvName.toLowerCase().startsWith("adv ")) {
+          cleanAdvName = `Adv. ${cleanAdvName}`;
+        }
+        const advItem = {
+          id: `adv_${Date.now()}`,
+          name: cleanAdvName,
+          title: "Advocate • High Court of Kerala (Ernakulam)",
+          location: "Ernakulam, Kerala",
+          experience: "10+ Years Experience",
+          rating: 5.0,
+          reviewsCount: 1,
+          matchScore: 99,
+          specialties: finalData.practiceAreas && finalData.practiceAreas.length > 0
+            ? finalData.practiceAreas
+            : ["Civil Litigation", "Constitutional Writs", "Commercial Law"],
+          fee: "₹1,500 / session",
+          email: email.trim(),
+          barCouncilNumber: "K/001429/2024",
+          isCurrentUser: true,
+        };
+        const updatedList = [advItem, ...registered.filter((a: any) => a.email !== email.trim())];
+        localStorage.setItem("wakheel_registered_advocates", JSON.stringify(updatedList));
       } catch {
         // Ignore storage errors
       }

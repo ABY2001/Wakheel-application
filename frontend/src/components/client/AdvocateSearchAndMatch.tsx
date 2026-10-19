@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Search, MapPin, Scale, Star, ShieldCheck, Calendar, MessageSquare, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, MapPin, Scale, Star, ShieldCheck, Calendar, MessageSquare, Sparkles, UserCheck } from "lucide-react";
 import { citizenApi } from "@/lib/api";
 
 export interface Advocate {
@@ -16,6 +16,9 @@ export interface Advocate {
   specialties: string[];
   fee: string;
   avatarUrl?: string;
+  email?: string;
+  barCouncilNumber?: string;
+  isCurrentUser?: boolean;
 }
 
 export const mockAdvocates: Advocate[] = [
@@ -30,6 +33,7 @@ export const mockAdvocates: Advocate[] = [
     matchScore: 98,
     specialties: ["Tenancy Disputes", "Real Estate Agreements", "Deposit Recovery"],
     fee: "₹2,500 / session",
+    barCouncilNumber: "K/001429/2012",
   },
   {
     id: "adv-2",
@@ -42,6 +46,7 @@ export const mockAdvocates: Advocate[] = [
     matchScore: 94,
     specialties: ["Contract Review", "Sublease Indemnity", "Commercial Disputes"],
     fee: "₹3,000 / session",
+    barCouncilNumber: "K/000892/2008",
   },
   {
     id: "adv-3",
@@ -54,12 +59,81 @@ export const mockAdvocates: Advocate[] = [
     matchScore: 89,
     specialties: ["Matrimonial Law", "Property Partition", "Consumer Complaints"],
     fee: "₹2,000 / session",
+    barCouncilNumber: "K/002105/2017",
   },
 ];
 
 interface AdvocateSearchAndMatchProps {
   onSelectAdvocateToBook?: (advocate: Advocate) => void;
   onRequestConsultation?: (advocate: Advocate) => void;
+}
+
+function getLocallyStoredAdvocates(): Advocate[] {
+  if (typeof window === "undefined") return [];
+  const localList: Advocate[] = [];
+
+  try {
+    // 1. Check list of advocates registered on this browser
+    const rawRegistered = localStorage.getItem("wakheel_registered_advocates");
+    if (rawRegistered) {
+      const parsed = JSON.parse(rawRegistered);
+      if (Array.isArray(parsed)) {
+        localList.push(...parsed);
+      }
+    }
+
+    // 2. Check current logged-in user if advocate
+    const rawUser = localStorage.getItem("wakheel_user");
+    if (rawUser) {
+      const u = JSON.parse(rawUser);
+      if (u && (u.role === "advocate" || u.accountType === "independent_advocate")) {
+        const rawProfile = localStorage.getItem("wakheel_advocate_profile");
+        const prof = rawProfile ? JSON.parse(rawProfile) : null;
+
+        let cleanName = (u.fullName || prof?.fullName || "Advocate").trim();
+        if (!cleanName.toLowerCase().startsWith("adv.") && !cleanName.toLowerCase().startsWith("adv ")) {
+          cleanName = `Adv. ${cleanName}`;
+        }
+
+        const barNo = prof?.barCouncilNumber || u.barCouncilId || "K/001429/2024";
+        const exp = prof?.experienceYears ? `${prof.experienceYears}+ Years Experience` : "8+ Years Experience";
+        const court = prof?.primaryCourt || u.additionalDetails?.practiceCourt || "High Court of Kerala (Ernakulam)";
+        const location = prof?.chamberAddress
+          ? prof.chamberAddress.split(",").slice(-2).join(",").trim()
+          : "Ernakulam, Kerala";
+        const specs =
+          Array.isArray(prof?.practiceAreas) && prof.practiceAreas.length > 0
+            ? prof.practiceAreas
+            : Array.isArray(prof?.specializations) && prof.specializations.length > 0
+            ? prof.specializations
+            : ["Civil Litigation", "Constitutional Writs", "Commercial Law"];
+        const fee = prof?.consultationFee ? `₹${Number(prof.consultationFee).toLocaleString()} / session` : "₹1,500 / session";
+
+        const currentAdv: Advocate = {
+          id: u.id || u._id || "current_advocate_user",
+          name: cleanName,
+          title: `Advocate • ${court}`,
+          location,
+          experience: exp,
+          rating: prof?.rating || 5.0,
+          reviewsCount: prof?.reviewsCount || 1,
+          matchScore: 99,
+          specialties: specs,
+          fee,
+          email: u.email,
+          barCouncilNumber: barNo,
+          isCurrentUser: true,
+        };
+
+        // Put current user at the top of local list
+        localList.unshift(currentAdv);
+      }
+    }
+  } catch (err) {
+    console.warn("Could not read local advocate data:", err);
+  }
+
+  return localList;
 }
 
 export function AdvocateSearchAndMatch({
@@ -71,65 +145,121 @@ export function AdvocateSearchAndMatch({
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
 
   useEffect(() => {
+    const localAdvocates = getLocallyStoredAdvocates();
+
+    const standardize = (a: any): Advocate => {
+      let name = (a.fullName || a.name || "Advocate").trim();
+      if (!name.toLowerCase().startsWith("adv.") && !name.toLowerCase().startsWith("adv ")) {
+        name = `Adv. ${name}`;
+      }
+      const specialties = Array.isArray(a.specializations)
+        ? a.specializations
+        : Array.isArray(a.specialties)
+        ? a.specialties
+        : a.specialization
+        ? [a.specialization]
+        : ["Civil Law", "Litigation"];
+
+      const location = a.chamberAddress
+        ? a.chamberAddress.split(",").slice(-2).join(",").trim()
+        : a.location || `${a.district || "Ernakulam"}, Kerala`;
+
+      const experience =
+        typeof a.experienceYears === "number"
+          ? `${a.experienceYears}+ Years Experience`
+          : a.experience || "10+ Years Experience";
+
+      const fee =
+        typeof a.consultationFee === "number"
+          ? `₹${a.consultationFee.toLocaleString()} / session`
+          : a.fee || "₹1,500 / session";
+
+      return {
+        id: a.id || a._id || `adv_${Math.random()}`,
+        name,
+        title: a.title || (a.primaryCourt ? `Advocate • ${a.primaryCourt}` : "Advocate, High Court of Kerala"),
+        location,
+        experience,
+        rating: typeof a.rating === "number" ? a.rating : 4.9,
+        reviewsCount: typeof a.reviewCount === "number" ? a.reviewCount : a.reviewsCount || 48,
+        matchScore: a.matchScore || (a.isVerified ? 98 : 92),
+        specialties,
+        fee,
+        avatarUrl: a.avatarUrl,
+        email: a.email,
+        barCouncilNumber: a.barCouncilNumber,
+      };
+    };
+
+    const mergeUnique = (base: Advocate[], additions: Advocate[]) => {
+      const seen = new Set<string>();
+      const result: Advocate[] = [];
+
+      // Add local additions first (e.g. current logged in advocate)
+      for (const adv of additions) {
+        const key = (adv.email || adv.name).toLowerCase().replace(/^adv\.\s*/, "");
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(adv);
+        }
+      }
+
+      // Then append base advocates
+      for (const adv of base) {
+        const key = (adv.email || adv.name).toLowerCase().replace(/^adv\.\s*/, "");
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(adv);
+        }
+      }
+
+      return result;
+    };
+
+    // Immediately show local advocates merged with defaults while network fetches
+    if (localAdvocates.length > 0) {
+      setAdvocates(mergeUnique(mockAdvocates, localAdvocates));
+    }
+
     citizenApi
       .getAdvocates()
       .then((res) => {
         if (res && res.advocates && Array.isArray(res.advocates) && res.advocates.length > 0) {
-          const mapped: Advocate[] = res.advocates.map((a: any) => {
-            const name = a.fullName || a.name || "Advocate";
-            const specialties = Array.isArray(a.specializations)
-              ? a.specializations
-              : Array.isArray(a.specialties)
-              ? a.specialties
-              : a.specialization
-              ? [a.specialization]
-              : ["Civil Law"];
-
-            const location = a.chamberAddress
-              ? a.chamberAddress.split(",").slice(-2).join(",").trim()
-              : a.location || `${a.district || "Ernakulam"}, Kerala`;
-
-            const experience = typeof a.experienceYears === "number"
-              ? `${a.experienceYears}+ Years Experience`
-              : a.experience || "10+ Years Experience";
-
-            const fee = typeof a.consultationFee === "number"
-              ? `₹${a.consultationFee.toLocaleString()} / session`
-              : a.fee || "₹2,000 / session";
-
-            return {
-              id: a.id || a._id || `adv_${Math.random()}`,
-              name,
-              title: a.title || (a.primaryCourt ? `Advocate • ${a.primaryCourt}` : "Advocate, High Court of Kerala"),
-              location,
-              experience,
-              rating: typeof a.rating === "number" ? a.rating : 4.9,
-              reviewsCount: typeof a.reviewCount === "number" ? a.reviewCount : a.reviewsCount || 48,
-              matchScore: a.matchScore || (a.isVerified ? 98 : 92),
-              specialties,
-              fee,
-              avatarUrl: a.avatarUrl,
-            };
-          });
-          setAdvocates(mapped);
+          const mapped = res.advocates.map(standardize);
+          setAdvocates(mergeUnique(mapped, localAdvocates));
+        } else if (localAdvocates.length > 0) {
+          setAdvocates(mergeUnique(mockAdvocates, localAdvocates));
         }
       })
       .catch(() => {
-        // Fall back gracefully to mockAdvocates
+        setAdvocates(mergeUnique(mockAdvocates, localAdvocates));
       });
   }, []);
+
+  // Compute all available specialties from advocates dynamically
+  const allSpecialties = useMemo(() => {
+    const set = new Set<string>();
+    advocates.forEach((adv) => {
+      (adv.specialties || []).forEach((s) => {
+        if (s && s.trim()) set.add(s.trim());
+      });
+    });
+    return Array.from(set).sort();
+  }, [advocates]);
 
   const filteredAdvocates = advocates.filter((adv) => {
     const name = (adv?.name || "").toLowerCase();
     const specs = Array.isArray(adv?.specialties) ? adv.specialties : [];
     const loc = (adv?.location || "").toLowerCase();
+    const barNo = (adv?.barCouncilNumber || "").toLowerCase();
     const term = (searchTerm || "").toLowerCase().trim();
 
     const matchesSearch =
       !term ||
       name.includes(term) ||
-      specs.some((s) => (s || "").toLowerCase().includes(term)) ||
-      loc.includes(term);
+      barNo.includes(term) ||
+      loc.includes(term) ||
+      specs.some((s) => (s || "").toLowerCase().includes(term));
 
     const matchesSpecialty =
       selectedSpecialty === "all" ||
@@ -179,10 +309,12 @@ export function AdvocateSearchAndMatch({
               onChange={(e) => setSelectedSpecialty(e.target.value)}
               className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl px-4 py-3.5 text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
             >
-              <option value="all">All Practice Areas</option>
-              <option value="tenancy">Tenancy &amp; Real Estate</option>
-              <option value="contract">Contracts &amp; Business</option>
-              <option value="family">Family Law</option>
+              <option value="all">All Practice Areas ({advocates.length})</option>
+              {allSpecialties.map((spec) => (
+                <option key={spec} value={spec}>
+                  {spec}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -193,7 +325,11 @@ export function AdvocateSearchAndMatch({
         {filteredAdvocates.map((adv) => (
           <div
             key={adv.id}
-            className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-6 space-y-5 hover:border-black dark:hover:border-white transition-all flex flex-col justify-between shadow-xs"
+            className={`rounded-2xl border ${
+              adv.isCurrentUser
+                ? "border-black dark:border-white ring-1 ring-black dark:ring-white"
+                : "border-zinc-200 dark:border-zinc-800"
+            } bg-white dark:bg-black p-6 space-y-5 hover:border-black dark:hover:border-white transition-all flex flex-col justify-between shadow-xs`}
           >
             <div className="space-y-4">
               {/* Header: Name, Match Pill, Rating */}
@@ -203,11 +339,24 @@ export function AdvocateSearchAndMatch({
                     {(adv.name || "Advocate").split(" ")[1]?.[0] || (adv.name || "A")[0] || "A"}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-black dark:text-white flex items-center gap-1.5">
-                      <span>{adv.name}</span>
-                      <ShieldCheck className="w-4 h-4 text-black dark:text-white" />
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-lg font-bold text-black dark:text-white flex items-center gap-1.5">
+                        <span>{adv.name}</span>
+                        <ShieldCheck className="w-4 h-4 text-black dark:text-white" />
+                      </h3>
+                      {adv.isCurrentUser && (
+                        <span className="px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                          <UserCheck className="w-3 h-3" />
+                          Your Profile
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-zinc-500">{adv.title}</p>
+                    {adv.barCouncilNumber && (
+                      <p className="text-[11px] font-mono text-zinc-400 mt-0.5">
+                        Bar Reg: {adv.barCouncilNumber}
+                      </p>
+                    )}
                   </div>
                 </div>
 

@@ -700,14 +700,185 @@ export const devStore = {
 
   // --- Advocates Directory ---
   getAdvocates() {
-    return DEFAULT_ADVOCATES;
+    const users = this.getUsers();
+    const profiles = readFile("dev_advocate_profiles.json", DEFAULT_ADVOCATE_PROFILES);
+
+    // Filter all registered users who have role 'advocate' or accountType 'independent_advocate'
+    const advocateUsers = users.filter(
+      (u) => u.role === "advocate" || u.accountType === "independent_advocate"
+    );
+
+    // Map profiles by userId, email, and _id for fast lookup
+    const profileMap = new Map();
+    profiles.forEach((p) => {
+      if (p.userId) profileMap.set(p.userId.toString(), p);
+      if (p.email) profileMap.set(p.email.toLowerCase(), p);
+      if (p._id) profileMap.set(p._id.toString(), p);
+    });
+
+    const registeredAdvocates = advocateUsers.map((u, index) => {
+      const uId = u._id || u.id || `adv_user_${index}`;
+      const email = u.email ? u.email.toLowerCase() : "";
+      const profile = profileMap.get(uId) || (email ? profileMap.get(email) : null);
+
+      let cleanName = (u.fullName || profile?.fullName || "Advocate").trim();
+      if (!cleanName.toLowerCase().startsWith("adv.") && !cleanName.toLowerCase().startsWith("adv ")) {
+        cleanName = `Adv. ${cleanName}`;
+      }
+
+      // Generate a stable Bar Council ID if not present
+      const pseudoHash = Math.abs(
+        (email || cleanName).split("").reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)
+      );
+      const defaultBarNo = `K/00${(pseudoHash % 9000) + 1000}/${2010 + (pseudoHash % 14)}`;
+
+      const barCouncilNumber =
+        profile?.barCouncilNumber ||
+        u.barCouncilId ||
+        u.barCouncilNumber ||
+        defaultBarNo;
+
+      const experienceYears =
+        typeof profile?.experienceYears === "number"
+          ? profile.experienceYears
+          : 6 + (pseudoHash % 15);
+
+      const primaryCourt =
+        profile?.primaryCourt ||
+        u.additionalDetails?.practiceCourt ||
+        (u.stateBarCouncil ? `${u.stateBarCouncil} & High Court` : "High Court of Kerala (Ernakulam)");
+
+      const chamberAddress =
+        profile?.chamberAddress ||
+        (u.stateBarCouncil
+          ? `Chambers, High Court Road, ${u.stateBarCouncil.replace("Bar Council of ", "")}`
+          : "Chamber Suite, High Court Road, Marine Drive, Kochi 682031");
+
+      const location =
+        profile?.chamberAddress
+          ? profile.chamberAddress.split(",").slice(-2).join(",").trim()
+          : "Ernakulam, Kerala";
+
+      const specializations =
+        profile?.specializations && profile.specializations.length > 0
+          ? profile.specializations
+          : ["Civil Litigation", "Constitutional Writs", "Commercial Law"];
+
+      const consultationFee =
+        typeof profile?.consultationFee === "number"
+          ? profile.consultationFee
+          : 1200 + (pseudoHash % 10) * 150;
+
+      return {
+        id: uId,
+        _id: uId,
+        userId: uId,
+        fullName: cleanName,
+        name: cleanName,
+        email: u.email,
+        barCouncilNumber,
+        experienceYears,
+        experience: `${experienceYears}+ Years Experience`,
+        primaryCourt,
+        chamberAddress,
+        location,
+        specializations,
+        specialties: specializations,
+        languages: profile?.languages || ["English", "Malayalam"],
+        consultationFee,
+        fee: `₹${consultationFee.toLocaleString()} / session`,
+        rating: profile?.rating || 4.9,
+        reviewCount: profile?.reviewCount || 18 + (pseudoHash % 30),
+        reviewsCount: profile?.reviewCount || 18 + (pseudoHash % 30),
+        matchScore: profile?.matchScore || 98,
+        isVerified: true,
+        availableToday: true,
+        bio: profile?.bio || `Practicing Advocate before the ${primaryCourt}.`,
+        upiId: profile?.upiId || `${(email || "counsel").split("@")[0]}@okaxis`,
+      };
+    });
+
+    // Merge registeredAdvocates with DEFAULT_ADVOCATES, deduplicating
+    const existingIds = new Set(registeredAdvocates.map((a) => a.id));
+    const existingEmails = new Set(
+      registeredAdvocates.map((a) => a.email?.toLowerCase()).filter(Boolean)
+    );
+    const existingNames = new Set(
+      registeredAdvocates.map((a) => a.name.toLowerCase().replace(/^adv\.\s*/, ""))
+    );
+
+    const remainingSeeds = DEFAULT_ADVOCATES.filter((seed) => {
+      const normName = (seed.fullName || seed.name || "").toLowerCase().replace(/^adv\.\s*/, "");
+      const normEmail = (seed.email || "").toLowerCase();
+      if (existingIds.has(seed.id)) return false;
+      if (normEmail && existingEmails.has(normEmail)) return false;
+      if (normName && existingNames.has(normName)) return false;
+      return true;
+    });
+
+    const normalizedSeeds = remainingSeeds.map((seed) => ({
+      ...seed,
+      name: seed.fullName || seed.name,
+      specialties: seed.specializations || seed.specialties || ["Civil Law"],
+      location: seed.chamberAddress
+        ? seed.chamberAddress.split(",").slice(-2).join(",").trim()
+        : seed.location || "Ernakulam, Kerala",
+      experience:
+        typeof seed.experienceYears === "number"
+          ? `${seed.experienceYears}+ Years Experience`
+          : seed.experience || "10+ Years Experience",
+      fee:
+        typeof seed.consultationFee === "number"
+          ? `₹${seed.consultationFee.toLocaleString()} / session`
+          : seed.fee || "₹1,500 / session",
+      reviewsCount: seed.reviewCount || seed.reviewsCount || 38,
+      matchScore: seed.matchScore || (seed.isVerified ? 98 : 90),
+    }));
+
+    // Newly registered / logged in advocates appear at the front
+    return [...registeredAdvocates, ...normalizedSeeds];
   },
 
   // --- Advocate Profile & Chambers ---
   getAdvocateProfile(advocateId = "adv_1") {
     const profiles = readFile("dev_advocate_profiles.json", DEFAULT_ADVOCATE_PROFILES);
-    const profile = profiles.find((p) => p.userId === advocateId || p._id === advocateId);
-    return profile || DEFAULT_ADVOCATE_PROFILES[0];
+    let profile = profiles.find((p) => p.userId === advocateId || p._id === advocateId);
+    if (!profile) {
+      const users = this.getUsers();
+      const user = users.find(
+        (u) => u._id === advocateId || u.id === advocateId || u.email === advocateId
+      );
+      if (user) {
+        let cleanName = (user.fullName || "Advocate").trim();
+        if (!cleanName.toLowerCase().startsWith("adv.") && !cleanName.toLowerCase().startsWith("adv ")) {
+          cleanName = `Adv. ${cleanName}`;
+        }
+        profile = {
+          _id: "prof_" + user._id,
+          userId: user._id,
+          fullName: cleanName,
+          email: user.email,
+          phone: user.phone || "+91 98470 12345",
+          barCouncilNumber: user.barCouncilId || "K/001429/2024",
+          experienceYears: 10,
+          primaryCourt: user.additionalDetails?.practiceCourt || "High Court of Kerala (Ernakulam)",
+          secondaryCourts: ["District Court, Ernakulam", "Sub Court, Ernakulam"],
+          chamberAddress: "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+          specializations: ["Constitutional Writs", "Land Reforms & Property", "Commercial Arbitration"],
+          languages: ["English", "Malayalam"],
+          consultationFee: 1500,
+          rating: 4.9,
+          reviewCount: 38,
+          isVerified: true,
+          availableToday: true,
+          bio: "Practicing Advocate registered with the Bar Council.",
+          upiId: `${(user.email || "counsel").split("@")[0]}@okaxis`,
+        };
+        profiles.push(profile);
+        writeFile("dev_advocate_profiles.json", profiles);
+      }
+    }
+    return profile || profiles[0] || DEFAULT_ADVOCATE_PROFILES[0];
   },
 
   updateAdvocateProfile(advocateId = "adv_1", updates = {}) {

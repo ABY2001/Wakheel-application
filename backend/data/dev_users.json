@@ -14,7 +14,7 @@
     "fullName": "gggg",
     "email": "abyworkmail123@gmail.com",
     "password": "$2a$10$eb2U7hOcHBlJ6vehAXFKKe5y37Zwqzhh12G7fgQ.ZqQmMUbJzjeem",
-    "role": "cs",
+    "role": "client",
     "verifyMethod": "email",
     "isVerified": false,
     "createdAt": "2026-10-12T04:07:31.046Z",

@@ -1,5 +1,36 @@
 [
   {
+    "_id": "grv_1792381766100",
+    "citizenId": "dev_1791778051045",
+    "title": "aaa",
+    "description": "aaa",
+    "category": "Property & Land Disputes",
+    "jurisdictionDistrict": "Ernakulam",
+    "preferredCourt": "High Court of Kerala / District Court",
+    "urgencyLevel": "Medium (Standard Filing)",
+    "status": "triage_analyzed",
+    "aiTriage": {
+      "summary": "Prima facie real estate & immovable property issue within Ernakulam. Discovered potential violations regarding title verification and boundaries.",
+      "applicableActs": [
+        "Kerala Land Reforms Act, 1963 (Section 85)",
+        "Specific Relief Act, 1963 (Section 5 & 6 for recovery of possession)",
+        "Transfer of Property Act, 1882",
+        "Indian Telegraph Act, 1885 (Section 10/16 if utility lines involved)"
+      ],
+      "suggestedRemedies": [
+        "Issue formal statutory Legal Notice to adversary prior to institution of suit",
+        "File Suit for Permanent Prohibitory Injunction before the Munsiff Court",
+        "Apply for Advocate Commissioner inspection to prepare mahazar and sketch"
+      ],
+      "estimatedCourtFee": "₹1,500 - ₹5,000 as per Kerala Court Fees and Suits Valuation Act, 1959",
+      "recommendedSpecialization": "Civil & Land Reforms Advocate",
+      "jurisdictionForum": "Munsiff Court / Sub Court, Ernakulam",
+      "riskScore": "Moderate"
+    },
+    "evidenceDocs": [],
+    "createdAt": "2026-10-19T03:49:26.101Z"
+  },
+  {
     "_id": "grv_1792065324446",
     "citizenId": "default_citizen",
     "title": "Land Encroachment along boundary wall in Aluva",

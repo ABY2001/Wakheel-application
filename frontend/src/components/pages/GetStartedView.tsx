@@ -272,6 +272,30 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
         localStorage.removeItem("wakheel_advocate_onboarded");
         localStorage.removeItem("wakheel_advocate_profile");
 
+        try {
+          const registered = JSON.parse(localStorage.getItem("wakheel_registered_advocates") || "[]");
+          const cleanAdvName = fullName.trim().toLowerCase().startsWith("adv.") ? fullName.trim() : `Adv. ${fullName.trim()}`;
+          const newAdvItem = {
+            id: userPayload.id || `adv_${Date.now()}`,
+            name: cleanAdvName,
+            title: `Advocate • ${practiceCourt || "High Court of Kerala (Ernakulam)"}`,
+            location: stateBarCouncil ? `${stateBarCouncil.replace("Bar Council of ", "")}, Kerala` : "Ernakulam, Kerala",
+            experience: "8+ Years Experience",
+            rating: 5.0,
+            reviewsCount: 1,
+            matchScore: 99,
+            specialties: ["Civil Litigation", "Constitutional Writs", "Commercial Law"],
+            fee: "₹1,500 / session",
+            email: email.trim(),
+            barCouncilNumber: barCouncilId.trim(),
+            isCurrentUser: true,
+          };
+          const updatedList = [newAdvItem, ...registered.filter((a: any) => a.email !== email.trim())];
+          localStorage.setItem("wakheel_registered_advocates", JSON.stringify(updatedList));
+        } catch {
+          // ignore storage errors
+        }
+
         setTimeout(() => {
           setIsSubmitting(false);
           router.push("/advocate-workspace");
@@ -376,6 +400,34 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
           router.push("/client-portal");
         } else if (loginRole === "advocate") {
           localStorage.removeItem("wakheel_advocate_first_signup");
+          try {
+            const registered = JSON.parse(localStorage.getItem("wakheel_registered_advocates") || "[]");
+            const rawProf = localStorage.getItem("wakheel_advocate_profile");
+            const prof = rawProf ? JSON.parse(rawProf) : null;
+            let cleanAdvName = (userPayload.fullName || email.split("@")[0]).trim();
+            if (!cleanAdvName.toLowerCase().startsWith("adv.") && !cleanAdvName.toLowerCase().startsWith("adv ")) {
+              cleanAdvName = `Adv. ${cleanAdvName}`;
+            }
+            const loggedInAdvItem = {
+              id: userPayload.id || `adv_${Date.now()}`,
+              name: cleanAdvName,
+              title: "Advocate • High Court of Kerala (Ernakulam)",
+              location: "Ernakulam, Kerala",
+              experience: prof?.experienceYears ? `${prof.experienceYears}+ Years Experience` : "10+ Years Experience",
+              rating: 5.0,
+              reviewsCount: 1,
+              matchScore: 99,
+              specialties: prof?.practiceAreas || ["Civil Litigation", "Constitutional Writs", "Commercial Law"],
+              fee: "₹1,500 / session",
+              email: email.trim(),
+              barCouncilNumber: (userPayload as any).barCouncilId || prof?.barCouncilNumber || "K/001429/2024",
+              isCurrentUser: true,
+            };
+            const updatedList = [loggedInAdvItem, ...registered.filter((a: any) => a.email !== email.trim())];
+            localStorage.setItem("wakheel_registered_advocates", JSON.stringify(updatedList));
+          } catch {
+            // ignore
+          }
           router.push("/advocate-workspace");
         } else {
           const hasFirm = localStorage.getItem("wakheel_firm_profile");

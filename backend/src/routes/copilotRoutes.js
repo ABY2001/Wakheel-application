@@ -5,6 +5,9 @@ import {
   draftPleading,
   getCopilotTemplates,
   copilotQuery,
+  extractCaseChronology,
+  auditChronologyConflicts,
+  generateHighCourtSynopsis,
 } from "../controllers/copilotController.js";
 
 const router = express.Router();
@@ -22,4 +25,10 @@ router.get("/templates", getCopilotTemplates);
 // 4. Live Copilot Query Engine (Chat Canvas)
 router.post("/query", copilotQuery);
 
+// 5. Interactive Case Chronology & Fact Timeline Builder (Milestone 4)
+router.post("/chronology/extract", extractCaseChronology);
+router.post("/chronology/audit-conflicts", auditChronologyConflicts);
+router.post("/chronology/generate-synopsis", generateHighCourtSynopsis);
+
 export default router;
+

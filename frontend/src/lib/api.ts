@@ -755,6 +755,46 @@ export const copilotApi = {
     });
     return await res.json();
   },
+
+  // 5. Case Chronology & Fact Timeline Builder (Milestone 4)
+  async extractChronology(data: {
+    bundleType?: string;
+    documents?: Array<{ name: string; size?: string }>;
+    customPrompt?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/chronology/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async auditChronologyConflicts(data: {
+    events: any[];
+    bundleType?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/chronology/audit-conflicts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async generateHighCourtSynopsis(data: {
+    caseMetadata?: any;
+    events: any[];
+    advocateName?: string;
+    barCouncilNumber?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/chronology/generate-synopsis`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
 };
 
 

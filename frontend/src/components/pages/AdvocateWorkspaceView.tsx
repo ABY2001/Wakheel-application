@@ -10,6 +10,7 @@ import {
 import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
 import { CaseChronologyBuilder } from "@/components/advocate/CaseChronologyBuilder";
 import { ChamberVoiceDictation } from "@/components/advocate/ChamberVoiceDictation";
+import { DocumentVaultView } from "@/components/advocate/DocumentVaultView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ElectronicConsentView } from "@/components/advocate/ElectronicConsentView";
 import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
@@ -3246,7 +3247,13 @@ export function AdvocateWorkspaceView() {
             </div>
           )}
 
-          {["legal-drafting", "contract-intelligence", "case-preparation", "vault", "office-suite", "compliance"].includes(activeTab) && (
+          {/* ============================================================== */}
+          {/* VIEW: 256-bit Encrypted Document Vault                          */}
+          {activeTab === "vault" && (
+            <DocumentVaultView currentMatter={selectedMatter} />
+          )}
+
+          {["legal-drafting", "contract-intelligence", "case-preparation", "office-suite", "compliance"].includes(activeTab) && (
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-5">
                 <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">

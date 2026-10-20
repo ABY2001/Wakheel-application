@@ -1671,23 +1671,14 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: Find Legal Help (Triage Form)                           */}
+          {/* VIEW: Find Legal Help (Legal Help Submission Wizard)           */}
           {/* ============================================================== */}
           {activeTab === "find-legal-help" && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div>
-                  <h3 className="text-lg font-bold text-black dark:text-white">Submit New Legal Grievance</h3>
-                  <p className="text-xs text-zinc-500">Explain your legal issue in simple words. Our AI categorizes and matches with High Court advocates.</p>
-                </div>
-                <button
-                  onClick={() => setActiveTab("dashboard")}
-                  className="px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold"
-                >
-                  Back to Dashboard
-                </button>
-              </div>
-              <LegalProblemSubmission onSubmitted={loadCitizenData} />
+            <div className="w-full max-w-5xl mx-auto space-y-6">
+              <LegalProblemSubmission
+                onSubmitted={loadCitizenData}
+                onViewMatters={() => setActiveTab("my-matters")}
+              />
             </div>
           )}
 

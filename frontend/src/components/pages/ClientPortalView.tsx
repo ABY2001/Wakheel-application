@@ -926,43 +926,18 @@ export function ClientPortalView() {
               <span>Discover advocates</span>
             </button>
 
-            {/* My Matters (Collapsible with Case tracker) */}
-            <div className="rounded-xl overflow-hidden">
-              <button
-                onClick={() => setMyMattersOpen(!myMattersOpen)}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                  activeTab === "my-matters" || activeTab === "case-tracker"
-                    ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Briefcase className="w-4 h-4 shrink-0" />
-                  <span>My Matters</span>
-                </div>
-                {myMattersOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-                )}
-              </button>
-
-              {myMattersOpen && (
-                <div className="pl-9 pr-2 py-1 space-y-0.5 bg-zinc-100/70 dark:bg-zinc-900/60 rounded-b-xl">
-                  <button
-                    onClick={() => setActiveTab("case-tracker")}
-                    className={`w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-left text-[11px] transition-colors cursor-pointer ${
-                      activeTab === "case-tracker"
-                        ? "text-black dark:text-white font-bold bg-zinc-200 dark:bg-zinc-800"
-                        : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                    }`}
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    <span>Case tracker</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* My Matters */}
+            <button
+              onClick={() => setActiveTab("my-matters")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "my-matters" || activeTab === "case-tracker"
+                  ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <Briefcase className="w-4 h-4 shrink-0" />
+              <span>My Matters</span>
+            </button>
 
             {/* Documents (Collapsible with Case Diary, Certified true copies, contracts) */}
             <div className="rounded-xl overflow-hidden">
@@ -1866,7 +1841,7 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {/* VIEW: My Legal Matters (Docket Cards View)                     */}
           {/* ============================================================== */}
-          {activeTab === "my-matters" && (
+          {(activeTab === "my-matters" || activeTab === "case-tracker" || activeTab === "case-tracker-prod") && (
             <MyLegalMattersView
               onSelectMatter={(matterTitle) => setSelectedMatter(matterTitle)}
               onOpenConsultation={() => {
@@ -1877,131 +1852,7 @@ export function ClientPortalView() {
             />
           )}
 
-          {/* ============================================================== */}
-          {/* VIEW: Case Tracker (eCourts CNR Tracking)                      */}
-          {/* ============================================================== */}
-          {(activeTab === "case-tracker" || activeTab === "case-tracker-prod") && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold">
-                      <Activity className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-black dark:text-white">Live eCourts Case Tracker</h3>
-                      <p className="text-xs text-zinc-500">Track High Court of Kerala and District Court proceedings with a 16-digit CNR number.</p>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    eCourts Services Bridge
-                  </span>
-                </div>
 
-                <form onSubmit={handleTrackDocket} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={trackerCnr}
-                    onChange={(e) => setTrackerCnr(e.target.value)}
-                    placeholder="Enter 16-Digit CNR Number (e.g. KLHC01-019482-2024 or KLER02-000412-2023)"
-                    className="flex-1 px-4 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono focus:outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isTrackingLoading}
-                    className="px-5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer disabled:opacity-50"
-                  >
-                    {isTrackingLoading ? "Tracking..." : "Track Docket"}
-                  </button>
-                </form>
-
-                {trackedMatter ? (
-                  <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-[10px] font-mono text-zinc-500">CNR: {trackedMatter.cnrNumber} • {trackedMatter.courtForum}</span>
-                        <h4 className="text-sm font-bold text-black dark:text-white mt-0.5">
-                          {trackedMatter.matterTitle}
-                        </h4>
-                      </div>
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#800020]" />
-                        {trackedMatter.status === "active" ? "Admitted / Listed" : trackedMatter.status || "In Progress"}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">NEXT HEARING</span>
-                        <span className="font-bold text-black dark:text-white">
-                          {trackedMatter.nextHearingDate ? new Date(trackedMatter.nextHearingDate).toLocaleDateString() : "Listed for hearing"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">COURT HALL</span>
-                        <span className="font-bold text-black dark:text-white">{trackedMatter.courtHall || "Court Hall 2A"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">BENCH / FORUM</span>
-                        <span className="font-bold text-black dark:text-white">{trackedMatter.matterType || "High Court Bench"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">ASSIGNED ADVOCATE</span>
-                        <span className="font-bold text-black dark:text-white">{trackedMatter.advocateName}</span>
-                      </div>
-                    </div>
-
-                    {/* Statutory Acts */}
-                    {trackedMatter.statutoryActs && (
-                      <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 text-xs">
-                        <span className="text-[10px] font-mono text-zinc-400 block mb-1">APPLICABLE STATUTES</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {trackedMatter.statutoryActs.map((act: string, idx: number) => (
-                            <span key={idx} className="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[11px] font-mono text-zinc-700 dark:text-zinc-300">
-                              {act}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Timeline Milestones */}
-                    {trackedMatter.timeline && trackedMatter.timeline.length > 0 && (
-                      <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block">
-                          CASE PROGRESSION MILESTONES
-                        </span>
-                        <div className="space-y-2 text-xs">
-                          {trackedMatter.timeline.map((step: any, sIdx: number) => (
-                            <div key={sIdx} className="flex items-start gap-3 p-2.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800">
-                              <div className="mt-0.5">
-                                {step.stage === "Completed" ? (
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                ) : (
-                                  <Clock className="w-4 h-4 text-[#800020]" />
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-black dark:text-white text-xs">{step.title}</span>
-                                  <span className="text-[10px] font-mono text-zinc-400">{step.date}</span>
-                                </div>
-                                <p className="text-[11px] text-zinc-500 mt-0.5">{step.remarks}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-xs text-zinc-500">
-                    No matter found matching CNR {trackerCnr}. Try searching &quot;KLHC01-019482-2024&quot; or &quot;KLER02-000412-2023&quot;.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* ============================================================== */}
           {/* VIEW: Documents & Certified Copies                             */}

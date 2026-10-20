@@ -7,11 +7,9 @@ import {
   CheckCircle2,
   X,
   Scale,
-  FileText,
-  User,
-  ShieldCheck,
-  Building2,
-  Calendar,
+  Search,
+  Activity,
+  Briefcase,
   ExternalLink,
 } from "lucide-react";
 
@@ -135,6 +133,9 @@ export function MyLegalMattersView({
 }: MyLegalMattersViewProps = {}) {
   const [matters] = useState<LegalMatter[]>(DEFAULT_MATTERS);
   const [selectedMatterDetail, setSelectedMatterDetail] = useState<LegalMatter | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCnrTracker, setShowCnrTracker] = useState(false);
+  const [customCnr, setCustomCnr] = useState("");
 
   const handleSelect = (matter: LegalMatter) => {
     setSelectedMatterDetail(matter);
@@ -143,21 +144,79 @@ export function MyLegalMattersView({
     }
   };
 
+  const filteredMatters = matters.filter((m) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      m.caseNumber.toLowerCase().includes(q) ||
+      m.title.toLowerCase().includes(q) ||
+      m.court.toLowerCase().includes(q) ||
+      (m.cnrNumber && m.cnrNumber.toLowerCase().includes(q))
+    );
+  });
+
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 animate-in fade-in duration-200">
-      {/* Page Header matching user screenshot */}
-      <div className="space-y-1">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
-          My Legal Matters
-        </h2>
-        <p className="text-xs sm:text-sm text-zinc-500">
-          Track court status, hearing postings, and assigned advocate updates
-        </p>
+      {/* Page Header exactly matching user screenshot */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
+            My Legal Matters
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-500">
+            Track court status, hearing postings, and assigned advocate updates
+          </p>
+        </div>
+
+        {/* Optional Search / CNR Toggle */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCnrTracker(!showCnrTracker)}
+            className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>{showCnrTracker ? "Hide CNR Search" : "16-Digit CNR Search"}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Optional CNR Search Drawer */}
+      {showCnrTracker && (
+        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 animate-in fade-in duration-150">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <input
+                type="text"
+                value={customCnr}
+                onChange={(e) => {
+                  setCustomCnr(e.target.value);
+                  setSearchQuery(e.target.value);
+                }}
+                placeholder="Enter 16-Digit CNR Number (e.g. KLHC01-019482-2024 or KLER02-000412-2023)..."
+                className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs font-mono text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+              />
+            </div>
+            {customCnr && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomCnr("");
+                  setSearchQuery("");
+                }}
+                className="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Matters Stack matching exact card layout */}
       <div className="space-y-4 sm:space-y-5">
-        {matters.map((matter) => (
+        {filteredMatters.map((matter) => (
           <div
             key={matter.id}
             className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-5 sm:p-7 space-y-4 shadow-xs transition-colors"

@@ -70,6 +70,7 @@ import {
 import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmission";
 import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
 import { ClientDocumentsView } from "@/components/client/ClientDocumentsView";
+import { DocumentFilingView } from "@/components/client/DocumentFilingView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -932,7 +933,7 @@ export function ClientPortalView() {
               onClick={() => setActiveTab("my-matters")}
               className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
                 activeTab === "my-matters" || activeTab === "case-tracker"
-                  ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
               }`}
             >
@@ -947,9 +948,8 @@ export function ClientPortalView() {
                 activeTab === "documents" ||
                 activeTab === "case-diary" ||
                 activeTab === "certified-true-copies" ||
-                activeTab === "contracts" ||
-                activeTab === "document-filing"
-                  ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                activeTab === "contracts"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
               }`}
             >
@@ -1824,10 +1824,16 @@ export function ClientPortalView() {
 
 
           {/* ============================================================== */}
+          {/* VIEW: Document Submission for Advocate Review                   */}
+          {/* ============================================================== */}
+          {activeTab === "document-filing" && (
+            <DocumentFilingView />
+          )}
+
+          {/* ============================================================== */}
           {/* VIEW: Documents & Case Records (Full Width with Top Navbar)    */}
           {/* ============================================================== */}
           {(activeTab === "documents" ||
-            activeTab === "document-filing" ||
             activeTab === "case-diary" ||
             activeTab === "certified-true-copies" ||
             activeTab === "contracts") && (
@@ -1839,8 +1845,6 @@ export function ClientPortalView() {
                   ? "certified-true-copies"
                   : activeTab === "contracts"
                   ? "contracts"
-                  : activeTab === "document-filing"
-                  ? "document-filing"
                   : "all"
               }
             />

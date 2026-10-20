@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { DocumentFilingView } from "@/components/client/DocumentFilingView";
 import {
   FolderLock,
   BookOpen,
@@ -389,9 +390,16 @@ export function ClientDocumentsView({
       )}
 
       {/* ===================================================================== */}
-      {/* VIEW: DOCUMENTS TABLE (All, CTC, Contracts, Filing)                   */}
+      {/* VIEW: DOCUMENT FILING (Advocate Review Submission)                    */}
       {/* ===================================================================== */}
-      {activeNavTab !== "case-diary" && (
+      {activeNavTab === "document-filing" && (
+        <DocumentFilingView />
+      )}
+
+      {/* ===================================================================== */}
+      {/* VIEW: DOCUMENTS TABLE (All, CTC, Contracts)                           */}
+      {/* ===================================================================== */}
+      {activeNavTab !== "case-diary" && activeNavTab !== "document-filing" && (
         <div className="space-y-4">
           {/* Search & Matter Filter Toolbar */}
           <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">

@@ -69,6 +69,7 @@ import {
 } from "lucide-react";
 import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmission";
 import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
+import { ClientDocumentsView } from "@/components/client/ClientDocumentsView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -939,54 +940,22 @@ export function ClientPortalView() {
               <span>My Matters</span>
             </button>
 
-            {/* Documents (Collapsible with Case Diary, Certified true copies, contracts) */}
-            <div className="rounded-xl overflow-hidden">
-              <button
-                onClick={() => setDocumentsOpen(!documentsOpen)}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                  activeTab === "documents" || activeTab === "case-diary" || activeTab === "certified-true-copies" || activeTab === "contracts"
-                    ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <FolderLock className="w-4 h-4 shrink-0" />
-                  <span>Documents</span>
-                </div>
-                {documentsOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-                )}
-              </button>
-
-              {documentsOpen && (
-                <div className="pl-9 pr-2 py-1 space-y-0.5 bg-zinc-100/70 dark:bg-zinc-900/60 rounded-b-xl">
-                  {[
-                    { id: "case-diary", label: "Case Diary", icon: BookOpen },
-                    { id: "certified-true-copies", label: "Certified true copies", icon: Stamp },
-                    { id: "contracts", label: "contracts", icon: FileText },
-                  ].map((sub) => {
-                    const SubIcon = sub.icon;
-                    const isSubActive = activeTab === sub.id;
-                    return (
-                      <button
-                        key={sub.id}
-                        onClick={() => setActiveTab(sub.id)}
-                        className={`w-full flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-left text-[11px] transition-colors cursor-pointer ${
-                          isSubActive
-                            ? "text-black dark:text-white font-bold bg-zinc-200 dark:bg-zinc-800"
-                            : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                        }`}
-                      >
-                        <SubIcon className="w-3.5 h-3.5" />
-                        <span>{sub.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {/* Documents */}
+            <button
+              onClick={() => setActiveTab("documents")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "documents" ||
+                activeTab === "case-diary" ||
+                activeTab === "certified-true-copies" ||
+                activeTab === "contracts" ||
+                activeTab === "document-filing"
+                  ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white font-semibold"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <FolderLock className="w-4 h-4 shrink-0" />
+              <span>Documents</span>
+            </button>
 
             {/* Document filing */}
             <button
@@ -1855,57 +1824,26 @@ export function ClientPortalView() {
 
 
           {/* ============================================================== */}
-          {/* VIEW: Documents & Certified Copies                             */}
+          {/* VIEW: Documents & Case Records (Full Width with Top Navbar)    */}
           {/* ============================================================== */}
-          {(activeTab === "documents" || activeTab === "document-filing" || activeTab === "case-diary" || activeTab === "certified-true-copies" || activeTab === "contracts") && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <div>
-                    <h3 className="text-base font-bold text-black dark:text-white">
-                      {activeTab === "certified-true-copies" ? "Certified True Copies (CTC)" : activeTab === "case-diary" ? "Case Diary & Hearing Notes" : "Citizen Document Vault"}
-                    </h3>
-                    <p className="text-xs text-zinc-500">256-bit encrypted court orders, affidavits, and registered contracts.</p>
-                  </div>
-                  <button
-                    onClick={() => setUploadModalOpen(true)}
-                    className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer"
-                  >
-                    + Upload Document
-                  </button>
-                </div>
-
-                <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-                  {documents.length > 0 ? (
-                    documents.map((doc, idx) => (
-                      <div key={doc._id || idx} className="py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-4 h-4 text-zinc-500" />
-                          <div>
-                            <span className="font-bold text-black dark:text-white block">{doc.title || doc.name}</span>
-                            <span className="text-[10px] text-zinc-400 font-mono">
-                              {doc.category || doc.type} • {doc.fileSize || doc.size || "1.2 MB"} • {doc.isSigned || doc.signedAt ? "Digitally Signed" : "Verified Copy"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold cursor-pointer">
-                            View
-                          </button>
-                          <button className="p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer">
-                            <Download className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-6 text-center text-xs text-zinc-500">
-                      No documents found in vault. Click &quot;+ Upload Document&quot; to add one.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          {(activeTab === "documents" ||
+            activeTab === "document-filing" ||
+            activeTab === "case-diary" ||
+            activeTab === "certified-true-copies" ||
+            activeTab === "contracts") && (
+            <ClientDocumentsView
+              initialTab={
+                activeTab === "case-diary"
+                  ? "case-diary"
+                  : activeTab === "certified-true-copies"
+                  ? "certified-true-copies"
+                  : activeTab === "contracts"
+                  ? "contracts"
+                  : activeTab === "document-filing"
+                  ? "document-filing"
+                  : "all"
+              }
+            />
           )}
 
           {/* ============================================================== */}

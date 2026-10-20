@@ -6,14 +6,9 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  ShieldCheck,
-  Send,
-  RotateCcw,
-  Building,
   Scale,
-  FileText,
-  Clock,
-  AlertTriangle,
+  RotateCcw,
+  Check,
 } from "lucide-react";
 import { citizenApi } from "@/lib/api";
 
@@ -168,8 +163,8 @@ export function LegalProblemSubmission({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-7 animate-in fade-in duration-300">
-      {/* Title & Subtitle Header matching screenshots */}
+    <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-200">
+      {/* Title & Subtitle Header */}
       <div className="text-center space-y-1.5 pt-2">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
           Legal Help Submission Wizard
@@ -179,43 +174,43 @@ export function LegalProblemSubmission({
         </p>
       </div>
 
-      {/* Stepper Indicator matching screenshots */}
-      <div className="flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm font-semibold">
+      {/* Stepper Indicator */}
+      <div className="flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm">
         <div
           className={`flex items-center gap-1.5 ${
             currentStep === 1
-              ? "text-black dark:text-white font-bold border-b-2 border-emerald-600 pb-0.5"
+              ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-0.5"
               : currentStep > 1
-              ? "text-emerald-700 dark:text-emerald-400 font-medium"
-              : "text-zinc-400"
+              ? "text-zinc-600 dark:text-zinc-300 font-medium"
+              : "text-zinc-400 dark:text-zinc-600"
           }`}
         >
           <span>1. Category</span>
         </div>
 
-        <span className="text-zinc-400">→</span>
+        <span className="text-zinc-300 dark:text-zinc-700">→</span>
 
         <div
           className={`flex items-center gap-1.5 ${
             currentStep === 2
-              ? "text-black dark:text-white font-bold border-b-2 border-emerald-600 pb-0.5"
+              ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-0.5"
               : currentStep > 2
-              ? "text-emerald-700 dark:text-emerald-400 font-medium"
-              : "text-zinc-400"
+              ? "text-zinc-600 dark:text-zinc-300 font-medium"
+              : "text-zinc-400 dark:text-zinc-600"
           }`}
         >
           <span>2. Location &amp; Details</span>
         </div>
 
-        <span className="text-zinc-400">→</span>
+        <span className="text-zinc-300 dark:text-zinc-700">→</span>
 
         <div
           className={`flex items-center gap-1.5 ${
             currentStep === 3
-              ? "text-black dark:text-white font-bold border-b-2 border-emerald-600 pb-0.5"
+              ? "text-black dark:text-white font-bold border-b-2 border-black dark:border-white pb-0.5"
               : currentStep === 4
-              ? "text-emerald-700 dark:text-emerald-400 font-medium"
-              : "text-zinc-400"
+              ? "text-zinc-600 dark:text-zinc-300 font-medium"
+              : "text-zinc-400 dark:text-zinc-600"
           }`}
         >
           <span>3. Review &amp; Submit</span>
@@ -223,9 +218,9 @@ export function LegalProblemSubmission({
       </div>
 
       {/* Main Card Container */}
-      <div className="rounded-2xl sm:rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 sm:p-9 shadow-xs space-y-6">
+      <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-6 sm:p-8 space-y-6 shadow-xs">
         {/* ========================================================================= */}
-        {/* STEP 1: Select Legal Category (Exact Screenshot 1)                        */}
+        {/* STEP 1: Select Legal Category                                             */}
         {/* ========================================================================= */}
         {currentStep === 1 && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -246,8 +241,8 @@ export function LegalProblemSubmission({
                     onClick={() => setSelectedCategory(cat)}
                     className={`p-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-center flex items-center justify-center min-h-[54px] cursor-pointer ${
                       isSelected
-                        ? "border-2 border-emerald-600 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-200 shadow-xs font-bold"
-                        : "border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600"
+                        ? "border-2 border-black dark:border-white bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white shadow-xs font-bold ring-1 ring-black dark:ring-white"
+                        : "border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-zinc-700 dark:text-zinc-300 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white"
                     }`}
                   >
                     <span>{cat}</span>
@@ -261,7 +256,7 @@ export function LegalProblemSubmission({
               <button
                 type="button"
                 onClick={handleNextToStep2}
-                className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
               >
                 <span>Next: Location &amp; Description</span>
                 <ArrowRight className="w-4 h-4" />
@@ -271,7 +266,7 @@ export function LegalProblemSubmission({
         )}
 
         {/* ========================================================================= */}
-        {/* STEP 2: Location & Problem Description (Exact Screenshot 2)               */}
+        {/* STEP 2: Location & Problem Description                                    */}
         {/* ========================================================================= */}
         {currentStep === 2 && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -292,7 +287,7 @@ export function LegalProblemSubmission({
                     type="text"
                     disabled
                     value={stateCountry}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium cursor-not-allowed select-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-medium cursor-not-allowed select-none"
                   />
                 </div>
 
@@ -303,7 +298,7 @@ export function LegalProblemSubmission({
                   <select
                     value={selectedDistrict}
                     onChange={(e) => setSelectedDistrict(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs sm:text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
                   >
                     {KERALA_DISTRICTS.map((dist) => (
                       <option key={dist} value={dist}>
@@ -324,11 +319,11 @@ export function LegalProblemSubmission({
                   value={issueDescription}
                   onChange={(e) => setIssueDescription(e.target.value)}
                   placeholder="Describe what occurred, dates, notices received, or questions you have..."
-                  className="w-full p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-emerald-600 leading-relaxed resize-none"
+                  className="w-full p-4 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs sm:text-sm text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white leading-relaxed resize-none"
                 />
               </div>
 
-              {/* Optional Urgency Selector */}
+              {/* Urgency Selector */}
               <div className="flex items-center gap-3 pt-1">
                 <span className="text-xs font-semibold text-zinc-500">Urgency:</span>
                 {(["Standard", "Medium", "Urgent"].map((urg) => (
@@ -338,7 +333,7 @@ export function LegalProblemSubmission({
                     onClick={() => setUrgencyLevel(urg)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                       urgencyLevel === urg
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800"
+                        ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
                         : "bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:text-black dark:hover:text-white"
                     }`}
                   >
@@ -353,7 +348,7 @@ export function LegalProblemSubmission({
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-black dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -362,7 +357,7 @@ export function LegalProblemSubmission({
               <button
                 type="button"
                 onClick={handleNextToStep3}
-                className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
               >
                 <span>Next: Review &amp; Submit</span>
                 <ArrowRight className="w-4 h-4" />
@@ -372,7 +367,7 @@ export function LegalProblemSubmission({
         )}
 
         {/* ========================================================================= */}
-        {/* STEP 3: Review Before Submission (Exact Screenshot 3)                     */}
+        {/* STEP 3: Review Before Submission                                          */}
         {/* ========================================================================= */}
         {currentStep === 3 && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -383,12 +378,12 @@ export function LegalProblemSubmission({
             </div>
 
             {/* Review Summary Card */}
-            <div className="p-6 rounded-2xl bg-zinc-50/80 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80 space-y-3.5 text-xs sm:text-sm">
+            <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-3.5 text-xs sm:text-sm">
               <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
                 <span className="font-bold text-zinc-900 dark:text-zinc-100 sm:w-28 shrink-0">
                   Category:
                 </span>
-                <span className="font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+                <span className="font-bold uppercase tracking-wide text-black dark:text-white">
                   {selectedCategory.toUpperCase()}
                 </span>
               </div>
@@ -427,7 +422,7 @@ export function LegalProblemSubmission({
                 type="button"
                 onClick={handleBack}
                 disabled={isSubmitting}
-                className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-black dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -437,11 +432,11 @@ export function LegalProblemSubmission({
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleConfirmSubmit}
-                className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-60"
+                className="px-6 py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <div className="w-4 h-4 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin" />
                     <span>Submitting Grievance...</span>
                   </>
                 ) : (
@@ -461,21 +456,21 @@ export function LegalProblemSubmission({
         {currentStep === 4 && submissionSuccess && (
           <div className="space-y-6 animate-in zoom-in-95 duration-200">
             {/* Success Banner */}
-            <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                <CheckCircle2 className="w-6 h-6" />
+            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs font-bold">
+                <Check className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm sm:text-base font-extrabold text-emerald-900 dark:text-emerald-200">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-sm sm:text-base font-extrabold text-black dark:text-white">
                     Legal Grievance Successfully Submitted!
                   </h4>
-                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-zinc-900 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300">
+                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-black dark:text-white">
                     Ref: {submissionSuccess.referenceId}
                   </span>
                 </div>
-                <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                  Your grievance has been safely transmitted to our AI intake engine and assigned to the empanelled Kerala advocate roster.
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  Your grievance has been logged and matched for advocate review in {selectedDistrict}.
                 </p>
               </div>
             </div>
@@ -484,10 +479,10 @@ export function LegalProblemSubmission({
             <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <Sparkles className="w-4 h-4 text-black dark:text-white" />
                   <span>Wakheel Preliminary Statutory Assessment</span>
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white dark:bg-white dark:text-black">
                   Active Triage
                 </span>
               </div>
@@ -507,7 +502,7 @@ export function LegalProblemSubmission({
                   <ul className="space-y-1">
                     {submissionSuccess.applicableLaws.map((law: string, idx: number) => (
                       <li key={idx} className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                        <Scale className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <Scale className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
                         <span>{law}</span>
                       </li>
                     ))}
@@ -521,7 +516,7 @@ export function LegalProblemSubmission({
                   <ul className="space-y-1">
                     {submissionSuccess.suggestedActions.map((act: string, idx: number) => (
                       <li key={idx} className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-                        <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
                         <span>{act}</span>
                       </li>
                     ))}
@@ -535,7 +530,7 @@ export function LegalProblemSubmission({
               <button
                 type="button"
                 onClick={handleReset}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-black dark:hover:text-white transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Submit Another Grievance</span>

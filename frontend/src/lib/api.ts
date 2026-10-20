@@ -293,6 +293,37 @@ export const citizenApi = {
     return await res.json();
   },
 
+  async getGrievanceById(token: string, id: string) {
+    const res = await fetch(`${API_BASE_URL}/citizen/grievances/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  },
+
+  async previewGrievanceTriage(token: string, data: { category?: string; description: string; jurisdictionDistrict?: string }) {
+    const res = await fetch(`${API_BASE_URL}/citizen/grievances/preview`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async matchAdvocateForGrievance(token: string, grievanceId: string, advocateId: string) {
+    const res = await fetch(`${API_BASE_URL}/citizen/grievances/${encodeURIComponent(grievanceId)}/match`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ advocateId }),
+    });
+    return await res.json();
+  },
+
   // 3. Active Matters & Case Tracking
   async getMatters(token: string) {
     const res = await fetch(`${API_BASE_URL}/citizen/matters`, {

@@ -5,6 +5,9 @@ import {
   updateProfile,
   submitGrievance,
   getGrievances,
+  getGrievanceById,
+  previewGrievanceTriage,
+  matchAdvocateForGrievance,
   getMatters,
   getMatterByCnr,
   getAdvocatesDirectory,
@@ -25,6 +28,9 @@ router.route("/profile").get(protect, getProfile).put(protect, updateProfile);
 
 // 2. Legal Problem Intake & AI Triage ("Find Legal Help")
 router.route("/grievances").post(protect, submitGrievance).get(protect, getGrievances);
+router.route("/grievances/preview").post(protect, previewGrievanceTriage);
+router.route("/grievances/:id").get(protect, getGrievanceById);
+router.route("/grievances/:id/match").post(protect, matchAdvocateForGrievance);
 
 // 3. Matters & Case Tracking
 router.route("/matters").get(protect, getMatters);

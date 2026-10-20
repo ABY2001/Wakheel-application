@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 const grievanceSchema = new mongoose.Schema(
   {
     citizenId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
     title: {
@@ -19,19 +18,6 @@ const grievanceSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: [
-        "Property & Land Disputes",
-        "Criminal & Bail Matter",
-        "Commercial & Contracts",
-        "Family & Matrimonial",
-        "Cheque Bounce (Sec 138 NI Act)",
-        "Consumer Protection & Deficient Service",
-        "Employment & Labour Grievance",
-        "Constitutional & Writ Petition",
-        "Motor Accident Claims (MACT)",
-        "Cyber Crime & Financial Fraud",
-        "Other Legal Matter",
-      ],
       default: "Other Legal Matter",
     },
     jurisdictionDistrict: {
@@ -44,8 +30,7 @@ const grievanceSchema = new mongoose.Schema(
     },
     urgencyLevel: {
       type: String,
-      enum: ["Low (General Inquiry)", "Medium (Standard Filing)", "High (Upcoming Deadline)", "Urgent (Interim Stay Needed)"],
-      default: "Medium (Standard Filing)",
+      default: "Medium",
     },
     status: {
       type: String,
@@ -59,8 +44,22 @@ const grievanceSchema = new mongoose.Schema(
       estimatedCourtFee: { type: String, default: "Standard Ad-valorem Court Fees" },
       recommendedSpecialization: { type: String, default: "General Civil / High Court Advocate" },
       jurisdictionForum: { type: String, default: "District Court / High Court" },
-      riskScore: { type: String, enum: ["Low", "Moderate", "High"], default: "Moderate" },
+      riskScore: { type: String, default: "Moderate" },
+      statutoryLimitation: { type: String, default: "As per Limitation Act, 1963" },
     },
+    matchedAdvocates: [
+      {
+        id: { type: String },
+        fullName: { type: String },
+        barCouncilNumber: { type: String },
+        specialization: [{ type: String }],
+        chamberAddress: { type: String },
+        consultationFee: { type: Number },
+        rating: { type: Number },
+        experience: { type: String },
+        courts: [{ type: String }],
+      },
+    ],
     matchedAdvocateIds: [
       {
         type: mongoose.Schema.Types.ObjectId,

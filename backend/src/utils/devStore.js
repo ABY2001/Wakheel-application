@@ -617,6 +617,11 @@ export const devStore = {
     return grvs;
   },
 
+  getGrievanceById(id) {
+    const grvs = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
+    return grvs.find((g) => g._id === id) || null;
+  },
+
   addGrievance(data) {
     const grvs = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
     const newGrv = {
@@ -627,6 +632,73 @@ export const devStore = {
     grvs.unshift(newGrv);
     writeFile("dev_grievances.json", grvs);
     return newGrv;
+  },
+
+  matchAdvocateToGrievance(grievanceId, advocateId, citizenId = "default_citizen") {
+    const grvs = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
+    const index = grvs.findIndex((g) => g._id === grievanceId);
+    if (index === -1) return null;
+
+    const advocates = this.getAdvocates();
+    const advocate = advocates.find((a) => a.id === advocateId) || advocates[0];
+
+    grvs[index].assignedAdvocateId = advocate.id;
+    grvs[index].assignedAdvocateName = advocate.fullName;
+    grvs[index].status = "matter_opened";
+    writeFile("dev_grievances.json", grvs);
+
+    // Auto-create an active matter in dev_matters.json so it immediately appears in My Matters
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const existing = matters.find((m) => m.grievanceId === grievanceId);
+    if (!existing) {
+      const year = new Date().getFullYear();
+      const randomNum = Math.floor(10000 + Math.random() * 90000);
+      const isWrit = grvs[index].category?.includes("Property") || grvs[index].category?.includes("Writ");
+      const casePrefix = isWrit ? "WP(C)" : "OS";
+      const caseNumber = `${casePrefix} ${randomNum}/${year}`;
+      const cnrNumber = `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${year}`;
+
+      const newMatter = {
+        _id: "mat_" + Date.now().toString(),
+        citizenId: grvs[index].citizenId || citizenId,
+        grievanceId: grvs[index]._id,
+        advocateId: advocate.id,
+        advocateName: advocate.fullName,
+        matterTitle: `${caseNumber} — ${grvs[index].title}`,
+        matterType: grvs[index].category || "Civil Litigation",
+        caseNumber,
+        cnrNumber,
+        courtForum: grvs[index].preferredCourt || advocate.primaryCourt || "High Court of Kerala (Ernakulam)",
+        courtHall: "Court Hall 2A",
+        status: "active",
+        nextHearingDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        statutoryActs: grvs[index].aiTriage?.applicableActs || ["Specific Relief Act, 1963", "Constitution of India Article 226"],
+        timeline: [
+          {
+            date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+            title: "Legal Grievance Triaged & Counsel Engaged",
+            remarks: `Initial consultation scheduled with ${advocate.fullName}. Preliminary case grounds drafted.`,
+            stage: "Completed",
+          },
+          {
+            date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+            title: "Chamber Conference & Document Scrutiny",
+            remarks: "Verification of title deeds, revenue extracts, and drafting of formal pleadings.",
+            stage: "Scheduled",
+          },
+        ],
+        totalFeesBilled: advocate.consultationFee ? advocate.consultationFee * 10 : 25000,
+        feesPaid: 0,
+      };
+
+      matters.unshift(newMatter);
+      writeFile("dev_matters.json", matters);
+      grvs[index].linkedMatterId = newMatter._id;
+      writeFile("dev_grievances.json", grvs);
+      return { grievance: grvs[index], matter: newMatter, advocate };
+    }
+
+    return { grievance: grvs[index], matter: existing, advocate };
   },
 
   // --- Matters ---

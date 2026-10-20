@@ -103,89 +103,337 @@ export const updateProfile = async (req, res) => {
 // 2. LEGAL PROBLEM INTAKE & AI TRIAGE ("Find Legal Help")
 // ============================================================================
 
-// Helper: AI Legal Triage Engine
+// Helper: Match Verified Advocates for Triage Category & District
+const matchAdvocatesForTriage = (category, district) => {
+  const cat = (category || "").toLowerCase();
+  const allAdvocates = devStore.getAdvocates();
+
+  // Score advocates based on specialization and primary court alignment
+  const scored = allAdvocates.map((adv) => {
+    let matchScore = 0;
+    const specs = (adv.specializations || []).map((s) => s.toLowerCase());
+
+    if (cat.includes("property") || cat.includes("land") || cat.includes("real estate")) {
+      if (specs.some((s) => s.includes("property") || s.includes("land") || s.includes("writs") || s.includes("civil"))) {
+        matchScore += 40;
+      }
+    } else if (cat.includes("family") || cat.includes("matrimonial")) {
+      if (specs.some((s) => s.includes("family") || s.includes("matrimonial") || s.includes("consumer"))) {
+        matchScore += 40;
+      }
+    } else if (cat.includes("criminal") || cat.includes("bail")) {
+      if (specs.some((s) => s.includes("criminal") || s.includes("bail"))) {
+        matchScore += 40;
+      }
+    } else if (cat.includes("corporate") || cat.includes("commercial") || cat.includes("arbitration") || cat.includes("adr")) {
+      if (specs.some((s) => s.includes("corporate") || s.includes("commercial") || s.includes("arbitration") || s.includes("ibc") || s.includes("m&a"))) {
+        matchScore += 40;
+      }
+    } else if (cat.includes("cyber") || cat.includes("it law")) {
+      if (specs.some((s) => s.includes("criminal") || s.includes("cyber") || s.includes("commercial"))) {
+        matchScore += 35;
+      }
+    } else if (cat.includes("consumer")) {
+      if (specs.some((s) => s.includes("consumer") || s.includes("civil"))) {
+        matchScore += 35;
+      }
+    } else {
+      matchScore += 20;
+    }
+
+    if (adv.isVerified) matchScore += 25;
+    if (adv.rating >= 4.8) matchScore += 15;
+    if (adv.availableToday) matchScore += 10;
+
+    return {
+      id: adv.id,
+      fullName: adv.fullName,
+      barCouncilNumber: adv.barCouncilNumber,
+      experienceYears: adv.experienceYears,
+      primaryCourt: adv.primaryCourt,
+      chamberAddress: adv.chamberAddress,
+      specializations: adv.specializations,
+      languages: adv.languages,
+      consultationFee: adv.consultationFee,
+      rating: adv.rating,
+      reviewCount: adv.reviewCount,
+      isVerified: adv.isVerified,
+      availableToday: adv.availableToday,
+      matchScore,
+    };
+  });
+
+  return scored.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
+};
+
+// Helper: AI Legal Triage Engine for Kerala & Indian Judicial Practice
 const runLegalAiTriage = (category, description, jurisdictionDistrict) => {
   const cat = (category || "").toLowerCase();
+  const district = jurisdictionDistrict || "Ernakulam";
 
-  if (cat.includes("property") || cat.includes("land")) {
+  // 1. Property, Land Reforms & Real Estate
+  if (cat.includes("property") || cat.includes("land") || cat.includes("real estate")) {
     return {
-      summary: `Prima facie real estate & immovable property issue within ${jurisdictionDistrict || "Ernakulam"}. Discovered potential violations regarding title verification and boundaries.`,
+      summary: `Dispute involves immovable landed property or title demarcation within ${district}. Prima facie concerns ownership chain, boundary encroachment, or utility route compliance.`,
       applicableActs: [
-        "Kerala Land Reforms Act, 1963 (Section 85)",
-        "Specific Relief Act, 1963 (Section 5 & 6 for recovery of possession)",
-        "Transfer of Property Act, 1882",
-        "Indian Telegraph Act, 1885 (Section 10/16 if utility lines involved)",
+        "Kerala Land Reforms Act, 1963 (Tenancy rights and ceiling provisions)",
+        "Specific Relief Act, 1963 (Section 5, 6 for recovery of possession, Section 38 for Perpetual Injunction)",
+        "Transfer of Property Act, 1882 (Section 52 Lis Pendens, Section 54 Sale, Section 105 Lease)",
+        "Kerala Survey and Boundaries Act, 1961 (Section 9 & 10 demarcation)",
+        "Real Estate (Regulation and Development) Act, 2016 (K-RERA) (if builder dispute)",
+        "Indian Telegraph Act, 1885 (Section 10/16 compensation if power grid/utility lines)",
       ],
       suggestedRemedies: [
-        "Issue formal statutory Legal Notice to adversary prior to institution of suit",
-        "File Suit for Permanent Prohibitory Injunction before the Munsiff Court",
-        "Apply for Advocate Commissioner inspection to prepare mahazar and sketch",
+        "Issue formal Statutory Legal Notice demanding immediate cessation of encroachment",
+        "File Original Suit (OS) for Permanent Prohibitory Injunction before Munsiff Court",
+        "Petition under Order XXVI Rule 9 CPC for Advocate Commissioner inspection with Taluk Surveyor to prepare Mahazar",
+        "Lodge Caveat Petition under Section 148A CPC before Sub Court / Munsiff Court to prevent ex-parte orders",
       ],
-      estimatedCourtFee: "₹1,500 - ₹5,000 as per Kerala Court Fees and Suits Valuation Act, 1959",
-      recommendedSpecialization: "Civil & Land Reforms Advocate",
-      jurisdictionForum: `Munsiff Court / Sub Court, ${jurisdictionDistrict || "Ernakulam"}`,
+      estimatedCourtFee: "₹1,500 - ₹5,000 as per Section 27 / Schedule I of Kerala Court Fees and Suits Valuation Act, 1959",
+      recommendedSpecialization: "Civil, Property & Land Revenue Counsel",
+      jurisdictionForum: `Munsiff Court / Sub Court, ${district} (Appeals: District Court / High Court of Kerala)`,
       riskScore: "Moderate",
+      statutoryLimitation: "3 years from the date of threat or dispossession (Articles 64, 65, 58 of Limitation Act, 1963)",
     };
   }
 
-  if (cat.includes("cheque") || cat.includes("138") || cat.includes("money")) {
+  // 2. Family & Matrimonial
+  if (cat.includes("family") || cat.includes("matrimonial") || cat.includes("divorce") || cat.includes("custody")) {
     return {
-      summary: "Potential offence under Section 138 of Negotiable Instruments Act, 1881. Statutory 15-day demand notice window applies strictly.",
+      summary: `Domestic relations grievance within ${district} requiring matrimonial conciliation, custody determination, or statutory protection.`,
       applicableActs: [
-        "Negotiable Instruments Act, 1881 (Section 138, 141 & 142)",
+        "Family Courts Act, 1984 (Section 7 exclusive jurisdiction and conciliation mandate)",
+        "Special Marriage Act, 1954 / Hindu Marriage Act, 1955 / Indian Divorce Act, 1869 (Divorce grounds)",
+        "Protection of Women from Domestic Violence Act, 2005 (PWDVA Section 12, 18, 19, 20, 22)",
+        "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 144 maintenance; corresponds to CrPC 125)",
+        "Guardians and Wards Act, 1890 (Section 7 & 17 child custody and visitation)",
+      ],
+      suggestedRemedies: [
+        "Participate in pre-litigation Family Court counselling and mediation session",
+        "File Original Petition (OP) for Dissolution of Marriage / Restitution of Conjugal Rights before Family Court",
+        "File Application for Interim Maintenance under Section 144 BNSS / Section 24 HMA",
+        "Petition for Interim Protection & Residence Order under Section 12 PWDVA if immediate safety concerns exist",
+      ],
+      estimatedCourtFee: "Fixed nominal court fees (₹50 to ₹100 per petition) under Kerala Court Fees Act",
+      recommendedSpecialization: "Family Law & Matrimonial Advocate",
+      jurisdictionForum: `Family Court, ${district}`,
+      riskScore: "Moderate",
+      statutoryLimitation: "Continuing cause of action for maintenance and residence; statutory periods apply for fault-based divorce",
+    };
+  }
+
+  // 3. Criminal Defense & Bail
+  if (cat.includes("criminal") || cat.includes("bail") || cat.includes("fir") || cat.includes("police")) {
+    return {
+      summary: `Criminal defense matter within ${district}. Immediate statutory scrutiny required regarding bailable vs non-bailable offences and arrest safeguarding.`,
+      applicableActs: [
+        "Bharatiya Nyaya Sanhita (BNS), 2023 (Substantive penal offences)",
+        "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 480/482/483 Bail, Section 35 Arrest procedure)",
+        "Bharatiya Sakshya Adhiniyam (BSA), 2023 (Digital and electronic evidence mandates)",
+        "Code of Criminal Procedure, 1973 (if investigation commenced prior to July 1, 2024)",
+      ],
+      suggestedRemedies: [
+        "File Anticipatory Bail Application (Bail Appln) under Section 482 BNSS before Court of Session or High Court of Kerala",
+        "Apply for Certified Copy of FIR from Crime and Criminal Tracking Network & Systems (CCTNS) portal",
+        "File Quash Petition under Section 528 BNSS / Section 482 CrPC before High Court if malicious prosecution",
+        "Request interim protection against coercive arrest during preliminary investigation",
+      ],
+      estimatedCourtFee: "₹100 - ₹250 (Court Fee Stamps on Petitions, Affidavits & Vakalatnama)",
+      recommendedSpecialization: "Senior Criminal Trial & High Court Bail Counsel",
+      jurisdictionForum: `Court of Session, ${district} / High Court of Kerala`,
+      riskScore: "High",
+      statutoryLimitation: "Immediate urgency upon apprehension of arrest or registration of FIR",
+    };
+  }
+
+  // 4. Corporate & Commercial
+  if (cat.includes("corporate") || cat.includes("commercial") || cat.includes("company") || cat.includes("nclt")) {
+    return {
+      summary: `Commercial enterprise grievance within ${district}. Evaluated under statutory company law, director duties, contract enforcement, and insolvency frameworks.`,
+      applicableActs: [
+        "Companies Act, 2013 (Section 241/242 Oppression & Mismanagement, Section 447 Fraud)",
+        "Insolvency and Bankruptcy Code (IBC), 2016 (Section 7, 9 Corporate Insolvency Resolution Process)",
+        "Commercial Courts Act, 2015 (Section 12A Mandatory Pre-Institution Mediation)",
+        "Indian Contract Act, 1872 (Section 73, 74 Damages for breach of commercial contract)",
+      ],
+      suggestedRemedies: [
+        "Initiate mandatory Pre-Institution Mediation under Section 12A of Commercial Courts Act before Kerala DLSA",
+        "Issue Statutory Demand Notice in Form 3/4 under Section 8 of IBC for undisputed operational/financial debts",
+        "File Company Petition before National Company Law Tribunal (NCLT) Kochi Bench",
+        "File Commercial Summary Suit with application for urgent Attachment Before Judgment (Order XXXVIII Rule 5 CPC)",
+      ],
+      estimatedCourtFee: "Prescribed NCLT schedule fees / Ad-valorem commercial court fee under Kerala Court Fees Act",
+      recommendedSpecialization: "Corporate, NCLT & Commercial Litigation Counsel",
+      jurisdictionForum: `Commercial Court / NCLT Kochi Bench / High Court of Kerala`,
+      riskScore: "High",
+      statutoryLimitation: "3 years from the date of contract default / financial debt maturity (Article 55 Limitation Act, 1963)",
+    };
+  }
+
+  // 5. Arbitration & ADR
+  if (cat.includes("arbitration") || cat.includes("adr") || cat.includes("tribunal")) {
+    return {
+      summary: `Arbitrable dispute involving contract interpretation, claim settlement, or arbitral tribunal proceedings in Kerala jurisdiction.`,
+      applicableActs: [
+        "Arbitration and Conciliation Act, 1996 (as amended in 2015, 2019, 2021)",
+        "Section 9 (Interim measures of protection by High Court / Commercial Court)",
+        "Section 11 (Appointment of Arbitrator by High Court of Kerala Arbitration Centre)",
+        "Section 34 (Setting aside of arbitral awards)",
+      ],
+      suggestedRemedies: [
+        "Issue formal Notice of Arbitration under Section 21 invoking arbitration agreement and proposing sole arbitrator",
+        "File Section 9 Arbitration Request before High Court / Commercial Court for interim asset preservation",
+        "File Section 11(6) Application before Hon'ble High Court of Kerala if opposing party fails to agree on arbitrator",
+        "Apply for emergency interim injunction against encashment of performance bank guarantees",
+      ],
+      estimatedCourtFee: "High Court of Kerala Arbitration Centre schedule charges & statutory stamp duty",
+      recommendedSpecialization: "Arbitration & Commercial Dispute Resolution Specialist",
+      jurisdictionForum: "High Court of Kerala Arbitration Centre / Commercial Court",
+      riskScore: "Moderate",
+      statutoryLimitation: "3 years from accrual of dispute to invoke arbitration; 3 months for Section 34 challenge",
+    };
+  }
+
+  // 6. Cybercrime & IT Law
+  if (cat.includes("cyber") || cat.includes("it law") || cat.includes("online fraud") || cat.includes("phishing")) {
+    return {
+      summary: `Cyber offence or digital financial fraud reported within ${district}. Requires immediate evidence preservation and account freeze actions.`,
+      applicableActs: [
+        "Information Technology Act, 2000 (Section 43, 66, 66C Identity Theft, 66D Cheating by personation, Section 67)",
+        "Bharatiya Nyaya Sanhita (BNS), 2023 (Section 318 Cheating, Section 316 Criminal Breach of Trust)",
+        "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 106 Seizure and account freeze)",
+        "Digital Personal Data Protection Act (DPDPA), 2023",
+      ],
+      suggestedRemedies: [
+        "Immediately report incident on National Cyber Crime Reporting Portal (cybercrime.gov.in / Call 1930) for golden-hour freeze",
+        "Submit formal complaint to jurisdictional Cyber Crime Police Station (Kochi / Thiruvananthapuram / Kozhikode)",
+        "Issue written representation to Bank Nodal Officer for reversing unauthorized fund transfers",
+        "File Section 483 BNSS petition before High Court of Kerala for de-freezing legitimate operational accounts",
+      ],
+      estimatedCourtFee: "Nominal court fee stamps",
+      recommendedSpecialization: "Cyber Law & White Collar Crime Counsel",
+      jurisdictionForum: `Court of Judicial First Class Magistrate / Cyber Police Division / High Court of Kerala`,
+      riskScore: "High",
+      statutoryLimitation: "Immediate reporting within 2 to 24 hours of unauthorized transaction to halt fund dispersal",
+    };
+  }
+
+  // 7. Consumer Protection
+  if (cat.includes("consumer") || cat.includes("deficiency") || cat.includes("unfair trade")) {
+    return {
+      summary: `Consumer grievance alleging deficiency of service, defective goods, or unfair trade practice in ${district}.`,
+      applicableActs: [
+        "Consumer Protection Act, 2019 (Section 35 Complaints to District Commission, Section 84 Product Liability)",
+        "Consumer Protection (E-Commerce) Rules, 2020",
+        "Consumer Protection (Direct Selling) Rules, 2021",
+      ],
+      suggestedRemedies: [
+        "Issue 15-day pre-litigation Statutory Legal Notice demanding refund, product replacement, or cure",
+        "File Consumer Complaint via e-Daakhil online portal or physical filing before District CDRC",
+        "Claim compensation for mental agony, litigation expenditure, and punitive damages for unfair practice",
+        "Petition for interim relief halting recurring charges or preserving evidence",
+      ],
+      estimatedCourtFee: "Nil for claims up to ₹5 Lakhs; nominal tiered fee above ₹5 Lakhs (Section 35 Consumer Protection Act)",
+      recommendedSpecialization: "Consumer Protection & Deficient Service Advocate",
+      jurisdictionForum: `District Consumer Disputes Redressal Commission (DCDRC), ${district}`,
+      riskScore: "Low",
+      statutoryLimitation: "2 years from the date on which the cause of action arose (Section 69 Consumer Protection Act, 2019)",
+    };
+  }
+
+  // 8. Cheque Bounce / Financial Recovery
+  if (cat.includes("cheque") || cat.includes("138") || cat.includes("negotiable") || cat.includes("debt")) {
+    return {
+      summary: `Financial default involving dishonoured cheque or promissory instrument in ${district}. Strict statutory timetable applies.`,
+      applicableActs: [
+        "Negotiable Instruments Act, 1881 (Section 138 Dishonour, Section 141 Corporate Liability, Section 142 Cognizance)",
         "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Summary Trial Procedures)",
         "Commercial Courts Act, 2015 (if commercial transaction above ₹3 Lakhs)",
       ],
       suggestedRemedies: [
-        "Issue mandatory Statutory Demand Notice within 30 days of Bank Return Memo",
-        "Wait for mandatory 15-day cure period from date of notice delivery",
-        "File Criminal Complaint under Section 142 before Judicial First Class Magistrate (JFCM)",
+        "Issue mandatory Statutory Demand Notice within 30 days of receiving Bank Return Memo",
+        "Provide mandatory 15-day cure period from date of confirmed delivery of notice",
+        "File Criminal Complaint under Section 142 before Judicial First Class Magistrate within 30 days of cure expiry",
+        "Apply for 20% Interim Compensation under Section 143A of NI Act at the stage of plea framing",
       ],
-      estimatedCourtFee: "Ad-valorem court fee as per Schedule I of Kerala Court Fees Act",
+      estimatedCourtFee: "Ad-valorem court fee as per Schedule I of Kerala Court Fees and Suits Valuation Act, 1959",
       recommendedSpecialization: "Commercial Litigation & Banking Counsel",
-      jurisdictionForum: "Court of Judicial First Class Magistrate (JFCM)",
+      jurisdictionForum: `Court of Judicial First Class Magistrate (JFCM), ${district}`,
       riskScore: "High",
+      statutoryLimitation: "Strict: 30 days for notice dispatch; 15 days cure; 30 days to file criminal complaint",
     };
   }
 
-  if (cat.includes("criminal") || cat.includes("bail")) {
+  // 9. Civil Litigation & Injunctions
+  if (cat.includes("civil") || cat.includes("injunction") || cat.includes("damages") || cat.includes("suit")) {
     return {
-      summary: "Criminal law matter. Immediate assessment required regarding bailable vs non-bailable offences and anticipation of arrest.",
+      summary: `Civil dispute within ${district} requiring declaratory decree, contractual enforcement, or preventive injunction.`,
       applicableActs: [
-        "Bharatiya Nyaya Sanhita (BNS), 2023",
-        "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 482 / 483 Bail)",
-        "Code of Criminal Procedure (if FIR registered prior to July 2024)",
+        "Code of Civil Procedure, 1908 (Order VII Rule 1 Plaint, Order XXXIX Rules 1 & 2 Interim Injunction)",
+        "Specific Relief Act, 1963 (Section 34 Declaratory Decrees, Section 38 Perpetual Injunction)",
+        "Kerala Court Fees and Suits Valuation Act, 1959",
       ],
       suggestedRemedies: [
-        "File Anticipatory Bail Petition before Court of Session or High Court of Kerala",
-        "Apply for Certified Copy of FIR from jurisdictional Police Station / e-Court portal",
-        "Petition under Section 528 BNSS / Section 482 CrPC for quashing if malicious prosecution",
+        "File Original Suit (OS) with urgent Application for Ad-Interim Temporary Injunction before Munsiff / Sub Court",
+        "File Caveat Petition under Section 148A CPC to guarantee right of audience against ex-parte injunctions",
+        "Apply for Attachment Before Judgment (Order XXXVIII Rule 5 CPC) to secure disputed monetary claim",
+        "Apply for Advocate Commissioner inspection for contemporaneous evidence gathering",
       ],
-      estimatedCourtFee: "₹100 - ₹250 (Court Fee Stamps on Petitions & Vakalatnama)",
-      recommendedSpecialization: "Senior Criminal Trial & High Court Counsel",
-      jurisdictionForum: "Sessions Court / High Court of Kerala",
-      riskScore: "High",
+      estimatedCourtFee: "Ad-valorem fees under Kerala Court Fees and Suits Valuation Act, 1959",
+      recommendedSpecialization: "Senior Civil Trial Counsel",
+      jurisdictionForum: `Munsiff Court / Sub Court, ${district}`,
+      riskScore: "Moderate",
+      statutoryLimitation: "3 years from the date right to sue accrues (Limitation Act, 1963)",
     };
   }
 
-  // General default triage
+  // 10. General / Default Triage
   return {
-    summary: `Citizen grievance documented in ${category}. Legal recourse evaluated under relevant central and Kerala enactments.`,
+    summary: `Citizen grievance categorized under ${category} within ${district}. Evaluated under applicable Kerala and Central statutory enactments.`,
     applicableActs: [
-      "Constitution of India (Article 226 for Writ Petitions)",
-      "Code of Civil Procedure, 1908 / BNS 2023",
-      "Consumer Protection Act, 2019 (if deficient service or unfair trade practice)",
+      "Constitution of India (Article 226 for Writ Petitions before High Court of Kerala)",
+      "Code of Civil Procedure, 1908 / Bharatiya Nyaya Sanhita, 2023",
+      "Specific Relief Act, 1963 / Indian Contract Act, 1872",
+      "Kerala Court Fees and Suits Valuation Act, 1959",
     ],
     suggestedRemedies: [
-      "Consult empaneled advocate for comprehensive document examination",
-      "Issue Cease & Desist or Demand Notice to opposite party",
-      "Draft representation / petition before competent forum",
+      "Schedule conference with empaneled Kerala advocate for detailed case vetting",
+      "Issue Cease & Desist / Statutory Notice to opposing party",
+      "Draft formal representation / plaint before competent judicial forum",
+      "File Caveat Petition if anticipating adverse ex-parte proceedings",
     ],
-    estimatedCourtFee: "Subject to forum and nature of relief claimed",
+    estimatedCourtFee: "Subject to forum and nature of relief claimed under Kerala Court Fees Act",
     recommendedSpecialization: "High Court & Civil Advocate",
-    jurisdictionForum: `High Court of Kerala / District Court, ${jurisdictionDistrict || "Ernakulam"}`,
+    jurisdictionForum: `High Court of Kerala / District Court, ${district}`,
     riskScore: "Moderate",
+    statutoryLimitation: "Limitation Act, 1963 provisions apply based on specific cause of action",
   };
+};
+
+// @desc    Pre-flight preview of AI Legal Triage (Without saving)
+// @route   POST /api/citizen/grievances/preview
+// @access  Private (Citizen)
+export const previewGrievanceTriage = async (req, res) => {
+  try {
+    const { category, description, jurisdictionDistrict } = req.body;
+    if (!description) {
+      return res.status(400).json({ success: false, message: "Description is required for triage preview" });
+    }
+
+    const aiTriage = runLegalAiTriage(category, description, jurisdictionDistrict);
+    const matchedAdvocates = matchAdvocatesForTriage(category, jurisdictionDistrict);
+
+    res.json({
+      success: true,
+      category: category || "Other Legal Matter",
+      jurisdictionDistrict: jurisdictionDistrict || "Ernakulam",
+      aiTriage,
+      matchedAdvocates,
+    });
+  } catch (error) {
+    console.error("previewGrievanceTriage error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // @desc    Submit a legal grievance for AI Triage & Advocate Matching
@@ -201,6 +449,7 @@ export const submitGrievance = async (req, res) => {
     }
 
     const aiTriageResult = runLegalAiTriage(category, description, jurisdictionDistrict);
+    const matchedAdvocates = matchAdvocatesForTriage(category, jurisdictionDistrict);
 
     if (shouldUseDevStore()) {
       const grievance = devStore.addGrievance({
@@ -209,17 +458,19 @@ export const submitGrievance = async (req, res) => {
         description: description.trim(),
         category: category || "Other Legal Matter",
         jurisdictionDistrict: jurisdictionDistrict || "Ernakulam",
-        preferredCourt: preferredCourt || "High Court of Kerala / District Court",
-        urgencyLevel: urgencyLevel || "Medium (Standard Filing)",
+        preferredCourt: preferredCourt || aiTriageResult.jurisdictionForum || "High Court of Kerala / District Court",
+        urgencyLevel: urgencyLevel || "Medium",
         status: "triage_analyzed",
         aiTriage: aiTriageResult,
+        matchedAdvocates,
         evidenceDocs: evidenceDocs || [],
       });
 
       return res.status(201).json({
         success: true,
-        message: "Legal grievance submitted and analyzed by Wakheel AI Triage (Dummy Data Engine)",
+        message: "Legal grievance submitted and analyzed by Wakheel AI Triage Engine",
         grievance,
+        matchedAdvocates,
         mode: "dummy_data",
       });
     }
@@ -230,10 +481,11 @@ export const submitGrievance = async (req, res) => {
       description: description.trim(),
       category: category || "Other Legal Matter",
       jurisdictionDistrict: jurisdictionDistrict || "Ernakulam",
-      preferredCourt: preferredCourt || "High Court of Kerala / District Court",
-      urgencyLevel: urgencyLevel || "Medium (Standard Filing)",
+      preferredCourt: preferredCourt || aiTriageResult.jurisdictionForum || "High Court of Kerala / District Court",
+      urgencyLevel: urgencyLevel || "Medium",
       status: "triage_analyzed",
       aiTriage: aiTriageResult,
+      matchedAdvocates,
       evidenceDocs: evidenceDocs || [],
     });
 
@@ -241,6 +493,7 @@ export const submitGrievance = async (req, res) => {
       success: true,
       message: "Legal grievance submitted and analyzed by Wakheel AI Triage",
       grievance,
+      matchedAdvocates,
       mode: "cloud_db",
     });
   } catch (error) {
@@ -265,6 +518,84 @@ export const getGrievances = async (req, res) => {
     res.json({ success: true, count: grievances.length, grievances, mode: "cloud_db" });
   } catch (error) {
     console.error("getGrievances error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get single grievance by ID with full triage & matched advocates
+// @route   GET /api/citizen/grievances/:id
+// @access  Private (Citizen)
+export const getGrievanceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const grievance = devStore.getGrievanceById(id);
+      if (!grievance) {
+        return res.status(404).json({ success: false, message: "Grievance record not found" });
+      }
+      return res.json({ success: true, grievance, mode: "dummy_data" });
+    }
+
+    const grievance = await Grievance.findById(id);
+    if (!grievance) {
+      return res.status(404).json({ success: false, message: "Grievance record not found" });
+    }
+
+    res.json({ success: true, grievance, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getGrievanceById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Match/Engage Advocate for Grievance & Auto-Create Matter Docket
+// @route   POST /api/citizen/grievances/:id/match
+// @access  Private (Citizen)
+export const matchAdvocateForGrievance = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const { advocateId } = req.body;
+
+    if (!advocateId) {
+      return res.status(400).json({ success: false, message: "advocateId is required" });
+    }
+
+    if (shouldUseDevStore()) {
+      const result = devStore.matchAdvocateToGrievance(id, advocateId, userId);
+      if (!result) {
+        return res.status(404).json({ success: false, message: "Grievance not found" });
+      }
+      return res.json({
+        success: true,
+        message: "Advocate successfully engaged and active matter docket created",
+        grievance: result.grievance,
+        matter: result.matter,
+        advocate: result.advocate,
+        mode: "dummy_data",
+      });
+    }
+
+    const grievance = await Grievance.findById(id);
+    if (!grievance) {
+      return res.status(404).json({ success: false, message: "Grievance not found" });
+    }
+
+    const advocate = await User.findById(advocateId).select("-password");
+    grievance.assignedAdvocateId = advocateId;
+    grievance.status = "matter_opened";
+    await grievance.save();
+
+    res.json({
+      success: true,
+      message: "Advocate successfully engaged for grievance",
+      grievance,
+      advocate,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("matchAdvocateForGrievance error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

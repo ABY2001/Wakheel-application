@@ -71,6 +71,7 @@ import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmissi
 import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
 import { ClientDocumentsView } from "@/components/client/ClientDocumentsView";
 import { DocumentFilingView } from "@/components/client/DocumentFilingView";
+import { CaseTimelineView } from "@/components/client/CaseTimelineView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -655,10 +656,10 @@ export function ClientPortalView() {
         },
         {
           id: "task-and-timeline",
-          label: "Task and Timeline",
-          subtitle: "Stage progression & milestones",
+          label: "Tasks & Timeline",
+          subtitle: "Case milestones & court schedule",
           whatItDoes: "Track the chronological history and upcoming milestones of your legal matter.",
-          icon: ListChecks,
+          icon: History,
         },
         {
           id: "payments-and-invoice",
@@ -1051,11 +1052,14 @@ export function ClientPortalView() {
               { id: "my-advocates", label: "My advocates", icon: Users },
               { id: "appointments", label: "Appointments", icon: Calendar },
               { id: "messages", label: "Messages", icon: MessageSquare },
-              { id: "task-and-timeline", label: "Task and Timeline", icon: ListChecks },
+              { id: "task-and-timeline", label: "Tasks & Timeline", icon: History },
               { id: "payments-and-invoice", label: "Payments and Invoice", icon: Receipt },
             ].map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id;
+              const isActive =
+                activeTab === item.id ||
+                (item.id === "task-and-timeline" &&
+                  (activeTab === "tasks-and-timeline" || activeTab === "timeline"));
               return (
                 <button
                   key={item.id}
@@ -1813,6 +1817,7 @@ export function ClientPortalView() {
           {(activeTab === "my-matters" || activeTab === "case-tracker" || activeTab === "case-tracker-prod") && (
             <MyLegalMattersView
               onSelectMatter={(matterTitle) => setSelectedMatter(matterTitle)}
+              onNavigateTab={(tab) => setActiveTab(tab)}
               onOpenConsultation={() => {
                 setSelectedAdvocate(mockAdvocates[0]);
                 setBookingDefaultTab("booking");
@@ -2581,6 +2586,21 @@ export function ClientPortalView() {
             <ERPDashboardView
               onNavigateTab={(t) => setActiveTab(t)}
               hideTopBanner={true}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Tasks & Timeline (Case Timeline & Next Steps)            */}
+          {/* ============================================================== */}
+          {(activeTab === "task-and-timeline" ||
+            activeTab === "tasks-and-timeline" ||
+            activeTab === "timeline") && (
+            <CaseTimelineView
+              initialMatter={selectedMatter}
+              onOpenBookingModal={(counsel) => {
+                const adv = mockAdvocates[0];
+                handleOpenConsultation(adv);
+              }}
             />
           )}
 

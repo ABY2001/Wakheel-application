@@ -125,11 +125,13 @@ const DEFAULT_MATTERS: LegalMatter[] = [
 interface MyLegalMattersViewProps {
   onSelectMatter?: (matterTitle: string) => void;
   onOpenConsultation?: () => void;
+  onNavigateTab?: (tab: string) => void;
 }
 
 export function MyLegalMattersView({
   onSelectMatter,
   onOpenConsultation,
+  onNavigateTab,
 }: MyLegalMattersViewProps = {}) {
   const [matters] = useState<LegalMatter[]>(DEFAULT_MATTERS);
   const [selectedMatterDetail, setSelectedMatterDetail] = useState<LegalMatter | null>(null);
@@ -397,6 +399,19 @@ export function MyLegalMattersView({
                     </div>
                   ))}
                 </div>
+                {onNavigateTab && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMatterDetail(null);
+                      onNavigateTab("task-and-timeline");
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
+                  >
+                    <span>View Complete Chronological Case Timeline &amp; Next Steps</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             )}
 

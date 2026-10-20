@@ -7,7 +7,6 @@ import {
   Briefcase,
   History,
   Activity,
-  ListChecks,
   Sparkles,
   FileEdit,
   MessageSquare,

@@ -68,6 +68,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmission";
+import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -1863,9 +1864,23 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
+          {/* VIEW: My Legal Matters (Docket Cards View)                     */}
+          {/* ============================================================== */}
+          {activeTab === "my-matters" && (
+            <MyLegalMattersView
+              onSelectMatter={(matterTitle) => setSelectedMatter(matterTitle)}
+              onOpenConsultation={() => {
+                setSelectedAdvocate(mockAdvocates[0]);
+                setBookingDefaultTab("booking");
+                setBookingModalOpen(true);
+              }}
+            />
+          )}
+
+          {/* ============================================================== */}
           {/* VIEW: Case Tracker (eCourts CNR Tracking)                      */}
           {/* ============================================================== */}
-          {(activeTab === "case-tracker" || activeTab === "case-tracker-prod" || activeTab === "my-matters") && (
+          {(activeTab === "case-tracker" || activeTab === "case-tracker-prod") && (
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">

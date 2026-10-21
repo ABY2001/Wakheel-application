@@ -34,6 +34,10 @@ import {
   getInvoiceById,
   payCitizenInvoice,
   createInvoiceRequest,
+  getCitizenMessages,
+  sendCitizenMessage,
+  markMessageRead,
+  getUnreadMessageCount,
 } from "../controllers/citizenController.js";
 
 const router = express.Router();
@@ -81,5 +85,10 @@ router.route("/ai/chat").post(protect, citizenAiChat);
 router.route("/invoices").get(protect, getCitizenInvoices).post(protect, createInvoiceRequest);
 router.route("/invoices/:id").get(protect, getInvoiceById);
 router.route("/invoices/:id/pay").post(protect, payCitizenInvoice);
+
+// 10. Secure Client-Advocate Privileged Messaging & Inbox
+router.route("/messages").get(protect, getCitizenMessages).post(protect, sendCitizenMessage);
+router.route("/messages/unread-count").get(protect, getUnreadMessageCount);
+router.route("/messages/:id/read").put(protect, markMessageRead);
 
 export default router;

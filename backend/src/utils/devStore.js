@@ -808,6 +808,110 @@ const DEFAULT_ADVOCATE_PROFILES = [
   },
 ];
 
+const DEFAULT_MESSAGES = [
+  {
+    _id: "msg_201",
+    id: "msg_201",
+    senderId: "adv_1",
+    senderRole: "advocate",
+    senderName: "Adv. Meera Krishnan",
+    recipientId: "default_citizen",
+    recipientRole: "citizen",
+    recipientName: "Gopakumar Nambiar",
+    matterId: "mat_wpc_19482",
+    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+    content: "Good afternoon Sri. Gopakumar. The Division Bench of the High Court of Kerala has taken up WP(C) 19482/2024 today before Court Hall 2A. We argued the interim stay application, and the Hon'ble Court has directed the respondents (KSEB) to maintain status quo regarding tree felling and tower alignment until their counter-affidavit is placed on record.",
+    attachments: [
+      {
+        fileName: "High_Court_Daily_Order_Interim_Stay.pdf",
+        fileUrl: "/docs/High_Court_Daily_Order_Interim_Stay.pdf",
+        fileType: "application/pdf",
+        fileSize: "1.4 MB",
+      },
+    ],
+    isRead: true,
+    readAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    isPrivileged: true,
+    category: "hearing_update",
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "msg_202",
+    id: "msg_202",
+    senderId: "default_citizen",
+    senderRole: "citizen",
+    senderName: "Gopakumar Nambiar",
+    recipientId: "adv_1",
+    recipientRole: "advocate",
+    recipientName: "Adv. Meera Krishnan",
+    matterId: "mat_wpc_19482",
+    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+    content: "Thank you Adv. Meera! That is a huge relief. Do I need to submit the original Village Officer demarcation sketch before the next posting date?",
+    attachments: [],
+    isRead: true,
+    readAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    isPrivileged: true,
+    category: "general",
+    createdAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "msg_203",
+    id: "msg_203",
+    senderId: "adv_1",
+    senderRole: "advocate",
+    senderName: "Adv. Meera Krishnan",
+    recipientId: "default_citizen",
+    recipientRole: "citizen",
+    recipientName: "Gopakumar Nambiar",
+    matterId: "mat_wpc_19482",
+    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+    content: "Yes, please upload the certified copy of the Village demarcation sketch to your document vault so we can examine the alignment coordinates and annex it to our reply affidavit before Friday.",
+    attachments: [],
+    isRead: true,
+    readAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
+    isPrivileged: true,
+    category: "document_request",
+    createdAt: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "msg_204",
+    id: "msg_204",
+    senderId: "adv_1",
+    senderRole: "advocate",
+    senderName: "Adv. Meera Krishnan",
+    recipientId: "default_citizen",
+    recipientRole: "citizen",
+    recipientName: "Gopakumar Nambiar",
+    matterId: "mat_os_412",
+    matterTitle: "OS 412/2024 — Title Injunction & Commission Inspection (Munsiff Court, Pala)",
+    content: "Regarding the commission inspection in OS 412/2024, the Advocate Commissioner has scheduled the local spot inspection for this Saturday at 10:30 AM. Kindly ensure you or your authorized representative is present at the property with your prior registered title deeds and tax receipts.",
+    attachments: [],
+    isRead: false,
+    isPrivileged: true,
+    category: "urgent",
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "msg_205",
+    id: "msg_205",
+    senderId: "default_citizen",
+    senderRole: "citizen",
+    senderName: "Gopakumar Nambiar",
+    recipientId: "adv_1",
+    recipientRole: "advocate",
+    recipientName: "Adv. Meera Krishnan",
+    matterId: "mat_not_701",
+    matterTitle: "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
+    content: "Advocate, India Post Speed Post tracking report shows the statutory demand notice was successfully delivered to Coastal Logistics on 16th October. The 15-day cure countdown is actively tracking in our portal.",
+    attachments: [],
+    isRead: true,
+    readAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+    isPrivileged: true,
+    category: "general",
+    createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -1816,5 +1920,60 @@ export const devStore = {
     docs.unshift(newDoc);
     writeFile("dev_documents.json", docs);
     return newDoc;
+  },
+
+  // --- Secure Client-Advocate Messaging ---
+  getMessages(userId = "default_citizen", matterId = "") {
+    const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    return messages.filter((m) => {
+      const matchUser =
+        !userId ||
+        m.senderId === userId ||
+        m.recipientId === userId ||
+        userId === "default_citizen";
+      const matchMatter = !matterId || m.matterId === matterId;
+      return matchUser && matchMatter;
+    });
+  },
+
+  sendMessage(data) {
+    const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    const now = new Date();
+    const newMsg = {
+      _id: "msg_" + Date.now().toString(),
+      id: "msg_" + Date.now().toString(),
+      senderId: data.senderId || "default_citizen",
+      senderRole: data.senderRole || "citizen",
+      senderName: data.senderName || "Gopakumar Nambiar",
+      recipientId: data.recipientId || "adv_1",
+      recipientRole: data.recipientRole || "advocate",
+      recipientName: data.recipientName || "Adv. Meera Krishnan",
+      matterId: data.matterId || "",
+      matterTitle: data.matterTitle || "General Legal Counsel",
+      content: data.content,
+      attachments: data.attachments || [],
+      isRead: false,
+      isPrivileged: data.isPrivileged !== undefined ? data.isPrivileged : true,
+      category: data.category || "general",
+      createdAt: now.toISOString(),
+    };
+    messages.push(newMsg);
+    writeFile("dev_messages.json", messages);
+    return newMsg;
+  },
+
+  markMessageAsRead(messageId) {
+    const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    const msg = messages.find((m) => m._id === messageId || m.id === messageId);
+    if (!msg) return null;
+    msg.isRead = true;
+    msg.readAt = new Date().toISOString();
+    writeFile("dev_messages.json", messages);
+    return msg;
+  },
+
+  getUnreadMessageCount(userId = "default_citizen") {
+    const messages = this.getMessages(userId);
+    return messages.filter((m) => m.recipientId === userId && !m.isRead).length;
   },
 };

@@ -669,6 +669,59 @@ export const citizenApi = {
     });
     return await res.json();
   },
+
+  // 10. Secure Client-Advocate Privileged Messaging & Inbox
+  async getMessages(token: string, matterId?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const url = matterId
+      ? `${API_BASE_URL}/citizen/messages?matterId=${encodeURIComponent(matterId)}`
+      : `${API_BASE_URL}/citizen/messages`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async sendCitizenMessage(
+    token: string,
+    data: {
+      content: string;
+      recipientId?: string;
+      recipientName?: string;
+      matterId?: string;
+      matterTitle?: string;
+      attachments?: { fileName: string; fileUrl: string; fileType: string; fileSize: string }[];
+      category?: "general" | "hearing_update" | "document_request" | "urgent";
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async markMessageAsRead(token: string, messageId: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/messages/${encodeURIComponent(messageId)}/read`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getUnreadMessageCount(token: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/messages/unread-count`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

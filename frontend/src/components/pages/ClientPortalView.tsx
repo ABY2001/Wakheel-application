@@ -73,6 +73,7 @@ import { DocumentFilingView } from "@/components/client/DocumentFilingView";
 import { CaseTimelineView } from "@/components/client/CaseTimelineView";
 import { LegalNoticesView } from "@/components/client/LegalNoticesView";
 import { InvoicesAndPaymentsView } from "@/components/client/InvoicesAndPaymentsView";
+import { SecureInboxView } from "@/components/client/SecureInboxView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -1711,7 +1712,7 @@ export function ClientPortalView() {
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                             c.status === "scheduled"
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                              ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
                               : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-800"
                           }`}
                         >
@@ -1749,6 +1750,20 @@ export function ClientPortalView() {
                   ))}
               </div>
             </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Privileged Chamber Inbox & Direct Advocate Messages     */}
+          {/* ============================================================== */}
+          {(activeTab === "inbox" || activeTab === "messages") && (
+            <SecureInboxView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              onOpenConsultationModal={() => {
+                setSelectedAdvocate(mockAdvocates[0]);
+                setBookingDefaultTab("booking");
+                setBookingModalOpen(true);
+              }}
+            />
           )}
 
           {/* ============================================================== */}

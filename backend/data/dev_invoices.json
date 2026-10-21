@@ -1,121 +1,210 @@
 [
   {
-    "_id": "inv_1792124984042",
-    "invoiceNumber": "INV-2026/KL-004",
+    "_id": "inv_1792576390253",
+    "invoiceNumber": "INV-2026/KL-005",
     "advocateId": "adv_1",
     "advocateName": "Adv. Meera Krishnan",
-    "citizenId": "default_citizen",
+    "barCouncilNumber": "K/001429/2012",
+    "chamberAddress": "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    "citizenId": "dev_1791778051045",
     "clientName": "Gopakumar Nambiar",
-    "clientPhone": "",
-    "matterId": "",
-    "matterTitle": "WP(C) 19482/2024 - High Court Representation",
+    "clientPhone": "+91 94471 28400",
+    "clientAddress": "Panampilly Nagar, Ernakulam, Kerala 682036",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — High Court Writ Representation",
     "items": [
       {
-        "description": "High Court Senior Appearance Fee",
-        "amount": 15000
-      },
-      {
-        "description": "Urgent Interim Stay Application Drafting",
-        "amount": 7500
+        "description": "Senior Counsel Conference & Counter Affidavit Drafting",
+        "amount": 12000,
+        "category": "Professional Fee",
+        "sacCode": "9982"
       }
     ],
-    "subtotal": 22500,
+    "subtotal": 12000,
     "gstRate": 18,
-    "gstAmount": 4050,
-    "totalAmount": 26550,
-    "status": "paid",
-    "dueDate": "2026-10-31T04:29:44.042Z",
+    "gstAmount": 2160,
+    "cgstAmount": 1080,
+    "sgstAmount": 1080,
+    "totalAmount": 14160,
+    "status": "unpaid",
+    "dueDate": "2026-11-05T09:53:10.253Z",
     "paymentMethod": "UPI",
-    "createdAt": "2026-10-16T04:29:44.042Z",
-    "paidAt": "2026-10-16T06:15:54.375Z"
+    "createdAt": "2026-10-21T09:53:10.253Z"
   },
   {
     "_id": "inv_2026_041",
     "invoiceNumber": "INV-2026/KL-041",
     "advocateId": "adv_1",
     "advocateName": "Adv. Meera Krishnan",
+    "barCouncilNumber": "K/001429/2012",
+    "chamberAddress": "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
     "citizenId": "default_citizen",
     "clientName": "Gopakumar Nambiar",
     "clientPhone": "+91 94471 28400",
+    "clientAddress": "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
     "matterId": "mat_wpc_19482",
     "matterTitle": "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
     "items": [
       {
         "description": "High Court E-Filing & Senior Drafting Fee",
+        "category": "Professional Fee",
+        "sacCode": "9982",
         "amount": 15000
       },
       {
-        "description": "Court Hall 2A Senior Appearance (Interim Injunction)",
+        "description": "Court Hall 2A Senior Appearance (Interim Injunction Hearing)",
+        "category": "Appearance Fee",
+        "sacCode": "9982",
         "amount": 10000
+      },
+      {
+        "description": "High Court Paper Book Binding, Indexing & True Copy Attestations",
+        "category": "Stationery & Process",
+        "sacCode": "9982",
+        "amount": 2500
+      },
+      {
+        "description": "Kerala Advocates' Clerks Welfare Fund Stamp & Advocate Welfare Fund",
+        "category": "Clerkage & Stamps",
+        "sacCode": "9982",
+        "amount": 1500
       }
     ],
-    "subtotal": 25000,
+    "subtotal": 29000,
     "gstRate": 18,
-    "gstAmount": 4500,
-    "totalAmount": 29500,
-    "status": "partially_paid",
-    "dueDate": "2026-10-26T04:17:50.495Z",
-    "paidAt": "2026-10-13T04:17:50.495Z",
+    "gstAmount": 5220,
+    "cgstAmount": 2610,
+    "sgstAmount": 2610,
+    "totalAmount": 34220,
+    "status": "unpaid",
+    "dueDate": "2026-10-31T09:35:16.570Z",
     "paymentMethod": "UPI",
-    "createdAt": "2026-10-11T04:17:50.495Z"
+    "createdAt": "2026-10-18T09:35:16.570Z"
   },
   {
-    "_id": "inv_2026_019",
-    "invoiceNumber": "INV-2026/KL-019",
+    "_id": "inv_2026_072",
+    "invoiceNumber": "INV-2026/KL-072",
     "advocateId": "adv_1",
     "advocateName": "Adv. Meera Krishnan",
-    "citizenId": "client_ananya",
-    "clientName": "Ananya Deshmukh",
-    "clientPhone": "+91 98200 44112",
-    "matterId": "mat_arb_041",
-    "matterTitle": "Commercial Arbitration Retainer & Section 9 Petition",
+    "barCouncilNumber": "K/001429/2012",
+    "chamberAddress": "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    "citizenId": "default_citizen",
+    "clientName": "Gopakumar Nambiar",
+    "clientPhone": "+91 94471 28400",
+    "clientAddress": "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
+    "matterId": "mat_os_412",
+    "matterTitle": "OS 412/2024 — Title Injunction & Commission Inspection (Munsiff Court, Pala)",
     "items": [
       {
-        "description": "Arbitration Notice Drafting & Chamber Briefing",
-        "amount": 20000
+        "description": "Plaint Preparation & Order XXVI Rule 9 Commission Application",
+        "category": "Professional Fee",
+        "sacCode": "9982",
+        "amount": 8000
       },
       {
-        "description": "NCLT Urgent Mentioning & Indexing",
-        "amount": 12000
+        "description": "Taluk Surveyor & Advocate Commissioner Mahazar Assistance",
+        "category": "Commission & Process",
+        "sacCode": "9982",
+        "amount": 6000
+      },
+      {
+        "description": "Kerala Court Fees & Suits Valuation Act Ad-valorem Stamps",
+        "category": "Court Fees",
+        "sacCode": "9982",
+        "amount": 3500
       }
     ],
-    "subtotal": 32000,
+    "subtotal": 17500,
     "gstRate": 18,
-    "gstAmount": 5760,
-    "totalAmount": 37760,
-    "status": "paid",
-    "dueDate": "2026-10-11T04:17:50.495Z",
-    "paidAt": "2026-10-11T04:17:50.495Z",
-    "paymentMethod": "NEFT/RTGS",
-    "createdAt": "2026-10-01T04:17:50.495Z"
+    "gstAmount": 3150,
+    "cgstAmount": 1575,
+    "sgstAmount": 1575,
+    "totalAmount": 20650,
+    "status": "unpaid",
+    "dueDate": "2026-10-26T09:35:16.570Z",
+    "paymentMethod": "Portal_Escrow",
+    "createdAt": "2026-10-20T09:35:16.570Z"
   },
   {
-    "_id": "inv_2026_058",
-    "invoiceNumber": "INV-2026/KL-058",
+    "_id": "inv_2026_011",
+    "invoiceNumber": "INV-2026/KL-011",
     "advocateId": "adv_1",
     "advocateName": "Adv. Meera Krishnan",
-    "citizenId": "client_rohit",
-    "clientName": "Rohit Menon",
-    "clientPhone": "+91 97455 33201",
-    "matterId": "mat_rera_102",
-    "matterTitle": "K-RERA Delay Possession Complaint & Title Verification",
+    "barCouncilNumber": "K/001429/2012",
+    "chamberAddress": "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    "citizenId": "default_citizen",
+    "clientName": "Gopakumar Nambiar",
+    "clientPhone": "+91 94471 28400",
+    "clientAddress": "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
+    "matterId": "mat_not_701",
+    "matterTitle": "Pre-Litigation Legal Notice under Section 138 NI Act & Scrutiny",
     "items": [
       {
-        "description": "Legal Scrutiny of Encumbrance & Builder Agreement",
-        "amount": 12000
+        "description": "Chamber Legal Consultation & Limitation Scrutiny",
+        "category": "Consultation",
+        "sacCode": "9982",
+        "amount": 5000
       },
       {
-        "description": "K-RERA Form M Application Filing",
-        "amount": 8000
+        "description": "Section 138 Statutory Notice Drafting & India Post Speed Post Dispatch",
+        "category": "Drafting & Dispatch",
+        "sacCode": "9982",
+        "amount": 4500
+      }
+    ],
+    "subtotal": 9500,
+    "gstRate": 18,
+    "gstAmount": 1710,
+    "cgstAmount": 855,
+    "sgstAmount": 855,
+    "totalAmount": 11210,
+    "status": "paid",
+    "dueDate": "2026-10-17T09:35:16.570Z",
+    "paidAt": "2026-10-17T09:35:16.570Z",
+    "paymentMethod": "UPI",
+    "transactionId": "UPI/2026/894102914",
+    "receiptNumber": "REC-2026/KL-011",
+    "createdAt": "2026-10-13T09:35:16.570Z"
+  },
+  {
+    "_id": "inv_2026_004",
+    "invoiceNumber": "INV-2026/KL-004",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "barCouncilNumber": "K/001429/2012",
+    "chamberAddress": "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    "citizenId": "default_citizen",
+    "clientName": "Gopakumar Nambiar",
+    "clientPhone": "+91 94471 28400",
+    "clientAddress": "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — Initial Legal Retainer & Caveat Registry Search",
+    "items": [
+      {
+        "description": "Initial Chamber Retainer & High Court Caveat Registry Search",
+        "category": "Retainer Fee",
+        "sacCode": "9982",
+        "amount": 18000
+      },
+      {
+        "description": "High Court Legal Benefit Fund & Vakalat Stamp Duty",
+        "category": "Stamps & Welfare",
+        "sacCode": "9982",
+        "amount": 2000
       }
     ],
     "subtotal": 20000,
     "gstRate": 18,
     "gstAmount": 3600,
+    "cgstAmount": 1800,
+    "sgstAmount": 1800,
     "totalAmount": 23600,
-    "status": "unpaid",
-    "dueDate": "2026-10-23T04:17:50.495Z",
-    "paymentMethod": "Portal_Escrow",
-    "createdAt": "2026-10-14T04:17:50.495Z"
+    "status": "paid",
+    "dueDate": "2026-10-09T09:35:16.570Z",
+    "paidAt": "2026-10-09T09:35:16.570Z",
+    "paymentMethod": "NEFT/RTGS",
+    "transactionId": "NEFT-SBI9481029841",
+    "receiptNumber": "REC-2026/KL-004",
+    "createdAt": "2026-10-05T09:35:16.570Z"
   }
 ]

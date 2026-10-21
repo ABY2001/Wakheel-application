@@ -5,6 +5,7 @@ import { Consultation } from "../models/Consultation.js";
 import { CitizenDocument } from "../models/CitizenDocument.js";
 import { LegalNotice } from "../models/LegalNotice.js";
 import { Invoice } from "../models/Invoice.js";
+import { Message } from "../models/Message.js";
 import { User } from "../models/User.js";
 import { AdvocateProfile } from "../models/AdvocateProfile.js";
 import { getIsMongoConnected } from "../config/db.js";
@@ -2211,6 +2212,139 @@ export const createInvoiceRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("createInvoiceRequest error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 10. SECURE CLIENT-ADVOCATE PRIVILEGED MESSAGING & INBOX
+// ============================================================================
+
+// @desc    Get all messages for citizen inbox
+// @route   GET /api/citizen/messages
+// @access  Private (Citizen)
+export const getCitizenMessages = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { matterId } = req.query;
+
+    if (shouldUseDevStore()) {
+      const messages = devStore.getMessages(userId, matterId);
+      return res.json({ success: true, count: messages.length, messages, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ senderId: userId }, { recipientId: userId }],
+    };
+    if (matterId) query.matterId = matterId;
+
+    const messages = await Message.find(query).sort({ createdAt: 1 });
+    res.json({ success: true, count: messages.length, messages, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getCitizenMessages error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Send privileged message to advocate
+// @route   POST /api/citizen/messages
+// @access  Private (Citizen)
+export const sendCitizenMessage = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const {
+      content,
+      recipientId = "adv_1",
+      recipientName = "Adv. Meera Krishnan",
+      matterId = "",
+      matterTitle = "General Legal Counsel",
+      attachments = [],
+      category = "general",
+    } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ success: false, message: "Message content cannot be empty" });
+    }
+
+    const messageData = {
+      senderId: userId,
+      senderRole: "citizen",
+      senderName: req.user?.fullName || "Gopakumar Nambiar",
+      recipientId,
+      recipientRole: "advocate",
+      recipientName,
+      matterId,
+      matterTitle,
+      content: content.trim(),
+      attachments,
+      category,
+      isRead: false,
+      isPrivileged: true,
+    };
+
+    if (shouldUseDevStore()) {
+      const created = devStore.sendMessage(messageData);
+      return res.status(201).json({
+        success: true,
+        message: "Privileged legal instruction delivered to advocate chamber",
+        messageData: created,
+        mode: "dummy_data",
+      });
+    }
+
+    const created = await Message.create(messageData);
+    res.status(201).json({
+      success: true,
+      message: "Privileged legal instruction delivered to advocate chamber",
+      messageData: created,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("sendCitizenMessage error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Mark message as read
+// @route   PUT /api/citizen/messages/:id/read
+// @access  Private (Citizen)
+export const markMessageRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.markMessageAsRead(id);
+      return res.json({ success: true, message: updated, mode: "dummy_data" });
+    }
+
+    const updated = await Message.findByIdAndUpdate(
+      id,
+      { $set: { isRead: true, readAt: new Date() } },
+      { new: true }
+    );
+    res.json({ success: true, message: updated, mode: "cloud_db" });
+  } catch (error) {
+    console.error("markMessageRead error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get unread message count
+// @route   GET /api/citizen/messages/unread-count
+// @access  Private (Citizen)
+export const getUnreadMessageCount = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+
+    if (shouldUseDevStore()) {
+      const count = devStore.getUnreadMessageCount(userId);
+      return res.json({ success: true, unreadCount: count, mode: "dummy_data" });
+    }
+
+    const count = await Message.countDocuments({ recipientId: userId, isRead: false });
+    res.json({ success: true, unreadCount: count, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getUnreadMessageCount error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

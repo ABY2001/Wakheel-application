@@ -1,5 +1,117 @@
 [
   {
+    "_id": "mat_1792554544298",
+    "citizenId": "default_citizen",
+    "caseNumber": "WP(C) 88204/2026",
+    "matterTitle": "WP(C) 88204/2026 — Gopakumar v. District Collector & Ors.",
+    "title": "WP(C) 88204/2026 — Gopakumar v. District Collector & Ors.",
+    "courtForum": "High Court of Kerala (Ernakulam)",
+    "court": "High Court of Kerala (Ernakulam)",
+    "advocateName": "Adv. Meera Krishnan",
+    "assignedAdvocate": "Adv. Meera Krishnan",
+    "cnrNumber": "KLHC01-088204-2026",
+    "courtHall": "Court Hall 3B",
+    "status": "Admitted",
+    "filingDate": "2026-10-21",
+    "nextHearingDate": "2026-11-04T03:49:04.297Z",
+    "statutoryActs": [
+      "Article 226 of the Constitution of India",
+      "Specific Relief Act, 1963"
+    ],
+    "timeline": [
+      {
+        "date": "21 Oct 2026",
+        "title": "Matter Registered in Wakheel Case Tracker",
+        "remarks": "Matter docket opened for WP(C) 88204/2026. Standing counsel / advocate engaged.",
+        "stage": "Completed"
+      },
+      {
+        "date": "21 Oct 2026",
+        "title": "Interim Stay Granted by Single Bench",
+        "remarks": "Notice ordered to respondents; ad-interim injunction granted for 3 weeks.",
+        "stage": "Interim Relief Active"
+      }
+    ],
+    "createdAt": "2026-10-21T03:49:04.299Z",
+    "updatedAt": "2026-10-21T03:49:04.311Z"
+  },
+  {
+    "_id": "mat_1792497331471",
+    "citizenId": "default_citizen",
+    "grievanceId": "grv_1792497331439",
+    "advocateId": "dev_1791778298749",
+    "advocateName": "Adv. Sarah Jenkins",
+    "matterTitle": "WP(C) 71251/2026 — Rubber plantation boundary dispute",
+    "matterType": "Property & Real Estate",
+    "caseNumber": "WP(C) 71251/2026",
+    "cnrNumber": "KLHC01-900534-2026",
+    "courtForum": "Munsiff Court / Sub Court, Kottayam (Appeals: District Court / High Court of Kerala)",
+    "courtHall": "Court Hall 2A",
+    "status": "active",
+    "nextHearingDate": "2026-11-03T11:55:31.471Z",
+    "statutoryActs": [
+      "Kerala Land Reforms Act, 1963 (Tenancy rights and ceiling provisions)",
+      "Specific Relief Act, 1963 (Section 5, 6 for recovery of possession, Section 38 for Perpetual Injunction)",
+      "Transfer of Property Act, 1882 (Section 52 Lis Pendens, Section 54 Sale, Section 105 Lease)",
+      "Kerala Survey and Boundaries Act, 1961 (Section 9 & 10 demarcation)",
+      "Real Estate (Regulation and Development) Act, 2016 (K-RERA) (if builder dispute)",
+      "Indian Telegraph Act, 1885 (Section 10/16 compensation if power grid/utility lines)"
+    ],
+    "timeline": [
+      {
+        "date": "20 Oct 2026",
+        "title": "Legal Grievance Triaged & Counsel Engaged",
+        "remarks": "Initial consultation scheduled with Adv. Sarah Jenkins. Preliminary case grounds drafted.",
+        "stage": "Completed"
+      },
+      {
+        "date": "27 Oct 2026",
+        "title": "Chamber Conference & Document Scrutiny",
+        "remarks": "Verification of title deeds, revenue extracts, and drafting of formal pleadings.",
+        "stage": "Scheduled"
+      }
+    ],
+    "totalFeesBilled": 16500,
+    "feesPaid": 0
+  },
+  {
+    "_id": "mat_1792496912955",
+    "citizenId": "default_citizen",
+    "grievanceId": "grv_1792496855839",
+    "advocateId": "adv_2",
+    "advocateName": "Adv. Rajesh V. Varma",
+    "matterTitle": "OS 96293/2026 — Arbitration dispute over software delivery contract",
+    "matterType": "Arbitration & ADR",
+    "caseNumber": "OS 96293/2026",
+    "cnrNumber": "KLHC01-440135-2026",
+    "courtForum": "High Court of Kerala Arbitration Centre / Commercial Court",
+    "courtHall": "Court Hall 2A",
+    "status": "active",
+    "nextHearingDate": "2026-11-03T11:48:32.955Z",
+    "statutoryActs": [
+      "Arbitration and Conciliation Act, 1996 (as amended in 2015, 2019, 2021)",
+      "Section 9 (Interim measures of protection by High Court / Commercial Court)",
+      "Section 11 (Appointment of Arbitrator by High Court of Kerala Arbitration Centre)",
+      "Section 34 (Setting aside of arbitral awards)"
+    ],
+    "timeline": [
+      {
+        "date": "20 Oct 2026",
+        "title": "Legal Grievance Triaged & Counsel Engaged",
+        "remarks": "Initial consultation scheduled with Adv. Rajesh V. Varma. Preliminary case grounds drafted.",
+        "stage": "Completed"
+      },
+      {
+        "date": "27 Oct 2026",
+        "title": "Chamber Conference & Document Scrutiny",
+        "remarks": "Verification of title deeds, revenue extracts, and drafting of formal pleadings.",
+        "stage": "Scheduled"
+      }
+    ],
+    "totalFeesBilled": 25000,
+    "feesPaid": 0
+  },
+  {
     "_id": "mat_wpc_19482",
     "citizenId": "default_citizen",
     "advocateName": "Adv. Meera Krishnan",

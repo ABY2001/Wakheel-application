@@ -8,6 +8,7 @@ import { Grievance } from "../models/Grievance.js";
 import { CitizenDocument } from "../models/CitizenDocument.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
+import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
 
 const shouldUseDevStore = () => {
   return process.env.USE_DUMMY_DATA === "true" || !getIsMongoConnected();
@@ -246,6 +247,206 @@ export const getMatterDetails = async (req, res) => {
     res.json({ success: true, matter, mode: "cloud_db" });
   } catch (error) {
     console.error("getMatterDetails error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Track matter docket by 16-digit CNR or Case Number
+// @route   GET /api/advocate/matters/track/:cnr or POST /api/advocate/matters/track
+// @access  Private (Advocate)
+export const trackCaseByCnr = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const cnr = req.params.cnr || req.body?.cnr || req.query?.cnr;
+    const caseNumber = req.body?.caseNumber || req.query?.caseNumber || "";
+
+    if (!cnr && !caseNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid 16-digit CNR number or Case Type/Number.",
+      });
+    }
+
+    const cleanCnr = (cnr || "").trim().toUpperCase();
+
+    if (shouldUseDevStore()) {
+      const advocateMatters = devStore.getAdvocateMatters(advocateId);
+      const existing = advocateMatters.find(
+        (m) =>
+          (cleanCnr && m.cnrNumber && m.cnrNumber.toUpperCase().includes(cleanCnr)) ||
+          (cleanCnr && m.caseNumber && m.caseNumber.toUpperCase().includes(cleanCnr)) ||
+          (caseNumber && m.caseNumber && m.caseNumber.toUpperCase().includes(caseNumber.toUpperCase()))
+      );
+
+      if (existing) {
+        return res.json({
+          success: true,
+          isLinkedToUser: true,
+          source: "advocate_docket",
+          matter: existing,
+          canImportToDocket: false,
+          message: "Matter already tracked in your chamber active dockets.",
+          mode: "dummy_data",
+        });
+      }
+
+      const liveCase = resolveECourtsLiveCnr(cleanCnr, caseNumber);
+      return res.json({
+        success: true,
+        isLinkedToUser: false,
+        source: "ecourts_njdg_live",
+        matter: liveCase,
+        canImportToDocket: true,
+        message: `Live e-Courts docket found for CNR ${liveCase.cnrNumber}`,
+        mode: "dummy_data",
+      });
+    }
+
+    // Cloud DB lookup
+    const query = { advocateId };
+    const orConditions = [];
+    if (cleanCnr) {
+      orConditions.push({ cnrNumber: cleanCnr });
+      orConditions.push({ caseNumber: cleanCnr });
+    }
+    if (caseNumber) {
+      orConditions.push({ caseNumber });
+    }
+    if (orConditions.length > 0) query.$or = orConditions;
+
+    const existing = await Matter.findOne(query);
+    if (existing) {
+      return res.json({
+        success: true,
+        isLinkedToUser: true,
+        source: "advocate_docket",
+        matter: existing,
+        canImportToDocket: false,
+        message: "Matter already tracked in your chamber active dockets.",
+        mode: "cloud_db",
+      });
+    }
+
+    const liveCase = resolveECourtsLiveCnr(cleanCnr, caseNumber);
+    res.json({
+      success: true,
+      isLinkedToUser: false,
+      source: "ecourts_njdg_live",
+      matter: liveCase,
+      canImportToDocket: true,
+      message: `Live e-Courts docket found for CNR ${liveCase.cnrNumber}`,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("advocate trackCaseByCnr error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Add / Import tracked case to advocate matters
+// @route   POST /api/advocate/matters
+// @access  Private (Advocate)
+export const createMatter = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const {
+      caseNumber,
+      title,
+      matterTitle,
+      court,
+      courtForum,
+      cnrNumber,
+      courtHall,
+      statutoryActs,
+      status,
+      nextHearingDate,
+      filingDate,
+      addToCauseList,
+      causeListItemNumber,
+    } = req.body;
+
+    const finalCaseNumber = caseNumber || `WP(C) ${Math.floor(10000 + Math.random() * 90000)}/2026`;
+    const finalTitle = title || matterTitle || `${finalCaseNumber} Legal Matter`;
+    const finalCourt = court || courtForum || "High Court of Kerala (Ernakulam Bench)";
+
+    const matterData = {
+      advocateId,
+      citizenId: "default_citizen",
+      caseNumber: finalCaseNumber,
+      caseTitle: finalTitle,
+      matterTitle: finalTitle,
+      matterType: finalCaseNumber.includes("WP") ? "Writ Petition (Civil)" : "Civil Suit",
+      courtForum: finalCourt,
+      courtHall: courtHall || "Court Hall 2A",
+      advocateName: req.user?.fullName || "Adv. Meera Krishnan",
+      assignedAdvocate: req.user?.fullName || "Adv. Meera Krishnan",
+      status: status || "Admitted",
+      stage: "Active Proceedings",
+      filingDate: filingDate || new Date().toISOString().split("T")[0],
+      nextHearingDate: nextHearingDate || new Date(Date.now() + 14 * 86400000).toISOString(),
+      cnrNumber: cnrNumber || `KLHC01${String(Math.floor(100000 + Math.random() * 900000))}2026`,
+      statutoryActs: statutoryActs || ["Article 226 of the Constitution of India"],
+      timeline: [
+        {
+          date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+          title: "Docket Imported into Advocate Chamber Tracker",
+          remarks: `CNR ${cnrNumber || finalCaseNumber} successfully synced with e-Courts NJDG repository.`,
+          stage: "Completed",
+        },
+      ],
+      orders: [],
+    };
+
+    if (shouldUseDevStore()) {
+      const created = devStore.addMatter(matterData);
+
+      // If requested, also add to Cause List for daily hearing board
+      if (addToCauseList) {
+        devStore.addCauseListItem({
+          advocateId,
+          itemNumber: causeListItemNumber || 14,
+          caseNumber: finalCaseNumber,
+          courtHall: courtHall || "Court Hall 2A",
+          bench: "Division Bench",
+          parties: finalTitle,
+          stage: "Interim Relief / Final Arguments",
+          status: "upcoming",
+          date: new Date().toISOString().split("T")[0],
+        });
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: "Matter docket created and linked to Advocate Case Tracker",
+        matter: created,
+        mode: "dummy_data",
+      });
+    }
+
+    const created = await Matter.create(matterData);
+
+    if (addToCauseList) {
+      await CauseList.create({
+        advocateId,
+        itemNumber: causeListItemNumber || 14,
+        caseNumber: finalCaseNumber,
+        courtHall: courtHall || "Court Hall 2A",
+        bench: "Division Bench",
+        parties: finalTitle,
+        stage: "Interim Relief / Final Arguments",
+        status: "upcoming",
+        date: new Date().toISOString().split("T")[0],
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Matter docket created and linked to Advocate Case Tracker",
+      matter: created,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("advocate createMatter error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

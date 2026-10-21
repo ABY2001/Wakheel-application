@@ -1,5 +1,103 @@
 [
   {
+    "_id": "mat_1792557595989",
+    "advocateId": "adv_1",
+    "citizenId": "default_citizen",
+    "caseNumber": "WP(C) 4921/2026",
+    "caseTitle": "Vanguard Infrastructure v. NHAI",
+    "matterTitle": "Vanguard Infrastructure v. NHAI",
+    "matterType": "Writ Petition (Civil)",
+    "courtForum": "High Court of Delhi",
+    "courtHall": "Court Hall 3",
+    "advocateName": "Adv. Meera Krishnan",
+    "assignedAdvocate": "Adv. Meera Krishnan",
+    "status": "Admitted",
+    "stage": "Active Proceedings",
+    "filingDate": "2026-10-21",
+    "nextHearingDate": "2026-11-04T04:39:55.988Z",
+    "cnrNumber": "DLHC010049212026",
+    "statutoryActs": [
+      "Article 226 of the Constitution of India"
+    ],
+    "timeline": [
+      {
+        "date": "21 Oct 2026",
+        "title": "Docket Imported into Advocate Chamber Tracker",
+        "remarks": "CNR DLHC010049212026 successfully synced with e-Courts NJDG repository.",
+        "stage": "Completed"
+      },
+      {
+        "date": "21 Oct 2026",
+        "title": "Division Bench Extended Injunction",
+        "remarks": "Counter affidavit filed; next date of hearing scheduled.",
+        "stage": "Interim Relief Extended"
+      }
+    ],
+    "orders": [],
+    "createdAt": "2026-10-21T04:39:55.989Z",
+    "updatedAt": "2026-10-21T04:39:56.006Z"
+  },
+  {
+    "_id": "mat_1792557595960",
+    "citizenId": "default_citizen",
+    "caseNumber": "WP(C) 99881/2026",
+    "matterTitle": "Test Petitioner v. State of Kerala",
+    "title": "Test Petitioner v. State of Kerala",
+    "courtForum": "High Court of Kerala (Ernakulam)",
+    "court": "High Court of Kerala (Ernakulam)",
+    "advocateName": "Adv. Meera Krishnan",
+    "assignedAdvocate": "Adv. Meera Krishnan",
+    "cnrNumber": "KLHC010998812026",
+    "courtHall": "Court Hall 2A",
+    "status": "Admitted",
+    "filingDate": "2026-10-21",
+    "nextHearingDate": "2026-11-04T04:39:55.958Z",
+    "statutoryActs": [
+      "Article 226 of the Constitution of India",
+      "Specific Relief Act, 1963"
+    ],
+    "timeline": [
+      {
+        "date": "21 Oct 2026",
+        "title": "Matter Registered in Wakheel Case Tracker",
+        "remarks": "Matter docket opened for WP(C) 99881/2026. Standing counsel / advocate engaged.",
+        "stage": "Completed"
+      }
+    ],
+    "createdAt": "2026-10-21T04:39:55.960Z"
+  },
+  {
+    "_id": "mat_1792557164182",
+    "advocateId": "adv_1",
+    "citizenId": "default_citizen",
+    "caseNumber": "WP(C) 4921/2026",
+    "caseTitle": "Vanguard Infrastructure v. NHAI",
+    "matterTitle": "Vanguard Infrastructure v. NHAI",
+    "matterType": "Writ Petition (Civil)",
+    "courtForum": "High Court of Delhi",
+    "courtHall": "Court Hall 2A",
+    "advocateName": "Adv. Meera Krishnan",
+    "assignedAdvocate": "Adv. Meera Krishnan",
+    "status": "Admitted",
+    "stage": "Active Proceedings",
+    "filingDate": "2026-10-21",
+    "nextHearingDate": "2026-11-04T04:32:43.968Z",
+    "cnrNumber": "DLHC010049212026",
+    "statutoryActs": [
+      "Article 226 of the Constitution of India"
+    ],
+    "timeline": [
+      {
+        "date": "21 Oct 2026",
+        "title": "Docket Imported into Advocate Chamber Tracker",
+        "remarks": "CNR DLHC010049212026 successfully synced with e-Courts NJDG repository.",
+        "stage": "Completed"
+      }
+    ],
+    "orders": [],
+    "createdAt": "2026-10-21T04:32:44.184Z"
+  },
+  {
     "_id": "mat_1792554544298",
     "citizenId": "default_citizen",
     "caseNumber": "WP(C) 88204/2026",
@@ -158,11 +256,17 @@
         "title": "Interim Stay Extended by Division Bench",
         "remarks": "High Court Bench 2A granted 3-week extension on interim injunction against tree felling.",
         "stage": "Interim Relief Active"
+      },
+      {
+        "date": "21 Oct 2026",
+        "title": "Interim Injunction Extended",
+        "remarks": "Bench granted 2 weeks",
+        "stage": "Interim Order"
       }
     ],
     "totalFeesBilled": 25000,
     "feesPaid": 15000,
-    "updatedAt": "2026-10-16T06:15:54.536Z"
+    "updatedAt": "2026-10-21T04:33:09.076Z"
   },
   {
     "_id": "mat_os_412",

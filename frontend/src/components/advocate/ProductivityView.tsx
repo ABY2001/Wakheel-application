@@ -20,6 +20,9 @@ import {
   FileText,
   Bookmark,
   Shield,
+  Scale,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import { advocateApi, CaseNoteItem, CauseListItem } from "@/lib/api";
 
@@ -48,18 +51,83 @@ export function ProductivityView({
   const [newTags, setNewTags] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Case Tracker Live State
+  const [trackerCnr, setTrackerCnr] = useState("DLHC010049212026");
+  const [trackerCaseQuery, setTrackerCaseQuery] = useState("");
+  const [trackerLoading, setTrackerLoading] = useState(false);
+  const [trackerResult, setTrackerResult] = useState<any>(null);
+  const [isImportingCase, setIsImportingCase] = useState(false);
+  const [trackerFeedback, setTrackerFeedback] = useState<string | null>(null);
+
+  const handleTrackDocket = async (overrideQuery?: string) => {
+    const q = overrideQuery !== undefined ? overrideQuery : trackerCnr.trim() || trackerCaseQuery.trim();
+    if (!q) return;
+    try {
+      setTrackerLoading(true);
+      setTrackerFeedback(null);
+      const res = await advocateApi.trackCase(undefined, q);
+      if (res && res.success && res.matter) {
+        setTrackerResult(res);
+      }
+    } catch (err: any) {
+      console.warn("Tracker lookup failed:", err);
+    } finally {
+      setTrackerLoading(false);
+    }
+  };
+
+  const handleImportDocket = async (addToCauseList = false) => {
+    if (!trackerResult?.matter) return;
+    try {
+      setIsImportingCase(true);
+      const res = await advocateApi.createMatter(undefined, {
+        caseNumber: trackerResult.matter.caseNumber,
+        title: trackerResult.matter.title || trackerResult.matter.caseTitle,
+        courtForum: trackerResult.matter.court || trackerResult.matter.courtForum,
+        cnrNumber: trackerResult.matter.cnrNumber,
+        courtHall: trackerResult.matter.courtHall,
+        status: trackerResult.matter.status || "Admitted",
+        statutoryActs: trackerResult.matter.statutoryActs,
+        addToCauseList,
+      });
+      if (res?.success) {
+        setTrackerFeedback(
+          addToCauseList
+            ? `Docket pinned to Daily Cause List & added to active matters!`
+            : `Docket added to chamber active matters!`
+        );
+        setTrackerResult((prev: any) => ({
+          ...prev,
+          isLinkedToUser: true,
+          source: "advocate_docket",
+        }));
+        if (addToCauseList) {
+          const clRes = await advocateApi.getCauseList();
+          if (clRes.success && clRes.causeList) setCauseList(clRes.causeList);
+        }
+      }
+    } catch (err: any) {
+      console.warn("Import docket failed:", err);
+      setTrackerFeedback("Import failed. Please check backend connection.");
+    } finally {
+      setIsImportingCase(false);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
       try {
         setLoading(true);
-        const [notesRes, clRes] = await Promise.all([
+        const [notesRes, clRes, trackerRes] = await Promise.all([
           advocateApi.getCaseNotes(),
           advocateApi.getCauseList(),
+          advocateApi.trackCase(undefined, "DLHC010049212026"),
         ]);
         if (isMounted) {
           if (notesRes.success && notesRes.notes) setNotes(notesRes.notes);
           if (clRes.success && clRes.causeList) setCauseList(clRes.causeList);
+          if (trackerRes && trackerRes.success && trackerRes.matter) setTrackerResult(trackerRes);
         }
       } catch (err) {
         console.error("Error loading productivity data:", err);
@@ -432,52 +500,275 @@ export function ProductivityView({
       {currentTab === "case-tracker" && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
-            <h3 className="text-sm font-bold text-black dark:text-white">Live eCourts Case Search &amp; Docket Tracker</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-black dark:text-white">Live eCourts Case Search &amp; Docket Tracker</h3>
+                <p className="text-xs text-zinc-500">Query 16-digit CNR numbers or case proceedings against National Judicial Data Grid (NJDG).</p>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-zinc-400">
+                <Shield className="w-3.5 h-3.5" />
+                <span>e-Courts NJDG Sync Active</span>
+              </div>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleTrackDocket();
+              }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+            >
               <input
                 type="text"
                 placeholder="Enter 16-Digit CNR Number"
-                defaultValue="DLHC010049212026"
-                className="px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                value={trackerCnr}
+                onChange={(e) => setTrackerCnr(e.target.value)}
+                className="px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
               />
               <input
                 type="text"
                 placeholder="Case Type &amp; Number (e.g. WP(C) 1024/2026)"
-                className="px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                value={trackerCaseQuery}
+                onChange={(e) => setTrackerCaseQuery(e.target.value)}
+                className="px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
               />
-              <button className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-                Track Live Docket
+              <button
+                type="submit"
+                disabled={trackerLoading}
+                className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {trackerLoading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Querying NJDG...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Track Live Docket</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Sample CNR Chips for Quick Testing */}
+            <div className="flex items-center flex-wrap gap-2 pt-1 text-[11px] text-zinc-500">
+              <span className="font-semibold text-black dark:text-white">Sample Dockets:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setTrackerCnr("DLHC010049212026");
+                  handleTrackDocket("DLHC010049212026");
+                }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                DLHC010049212026 (Delhi HC)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTrackerCnr("KLHC010194822024");
+                  handleTrackDocket("KLHC010194822024");
+                }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                KLHC010194822024 (Kerala HC)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTrackerCnr("KLER020084122024");
+                  handleTrackDocket("KLER020084122024");
+                }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                KLER020084122024 (Sub Court)
               </button>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+          {/* Toast Notification */}
+          {trackerFeedback && (
+            <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs text-black dark:text-white">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-black dark:bg-white animate-ping" />
-                <span className="text-xs font-bold text-black dark:text-white">Active Case Status: CNR #DLHC010049212026</span>
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-black dark:text-white" />
+                <span>{trackerFeedback}</span>
               </div>
-              <span className="text-xs font-mono text-zinc-500">Last Synced: 5m ago</span>
+              <button
+                onClick={() => setTrackerFeedback(null)}
+                className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-              <div>
-                <span className="text-zinc-500 text-[10px] block">COURT &amp; BENCH</span>
-                <span className="font-bold text-black dark:text-white">Court Hall 3 • High Court of Delhi</span>
+          )}
+
+          {/* Docket Details Card */}
+          {trackerResult?.matter && (
+            <div className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-black dark:bg-white animate-ping" />
+                  <span className="text-xs font-bold text-black dark:text-white">
+                    Active Case Status: CNR #{trackerResult.matter.cnrNumber || trackerCnr}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+                    {trackerResult.isLinkedToUser ? "Chamber Active Docket" : "eCourts NJDG Live"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-zinc-500">Live Synced</span>
+                  <button
+                    onClick={() => handleTrackDocket()}
+                    className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer text-zinc-600 dark:text-zinc-400"
+                    title="Re-sync Docket"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-              <div>
-                <span className="text-zinc-500 text-[10px] block">NEXT HEARING DATE</span>
-                <span className="font-bold text-black dark:text-white">Today, 12 Oct 2026 (Item 14)</span>
+
+              {/* Case Title & Court */}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-black text-white dark:bg-white dark:text-black">
+                    {trackerResult.matter.caseNumber}
+                  </span>
+                  <span className="text-xs font-bold text-black dark:text-white">
+                    {trackerResult.matter.title || trackerResult.matter.caseTitle}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  {trackerResult.matter.court || trackerResult.matter.courtForum}
+                </p>
               </div>
-              <div>
-                <span className="text-zinc-500 text-[10px] block">STAGE OF CASE</span>
-                <span className="font-bold text-black dark:text-white">Final Arguments &amp; Orders</span>
+
+              {/* 4-Metric Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs pt-2 pb-2">
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">COURT &amp; BENCH</span>
+                  <span className="font-bold text-black dark:text-white block">
+                    {trackerResult.matter.courtHall || "Court Hall 2A"}
+                  </span>
+                  <span className="text-[11px] text-zinc-400 block line-clamp-1">
+                    {trackerResult.matter.bench || "Division Bench"}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">NEXT HEARING DATE</span>
+                  <span className="font-bold text-black dark:text-white block">
+                    {trackerResult.matter.nextHearing || "Today, 12 Oct 2026 (Item 14)"}
+                  </span>
+                  <span className="text-[11px] text-zinc-400 block">
+                    Cause List #{trackerResult.matter.causeListItemNumber || 14}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">STAGE OF CASE</span>
+                  <span className="font-bold text-black dark:text-white block">
+                    {trackerResult.matter.stage || trackerResult.matter.status || "Admitted"}
+                  </span>
+                  <span className="text-[11px] text-zinc-400 block">
+                    Filing: {trackerResult.matter.filingDate || "2026-06-14"}
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">COUNSEL ON RECORD</span>
+                  <span className="font-bold text-black dark:text-white block">
+                    {trackerResult.matter.assignedAdvocate || "Adv. Sarah Jenkins"}
+                  </span>
+                  <span className="text-[11px] text-zinc-400 block">Lead Arguing Counsel</span>
+                </div>
               </div>
-              <div>
-                <span className="text-zinc-500 text-[10px] block">PETITIONER COUNSEL</span>
-                <span className="font-bold text-black dark:text-white">Adv. Sarah Jenkins</span>
+
+              {/* Statutory Acts */}
+              {Array.isArray(trackerResult.matter.statutoryActs) && trackerResult.matter.statutoryActs.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Statutory Provisions &amp; Acts</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {trackerResult.matter.statutoryActs.map((act: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-medium text-black dark:text-white"
+                      >
+                        {act}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Proceedings Timeline */}
+              {Array.isArray(trackerResult.matter.timeline) && trackerResult.matter.timeline.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                  <span className="text-xs font-bold text-black dark:text-white">Court Proceedings &amp; Interim Orders</span>
+                  <div className="space-y-2">
+                    {trackerResult.matter.timeline.map((event: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-start justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[11px] text-zinc-400 font-bold">{event.date}</span>
+                            <span className="font-bold text-black dark:text-white">{event.title}</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-600 dark:text-zinc-400">{event.remarks}</p>
+                        </div>
+                        <span className="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+                          {event.stage || "Completed"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="text-[11px] text-zinc-500">
+                  {trackerResult.isLinkedToUser
+                    ? "✓ Docket linked to your chamber pipeline."
+                    : "Docket available on National Judicial Data Grid (NJDG)."}
+                </div>
+                <div className="flex items-center gap-2">
+                  {!trackerResult.isLinkedToUser ? (
+                    <>
+                      <button
+                        onClick={() => handleImportDocket(false)}
+                        disabled={isImportingCase}
+                        className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer disabled:opacity-50"
+                      >
+                        {isImportingCase ? "Importing..." : "Add to Active Matters"}
+                      </button>
+                      <button
+                        onClick={() => handleImportDocket(true)}
+                        disabled={isImportingCase}
+                        className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-85 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Pin to Daily Cause List</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Tracked in Chamber Matters</span>
+                      </span>
+                      <button
+                        onClick={() => handleImportDocket(true)}
+                        disabled={isImportingCase}
+                        className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                      >
+                        Add to Cause List
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

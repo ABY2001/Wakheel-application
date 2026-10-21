@@ -9,6 +9,7 @@ import { User } from "../models/User.js";
 import { AdvocateProfile } from "../models/AdvocateProfile.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
+import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
 
 // Check if dummy data mode is requested or if MongoDB is offline
 const shouldUseDevStore = () => {
@@ -674,99 +675,7 @@ const normalizeMatterForClient = (m) => {
   };
 };
 
-// Helper: e-Courts NJDG National Live Case Resolver
-const resolveECourtsLiveCnr = (cnrInput) => {
-  const cleanCnr = (cnrInput || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const stateCode = cleanCnr.slice(0, 2);
-  const courtCode = cleanCnr.slice(2, 6);
-  const caseSerial = cleanCnr.slice(6, 12) || "019482";
-  const caseYear = cleanCnr.slice(12, 16) || "2024";
 
-  const courtNames = {
-    KLHC: "High Court of Kerala (Ernakulam)",
-    KLER: "Sub Court, Ernakulam",
-    KLTV: "District & Sessions Court, Thiruvananthapuram",
-    KLKK: "District Court, Kozhikode",
-    KLTS: "District Court, Thrissur",
-    KLAL: "District Court, Alappuzha",
-    DLHC: "High Court of Delhi (New Delhi)",
-    MHBB: "Bombay High Court (Mumbai)",
-    TNMD: "Madras High Court (Chennai)",
-  };
-
-  const courtKey = cleanCnr.slice(0, 4);
-  const courtForum =
-    courtNames[courtKey] ||
-    (stateCode === "KL" ? "High Court of Kerala (Ernakulam Bench)" : "District & Sessions Court");
-  const caseType = courtKey.includes("HC") ? "WP(C)" : "OS";
-  const caseNumber = `${caseType} ${parseInt(caseSerial, 10) || 19482}/${caseYear}`;
-
-  return {
-    cnrNumber: cleanCnr || "KLHC01-019482-2024",
-    caseNumber,
-    title: "Gopakumar Nambiar v. Kerala State Electricity Board & Ors.",
-    matterTitle: "Gopakumar Nambiar v. Kerala State Electricity Board & Ors.",
-    petitioner: "Gopakumar Nambiar",
-    respondent: "Kerala State Electricity Board & Ors.",
-    court: courtForum,
-    courtForum,
-    courtHall: "Court Hall 2A (Division Bench)",
-    bench: "Hon'ble Justice K. Haripal / Division Bench 2A",
-    assignedAdvocate: "Adv. Meera Krishnan (Roll No: K/001429/2012)",
-    advocateName: "Adv. Meera Krishnan",
-    status: "Admitted",
-    stage: "Hearing on Interim Stay / Final Arguments",
-    filingDate: `${caseYear}-06-14`,
-    registrationDate: `${caseYear}-06-16`,
-    nextHearing: `20-Nov-${caseYear} (Bench 4B, Item #14)`,
-    nextHearingDate: `${caseYear}-11-20T10:30:00.000Z`,
-    statutoryActs: [
-      "Indian Telegraph Act, 1885 (Section 10 & 16)",
-      "Electricity Act, 2003",
-      "Article 226 of the Constitution of India",
-    ],
-    timeline: [
-      {
-        date: `14-Jun-${caseYear}`,
-        title: "Writ Petition Filed in High Court Registry",
-        remarks: "Authenticated paperbook and petition grounds registered after scrutiny.",
-        stage: "Completed",
-      },
-      {
-        date: `02-Jul-${caseYear}`,
-        title: "Interim Stay of Tree-Felling Granted",
-        remarks: "Single Bench prohibited KSEB from entering agricultural holding without compliance.",
-        stage: "Completed",
-      },
-      {
-        date: `16-Oct-${caseYear}`,
-        title: "Interim Stay Extended by Division Bench",
-        remarks: "Division Bench 2A extended interim stay; respondent counter-affidavit taken on record.",
-        stage: "Interim Relief Active",
-      },
-      {
-        date: `20-Nov-${caseYear}`,
-        title: "Upcoming Final Arguments Listed",
-        remarks: "Listed before Bench 4B for conclusive hearing on Section 16 Telegraph Act compliance.",
-        stage: "Scheduled",
-      },
-    ],
-    orders: [
-      {
-        orderDate: `16-Oct-${caseYear}`,
-        orderType: "Daily Interim Stay Order",
-        bench: "Court Hall 2A",
-        fileName: `Interim_Stay_Order_${caseType}_${caseYear}.pdf`,
-      },
-      {
-        orderDate: `02-Jul-${caseYear}`,
-        orderType: "Ad-Interim Injunction Order",
-        bench: "Court Hall 4B",
-        fileName: `Injunction_Order_${caseType}_${caseYear}.pdf`,
-      },
-    ],
-  };
-};
 
 // @desc    Get active matters for citizen
 // @route   GET /api/citizen/matters

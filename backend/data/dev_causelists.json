@@ -1,5 +1,31 @@
 [
   {
+    "_id": "cl_1792557595994",
+    "status": "upcoming",
+    "advocateId": "adv_1",
+    "itemNumber": 14,
+    "caseNumber": "WP(C) 4921/2026",
+    "courtHall": "Court Hall 3",
+    "bench": "Division Bench",
+    "parties": "Vanguard Infrastructure v. NHAI",
+    "stage": "Interim Relief / Final Arguments",
+    "date": "2026-10-21",
+    "createdAt": "2026-10-21T04:39:55.994Z"
+  },
+  {
+    "_id": "cl_1792557164192",
+    "status": "upcoming",
+    "advocateId": "adv_1",
+    "itemNumber": 14,
+    "caseNumber": "WP(C) 4921/2026",
+    "courtHall": "Court Hall 2A",
+    "bench": "Division Bench",
+    "parties": "Vanguard Infrastructure v. NHAI",
+    "stage": "Interim Relief / Final Arguments",
+    "date": "2026-10-21",
+    "createdAt": "2026-10-21T04:32:44.192Z"
+  },
+  {
     "_id": "cl_101",
     "advocateId": "adv_1",
     "courtDate": "2026-10-16T04:17:50.495Z",

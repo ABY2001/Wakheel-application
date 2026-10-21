@@ -9,6 +9,8 @@ import {
   updateCauseListItem,
   getMatters,
   getMatterDetails,
+  trackCaseByCnr,
+  createMatter,
   getInvoices,
   createInvoice,
   updateInvoiceStatus,
@@ -39,6 +41,9 @@ router.put("/causelist/:id", protect, updateCauseListItem);
 
 // 4. Matters Pipeline & Case Proceedings
 router.get("/matters", protect, getMatters);
+router.post("/matters", protect, createMatter);
+router.get("/matters/track/:cnr", protect, trackCaseByCnr);
+router.post("/matters/track", protect, trackCaseByCnr);
 router.get("/matters/:id", protect, getMatterDetails);
 router.post("/matters/:id/timeline", protect, addMatterTimelineEvent);
 

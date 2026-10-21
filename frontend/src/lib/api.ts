@@ -620,20 +620,52 @@ export const citizenApi = {
 
   // 9. Fee Invoices & Payment Settlement (Milestone 2 Sync)
   async getInvoices(token: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/invoices`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${t}` },
     });
     return await res.json();
   },
 
-  async payInvoice(token: string, invoiceId: string, paymentMethod: string = "UPI") {
+  async getInvoiceById(token: string, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/invoices/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async payInvoice(token: string, invoiceId: string, paymentMethod: string = "UPI", transactionId?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/invoices/${encodeURIComponent(invoiceId)}/pay`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${t}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ paymentMethod }),
+      body: JSON.stringify({ paymentMethod, transactionId }),
+    });
+    return await res.json();
+  },
+
+  async createInvoiceRequest(
+    token: string,
+    data: {
+      matterId?: string;
+      matterTitle?: string;
+      serviceDescription?: string;
+      advocateName?: string;
+      estimatedAmount?: number;
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/invoices`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     });
     return await res.json();
   },

@@ -240,6 +240,18 @@
     ],
     "timeline": [
       {
+        "date": "21 Oct 2026",
+        "title": "Retainer Bill Settled (INV-2026/KL-041)",
+        "remarks": "Payment of ₹34,220 confirmed via UPI (Txn: UPI/2026/89401284). Formal GST receipt REC-2026/041 issued.",
+        "stage": "Completed"
+      },
+      {
+        "date": "21 Oct 2026",
+        "title": "Retainer Bill Settled (INV-2026/KL-041)",
+        "remarks": "Payment of ₹34,220 confirmed via UPI (Txn: UPI/2026/TEST894). Formal GST receipt REC-2026/041 issued.",
+        "stage": "Completed"
+      },
+      {
         "date": "18-Oct-2024",
         "title": "Writ Petition (Civil) E-Filing Completed",
         "remarks": "Verified true copy grounds submitted with High Court Registry",
@@ -277,7 +289,7 @@
       }
     ],
     "totalFeesBilled": 25000,
-    "feesPaid": 15000,
+    "feesPaid": 83440,
     "updatedAt": "2026-10-21T04:33:09.076Z"
   },
   {

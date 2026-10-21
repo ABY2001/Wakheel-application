@@ -2039,7 +2039,7 @@ Disclaimer: This automated guidance is for informational reference and does not 
 };
 
 // ============================================================================
-// 9. CITIZEN INVOICES & RETAIINER FEE PAYMENTS (Milestone 2 Two-Way Sync)
+// 9. CITIZEN INVOICES & RETAINER FEE PAYMENTS (Milestone 2 Two-Way Sync)
 // ============================================================================
 export const getCitizenInvoices = async (req, res) => {
   try {
@@ -2058,13 +2058,32 @@ export const getCitizenInvoices = async (req, res) => {
   }
 };
 
+export const getInvoiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const invoice = devStore.getInvoiceById(id);
+      if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found" });
+      return res.json({ success: true, invoice, mode: "dummy_data" });
+    }
+
+    const invoice = await Invoice.findById(id);
+    if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found" });
+    res.json({ success: true, invoice, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getInvoiceById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const payCitizenInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-    const { paymentMethod = "UPI" } = req.body;
+    const { paymentMethod = "UPI", transactionId } = req.body;
 
     if (shouldUseDevStore()) {
-      const result = devStore.payInvoice(id, paymentMethod);
+      const result = devStore.payInvoice(id, paymentMethod, transactionId);
       if (!result) return res.status(404).json({ success: false, message: "Invoice not found" });
       return res.json({
         success: true,
@@ -2075,9 +2094,25 @@ export const payCitizenInvoice = async (req, res) => {
       });
     }
 
+    const now = new Date();
+    const txnId =
+      transactionId ||
+      `${paymentMethod.toUpperCase().replace(/[^A-Z]/g, "") || "TXN"}/${now.getFullYear()}/${Math.floor(
+        10000000 + Math.random() * 90000000
+      )}`;
+    const recNumber = `REC-${now.getFullYear()}/${Math.floor(100 + Math.random() * 900)}`;
+
     const invoice = await Invoice.findByIdAndUpdate(
       id,
-      { $set: { status: "paid", paidAt: new Date(), paymentMethod } },
+      {
+        $set: {
+          status: "paid",
+          paidAt: now,
+          paymentMethod,
+          transactionId: txnId,
+          receiptNumber: recNumber,
+        },
+      },
       { new: true }
     );
     if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -2093,7 +2128,7 @@ export const payCitizenInvoice = async (req, res) => {
             timeline: {
               date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
               title: `Retainer Bill Settled (${invoice.invoiceNumber})`,
-              remarks: `Payment of ₹${invoice.totalAmount} received via ${paymentMethod}.`,
+              remarks: `Payment of ₹${invoice.totalAmount} received via ${paymentMethod} (Txn: ${txnId}). Formal GST receipt issued.`,
               stage: "Completed",
             },
           },
@@ -2111,6 +2146,71 @@ export const payCitizenInvoice = async (req, res) => {
     });
   } catch (error) {
     console.error("payCitizenInvoice error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createInvoiceRequest = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const {
+      matterId,
+      matterTitle,
+      serviceDescription,
+      advocateName = "Adv. Meera Krishnan",
+      estimatedAmount = 10000,
+    } = req.body;
+
+    const subtotal = Number(estimatedAmount) || 10000;
+    const gstRate = 18;
+    const gstAmount = Math.round(subtotal * (gstRate / 100));
+    const totalAmount = subtotal + gstAmount;
+
+    const invoiceData = {
+      citizenId: userId,
+      advocateName,
+      matterId: matterId || "mat_wpc_19482",
+      matterTitle: matterTitle || "Retainer Legal Representation",
+      items: [
+        {
+          description: serviceDescription || "Chamber Consultation & Legal Drafting",
+          amount: subtotal,
+          category: "Professional Fee",
+          sacCode: "9982",
+        },
+      ],
+      subtotal,
+      gstRate,
+      gstAmount,
+      cgstAmount: Math.round(gstAmount / 2),
+      sgstAmount: Math.round(gstAmount / 2),
+      totalAmount,
+      status: "unpaid",
+    };
+
+    if (shouldUseDevStore()) {
+      const created = devStore.createInvoice(invoiceData);
+      return res.status(201).json({
+        success: true,
+        message: "Invoice created successfully",
+        invoice: created,
+        mode: "dummy_data",
+      });
+    }
+
+    const count = await Invoice.countDocuments();
+    const created = await Invoice.create({
+      ...invoiceData,
+      invoiceNumber: `INV-${new Date().getFullYear()}/KL-${String(count + 1).padStart(3, "0")}`,
+    });
+    res.status(201).json({
+      success: true,
+      message: "Invoice created successfully",
+      invoice: created,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("createInvoiceRequest error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

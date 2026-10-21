@@ -627,71 +627,121 @@ const DEFAULT_INVOICES = [
     invoiceNumber: "INV-2026/KL-041",
     advocateId: "adv_1",
     advocateName: "Adv. Meera Krishnan",
+    barCouncilNumber: "K/001429/2012",
+    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
     citizenId: "default_citizen",
     clientName: "Gopakumar Nambiar",
     clientPhone: "+91 94471 28400",
+    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
     matterId: "mat_wpc_19482",
     matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
     items: [
-      { description: "High Court E-Filing & Senior Drafting Fee", amount: 15000 },
-      { description: "Court Hall 2A Senior Appearance (Interim Injunction)", amount: 10000 },
+      { description: "High Court E-Filing & Senior Drafting Fee", category: "Professional Fee", sacCode: "9982", amount: 15000 },
+      { description: "Court Hall 2A Senior Appearance (Interim Injunction Hearing)", category: "Appearance Fee", sacCode: "9982", amount: 10000 },
+      { description: "High Court Paper Book Binding, Indexing & True Copy Attestations", category: "Stationery & Process", sacCode: "9982", amount: 2500 },
+      { description: "Kerala Advocates' Clerks Welfare Fund Stamp & Advocate Welfare Fund", category: "Clerkage & Stamps", sacCode: "9982", amount: 1500 },
     ],
-    subtotal: 25000,
+    subtotal: 29000,
     gstRate: 18,
-    gstAmount: 4500,
-    totalAmount: 29500,
-    status: "partially_paid",
+    gstAmount: 5220,
+    cgstAmount: 2610,
+    sgstAmount: 2610,
+    totalAmount: 34220,
+    status: "unpaid",
     dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-    paidAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     paymentMethod: "UPI",
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    _id: "inv_2026_019",
-    invoiceNumber: "INV-2026/KL-019",
+    _id: "inv_2026_072",
+    invoiceNumber: "INV-2026/KL-072",
     advocateId: "adv_1",
     advocateName: "Adv. Meera Krishnan",
-    citizenId: "client_ananya",
-    clientName: "Ananya Deshmukh",
-    clientPhone: "+91 98200 44112",
-    matterId: "mat_arb_041",
-    matterTitle: "Commercial Arbitration Retainer & Section 9 Petition",
+    barCouncilNumber: "K/001429/2012",
+    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    citizenId: "default_citizen",
+    clientName: "Gopakumar Nambiar",
+    clientPhone: "+91 94471 28400",
+    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
+    matterId: "mat_os_412",
+    matterTitle: "OS 412/2024 — Title Injunction & Commission Inspection (Munsiff Court, Pala)",
     items: [
-      { description: "Arbitration Notice Drafting & Chamber Briefing", amount: 20000 },
-      { description: "NCLT Urgent Mentioning & Indexing", amount: 12000 },
+      { description: "Plaint Preparation & Order XXVI Rule 9 Commission Application", category: "Professional Fee", sacCode: "9982", amount: 8000 },
+      { description: "Taluk Surveyor & Advocate Commissioner Mahazar Assistance", category: "Commission & Process", sacCode: "9982", amount: 6000 },
+      { description: "Kerala Court Fees & Suits Valuation Act Ad-valorem Stamps", category: "Court Fees", sacCode: "9982", amount: 3500 },
     ],
-    subtotal: 32000,
+    subtotal: 17500,
     gstRate: 18,
-    gstAmount: 5760,
-    totalAmount: 37760,
-    status: "paid",
-    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    paidAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentMethod: "NEFT/RTGS",
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    gstAmount: 3150,
+    cgstAmount: 1575,
+    sgstAmount: 1575,
+    totalAmount: 20650,
+    status: "unpaid",
+    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    paymentMethod: "Portal_Escrow",
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    _id: "inv_2026_058",
-    invoiceNumber: "INV-2026/KL-058",
+    _id: "inv_2026_011",
+    invoiceNumber: "INV-2026/KL-011",
     advocateId: "adv_1",
     advocateName: "Adv. Meera Krishnan",
-    citizenId: "client_rohit",
-    clientName: "Rohit Menon",
-    clientPhone: "+91 97455 33201",
-    matterId: "mat_rera_102",
-    matterTitle: "K-RERA Delay Possession Complaint & Title Verification",
+    barCouncilNumber: "K/001429/2012",
+    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    citizenId: "default_citizen",
+    clientName: "Gopakumar Nambiar",
+    clientPhone: "+91 94471 28400",
+    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
+    matterId: "mat_not_701",
+    matterTitle: "Pre-Litigation Legal Notice under Section 138 NI Act & Scrutiny",
     items: [
-      { description: "Legal Scrutiny of Encumbrance & Builder Agreement", amount: 12000 },
-      { description: "K-RERA Form M Application Filing", amount: 8000 },
+      { description: "Chamber Legal Consultation & Limitation Scrutiny", category: "Consultation", sacCode: "9982", amount: 5000 },
+      { description: "Section 138 Statutory Notice Drafting & India Post Speed Post Dispatch", category: "Drafting & Dispatch", sacCode: "9982", amount: 4500 },
+    ],
+    subtotal: 9500,
+    gstRate: 18,
+    gstAmount: 1710,
+    cgstAmount: 855,
+    sgstAmount: 855,
+    totalAmount: 11210,
+    status: "paid",
+    dueDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    paidAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    paymentMethod: "UPI",
+    transactionId: "UPI/2026/894102914",
+    receiptNumber: "REC-2026/KL-011",
+    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "inv_2026_004",
+    invoiceNumber: "INV-2026/KL-004",
+    advocateId: "adv_1",
+    advocateName: "Adv. Meera Krishnan",
+    barCouncilNumber: "K/001429/2012",
+    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+    citizenId: "default_citizen",
+    clientName: "Gopakumar Nambiar",
+    clientPhone: "+91 94471 28400",
+    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
+    matterId: "mat_wpc_19482",
+    matterTitle: "WP(C) 19482/2024 — Initial Legal Retainer & Caveat Registry Search",
+    items: [
+      { description: "Initial Chamber Retainer & High Court Caveat Registry Search", category: "Retainer Fee", sacCode: "9982", amount: 18000 },
+      { description: "High Court Legal Benefit Fund & Vakalat Stamp Duty", category: "Stamps & Welfare", sacCode: "9982", amount: 2000 },
     ],
     subtotal: 20000,
     gstRate: 18,
     gstAmount: 3600,
+    cgstAmount: 1800,
+    sgstAmount: 1800,
     totalAmount: 23600,
-    status: "unpaid",
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentMethod: "Portal_Escrow",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "paid",
+    dueDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    paidAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    paymentMethod: "NEFT/RTGS",
+    transactionId: "NEFT-SBI9481029841",
+    receiptNumber: "REC-2026/KL-004",
+    createdAt: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -1629,26 +1679,96 @@ export const devStore = {
     );
   },
 
-  payInvoice(invoiceId, paymentMethod = "UPI") {
+  getInvoiceById(invoiceId) {
+    const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
+    return invoices.find((i) => i._id === invoiceId || i.invoiceNumber === invoiceId) || null;
+  },
+
+  createInvoice(data) {
+    const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
+    const now = new Date();
+    const count = invoices.length + 1;
+    const invNum = data.invoiceNumber || `INV-${now.getFullYear()}/KL-${String(count).padStart(3, "0")}`;
+    const subtotal = Number(data.subtotal) || (data.items ? data.items.reduce((s, it) => s + (Number(it.amount) || 0), 0) : 0);
+    const gstRate = Number(data.gstRate) || 18;
+    const gstAmount = Math.round(subtotal * (gstRate / 100));
+    const totalAmount = subtotal + gstAmount;
+
+    const newInvoice = {
+      _id: "inv_" + Date.now().toString(),
+      invoiceNumber: invNum,
+      advocateId: data.advocateId || "adv_1",
+      advocateName: data.advocateName || "Adv. Meera Krishnan",
+      barCouncilNumber: data.barCouncilNumber || "K/001429/2012",
+      chamberAddress: data.chamberAddress || "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
+      citizenId: data.citizenId || "default_citizen",
+      clientName: data.clientName || "Gopakumar Nambiar",
+      clientPhone: data.clientPhone || "+91 94471 28400",
+      clientAddress: data.clientAddress || "Panampilly Nagar, Ernakulam, Kerala 682036",
+      matterId: data.matterId || "",
+      matterTitle: data.matterTitle || "Legal Representation & Retainer",
+      items: data.items || [{ description: "Legal Retainer Consultation", amount: subtotal, category: "Professional Fee", sacCode: "9982" }],
+      subtotal,
+      gstRate,
+      gstAmount,
+      cgstAmount: Math.round(gstAmount / 2),
+      sgstAmount: Math.round(gstAmount / 2),
+      totalAmount,
+      status: data.status || "unpaid",
+      dueDate: data.dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+      paymentMethod: data.paymentMethod || "UPI",
+      createdAt: now.toISOString(),
+      ...data,
+    };
+    invoices.unshift(newInvoice);
+    writeFile("dev_invoices.json", invoices);
+    return newInvoice;
+  },
+
+  payInvoice(invoiceId, paymentMethod = "UPI", transactionId = "") {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
     const inv = invoices.find((i) => i._id === invoiceId || i.invoiceNumber === invoiceId);
     if (!inv) return null;
 
+    const now = new Date();
     inv.status = "paid";
-    inv.paidAt = new Date().toISOString();
+    inv.paidAt = now.toISOString();
     inv.paymentMethod = paymentMethod;
+    inv.transactionId =
+      transactionId ||
+      `${paymentMethod.toUpperCase().replace(/[^A-Z]/g, "") || "TXN"}/${now.getFullYear()}/${Math.floor(
+        10000000 + Math.random() * 90000000
+      )}`;
+    inv.receiptNumber =
+      inv.receiptNumber ||
+      `REC-${now.getFullYear()}/${inv.invoiceNumber.replace(/[^0-9]/g, "").slice(-3) || "001"}`;
     writeFile("dev_invoices.json", invoices);
 
     // Cross-portal sync: increment feesPaid on the matter & add timeline milestone
     const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
-    const matter = matters.find((m) => m._id === inv.matterId || m.caseNumber === inv.matterId || m.matterTitle === inv.matterTitle);
+    const matter = matters.find(
+      (m) =>
+        m._id === inv.matterId ||
+        m.id === inv.matterId ||
+        m.caseNumber === inv.matterId ||
+        (inv.matterTitle && m.matterTitle && m.matterTitle.includes(inv.matterTitle.slice(0, 15)))
+    );
     if (matter) {
-      matter.feesPaid = (Number(matter.feesPaid) || 0) + (Number(inv.totalAmount) || Number(inv.subtotal) || 0);
+      matter.feesPaid =
+        (Number(matter.feesPaid) || 0) + (Number(inv.totalAmount) || Number(inv.subtotal) || 0);
       if (!matter.timeline) matter.timeline = [];
-      matter.timeline.push({
-        date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      matter.timeline.unshift({
+        date: new Date().toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
         title: `Retainer Bill Settled (${inv.invoiceNumber})`,
-        remarks: `Payment of ₹${inv.totalAmount.toLocaleString("en-IN")} confirmed via ${paymentMethod}. Formal GST receipt generated.`,
+        remarks: `Payment of ₹${Number(inv.totalAmount).toLocaleString(
+          "en-IN"
+        )} confirmed via ${paymentMethod} (Txn: ${inv.transactionId}). Formal GST receipt ${
+          inv.receiptNumber
+        } issued.`,
         stage: "Completed",
       });
       writeFile("dev_matters.json", matters);

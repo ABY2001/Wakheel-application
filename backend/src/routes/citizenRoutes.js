@@ -31,7 +31,9 @@ import {
   deleteLegalNotice,
   citizenAiChat,
   getCitizenInvoices,
+  getInvoiceById,
   payCitizenInvoice,
+  createInvoiceRequest,
 } from "../controllers/citizenController.js";
 
 const router = express.Router();
@@ -76,7 +78,8 @@ router.route("/notices/:id/track").get(protect, trackNoticeSpeedPost);
 router.route("/ai/chat").post(protect, citizenAiChat);
 
 // 9. Fee Invoices & Payment Settlement (Milestone 2 Two-Way Sync)
-router.route("/invoices").get(protect, getCitizenInvoices);
+router.route("/invoices").get(protect, getCitizenInvoices).post(protect, createInvoiceRequest);
+router.route("/invoices/:id").get(protect, getInvoiceById);
 router.route("/invoices/:id/pay").post(protect, payCitizenInvoice);
 
 export default router;

@@ -72,6 +72,7 @@ import { ClientDocumentsView } from "@/components/client/ClientDocumentsView";
 import { DocumentFilingView } from "@/components/client/DocumentFilingView";
 import { CaseTimelineView } from "@/components/client/CaseTimelineView";
 import { LegalNoticesView } from "@/components/client/LegalNoticesView";
+import { InvoicesAndPaymentsView } from "@/components/client/InvoicesAndPaymentsView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -2556,68 +2557,10 @@ export function ClientPortalView() {
           {/* VIEW: Payments and Invoices (Milestone 2 Realtime Sync)         */}
           {/* ============================================================== */}
           {activeTab === "payments-and-invoice" && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <div>
-                    <h3 className="text-base font-bold text-black dark:text-white">Fee Invoices &amp; Court Fee Receipts</h3>
-                    <p className="text-xs text-zinc-500">Track advocate consultation payments, retainers, and court stamp duty receipts.</p>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-zinc-500">
-                    {invoices.length} Bills • GST Compliant
-                  </span>
-                </div>
-
-                {invoices.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-zinc-500">
-                    No billing records found for your account.
-                  </div>
-                ) : (
-                  <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-                    {invoices.map((inv) => (
-                      <div key={inv._id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="space-y-1">
-                          <span className="font-bold text-black dark:text-white block text-sm">
-                            {inv.matterTitle || (inv.items && inv.items[0]?.description) || "Legal Retainer"}
-                          </span>
-                          <span className="text-[11px] text-zinc-500 font-mono">
-                            {inv.invoiceNumber} • {inv.advocateName || "Adv. Meera Krishnan"}
-                          </span>
-                          <div className="text-[10px] text-zinc-400">
-                            Subtotal: ₹{(inv.subtotal || 0).toLocaleString("en-IN")} + 18% GST (₹{(inv.gstAmount || 0).toLocaleString("en-IN")})
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 self-end sm:self-center">
-                          <div className="text-right">
-                            <span className="font-mono font-bold text-black dark:text-white text-base block">
-                              ₹{(inv.totalAmount || inv.subtotal || 0).toLocaleString("en-IN")}
-                            </span>
-                            <span className="text-[10px] text-zinc-400">
-                              {inv.status === "paid" ? `Paid via ${inv.paymentMethod || "UPI"}` : "Due in 10 days"}
-                            </span>
-                          </div>
-
-                          {inv.status === "paid" ? (
-                            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Paid
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handlePayInvoice(inv._id)}
-                              disabled={payingInvoiceId === inv._id}
-                              className="px-4 py-1.5 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer shadow-xs disabled:opacity-50 transition-all"
-                            >
-                              {payingInvoiceId === inv._id ? "Processing..." : "Pay Now (UPI)"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <InvoicesAndPaymentsView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              onInvoicePaid={loadCitizenData}
+            />
           )}
 
         </div>

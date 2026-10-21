@@ -971,7 +971,17 @@ export const addMatterTimelineMilestone = async (req, res) => {
       });
     }
 
-    const matter = await Matter.findById(id);
+    let matter = null;
+    try {
+      matter = await Matter.findById(id);
+    } catch {
+      // not a valid ObjectId, fallback to caseNumber/cnrNumber
+    }
+    if (!matter) {
+      matter = await Matter.findOne({
+        $or: [{ caseNumber: id }, { cnrNumber: id }, { _id: id }],
+      });
+    }
     if (!matter) {
       return res.status(404).json({ success: false, message: "Matter not found" });
     }

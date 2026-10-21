@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { citizenApi } from "@/lib/api";
 import {
   Calendar,
   Clock,
@@ -17,6 +18,7 @@ import {
   Check,
   Download,
   Building,
+  RefreshCw,
 } from "lucide-react";
 
 export interface TimelineMilestone {
@@ -165,29 +167,106 @@ const DEFAULT_MILESTONES: TimelineMilestone[] = [
   },
 ];
 
-const AVAILABLE_MATTERS = [
+export interface MatterOption {
+  id: string;
+  title: string;
+  fullTitle: string;
+  court: string;
+  counsel: string;
+  nextHearing?: string;
+  stage?: string;
+  timeline?: Array<{
+    date: string;
+    title: string;
+    remarks: string;
+    stage: string;
+  }>;
+}
+
+const AVAILABLE_MATTERS: MatterOption[] = [
   {
-    id: "wpc-19482",
+    id: "mat_wpc_19482",
     title: "WP(C) 19482/2024",
     fullTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    court: "High Court of Kerala",
+    court: "High Court of Kerala (Ernakulam Bench)",
     counsel: "Adv. Meera Krishnan",
   },
   {
-    id: "arb-nclt",
+    id: "mat-02",
     title: "ARB/NCLT/KOCHI/2024/041",
     fullTitle: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech Solutions",
-    court: "Arbitration Centre, Kerala",
-    counsel: "Adv. Sanjay Verma",
+    court: "National Company Law Tribunal (Kochi Bench)",
+    counsel: "Adv. Meera Krishnan",
   },
   {
-    id: "os-412",
+    id: "mat-03",
     title: "OS 412/2023",
     fullTitle: "OS 412/2023 — Gopakumar v. Varghese",
     court: "Sub Court, Ernakulam",
-    counsel: "Adv. K. R. Nambiar",
+    counsel: "Adv. Meera Krishnan",
   },
 ];
+
+const mapTimelineEvents = (
+  matterId: string,
+  events: any[],
+  fallbackCourt = "Court Hall 2A",
+  fallbackCounsel = "Adv. Meera Krishnan"
+): TimelineMilestone[] => {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  return events.map((item, idx) => {
+    const isCompleted =
+      item.stage?.toLowerCase().includes("completed") ||
+      item.stage?.toLowerCase().includes("admitted") ||
+      item.stage?.toLowerCase().includes("active") ||
+      item.status === "Completed";
+
+    const hasOrder =
+      Boolean(item.hasOrderDoc || item.orderDocName) ||
+      item.title?.toLowerCase().includes("order") ||
+      item.title?.toLowerCase().includes("stay") ||
+      item.title?.toLowerCase().includes("decree");
+
+    const orderName =
+      item.orderDocName ||
+      (item.title?.toLowerCase().includes("stay")
+        ? "Interim_Stay_Order_Bench_2A.pdf"
+        : item.title?.toLowerCase().includes("order")
+        ? "Certified_Court_Order.pdf"
+        : undefined);
+
+    const isVideoConsultation =
+      item.actionType === "consultation" ||
+      item.title?.toLowerCase().includes("consultation") ||
+      item.title?.toLowerCase().includes("meeting");
+
+    const isFiling =
+      item.actionType === "filing" ||
+      item.title?.toLowerCase().includes("filed") ||
+      item.title?.toLowerCase().includes("filing") ||
+      item.title?.toLowerCase().includes("rejoinder");
+
+    return {
+      id: item.id || `ts-${matterId}-${idx}`,
+      matterId,
+      date: item.date || "Listed Hearing",
+      rawDate: item.rawDate || item.date || "",
+      title: item.title || "Court Proceedings Update",
+      description:
+        item.remarks ||
+        item.description ||
+        "Proceedings milestone logged on case chronology.",
+      status: isCompleted ? "Completed" : "Scheduled",
+      benchOrCounsel:
+        item.benchOrCounsel ||
+        item.bench ||
+        (isVideoConsultation ? fallbackCounsel : fallbackCourt),
+      hasOrderDoc: hasOrder,
+      orderDocName: orderName,
+      actionType: isVideoConsultation ? "consultation" : isFiling ? "filing" : "court",
+    };
+  });
+};
 
 interface CaseTimelineViewProps {
   initialMatter?: string;
@@ -198,17 +277,13 @@ export function CaseTimelineView({
   initialMatter,
   onOpenBookingModal,
 }: CaseTimelineViewProps) {
-  const [selectedMatterKey, setSelectedMatterKey] = useState<string>(() => {
-    if (initialMatter) {
-      if (initialMatter.includes("NCLT") || initialMatter.includes("ARB")) return "arb-nclt";
-      if (initialMatter.includes("OS 412")) return "os-412";
-    }
-    return "wpc-19482";
-  });
-
+  const [mattersList, setMattersList] = useState<MatterOption[]>(AVAILABLE_MATTERS);
+  const [selectedMatterKey, setSelectedMatterKey] = useState<string>("mat_wpc_19482");
   const [milestones, setMilestones] = useState<TimelineMilestone[]>(DEFAULT_MILESTONES);
   const [statusFilter, setStatusFilter] = useState<"all" | "Scheduled" | "Completed">("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [isSubmittingMilestone, setIsSubmittingMilestone] = useState(false);
+  const [isLoadingTimeline, setIsLoadingTimeline] = useState(false);
 
   // Form State for Adding New Milestone
   const [newTitle, setNewTitle] = useState("");
@@ -217,39 +292,134 @@ export function CaseTimelineView({
   const [newStatus, setNewStatus] = useState<"Scheduled" | "Completed">("Scheduled");
 
   const currentMatter =
-    AVAILABLE_MATTERS.find((m) => m.id === selectedMatterKey) || AVAILABLE_MATTERS[0];
+    mattersList.find((m) => m.id === selectedMatterKey) || mattersList[0];
+
+  const loadMattersAndTimeline = async () => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
+    try {
+      setIsLoadingTimeline(true);
+      const res = await citizenApi.getMatters(token);
+      if (res?.success && Array.isArray(res.matters) && res.matters.length > 0) {
+        const mappedMatters: MatterOption[] = res.matters.map((m: any) => ({
+          id: m.id || m._id,
+          title: m.caseNumber || m.title,
+          fullTitle: `${m.caseNumber} — ${m.title || m.matterTitle}`,
+          court: m.court || m.courtForum || "High Court of Kerala",
+          counsel: m.assignedAdvocate || m.advocateName || "Adv. Meera Krishnan",
+          nextHearing: m.nextHearing,
+          stage: m.stage || m.status,
+          timeline: m.timeline || [],
+        }));
+        setMattersList(mappedMatters);
+
+        let targetId = mappedMatters[0].id;
+        if (initialMatter) {
+          const match = mappedMatters.find(
+            (m) =>
+              m.title.toLowerCase().includes(initialMatter.toLowerCase()) ||
+              m.fullTitle.toLowerCase().includes(initialMatter.toLowerCase()) ||
+              initialMatter.toLowerCase().includes(m.title.toLowerCase())
+          );
+          if (match) targetId = match.id;
+        } else if (selectedMatterKey && mappedMatters.some((m) => m.id === selectedMatterKey)) {
+          targetId = selectedMatterKey;
+        }
+
+        setSelectedMatterKey(targetId);
+        const targetMatter = mappedMatters.find((m) => m.id === targetId) || mappedMatters[0];
+        if (targetMatter.timeline && targetMatter.timeline.length > 0) {
+          const mappedEvents = mapTimelineEvents(
+            targetId,
+            targetMatter.timeline,
+            targetMatter.court,
+            targetMatter.counsel
+          );
+          setMilestones(mappedEvents);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load matters from API, using default timeline:", err);
+    } finally {
+      setIsLoadingTimeline(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMattersAndTimeline();
+  }, [initialMatter]);
+
+  const handleSelectMatter = (matterId: string) => {
+    setSelectedMatterKey(matterId);
+    const target = mattersList.find((m) => m.id === matterId);
+    if (target?.timeline && target.timeline.length > 0) {
+      const mapped = mapTimelineEvents(matterId, target.timeline, target.court, target.counsel);
+      setMilestones(mapped);
+    }
+  };
 
   const filteredMilestones = milestones
     .filter((m) => m.matterId === selectedMatterKey)
     .filter((m) => (statusFilter === "all" ? true : m.status === statusFilter));
 
-  const handleAddMilestone = (e: React.FormEvent) => {
+  const handleAddMilestone = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newDate.trim()) return;
 
-    // Format display date e.g. "20-Nov-2024"
+    setIsSubmittingMilestone(true);
     const parsed = new Date(newDate);
     const day = String(parsed.getDate()).padStart(2, "0");
     const month = parsed.toLocaleString("en-US", { month: "short" });
     const year = parsed.getFullYear();
     const formattedDisplay = `${day}-${month}-${year}`;
 
-    const created: TimelineMilestone = {
-      id: `ts-${Date.now()}`,
-      matterId: selectedMatterKey,
-      date: formattedDisplay,
-      rawDate: newDate,
-      title: newTitle.trim(),
-      description: newDescription.trim() || "Milestone logged in case chronology.",
-      status: newStatus,
-      actionType: "court",
-    };
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
 
-    setMilestones([created, ...milestones]);
-    setNewTitle("");
-    setNewDate("");
-    setNewDescription("");
-    setAddModalOpen(false);
+    try {
+      const res = await citizenApi.addMatterTimelineMilestone(token, selectedMatterKey, {
+        title: newTitle.trim(),
+        remarks: newDescription.trim() || "Milestone logged on case chronology.",
+        stage: newStatus,
+        date: formattedDisplay,
+        nextHearingDate: newDate,
+      });
+
+      if (res?.success && res.matter?.timeline) {
+        const mapped = mapTimelineEvents(
+          selectedMatterKey,
+          res.matter.timeline,
+          currentMatter.court,
+          currentMatter.counsel
+        );
+        setMilestones(mapped);
+      } else {
+        const created: TimelineMilestone = {
+          id: `ts-${Date.now()}`,
+          matterId: selectedMatterKey,
+          date: formattedDisplay,
+          rawDate: newDate,
+          title: newTitle.trim(),
+          description: newDescription.trim() || "Milestone logged in case chronology.",
+          status: newStatus,
+          actionType: "court",
+        };
+        setMilestones([created, ...milestones]);
+      }
+
+      setNewTitle("");
+      setNewDate("");
+      setNewDescription("");
+      setAddModalOpen(false);
+    } catch (err) {
+      console.warn("Error adding milestone to backend:", err);
+    } finally {
+      setIsSubmittingMilestone(false);
+    }
   };
 
   const toggleStatus = (id: string) => {
@@ -282,17 +452,26 @@ export function CaseTimelineView({
           <div className="relative">
             <select
               value={selectedMatterKey}
-              onChange={(e) => setSelectedMatterKey(e.target.value)}
+              onChange={(e) => handleSelectMatter(e.target.value)}
               aria-label="Select matter for timeline"
               className="px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer pr-8"
             >
-              {AVAILABLE_MATTERS.map((m) => (
+              {mattersList.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.title}
                 </option>
               ))}
             </select>
           </div>
+
+          <button
+            type="button"
+            onClick={() => loadMattersAndTimeline()}
+            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 cursor-pointer"
+            title="Refresh Case Timeline from Court Registry"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoadingTimeline ? "animate-spin" : ""}`} />
+          </button>
 
           <button
             type="button"
@@ -551,9 +730,11 @@ export function CaseTimelineView({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+                  disabled={isSubmittingMilestone}
+                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
-                  Save Milestone
+                  {isSubmittingMilestone && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{isSubmittingMilestone ? "Saving..." : "Save Milestone"}</span>
                 </button>
               </div>
             </form>

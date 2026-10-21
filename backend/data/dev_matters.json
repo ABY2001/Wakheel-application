@@ -14,7 +14,7 @@
     "status": "Admitted",
     "stage": "Active Proceedings",
     "filingDate": "2026-10-21",
-    "nextHearingDate": "2026-11-04T04:39:55.988Z",
+    "nextHearingDate": "2026-11-20T10:30:00.000Z",
     "cnrNumber": "DLHC010049212026",
     "statutoryActs": [
       "Article 226 of the Constitution of India"
@@ -31,11 +31,23 @@
         "title": "Division Bench Extended Injunction",
         "remarks": "Counter affidavit filed; next date of hearing scheduled.",
         "stage": "Interim Relief Extended"
+      },
+      {
+        "date": "12-Nov-2024",
+        "title": "Advocate Commissioner Re-survey Site Inspection",
+        "remarks": "Joint inspection scheduled with village revenue officer and KSEB assistant executive engineer.",
+        "stage": "Scheduled"
+      },
+      {
+        "date": "16-Oct-2026",
+        "title": "Division Bench 2A Dictated Operative Injunction Order",
+        "remarks": "Hon'ble Division Bench extended ad-interim injunction against felling of rubber trees by 4 weeks. Standing counsel granted final opportunity for counter.",
+        "stage": "Interim Relief Extended"
       }
     ],
     "orders": [],
     "createdAt": "2026-10-21T04:39:55.989Z",
-    "updatedAt": "2026-10-21T04:39:56.006Z"
+    "updatedAt": "2026-10-21T06:03:12.754Z"
   },
   {
     "_id": "mat_1792557595960",

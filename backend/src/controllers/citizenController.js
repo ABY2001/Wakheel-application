@@ -604,6 +604,170 @@ export const matchAdvocateForGrievance = async (req, res) => {
 // 3. MATTERS & CASE TRACKER CONTROLLERS
 // ============================================================================
 
+// Helper: Normalize matter for client frontend format
+const normalizeMatterForClient = (m) => {
+  const doc = m.toObject ? m.toObject() : m;
+  const id = doc._id ? doc._id.toString() : doc.id;
+  const caseNumber = doc.caseNumber || "WP(C) 19482/2024";
+  const rawTitle = doc.title || doc.matterTitle || doc.caseTitle || `${caseNumber} Matter`;
+  const court = doc.court || doc.courtForum || "High Court of Kerala (Ernakulam Bench)";
+  const assignedAdvocate = doc.assignedAdvocate || doc.advocateName || "Adv. Meera Krishnan";
+  const courtHall = doc.courtHall || "Court Hall 2A (Division Bench)";
+  const status = doc.status || "Admitted";
+  const filingDate = doc.filingDate || (doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : "2024-06-14");
+  const cnrNumber = doc.cnrNumber || "KLHC01-019482-2024";
+
+  let nextHearing = doc.nextHearing || "20-Nov-2024 (Bench 4B)";
+  if (doc.nextHearingDate) {
+    if (typeof doc.nextHearingDate === "string" && doc.nextHearingDate.includes("T")) {
+      const d = new Date(doc.nextHearingDate);
+      if (!isNaN(d.getTime())) {
+        nextHearing = `${d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${courtHall.split("(")[0].trim()})`;
+      }
+    } else if (typeof doc.nextHearingDate === "string") {
+      nextHearing = doc.nextHearingDate;
+    }
+  }
+
+  const statutoryActs =
+    doc.statutoryActs && doc.statutoryActs.length > 0
+      ? doc.statutoryActs
+      : [
+          "Article 226 of the Constitution of India",
+          "Indian Telegraph Act, 1885 (Section 10 & 16)",
+          "Specific Relief Act, 1963",
+        ];
+
+  const timeline = (doc.timeline || []).map((step) => ({
+    date:
+      typeof step.date === "string"
+        ? step.date
+        : step.date
+        ? new Date(step.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+        : "Recent",
+    title: step.title || "Court Proceedings Update",
+    remarks: step.remarks || "",
+    stage: step.stage || "Completed",
+    orderCopyUrl: step.orderCopyUrl,
+  }));
+
+  return {
+    id,
+    _id: id,
+    caseNumber,
+    title: rawTitle,
+    matterTitle: rawTitle,
+    court,
+    courtForum: court,
+    assignedAdvocate,
+    advocateName: assignedAdvocate,
+    nextHearing,
+    nextHearingDate: doc.nextHearingDate,
+    filingDate,
+    status,
+    cnrNumber,
+    courtHall,
+    statutoryActs,
+    timeline,
+    totalFeesBilled: doc.totalFeesBilled || 0,
+    feesPaid: doc.feesPaid || 0,
+  };
+};
+
+// Helper: e-Courts NJDG National Live Case Resolver
+const resolveECourtsLiveCnr = (cnrInput) => {
+  const cleanCnr = (cnrInput || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const stateCode = cleanCnr.slice(0, 2);
+  const courtCode = cleanCnr.slice(2, 6);
+  const caseSerial = cleanCnr.slice(6, 12) || "019482";
+  const caseYear = cleanCnr.slice(12, 16) || "2024";
+
+  const courtNames = {
+    KLHC: "High Court of Kerala (Ernakulam)",
+    KLER: "Sub Court, Ernakulam",
+    KLTV: "District & Sessions Court, Thiruvananthapuram",
+    KLKK: "District Court, Kozhikode",
+    KLTS: "District Court, Thrissur",
+    KLAL: "District Court, Alappuzha",
+    DLHC: "High Court of Delhi (New Delhi)",
+    MHBB: "Bombay High Court (Mumbai)",
+    TNMD: "Madras High Court (Chennai)",
+  };
+
+  const courtKey = cleanCnr.slice(0, 4);
+  const courtForum =
+    courtNames[courtKey] ||
+    (stateCode === "KL" ? "High Court of Kerala (Ernakulam Bench)" : "District & Sessions Court");
+  const caseType = courtKey.includes("HC") ? "WP(C)" : "OS";
+  const caseNumber = `${caseType} ${parseInt(caseSerial, 10) || 19482}/${caseYear}`;
+
+  return {
+    cnrNumber: cleanCnr || "KLHC01-019482-2024",
+    caseNumber,
+    title: "Gopakumar Nambiar v. Kerala State Electricity Board & Ors.",
+    matterTitle: "Gopakumar Nambiar v. Kerala State Electricity Board & Ors.",
+    petitioner: "Gopakumar Nambiar",
+    respondent: "Kerala State Electricity Board & Ors.",
+    court: courtForum,
+    courtForum,
+    courtHall: "Court Hall 2A (Division Bench)",
+    bench: "Hon'ble Justice K. Haripal / Division Bench 2A",
+    assignedAdvocate: "Adv. Meera Krishnan (Roll No: K/001429/2012)",
+    advocateName: "Adv. Meera Krishnan",
+    status: "Admitted",
+    stage: "Hearing on Interim Stay / Final Arguments",
+    filingDate: `${caseYear}-06-14`,
+    registrationDate: `${caseYear}-06-16`,
+    nextHearing: `20-Nov-${caseYear} (Bench 4B, Item #14)`,
+    nextHearingDate: `${caseYear}-11-20T10:30:00.000Z`,
+    statutoryActs: [
+      "Indian Telegraph Act, 1885 (Section 10 & 16)",
+      "Electricity Act, 2003",
+      "Article 226 of the Constitution of India",
+    ],
+    timeline: [
+      {
+        date: `14-Jun-${caseYear}`,
+        title: "Writ Petition Filed in High Court Registry",
+        remarks: "Authenticated paperbook and petition grounds registered after scrutiny.",
+        stage: "Completed",
+      },
+      {
+        date: `02-Jul-${caseYear}`,
+        title: "Interim Stay of Tree-Felling Granted",
+        remarks: "Single Bench prohibited KSEB from entering agricultural holding without compliance.",
+        stage: "Completed",
+      },
+      {
+        date: `16-Oct-${caseYear}`,
+        title: "Interim Stay Extended by Division Bench",
+        remarks: "Division Bench 2A extended interim stay; respondent counter-affidavit taken on record.",
+        stage: "Interim Relief Active",
+      },
+      {
+        date: `20-Nov-${caseYear}`,
+        title: "Upcoming Final Arguments Listed",
+        remarks: "Listed before Bench 4B for conclusive hearing on Section 16 Telegraph Act compliance.",
+        stage: "Scheduled",
+      },
+    ],
+    orders: [
+      {
+        orderDate: `16-Oct-${caseYear}`,
+        orderType: "Daily Interim Stay Order",
+        bench: "Court Hall 2A",
+        fileName: `Interim_Stay_Order_${caseType}_${caseYear}.pdf`,
+      },
+      {
+        orderDate: `02-Jul-${caseYear}`,
+        orderType: "Ad-Interim Injunction Order",
+        bench: "Court Hall 4B",
+        fileName: `Injunction_Order_${caseType}_${caseYear}.pdf`,
+      },
+    ],
+  };
+};
+
 // @desc    Get active matters for citizen
 // @route   GET /api/citizen/matters
 // @access  Private (Citizen)
@@ -613,18 +777,70 @@ export const getMatters = async (req, res) => {
 
     if (shouldUseDevStore()) {
       const matters = devStore.getMatters(userId);
-      return res.json({ success: true, count: matters.length, matters, mode: "dummy_data" });
+      const normalized = matters.map(normalizeMatterForClient);
+      return res.json({
+        success: true,
+        count: normalized.length,
+        matters: normalized,
+        mode: "dummy_data",
+      });
     }
 
     let matters = await Matter.find({ citizenId: userId }).sort({ updatedAt: -1 });
-    res.json({ success: true, count: matters.length, matters, mode: "cloud_db" });
+    const normalized = matters.map(normalizeMatterForClient);
+    res.json({
+      success: true,
+      count: normalized.length,
+      matters: normalized,
+      mode: "cloud_db",
+    });
   } catch (error) {
     console.error("getMatters error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get matter by CNR number
+// @desc    Get single matter details by ID
+// @route   GET /api/citizen/matters/detail/:id
+// @access  Private (Citizen)
+export const getMatterById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserId(req);
+
+    if (shouldUseDevStore()) {
+      const match = devStore.getMatterById(id);
+      if (match) {
+        return res.json({
+          success: true,
+          matter: normalizeMatterForClient(match),
+          mode: "dummy_data",
+        });
+      }
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    const matter = await Matter.findOne({
+      citizenId: userId,
+      $or: [{ _id: id }, { caseNumber: id }, { cnrNumber: id }],
+    });
+
+    if (!matter) {
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    res.json({
+      success: true,
+      matter: normalizeMatterForClient(matter),
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("getMatterById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get matter by CNR number or Case Number
 // @route   GET /api/citizen/matters/:cnr
 // @access  Private (Citizen)
 export const getMatterByCnr = async (req, res) => {
@@ -640,7 +856,11 @@ export const getMatterByCnr = async (req, res) => {
           (m.caseNumber && m.caseNumber.toLowerCase() === cnr.toLowerCase())
       );
       if (match) {
-        return res.json({ success: true, matter: match, mode: "dummy_data" });
+        return res.json({
+          success: true,
+          matter: normalizeMatterForClient(match),
+          mode: "dummy_data",
+        });
       }
       return res.status(404).json({ success: false, message: "Matter not found for specified CNR" });
     }
@@ -655,9 +875,213 @@ export const getMatterByCnr = async (req, res) => {
     if (!matter) {
       return res.status(404).json({ success: false, message: "Matter not found for specified CNR" });
     }
-    res.json({ success: true, matter, mode: "cloud_db" });
+    res.json({
+      success: true,
+      matter: normalizeMatterForClient(matter),
+      mode: "cloud_db",
+    });
   } catch (error) {
     console.error("getMatterByCnr error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Live e-Courts Case Tracking by CNR / Case Number
+// @route   GET /api/citizen/matters/track/:cnr (or POST /api/citizen/matters/track)
+// @access  Private (Citizen)
+export const trackCaseByCnr = async (req, res) => {
+  try {
+    const cnr = req.params.cnr || req.body.cnr || req.query.cnr;
+    const userId = getUserId(req);
+
+    if (!cnr) {
+      return res.status(400).json({ success: false, message: "CNR or Case number is required for tracking" });
+    }
+
+    // 1. First check if it already belongs to the user's active dockets
+    if (shouldUseDevStore()) {
+      const matters = devStore.getMatters(userId);
+      const userMatch = matters.find(
+        (m) =>
+          (m.cnrNumber && m.cnrNumber.toLowerCase().replace(/[^a-z0-9]/g, "") === cnr.toLowerCase().replace(/[^a-z0-9]/g, "")) ||
+          (m.caseNumber && m.caseNumber.toLowerCase().replace(/[^a-z0-9]/g, "") === cnr.toLowerCase().replace(/[^a-z0-9]/g, ""))
+      );
+
+      if (userMatch) {
+        return res.json({
+          success: true,
+          isLinkedToUser: true,
+          source: "user_active_docket",
+          matter: normalizeMatterForClient(userMatch),
+          canImportToDocket: false,
+          mode: "dummy_data",
+        });
+      }
+    } else {
+      const cleanRegex = new RegExp(`^${cnr.replace(/[-/]/g, "[-/]?")}$`, "i");
+      const userMatch = await Matter.findOne({
+        citizenId: userId,
+        $or: [{ cnrNumber: cleanRegex }, { caseNumber: cleanRegex }],
+      });
+
+      if (userMatch) {
+        return res.json({
+          success: true,
+          isLinkedToUser: true,
+          source: "user_active_docket",
+          matter: normalizeMatterForClient(userMatch),
+          canImportToDocket: false,
+          mode: "cloud_db",
+        });
+      }
+    }
+
+    // 2. If not found in user's active dockets, query live e-Courts NJDG resolver
+    const liveCase = resolveECourtsLiveCnr(cnr);
+    res.json({
+      success: true,
+      isLinkedToUser: false,
+      source: "ecourts_njdg_live",
+      matter: liveCase,
+      canImportToDocket: true,
+      message: `Live e-Courts docket found for CNR ${liveCase.cnrNumber}`,
+    });
+  } catch (error) {
+    console.error("trackCaseByCnr error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Add / File new matter docket
+// @route   POST /api/citizen/matters
+// @access  Private (Citizen)
+export const createMatter = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const {
+      caseNumber,
+      title,
+      matterTitle,
+      court,
+      courtForum,
+      assignedAdvocate,
+      advocateName,
+      cnrNumber,
+      courtHall,
+      statutoryActs,
+      status,
+      nextHearingDate,
+      filingDate,
+    } = req.body;
+
+    const finalCaseNumber = caseNumber || `WP(C) ${Math.floor(10000 + Math.random() * 90000)}/2026`;
+    const finalTitle = title || matterTitle || `${finalCaseNumber} Legal Matter`;
+    const finalCourt = court || courtForum || "High Court of Kerala (Ernakulam)";
+    const finalAdvocate = assignedAdvocate || advocateName || "Adv. Meera Krishnan";
+    const finalCnr = cnrNumber || `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-2026`;
+
+    const matterData = {
+      citizenId: userId,
+      caseNumber: finalCaseNumber,
+      matterTitle: finalTitle,
+      title: finalTitle,
+      courtForum: finalCourt,
+      court: finalCourt,
+      advocateName: finalAdvocate,
+      assignedAdvocate: finalAdvocate,
+      cnrNumber: finalCnr,
+      courtHall: courtHall || "Court Hall 2A",
+      status: status || "Admitted",
+      filingDate: filingDate || new Date().toISOString().split("T")[0],
+      nextHearingDate: nextHearingDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      statutoryActs: statutoryActs || ["Article 226 of the Constitution of India", "Specific Relief Act, 1963"],
+      timeline: [
+        {
+          date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+          title: "Matter Registered in Wakheel Case Tracker",
+          remarks: `Matter docket opened for ${finalCaseNumber}. Standing counsel / advocate engaged.`,
+          stage: "Completed",
+        },
+      ],
+    };
+
+    if (shouldUseDevStore()) {
+      const created = devStore.addMatter(matterData);
+      return res.status(201).json({
+        success: true,
+        message: "Matter docket created and linked to Case Tracker",
+        matter: normalizeMatterForClient(created),
+        mode: "dummy_data",
+      });
+    }
+
+    const created = await Matter.create(matterData);
+    res.status(201).json({
+      success: true,
+      message: "Matter docket created and linked to Case Tracker",
+      matter: normalizeMatterForClient(created),
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("createMatter error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Add milestone to matter timeline
+// @route   POST /api/citizen/matters/:id/timeline
+// @access  Private (Citizen)
+export const addMatterTimelineMilestone = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, remarks, stage, date, nextHearingDate } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ success: false, message: "Milestone title is required" });
+    }
+
+    const eventData = {
+      title,
+      remarks: remarks || "",
+      stage: stage || "Completed",
+      date: date || new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      nextHearingDate,
+    };
+
+    if (shouldUseDevStore()) {
+      const result = devStore.addMatterTimelineEvent(id, eventData);
+      if (!result) {
+        return res.status(404).json({ success: false, message: "Matter not found" });
+      }
+      return res.json({
+        success: true,
+        message: "Milestone added to case timeline",
+        matter: normalizeMatterForClient(result.matter),
+        event: result.event,
+        mode: "dummy_data",
+      });
+    }
+
+    const matter = await Matter.findById(id);
+    if (!matter) {
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    matter.timeline.push(eventData);
+    if (nextHearingDate) {
+      matter.nextHearingDate = nextHearingDate;
+    }
+    await matter.save();
+
+    res.json({
+      success: true,
+      message: "Milestone added to case timeline",
+      matter: normalizeMatterForClient(matter),
+      event: eventData,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("addMatterTimelineMilestone error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

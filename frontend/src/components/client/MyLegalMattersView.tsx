@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowRight,
   Clock,
@@ -11,7 +11,13 @@ import {
   Activity,
   Briefcase,
   ExternalLink,
+  Plus,
+  RefreshCw,
+  Check,
+  Building,
+  FileText,
 } from "lucide-react";
+import { citizenApi } from "@/lib/api";
 
 export interface LegalMatter {
   id: string;
@@ -133,16 +139,92 @@ export function MyLegalMattersView({
   onOpenConsultation,
   onNavigateTab,
 }: MyLegalMattersViewProps = {}) {
-  const [matters] = useState<LegalMatter[]>(DEFAULT_MATTERS);
+  const [matters, setMatters] = useState<LegalMatter[]>(DEFAULT_MATTERS);
   const [selectedMatterDetail, setSelectedMatterDetail] = useState<LegalMatter | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCnrTracker, setShowCnrTracker] = useState(false);
   const [customCnr, setCustomCnr] = useState("");
+  const [isSearchingCnr, setIsSearchingCnr] = useState(false);
+  const [liveTrackedResult, setLiveTrackedResult] = useState<any | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  // Sync matters from backend API on mount
+  useEffect(() => {
+    const fetchMatters = async () => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || "dev_token"
+          : "dev_token";
+      try {
+        const res = await citizenApi.getMatters(token);
+        if (res?.success && Array.isArray(res.matters) && res.matters.length > 0) {
+          setMatters(res.matters);
+        }
+      } catch (err) {
+        console.warn("Could not fetch matters from backend, using default dockets:", err);
+      }
+    };
+    fetchMatters();
+  }, []);
 
   const handleSelect = (matter: LegalMatter) => {
     setSelectedMatterDetail(matter);
     if (onSelectMatter) {
       onSelectMatter(`${matter.caseNumber} — ${matter.title.split("v.")[0].trim()}...`);
+    }
+  };
+
+  const handleTrackCnr = async () => {
+    const query = customCnr.trim();
+    if (!query) return;
+    setIsSearchingCnr(true);
+    setLiveTrackedResult(null);
+
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
+
+    try {
+      const res = await citizenApi.trackCase(token, query);
+      if (res?.success && res.matter) {
+        setLiveTrackedResult(res);
+      }
+    } catch (err) {
+      console.warn("Live CNR tracking error:", err);
+    } finally {
+      setIsSearchingCnr(false);
+    }
+  };
+
+  const handleImportTrackedCase = async (caseData: any) => {
+    setIsImporting(true);
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
+
+    try {
+      const res = await citizenApi.createMatter(token, {
+        caseNumber: caseData.caseNumber,
+        matterTitle: caseData.title || caseData.caseTitle,
+        courtForum: caseData.court,
+        assignedAdvocate: caseData.assignedAdvocate || "Adv. Meera Krishnan",
+        cnrNumber: caseData.cnrNumber,
+        courtHall: caseData.courtHall,
+        status: caseData.status || "Admitted",
+        statutoryActs: caseData.statutoryActs,
+      });
+
+      if (res?.success && res.matter) {
+        setMatters((prev) => [res.matter, ...prev.filter((m) => m.id !== res.matter.id)]);
+        setLiveTrackedResult(null);
+        setSelectedMatterDetail(res.matter);
+      }
+    } catch (err) {
+      console.warn("Error importing case docket:", err);
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -185,7 +267,7 @@ export function MyLegalMattersView({
 
       {/* Optional CNR Search Drawer */}
       {showCnrTracker && (
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 animate-in fade-in duration-150">
+        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 animate-in fade-in duration-150">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -196,16 +278,38 @@ export function MyLegalMattersView({
                   setCustomCnr(e.target.value);
                   setSearchQuery(e.target.value);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleTrackCnr();
+                }}
                 placeholder="Enter 16-Digit CNR Number (e.g. KLHC01-019482-2024 or KLER02-000412-2023)..."
-                className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs font-mono text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs font-mono text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
               />
             </div>
+            <button
+              type="button"
+              disabled={isSearchingCnr || !customCnr.trim()}
+              onClick={handleTrackCnr}
+              className="px-4 py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shrink-0"
+            >
+              {isSearchingCnr ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Querying e-Courts...</span>
+                </>
+              ) : (
+                <>
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>Track Live Docket</span>
+                </>
+              )}
+            </button>
             {customCnr && (
               <button
                 type="button"
                 onClick={() => {
                   setCustomCnr("");
                   setSearchQuery("");
+                  setLiveTrackedResult(null);
                 }}
                 className="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
               >
@@ -213,6 +317,71 @@ export function MyLegalMattersView({
               </button>
             )}
           </div>
+
+          {/* Live eCourts Docket Result Card */}
+          {liveTrackedResult && liveTrackedResult.matter && (
+            <div className="p-4 sm:p-5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3 animate-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-900 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-ping" />
+                  <span className="text-xs font-bold text-black dark:text-white">
+                    {liveTrackedResult.isLinkedToUser
+                      ? "Active Case Docket in Your Account"
+                      : "Live e-Courts National Judicial Data Grid (NJDG) Record"}
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono text-zinc-400">
+                  CNR: {liveTrackedResult.matter.cnrNumber}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-0.5 rounded-md bg-black text-white dark:bg-white dark:text-black font-mono font-bold text-xs">
+                    {liveTrackedResult.matter.caseNumber}
+                  </span>
+                  <span className="font-bold text-sm text-black dark:text-white">
+                    {liveTrackedResult.matter.title || liveTrackedResult.matter.matterTitle}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                <div>
+                  <span className="text-zinc-500 block text-[10px] uppercase font-mono">Court &amp; Bench</span>
+                  <span className="font-semibold text-black dark:text-white">
+                    {liveTrackedResult.matter.court}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-500 block text-[10px] uppercase font-mono">Next Hearing</span>
+                  <span className="font-semibold text-black dark:text-white">
+                    {liveTrackedResult.matter.nextHearing}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-zinc-500 block text-[10px] uppercase font-mono">Current Stage</span>
+                  <span className="font-semibold text-black dark:text-white">
+                    {liveTrackedResult.matter.status || liveTrackedResult.matter.stage}
+                  </span>
+                </div>
+              </div>
+
+              {liveTrackedResult.canImportToDocket && !liveTrackedResult.isLinkedToUser && (
+                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 flex justify-end">
+                  <button
+                    type="button"
+                    disabled={isImporting}
+                    onClick={() => handleImportTrackedCase(liveTrackedResult.matter)}
+                    className="px-4 py-2 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isImporting ? "Importing to Docket..." : "Import & Track in My Matters"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

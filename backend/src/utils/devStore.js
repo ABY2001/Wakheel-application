@@ -706,6 +706,33 @@ export const devStore = {
     return readFile("dev_matters.json", DEFAULT_MATTERS);
   },
 
+  getMatterById(id) {
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    return (
+      matters.find(
+        (m) =>
+          m._id === id ||
+          (m.caseNumber && m.caseNumber.toLowerCase() === id.toLowerCase()) ||
+          (m.cnrNumber && m.cnrNumber.toLowerCase() === id.toLowerCase())
+      ) || null
+    );
+  },
+
+  updateMatter(id, updateData) {
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const index = matters.findIndex(
+      (m) => m._id === id || (m.caseNumber && m.caseNumber.toLowerCase() === id.toLowerCase())
+    );
+    if (index === -1) return null;
+    matters[index] = {
+      ...matters[index],
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+    };
+    writeFile("dev_matters.json", matters);
+    return matters[index];
+  },
+
   addMatter(data) {
     const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
     const newMatter = {

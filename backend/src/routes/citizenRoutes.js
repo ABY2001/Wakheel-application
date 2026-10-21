@@ -9,7 +9,11 @@ import {
   previewGrievanceTriage,
   matchAdvocateForGrievance,
   getMatters,
+  getMatterById,
   getMatterByCnr,
+  trackCaseByCnr,
+  createMatter,
+  addMatterTimelineMilestone,
   getAdvocatesDirectory,
   bookConsultation,
   getConsultations,
@@ -33,7 +37,11 @@ router.route("/grievances/:id").get(protect, getGrievanceById);
 router.route("/grievances/:id/match").post(protect, matchAdvocateForGrievance);
 
 // 3. Matters & Case Tracking
-router.route("/matters").get(protect, getMatters);
+router.route("/matters").get(protect, getMatters).post(protect, createMatter);
+router.route("/matters/track/:cnr").get(protect, trackCaseByCnr);
+router.route("/matters/track").post(protect, trackCaseByCnr);
+router.route("/matters/detail/:id").get(protect, getMatterById);
+router.route("/matters/:id/timeline").post(protect, addMatterTimelineMilestone);
 router.route("/matters/:cnr").get(protect, getMatterByCnr);
 
 // 4. Discover Advocates (Public / Protected)

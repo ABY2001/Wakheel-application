@@ -332,9 +332,47 @@ export const citizenApi = {
     return await res.json();
   },
 
+  async getMatterById(token: string, id: string) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters/detail/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  },
+
   async getMatterByCnr(token: string, cnr: string) {
     const res = await fetch(`${API_BASE_URL}/citizen/matters/${encodeURIComponent(cnr)}`, {
       headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  },
+
+  async trackCase(token: string, cnr: string) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters/track/${encodeURIComponent(cnr)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  },
+
+  async createMatter(token: string, data: any) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async addMatterTimelineMilestone(token: string, matterId: string, milestone: any) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters/${encodeURIComponent(matterId)}/timeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(milestone),
     });
     return await res.json();
   },

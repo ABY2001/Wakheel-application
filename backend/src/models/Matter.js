@@ -3,13 +3,11 @@ import mongoose from "mongoose";
 const matterSchema = new mongoose.Schema(
   {
     citizenId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
     assignedAdvocateId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
     },
     advocateName: {
       type: String,
@@ -20,9 +18,12 @@ const matterSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    caseTitle: {
+      type: String,
+      trim: true,
+    },
     matterType: {
       type: String,
-      enum: ["Writ Petition (Civil)", "Bail Application", "Commercial Arbitration", "Civil Appeal", "Criminal Misc", "Original Petition", "Company Petition"],
       default: "Writ Petition (Civil)",
     },
     caseNumber: {
@@ -42,22 +43,35 @@ const matterSchema = new mongoose.Schema(
       type: String,
       default: "Court Hall 2A",
     },
+    bench: {
+      type: String,
+      default: "Division Bench",
+    },
+    petitioner: {
+      type: String,
+    },
+    respondent: {
+      type: String,
+    },
     status: {
       type: String,
-      enum: ["active", "stay_granted", "notice_issued", "hearing_scheduled", "reserved_for_orders", "disposed"],
-      default: "active",
+      default: "Admitted",
+    },
+    filingDate: {
+      type: String,
+      default: () => new Date().toISOString().split("T")[0],
     },
     nextHearingDate: {
-      type: Date,
+      type: mongoose.Schema.Types.Mixed,
     },
     statutoryActs: [{ type: String }],
     timeline: [
       {
-        date: { type: Date, default: Date.now },
+        date: { type: mongoose.Schema.Types.Mixed, default: Date.now },
         title: { type: String, required: true },
         remarks: { type: String, default: "" },
         orderCopyUrl: { type: String },
-        stage: { type: String, default: "In Progress" },
+        stage: { type: String, default: "Completed" },
       },
     ],
     totalFeesBilled: {

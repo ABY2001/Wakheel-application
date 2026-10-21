@@ -3,13 +3,11 @@ import mongoose from "mongoose";
 const citizenDocumentSchema = new mongoose.Schema(
   {
     citizenId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
     matterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Matter",
+      type: mongoose.Schema.Types.Mixed,
     },
     title: {
       type: String,
@@ -18,8 +16,15 @@ const citizenDocumentSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["Identity & KYC", "Property Deed / Revenue", "Court Petition / Writ", "Vakalatnama", "Legal Notice", "Affidavit", "Certified Court Order", "Evidence & Exhibits"],
       default: "Evidence & Exhibits",
+    },
+    subType: {
+      type: String,
+      default: "all",
+    },
+    matter: {
+      type: String,
+      default: "General Legal Vault",
     },
     fileName: {
       type: String,
@@ -33,18 +38,43 @@ const citizenDocumentSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    pages: {
+      type: Number,
+      default: 1,
+    },
     sha256Hash: {
       type: String,
       default: "",
     },
     isSigned: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     signedAt: {
       type: Date,
+      default: Date.now,
     },
     signatoryConsentId: {
+      type: String,
+      default: "",
+    },
+    filingStatus: {
+      type: String,
+      default: "Ready in Vault",
+    },
+    advocateName: {
+      type: String,
+      default: "Adv. Meera Krishnan",
+    },
+    advocateId: {
+      type: mongoose.Schema.Types.Mixed,
+      default: "adv_1",
+    },
+    remarks: {
+      type: String,
+      default: "",
+    },
+    details: {
       type: String,
       default: "",
     },

@@ -763,3 +763,62 @@ export const shareCourtDocument = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Get all chamber documents and client filings
+// @route   GET /api/advocate/documents
+// @access  Private (Advocate)
+export const getAdvocateDocuments = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+
+    if (shouldUseDevStore()) {
+      const documents = devStore.getAdvocateDocuments(advocateId);
+      return res.json({ success: true, count: documents.length, documents, mode: "dummy_data" });
+    }
+
+    const docs = await CitizenDocument.find({
+      $or: [{ advocateId }, { subType: "document-filing" }],
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, count: docs.length, documents: docs, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getAdvocateDocuments error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update client document filing status
+// @route   PUT /api/advocate/documents/:id/status
+// @access  Private (Advocate)
+export const updateDocumentFilingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, remarks } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ success: false, message: "Status is required" });
+    }
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.updateDocument(id, {
+        filingStatus: status,
+        status,
+        ...(remarks && { remarks }),
+      });
+      if (!updated) return res.status(404).json({ success: false, message: "Document not found" });
+      return res.json({ success: true, message: "Filing status updated", document: updated, mode: "dummy_data" });
+    }
+
+    const updated = await CitizenDocument.findByIdAndUpdate(
+      id,
+      { $set: { filingStatus: status, status, ...(remarks && { remarks }) } },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, message: "Document not found" });
+
+    res.json({ success: true, message: "Filing status updated", document: updated, mode: "cloud_db" });
+  } catch (error) {
+    console.error("updateDocumentFilingStatus error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

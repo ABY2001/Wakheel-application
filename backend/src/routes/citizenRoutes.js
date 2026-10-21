@@ -19,6 +19,10 @@ import {
   getConsultations,
   getDocuments,
   uploadDocument,
+  fileDocument,
+  getFilings,
+  deleteDocument,
+  verifyDocumentHash,
   getLegalNotices,
   citizenAiChat,
   getCitizenInvoices,
@@ -50,8 +54,12 @@ router.route("/advocates").get(getAdvocatesDirectory);
 // 5. Consultations & Chamber Bookings
 router.route("/consultations").post(protect, bookConsultation).get(protect, getConsultations);
 
-// 6. Document Vault
+// 6. Document Vault & Court Document Filing
 router.route("/documents").get(protect, getDocuments).post(protect, uploadDocument);
+router.route("/documents/file").post(protect, fileDocument);
+router.route("/documents/filings").get(protect, getFilings);
+router.route("/documents/:id").delete(protect, deleteDocument);
+router.route("/documents/:id/verify").get(protect, verifyDocumentHash);
 
 // 7. Statutory Legal Notices
 router.route("/notices").get(protect, getLegalNotices);

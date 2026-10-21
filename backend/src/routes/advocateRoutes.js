@@ -23,6 +23,8 @@ import {
   acceptLead,
   addMatterTimelineEvent,
   shareCourtDocument,
+  getAdvocateDocuments,
+  updateDocumentFilingStatus,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -67,5 +69,7 @@ router.post("/leads/:id/accept", protect, acceptLead);
 
 // 9. Shared Court Orders & Documents
 router.post("/documents/share", protect, shareCourtDocument);
+router.get("/documents", protect, getAdvocateDocuments);
+router.put("/documents/:id/status", protect, updateDocumentFilingStatus);
 
 export default router;

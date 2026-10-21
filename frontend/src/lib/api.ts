@@ -413,28 +413,102 @@ export const citizenApi = {
     return await res.json();
   },
 
-  // 6. Document Vault
-  async getDocuments(token: string) {
-    const res = await fetch(`${API_BASE_URL}/citizen/documents`, {
-      headers: { Authorization: `Bearer ${token}` },
+  // 6. Document Vault & Document Filing
+  async getDocuments(
+    token?: string,
+    filters?: { subType?: string; category?: string; matter?: string; search?: string }
+  ) {
+    const params = new URLSearchParams();
+    if (filters?.subType && filters.subType !== "all") params.append("subType", filters.subType);
+    if (filters?.category) params.append("category", filters.category);
+    if (filters?.matter && filters.matter !== "All Matters") params.append("matter", filters.matter);
+    if (filters?.search) params.append("search", filters.search);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const res = await fetch(`${API_BASE_URL}/citizen/documents${qs}`, {
+      headers: { Authorization: `Bearer ${t}` },
     });
     return await res.json();
   },
 
-  async uploadDocument(token: string, data: {
-    title: string;
-    category?: string;
-    fileName: string;
-    fileSize?: string;
-    fileType?: string;
-  }) {
+  async uploadDocument(
+    token?: string,
+    data?: {
+      title?: string;
+      name?: string;
+      category?: string;
+      subType?: string;
+      matter?: string;
+      matterId?: string;
+      fileName?: string;
+      fileSize?: string;
+      fileType?: string;
+      size?: string;
+      pages?: number;
+      details?: string;
+      isSigned?: boolean;
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
     const res = await fetch(`${API_BASE_URL}/citizen/documents`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${t}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data || {}),
+    });
+    return await res.json();
+  },
+
+  async fileDocument(
+    token?: string,
+    data?: {
+      fileName: string;
+      category: string;
+      matter: string;
+      matterId?: string;
+      size?: string;
+      fileSize?: string;
+      remarks?: string;
+      advocateName?: string;
+      advocateId?: string;
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const res = await fetch(`${API_BASE_URL}/citizen/documents/file`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data || {}),
+    });
+    return await res.json();
+  },
+
+  async getFilings(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const res = await fetch(`${API_BASE_URL}/citizen/documents/filings`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async deleteDocument(token: string | undefined, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const res = await fetch(`${API_BASE_URL}/citizen/documents/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async verifyDocumentHash(token: string | undefined, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const res = await fetch(`${API_BASE_URL}/citizen/documents/${id}/verify`, {
+      headers: { Authorization: `Bearer ${t}` },
     });
     return await res.json();
   },
@@ -738,6 +812,25 @@ export const advocateApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(eventData),
+    });
+    return await res.json();
+  },
+
+  async getDocuments(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/documents`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async updateDocumentFilingStatus(id: string, status: string, remarks?: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/documents/${id}/status`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status, remarks }),
     });
     return await res.json();
   },

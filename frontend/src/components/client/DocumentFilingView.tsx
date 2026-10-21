@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { citizenApi } from "@/lib/api";
 import {
   UploadCloud,
   AlertCircle,
@@ -25,8 +26,9 @@ export interface SubmittedFiling {
   matter: string;
   size: string;
   date: string;
-  status: "Transmitted to Advocate" | "Under Counsel Review" | "Accepted for Drafting";
+  status: "Transmitted to Advocate" | "Under Counsel Review" | "Accepted for Drafting" | "Approved & Filed with Court Registry";
   advocateName: string;
+  remarks?: string;
 }
 
 const DEFAULT_FILINGS: SubmittedFiling[] = [
@@ -78,7 +80,12 @@ const CATEGORIES_LIST = [
   "Other Evidence Document",
 ];
 
-export function DocumentFilingView() {
+interface DocumentFilingViewProps {
+  onFilingSubmitted?: (filing: any) => void;
+}
+
+export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProps) {
+  const [mattersList, setMattersList] = useState<string[]>(MATTERS_LIST);
   const [selectedMatter, setSelectedMatter] = useState(MATTERS_LIST[0]);
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES_LIST[0]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -88,6 +95,49 @@ export function DocumentFilingView() {
   const [submittedHistory, setSubmittedHistory] = useState<SubmittedFiling[]>(DEFAULT_FILINGS);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Sync matters list and filings history from backend API
+  useEffect(() => {
+    let isMounted = true;
+    async function loadMattersAndFilings() {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || "dev_token"
+          : "dev_token";
+      try {
+        const [mattersRes, filingsRes] = await Promise.all([
+          citizenApi.getMatters(token),
+          citizenApi.getFilings(token),
+        ]);
+        if (isMounted) {
+          if (
+            mattersRes?.success &&
+            Array.isArray(mattersRes.matters) &&
+            mattersRes.matters.length > 0
+          ) {
+            const names = mattersRes.matters.map(
+              (m: any) => `${m.caseNumber} — ${m.title || m.matterTitle}`
+            );
+            setMattersList(names);
+            setSelectedMatter(names[0]);
+          }
+          if (
+            filingsRes?.success &&
+            Array.isArray(filingsRes.filings) &&
+            filingsRes.filings.length > 0
+          ) {
+            setSubmittedHistory(filingsRes.filings);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load matters or filings from backend:", err);
+      }
+    }
+    loadMattersAndFilings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -102,31 +152,50 @@ export function DocumentFilingView() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
 
-    setTimeout(() => {
-      const fileName = selectedFile
-        ? selectedFile.name
-        : `${selectedCategory.replace(/[\s/]/g, "_")}_Evidence.pdf`;
-      const fileSize = selectedFile
-        ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`
-        : "1.8 MB";
+    const fileName = selectedFile
+      ? selectedFile.name
+      : `${selectedCategory.replace(/[\s/]/g, "_")}_Evidence.pdf`;
+    const fileSize = selectedFile
+      ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`
+      : "1.8 MB";
 
-      const newFiling: SubmittedFiling = {
-        id: `filing-${Date.now()}`,
+    try {
+      const res = await citizenApi.fileDocument(token, {
         fileName,
         category: selectedCategory,
         matter: selectedMatter,
         size: fileSize,
-        date: "Just now",
-        status: "Transmitted to Advocate",
+        fileSize,
+        remarks: filingRemarks,
         advocateName: "Adv. Meera Krishnan",
-      };
+      });
 
-      setSubmittedHistory([newFiling, ...submittedHistory]);
-      setIsSubmitting(false);
+      if (res?.success && res.filing) {
+        setSubmittedHistory((prev) => [res.filing, ...prev.filter((f) => f.id !== res.filing.id)]);
+        if (onFilingSubmitted) onFilingSubmitted(res.filing);
+      } else {
+        const newFiling: SubmittedFiling = {
+          id: `filing-${Date.now()}`,
+          fileName,
+          category: selectedCategory,
+          matter: selectedMatter,
+          size: fileSize,
+          date: "Just now",
+          status: "Transmitted to Advocate",
+          advocateName: "Adv. Meera Krishnan",
+        };
+        setSubmittedHistory([newFiling, ...submittedHistory]);
+        if (onFilingSubmitted) onFilingSubmitted(newFiling);
+      }
+
       setShowSuccessBanner(true);
       setSelectedFile(null);
       setFilingRemarks("");
@@ -134,7 +203,11 @@ export function DocumentFilingView() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    }, 800);
+    } catch (err) {
+      console.warn("Filing submit error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

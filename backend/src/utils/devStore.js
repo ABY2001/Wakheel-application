@@ -148,42 +148,235 @@ const DEFAULT_CONSULTATIONS = [
 
 const DEFAULT_DOCUMENTS = [
   {
-    _id: "doc_501",
+    _id: "doc-01",
+    id: "doc-01",
     citizenId: "default_citizen",
-    title: "Writ Petition (Civil) Synopsis & Certified Grounds",
-    category: "Court Petition / Writ",
-    fileName: "WPC_19482_2024_Grounds_Verified.pdf",
+    title: "WPC 19482/2024 Writ Petition Paperbook",
+    name: "WPC_19482_2024_Writ_Petition_Paperbook.pdf",
+    fileName: "WPC_19482_2024_Writ_Petition_Paperbook.pdf",
+    category: "Pleading",
+    subType: "all",
+    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    size: "4.8 MB",
+    fileSize: "4.8 MB",
+    uploadDate: "14 Jun 2024",
+    isSigned: true,
+    pages: 42,
+    sha256Hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
+    hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
+    details: "High Court verified true copy writ petition with Annexures P-1 to P-8.",
+    filingStatus: "Approved & Filed with Court Registry",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "doc-02",
+    id: "doc-02",
+    citizenId: "default_citizen",
+    title: "Interim Stay Order Bench 2A High Court",
+    name: "Interim_Stay_Order_Bench_2A_High_Court.pdf",
+    fileName: "Interim_Stay_Order_Bench_2A_High_Court.pdf",
+    category: "Court Order",
+    subType: "all",
+    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    size: "1.2 MB",
+    fileSize: "1.2 MB",
+    uploadDate: "16 Oct 2026",
+    isSigned: true,
+    pages: 3,
+    sha256Hash: "sha256:3a91b48f9024bc68e10dca27189",
+    hash: "sha256:3a91b48f9024bc68e10dca27189",
+    details: "Daily order granting extension of interim stay against realignment of 11KV lines.",
+    filingStatus: "Approved & Filed with Court Registry",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "doc-03",
+    id: "doc-03",
+    citizenId: "default_citizen",
+    title: "High Court Certified True Copy Decree",
+    name: "High_Court_Certified_True_Copy_Decree.pdf",
+    fileName: "High_Court_Certified_True_Copy_Decree.pdf",
+    category: "CTC",
+    subType: "certified-true-copies",
+    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    size: "2.1 MB",
+    fileSize: "2.1 MB",
+    uploadDate: "18 Oct 2024",
+    isSigned: true,
+    pages: 5,
+    sha256Hash: "sha256:92cb1f570081d4a0e98c61fa348",
+    hash: "sha256:92cb1f570081d4a0e98c61fa348",
+    details: "Official Certified True Copy issued by Assistant Registrar (Judicial), Kerala High Court. CTC No: HC-CTC-2024-8910.",
+    filingStatus: "Approved & Filed with Court Registry",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "doc-04",
+    id: "doc-04",
+    citizenId: "default_citizen",
+    title: "Sub Court Demarcation Decree CTC",
+    name: "Sub_Court_Demarcation_Decree_CTC.pdf",
+    fileName: "Sub_Court_Demarcation_Decree_CTC.pdf",
+    category: "CTC",
+    subType: "certified-true-copies",
+    matter: "OS 412/2023 — Gopakumar v. Varghese",
+    matterId: "mat-03",
+    size: "1.8 MB",
+    fileSize: "1.8 MB",
+    uploadDate: "12 Jan 2024",
+    isSigned: true,
+    pages: 4,
+    sha256Hash: "sha256:5ef1092ab7c41908d32b84ac125",
+    hash: "sha256:5ef1092ab7c41908d32b84ac125",
+    details: "Sub Court Ernakulam certified extract bearing judicial adhesive stamps of ₹50.",
+    filingStatus: "Approved & Filed with Court Registry",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "doc-05",
+    id: "doc-05",
+    citizenId: "default_citizen",
+    title: "Commercial Lease Agreement Ernakulam",
+    name: "Commercial_Lease_Agreement_Ernakulam.pdf",
+    fileName: "Commercial_Lease_Agreement_Ernakulam.pdf",
+    category: "Contract",
+    subType: "contracts",
+    matter: "Corporate Legal Affairs",
+    size: "1.5 MB",
+    fileSize: "1.5 MB",
+    uploadDate: "05 Mar 2024",
+    isSigned: true,
+    pages: 14,
+    sha256Hash: "sha256:7c491da823bf108ec92451bc09a",
+    hash: "sha256:7c491da823bf108ec92451bc09a",
+    details: "Registered 3-year commercial property lease deed with indemnity and arbitration clause.",
+    filingStatus: "Ready in Vault",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "doc-06",
+    id: "doc-06",
+    citizenId: "default_citizen",
+    title: "Software Development MSA NDA Executed",
+    name: "Software_Development_MSA_NDA_Executed.pdf",
+    fileName: "Software_Development_MSA_NDA_Executed.pdf",
+    category: "Contract",
+    subType: "contracts",
+    matter: "ARB/NCLT/KOCHI/2024/041",
+    matterId: "mat-02",
+    size: "950 KB",
+    fileSize: "950 KB",
+    uploadDate: "10 Jul 2024",
+    isSigned: true,
+    pages: 9,
+    sha256Hash: "sha256:d12c8a49e50f3b890a214fe6881",
+    hash: "sha256:d12c8a49e50f3b890a214fe6881",
+    details: "Master Services Agreement executed between Malabar Infotech and Coastal Logistics.",
+    filingStatus: "Ready in Vault",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "doc-07",
+    id: "doc-07",
+    citizenId: "default_citizen",
+    title: "High Court EFiling Registry Receipt",
+    name: "High_Court_EFiling_Registry_Receipt.pdf",
+    fileName: "High_Court_EFiling_Registry_Receipt.pdf",
+    category: "Filing Receipt",
+    subType: "document-filing",
+    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    size: "420 KB",
+    fileSize: "420 KB",
+    uploadDate: "14 Jun 2024",
+    isSigned: true,
+    pages: 1,
+    sha256Hash: "sha256:2fa810bc931e508ab219c481944",
+    hash: "sha256:2fa810bc931e508ab219c481944",
+    details: "eCourts e-filing acknowledgment receipt. Filing No: EF/KLHC/2024/19482. Scrutiny cleared.",
+    filingStatus: "Approved & Filed with Court Registry",
+    advocateName: "Adv. Meera Krishnan",
+  },
+  {
+    _id: "filing-01",
+    id: "filing-01",
+    citizenId: "default_citizen",
+    title: "Survey Sketch Re-survey Plan Block 14",
+    name: "Survey_Sketch_Re-survey_Plan_Block_14.pdf",
+    fileName: "Survey_Sketch_Re-survey_Plan_Block_14.pdf",
+    category: "Survey Sketch / Site Map",
+    subType: "document-filing",
+    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
+    matterId: "mat_wpc_19482",
+    size: "2.4 MB",
     fileSize: "2.4 MB",
+    uploadDate: "Today, 11:15 AM",
+    date: "Today, 11:15 AM",
     isSigned: true,
-    signedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+    pages: 2,
+    sha256Hash: "sha256:4f1a239b8c0d12e457f901ab234",
+    hash: "sha256:4f1a239b8c0d12e457f901ab234",
+    details: "Authenticated village officer sketch showing registered holding demarcations.",
+    filingStatus: "Transmitted to Advocate",
+    status: "Transmitted to Advocate",
+    advocateName: "Adv. Meera Krishnan",
+    advocateId: "adv_1",
+    remarks: "Kindly include this as Annexure P-9 to the rejoinder affidavit.",
   },
   {
-    _id: "doc_502",
+    _id: "filing-02",
+    id: "filing-02",
     citizenId: "default_citizen",
-    title: "Title Deed & Encumbrance Certificate (Kanjirappally Village)",
-    category: "Property Deed / Revenue",
-    fileName: "TitleDeed_Doc_248_2016.pdf",
-    fileSize: "5.1 MB",
+    title: "Counter Affidavit Objections Rejoinder",
+    name: "Counter_Affidavit_Objections_Rejoinder.docx",
+    fileName: "Counter_Affidavit_Objections_Rejoinder.docx",
+    category: "Pleading Draft / Affidavit Counter",
+    subType: "document-filing",
+    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
+    matterId: "mat_wpc_19482",
+    size: "1.1 MB",
+    fileSize: "1.1 MB",
+    uploadDate: "18 Oct 2024",
+    date: "18 Oct 2024",
     isSigned: false,
+    pages: 8,
+    sha256Hash: "sha256:7bc012398a4d5e6f1a2b3c4d5e6",
+    hash: "sha256:7bc012398a4d5e6f1a2b3c4d5e6",
+    details: "Draft rejoinder answering allegations raised in KSEB executive engineer counter.",
+    filingStatus: "Under Counsel Review",
+    status: "Under Counsel Review",
+    advocateName: "Adv. Meera Krishnan",
+    advocateId: "adv_1",
+    remarks: "Drafted rebuttal for senior counsel review.",
   },
   {
-    _id: "doc_503",
+    _id: "filing-03",
+    id: "filing-03",
     citizenId: "default_citizen",
-    title: "Vakalatnama & Power of Attorney (Adv. Meera Krishnan)",
-    category: "Vakalatnama",
-    fileName: "Vakalatnama_Adv_Meera_Krishnan.pdf",
-    fileSize: "840 KB",
+    title: "Bank Memo Original Debit Advice",
+    name: "Bank_Memo_Original_Debit_Advice.pdf",
+    fileName: "Bank_Memo_Original_Debit_Advice.pdf",
+    category: "Bank Statement / Financial Records",
+    subType: "document-filing",
+    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
+    matterId: "mat-02",
+    size: "820 KB",
+    fileSize: "820 KB",
+    uploadDate: "14 Oct 2024",
+    date: "14 Oct 2024",
     isSigned: true,
-    signedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "doc_504",
-    citizenId: "default_citizen",
-    title: "Advocate Commissioner Inspection Mahazar & Site Sketch",
-    category: "Certified Court Order",
-    fileName: "Commissioner_Report_OS_412_2023.pdf",
-    fileSize: "3.7 MB",
-    isSigned: false,
+    pages: 1,
+    sha256Hash: "sha256:99a8b7c6d5e4f3a2b1c0d9e8f7a",
+    hash: "sha256:99a8b7c6d5e4f3a2b1c0d9e8f7a",
+    details: "Bank memo confirming non-clearance of company settlement cheque.",
+    filingStatus: "Accepted for Drafting",
+    status: "Accepted for Drafting",
+    advocateName: "Adv. Meera Krishnan",
+    advocateId: "adv_1",
+    remarks: "Required for petition under Section 9 of IBC.",
   },
 ];
 
@@ -763,21 +956,100 @@ export const devStore = {
     return newCon;
   },
 
-  // --- Documents ---
-  getDocuments(userId) {
-    return readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+  // --- Documents & Vault ---
+  getDocuments(userId, filter = {}) {
+    const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    return docs.filter((d) => {
+      if (userId && d.citizenId && d.citizenId !== userId && userId !== "default_citizen") {
+        return false;
+      }
+      if (filter.subType && filter.subType !== "all") {
+        if (filter.subType === "contracts" && d.category !== "Contract" && d.subType !== "contracts") return false;
+        if (filter.subType === "certified-true-copies" && d.category !== "CTC" && d.subType !== "certified-true-copies") return false;
+        if (filter.subType === "document-filing" && d.subType !== "document-filing" && d.category !== "Filing Receipt") return false;
+        if (filter.subType === "case-diary" && d.subType !== "case-diary") return false;
+      }
+      if (filter.category && d.category && !d.category.toLowerCase().includes(filter.category.toLowerCase())) {
+        return false;
+      }
+      if (filter.matter && d.matter && !d.matter.toLowerCase().includes(filter.matter.toLowerCase())) {
+        return false;
+      }
+      if (filter.matterId && d.matterId && d.matterId !== filter.matterId) {
+        return false;
+      }
+      return true;
+    });
+  },
+
+  getDocumentById(id) {
+    const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    return docs.find((d) => d._id === id || d.id === id);
   },
 
   addDocument(data) {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    const id = data.id || data._id || "doc_" + Date.now().toString();
     const newDoc = {
-      _id: "doc_" + Date.now().toString(),
+      _id: id,
+      id,
+      name: data.name || data.fileName || "Document.pdf",
+      fileName: data.fileName || data.name || "Document.pdf",
+      category: data.category || "Evidence & Exhibits",
+      subType: data.subType || "all",
+      matter: data.matter || "General Legal Vault",
+      size: data.size || data.fileSize || "1.2 MB",
+      fileSize: data.fileSize || data.size || "1.2 MB",
+      uploadDate: data.uploadDate || data.date || "Just now",
+      date: data.date || data.uploadDate || "Just now",
+      isSigned: data.isSigned !== undefined ? data.isSigned : true,
+      pages: data.pages || 1,
+      hash: data.hash || data.sha256Hash || `sha256:${Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`,
+      sha256Hash: data.sha256Hash || data.hash || `sha256:${Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`,
+      details: data.details || data.remarks || "Uploaded to secure vault",
+      filingStatus: data.filingStatus || data.status || "Ready in Vault",
+      status: data.status || data.filingStatus || "Ready in Vault",
+      advocateName: data.advocateName || "Adv. Meera Krishnan",
+      advocateId: data.advocateId || "adv_1",
+      remarks: data.remarks || "",
       ...data,
       createdAt: new Date().toISOString(),
     };
     docs.unshift(newDoc);
     writeFile("dev_documents.json", docs);
     return newDoc;
+  },
+
+  updateDocument(id, updates) {
+    const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    const idx = docs.findIndex((d) => d._id === id || d.id === id);
+    if (idx !== -1) {
+      docs[idx] = { ...docs[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_documents.json", docs);
+      return docs[idx];
+    }
+    return null;
+  },
+
+  deleteDocument(id) {
+    const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    const filtered = docs.filter((d) => d._id !== id && d.id !== id);
+    if (filtered.length !== docs.length) {
+      writeFile("dev_documents.json", filtered);
+      return true;
+    }
+    return false;
+  },
+
+  getAdvocateDocuments(advocateId = "adv_1") {
+    const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    return docs.filter(
+      (d) =>
+        d.advocateId === advocateId ||
+        (d.advocateName && d.advocateName.toLowerCase().includes("meera")) ||
+        d.subType === "document-filing" ||
+        advocateId === "adv_1"
+    );
   },
 
   // --- Legal Notices ---

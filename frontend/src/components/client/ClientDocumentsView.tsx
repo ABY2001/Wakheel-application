@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DocumentFilingView } from "@/components/client/DocumentFilingView";
+import { citizenApi } from "@/lib/api";
 import {
   FolderLock,
   BookOpen,
@@ -193,6 +194,33 @@ export function ClientDocumentsView({
   const [docsList, setDocsList] = useState<ClientDocument[]>(INITIAL_DOCUMENTS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMatterFilter, setSelectedMatterFilter] = useState("All Matters");
+  const [loadingDocs, setLoadingDocs] = useState(false);
+
+  // Sync documents from backend API on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchDocs() {
+      try {
+        setLoadingDocs(true);
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("wakheel_token") || "dev_token"
+            : "dev_token";
+        const res = await citizenApi.getDocuments(token);
+        if (isMounted && res?.success && Array.isArray(res.documents) && res.documents.length > 0) {
+          setDocsList(res.documents);
+        }
+      } catch (err) {
+        console.warn("Using fallback documents:", err);
+      } finally {
+        if (isMounted) setLoadingDocs(false);
+      }
+    }
+    fetchDocs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Modals state
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -219,47 +247,85 @@ export function ClientDocumentsView({
     return matchesTab && matchesMatter && matchesSearch;
   });
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDocName.trim()) return;
 
     setIsUploading(true);
-    setTimeout(() => {
-      const generatedHash = "sha256:" + Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-      const targetSubType =
-        newDocCategory === "Contract"
-          ? "contracts"
-          : newDocCategory === "CTC"
-          ? "certified-true-copies"
-          : newDocCategory === "Filing Receipt"
-          ? "document-filing"
-          : "all";
+    const targetSubType =
+      newDocCategory === "Contract"
+        ? "contracts"
+        : newDocCategory === "CTC"
+        ? "certified-true-copies"
+        : newDocCategory === "Filing Receipt"
+        ? "document-filing"
+        : "all";
 
-      const created: ClientDocument = {
-        id: `doc-${Date.now()}`,
-        name: newDocName.endsWith(".pdf") || newDocName.endsWith(".docx") ? newDocName : `${newDocName}.pdf`,
+    const formattedName =
+      newDocName.endsWith(".pdf") || newDocName.endsWith(".docx")
+        ? newDocName
+        : `${newDocName}.pdf`;
+
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
+
+    try {
+      const res = await citizenApi.uploadDocument(token, {
+        title: newDocName.trim(),
+        name: formattedName,
+        fileName: formattedName,
         category: newDocCategory,
+        subType: targetSubType,
         matter: newDocMatter,
         size: `${(Math.random() * 2 + 1).toFixed(1)} MB`,
+        fileSize: `${(Math.random() * 2 + 1).toFixed(1)} MB`,
+        details: newDocNotes.trim() || "Uploaded securely to citizen document vault.",
+        isSigned: true,
+      });
+
+      if (res?.success && res.document) {
+        setDocsList((prev) => [res.document, ...prev.filter((d) => d.id !== res.document.id)]);
+      }
+    } catch (err) {
+      console.warn("Upload document API error:", err);
+      // Fallback local update
+      const fallbackHash = "sha256:" + Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      const fallbackCreated: ClientDocument = {
+        id: `doc-${Date.now()}`,
+        name: formattedName,
+        category: newDocCategory,
+        matter: newDocMatter,
+        size: "1.8 MB",
         uploadDate: "Just now",
         isSigned: true,
-        pages: Math.floor(Math.random() * 10) + 1,
-        hash: generatedHash,
+        pages: 4,
+        hash: fallbackHash,
         subType: targetSubType,
         details: newDocNotes.trim() || "Uploaded securely to citizen document vault.",
       };
-
-      setDocsList([created, ...docsList]);
+      setDocsList([fallbackCreated, ...docsList]);
+    } finally {
       setIsUploading(false);
       setUploadModalOpen(false);
       setNewDocName("");
       setNewDocNotes("");
-    }, 700);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Remove this document from your vault?")) {
-      setDocsList(docsList.filter((d) => d.id !== id));
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || "dev_token"
+          : "dev_token";
+      try {
+        await citizenApi.deleteDocument(token, id);
+      } catch (err) {
+        console.warn("Delete document error:", err);
+      }
+      setDocsList((prev) => prev.filter((d) => d.id !== id && (d as any)._id !== id));
       if (previewDoc?.id === id) setPreviewDoc(null);
     }
   };

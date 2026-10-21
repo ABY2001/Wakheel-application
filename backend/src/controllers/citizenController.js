@@ -1237,6 +1237,158 @@ export const getConsultations = async (req, res) => {
   }
 };
 
+// @desc    Get single consultation by ID
+// @route   GET /api/citizen/consultations/:id
+// @access  Private (Citizen)
+export const getConsultationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const consultation = devStore.getConsultationById(id);
+      if (!consultation) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({ success: true, consultation, mode: "dummy_data" });
+    }
+
+    const consultation = await Consultation.findById(id);
+    if (!consultation) return res.status(404).json({ success: false, message: "Consultation not found" });
+    res.json({ success: true, consultation, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getConsultationById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Reschedule consultation date/time
+// @route   PUT /api/citizen/consultations/:id/reschedule
+// @access  Private (Citizen)
+export const rescheduleConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { scheduledDate, timeSlot, reason } = req.body;
+
+    if (!scheduledDate) {
+      return res.status(400).json({ success: false, message: "New scheduled date is required" });
+    }
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.rescheduleConsultation(id, scheduledDate, timeSlot, reason);
+      if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({
+        success: true,
+        message: "Consultation rescheduled successfully. Advocate calendar updated.",
+        consultation: updated,
+        mode: "dummy_data",
+      });
+    }
+
+    const updated = await Consultation.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          scheduledDate: new Date(scheduledDate),
+          timeSlot: timeSlot || "10:30 AM - 11:15 AM",
+          status: "rescheduled",
+          rescheduleReason: reason || "",
+        },
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+
+    res.json({
+      success: true,
+      message: "Consultation rescheduled successfully. Advocate calendar updated.",
+      consultation: updated,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("rescheduleConsultation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Cancel consultation
+// @route   PUT /api/citizen/consultations/:id/cancel
+// @access  Private (Citizen)
+export const cancelConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.cancelConsultation(id, reason);
+      if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({
+        success: true,
+        message: "Consultation cancelled. Fee refund initiated to original payment source.",
+        consultation: updated,
+        mode: "dummy_data",
+      });
+    }
+
+    const updated = await Consultation.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status: "cancelled",
+          cancellationReason: reason || "Citizen requested cancellation",
+        },
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+
+    res.json({
+      success: true,
+      message: "Consultation cancelled. Fee refund initiated to original payment source.",
+      consultation: updated,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("cancelConsultation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Join secure virtual video chamber room
+// @route   GET /api/citizen/consultations/:id/room
+// @access  Private (Citizen)
+export const joinConsultationRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let consultation = null;
+    if (shouldUseDevStore()) {
+      consultation = devStore.getConsultationById(id);
+    } else {
+      consultation = await Consultation.findById(id);
+    }
+
+    if (!consultation) {
+      return res.status(404).json({ success: false, message: "Consultation not found" });
+    }
+
+    const roomId = `wakheel-chamber-${consultation._id || id}`;
+    const meetingUrl = consultation.meetingLink || `https://meet.wakheel.law/${roomId}`;
+
+    res.json({
+      success: true,
+      roomId,
+      meetingUrl,
+      advocateName: consultation.advocateName,
+      consultationType: consultation.consultationType,
+      scheduledDate: consultation.scheduledDate,
+      timeSlot: consultation.timeSlot,
+      status: consultation.status,
+      token: `jwt_room_auth_${Date.now()}`,
+    });
+  } catch (error) {
+    console.error("joinConsultationRoom error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ============================================================================
 // 6. DOCUMENT VAULT & DOCUMENT FILING CONTROLLERS
 // ============================================================================

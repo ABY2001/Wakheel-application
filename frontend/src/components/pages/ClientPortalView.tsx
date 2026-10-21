@@ -74,6 +74,7 @@ import { CaseTimelineView } from "@/components/client/CaseTimelineView";
 import { LegalNoticesView } from "@/components/client/LegalNoticesView";
 import { InvoicesAndPaymentsView } from "@/components/client/InvoicesAndPaymentsView";
 import { SecureInboxView } from "@/components/client/SecureInboxView";
+import { ConsultationsManagementView } from "@/components/client/ConsultationsManagementView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -1657,99 +1658,14 @@ export function ClientPortalView() {
           {/* VIEW: Consultations & Chamber Appointments                     */}
           {/* ============================================================== */}
           {(activeTab === "consultations" || activeTab === "appointments") && (
-            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div>
-                  <h3 className="text-lg font-bold text-black dark:text-white">Legal Consultations &amp; Chamber Sessions</h3>
-                  <p className="text-xs text-zinc-500">Manage virtual video consultations, physical chamber visits, and advocate appointments.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 p-0.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-900">
-                    {(["all", "scheduled", "completed"] as const).map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setConsultationFilter(filter)}
-                        className={`px-3 py-1 rounded-lg transition-colors capitalize cursor-pointer ${
-                          consultationFilter === filter
-                            ? "bg-white dark:bg-black text-black dark:text-white shadow-xs font-bold"
-                            : "text-zinc-500 hover:text-black dark:hover:text-white"
-                        }`}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedAdvocate(mockAdvocates[0]);
-                      setBookingDefaultTab("booking");
-                      setBookingModalOpen(true);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Book Session</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {consultations
-                  .filter((c) => consultationFilter === "all" || c.status === consultationFilter)
-                  .map((c) => (
-                    <div
-                      key={c._id}
-                      className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 uppercase">
-                            {c.consultationType} Chamber
-                          </span>
-                          <h4 className="text-sm font-bold text-black dark:text-white mt-1.5">{c.subject}</h4>
-                          <p className="text-xs text-zinc-500 mt-0.5">{c.advocateName}</p>
-                        </div>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            c.status === "scheduled"
-                              ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-800"
-                          }`}
-                        >
-                          {c.status === "scheduled" ? "Confirmed" : "Completed"}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-zinc-100 dark:border-zinc-900">
-                        <div>
-                          <span className="text-[10px] text-zinc-400 block font-mono">DATE &amp; TIME</span>
-                          <span className="font-semibold text-black dark:text-white">
-                            {c.scheduledDate?.split("T")[0]} • {c.timeSlot}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-zinc-400 block font-mono">FEE</span>
-                          <span className="font-semibold text-black dark:text-white">
-                            ₹{c.feeAmount || 1500} • {c.paymentStatus || "Paid"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {c.meetingLink && c.consultationType === "video" && (
-                        <a
-                          href={c.meetingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2 px-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all hover:bg-zinc-800 dark:hover:bg-zinc-200"
-                        >
-                          <PhoneCall className="w-4 h-4" />
-                          <span>Join Secure Video Chamber</span>
-                        </a>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            </div>
+            <ConsultationsManagementView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              onOpenBookingModal={() => {
+                setSelectedAdvocate(mockAdvocates[0]);
+                setBookingDefaultTab("booking");
+                setBookingModalOpen(true);
+              }}
+            />
           )}
 
           {/* ============================================================== */}

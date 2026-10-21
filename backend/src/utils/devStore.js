@@ -119,30 +119,82 @@ const DEFAULT_CONSULTATIONS = [
   {
     _id: "con_901",
     citizenId: "default_citizen",
+    advocateId: "adv_1",
     advocateName: "Adv. Meera Krishnan",
+    barCouncilNumber: "K/001429/2012",
     consultationType: "video",
     scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     timeSlot: "10:30 AM - 11:15 AM",
     durationMinutes: 45,
     meetingLink: "https://meet.wakheel.law/chambers-krishnan-09",
-    subject: "Discussion on WP(C) 19482/2024 Counter-Affidavit Rejoinder & Precedent Citations",
+    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
+    subject: "WP(C) 19482/2024 — High Court Rejoinder & Precedent Citations",
+    clientNotes: "Discussing KSEB counter-affidavit allegations regarding Telegraph Act Section 16 compliance.",
+    adviceNotes: "",
     feeAmount: 1500,
     paymentStatus: "paid",
     status: "scheduled",
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "con_903",
+    citizenId: "default_citizen",
+    advocateId: "adv_1",
+    advocateName: "Adv. Meera Krishnan",
+    barCouncilNumber: "K/001429/2012",
+    consultationType: "video",
+    scheduledDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+    timeSlot: "02:30 PM - 03:15 PM",
+    durationMinutes: 45,
+    meetingLink: "https://meet.wakheel.law/chambers-krishnan-14",
+    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
+    subject: "Section 138 NI Act — Statutory Demand Notice Expiry & JFCM Criminal Complaint",
+    clientNotes: "Speed Post delivered on 16th October. Need to draft Section 138 complaint before Judicial First Class Magistrate Court.",
+    adviceNotes: "",
+    feeAmount: 1500,
+    paymentStatus: "paid",
+    status: "scheduled",
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "con_904",
+    citizenId: "default_citizen",
+    advocateId: "adv_1",
+    advocateName: "Adv. Meera Krishnan",
+    barCouncilNumber: "K/001429/2012",
+    consultationType: "chamber",
+    scheduledDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    timeSlot: "11:00 AM - 12:00 PM",
+    durationMinutes: 60,
+    meetingLink: "",
+    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
+    subject: "Division Bench Hearing Strategy & ADM Objection Lodgement",
+    clientNotes: "Brought survey plan sketches and revenue tax receipts.",
+    adviceNotes: "Status quo order granted by Division Bench. Injunction restrains KSEB from felling timber or entering property pending fresh notice and summary enquiry by District Magistrate under Section 16(1) of Indian Telegraph Act.",
+    feeAmount: 2000,
+    paymentStatus: "paid",
+    status: "completed",
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     _id: "con_902",
     citizenId: "default_citizen",
+    advocateId: "adv_2",
     advocateName: "Adv. Rajesh V. Varma",
+    barCouncilNumber: "K/000842/2008",
     consultationType: "chamber",
-    scheduledDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    scheduledDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     timeSlot: "04:00 PM - 04:45 PM",
     durationMinutes: 45,
     meetingLink: "",
-    subject: "Initial Strategy Consultation on Sub Court OS 412/2023 Property Demarcation",
+    chamberAddress: "Chamber #18, District Court Complex, Ernakulam 682011",
+    subject: "Sub Court OS 412/2023 — Property Demarcation & Boundary Injunction",
+    clientNotes: "Initial strategy conference on commission inspection mahazar.",
+    adviceNotes: "Commission application under Order XXVI Rule 9 CPC moved with urgent memo. Taluk surveyor assistance requested.",
     feeAmount: 2500,
     paymentStatus: "paid",
     status: "completed",
+    createdAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -1172,20 +1224,79 @@ export const devStore = {
 
   // --- Consultations ---
   getConsultations(userId) {
-    return readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    const list = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    return list.filter(
+      (c) => !userId || c.citizenId === userId || userId === "default_citizen"
+    );
+  },
+
+  getConsultationById(id) {
+    const list = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    return list.find((c) => c._id === id || c.id === id) || null;
   },
 
   addConsultation(data) {
     const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    const roomCode = Math.floor(1000 + Math.random() * 9000);
     const newCon = {
       _id: "con_" + Date.now().toString(),
-      ...data,
+      id: "con_" + Date.now().toString(),
+      citizenId: data.citizenId || "default_citizen",
+      advocateId: data.advocateId || "adv_1",
+      advocateName: data.advocateName || "Adv. Meera Krishnan",
+      barCouncilNumber: data.barCouncilNumber || "K/001429/2012",
+      consultationType: data.consultationType || "video",
+      scheduledDate: data.scheduledDate || new Date().toISOString(),
+      timeSlot: data.timeSlot || "10:30 AM - 11:15 AM",
+      durationMinutes: Number(data.durationMinutes) || 45,
+      meetingLink: data.consultationType === "video" ? `https://meet.wakheel.law/chambers-room-${roomCode}` : "",
+      chamberAddress: data.chamberAddress || "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Kochi 682031",
+      subject: data.subject || "Legal Consultation & Strategy Session",
+      clientNotes: data.clientNotes || "",
+      adviceNotes: "",
+      feeAmount: Number(data.feeAmount) || 1500,
+      paymentStatus: "paid",
       status: "scheduled",
       createdAt: new Date().toISOString(),
+      ...data,
     };
     cons.unshift(newCon);
     writeFile("dev_consultations.json", cons);
     return newCon;
+  },
+
+  rescheduleConsultation(id, newDate, newTimeSlot, reason = "") {
+    const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    const idx = cons.findIndex((c) => c._id === id || c.id === id);
+    if (idx === -1) return null;
+    cons[idx].scheduledDate = new Date(newDate).toISOString();
+    if (newTimeSlot) cons[idx].timeSlot = newTimeSlot;
+    cons[idx].status = "rescheduled";
+    cons[idx].rescheduleReason = reason;
+    cons[idx].updatedAt = new Date().toISOString();
+    writeFile("dev_consultations.json", cons);
+    return cons[idx];
+  },
+
+  cancelConsultation(id, reason = "") {
+    const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    const idx = cons.findIndex((c) => c._id === id || c.id === id);
+    if (idx === -1) return null;
+    cons[idx].status = "cancelled";
+    cons[idx].cancellationReason = reason;
+    cons[idx].updatedAt = new Date().toISOString();
+    writeFile("dev_consultations.json", cons);
+    return cons[idx];
+  },
+
+  addConsultationNote(id, note) {
+    const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    const idx = cons.findIndex((c) => c._id === id || c.id === id);
+    if (idx === -1) return null;
+    cons[idx].clientNotes = (cons[idx].clientNotes ? cons[idx].clientNotes + "\n" : "") + note;
+    cons[idx].updatedAt = new Date().toISOString();
+    writeFile("dev_consultations.json", cons);
+    return cons[idx];
   },
 
   // --- Documents & Vault ---

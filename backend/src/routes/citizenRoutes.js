@@ -17,6 +17,10 @@ import {
   getAdvocatesDirectory,
   bookConsultation,
   getConsultations,
+  getConsultationById,
+  rescheduleConsultation,
+  cancelConsultation,
+  joinConsultationRoom,
   getDocuments,
   uploadDocument,
   fileDocument,
@@ -64,6 +68,10 @@ router.route("/advocates").get(getAdvocatesDirectory);
 
 // 5. Consultations & Chamber Bookings
 router.route("/consultations").post(protect, bookConsultation).get(protect, getConsultations);
+router.route("/consultations/:id").get(protect, getConsultationById);
+router.route("/consultations/:id/reschedule").put(protect, rescheduleConsultation);
+router.route("/consultations/:id/cancel").put(protect, cancelConsultation);
+router.route("/consultations/:id/room").get(protect, joinConsultationRoom);
 
 // 6. Document Vault & Court Document Filing
 router.route("/documents").get(protect, getDocuments).post(protect, uploadDocument);

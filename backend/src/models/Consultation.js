@@ -3,21 +3,18 @@ import mongoose from "mongoose";
 const consultationSchema = new mongoose.Schema(
   {
     citizenId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
     advocateId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
     },
     advocateName: {
       type: String,
       default: "Adv. Meera Krishnan",
     },
     matterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Matter",
+      type: mongoose.Schema.Types.Mixed,
     },
     consultationType: {
       type: String,
@@ -54,6 +51,10 @@ const consultationSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    adviceNotes: {
+      type: String,
+      default: "",
+    },
     feeAmount: {
       type: Number,
       default: 1500,
@@ -67,6 +68,14 @@ const consultationSchema = new mongoose.Schema(
       type: String,
       enum: ["scheduled", "completed", "rescheduled", "cancelled"],
       default: "scheduled",
+    },
+    cancellationReason: {
+      type: String,
+      default: "",
+    },
+    rescheduleReason: {
+      type: String,
+      default: "",
     },
   },
   {

@@ -407,8 +407,51 @@ export const citizenApi = {
   },
 
   async getConsultations(token: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/consultations`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getConsultationById(token: string, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async rescheduleConsultation(token: string, id: string, scheduledDate: string, timeSlot: string, reason?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}/reschedule`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ scheduledDate, timeSlot, reason }),
+    });
+    return await res.json();
+  },
+
+  async cancelConsultation(token: string, id: string, reason?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}/cancel`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason }),
+    });
+    return await res.json();
+  },
+
+  async joinConsultationRoom(token: string, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}/room`, {
+      headers: { Authorization: `Bearer ${t}` },
     });
     return await res.json();
   },

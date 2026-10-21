@@ -513,10 +513,94 @@ export const citizenApi = {
     return await res.json();
   },
 
-  // 7. Statutory Legal Notices
+  // 7. Statutory Legal Notices & Speed Post Tracking
   async getLegalNotices(token: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/notices`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getNoticeById(token: string, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notices/${id}`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createLegalNotice(
+    token: string,
+    data: {
+      noticeType: string;
+      title: string;
+      recipientName: string;
+      recipientAddress: string;
+      claimAmount?: string;
+      statutoryNoticeDays?: number;
+      dispatchDate?: string;
+      speedPostTrackingNumber?: string;
+      advocateName?: string;
+      draftContent?: string;
+      senderName?: string;
+      matterId?: string;
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notices`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async trackNoticeSpeedPost(token: string, idOrBarcode: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notices/${encodeURIComponent(idOrBarcode)}/track`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async generateNoticeDraft(
+    token: string,
+    params: {
+      noticeType: string;
+      senderName?: string;
+      recipientName: string;
+      recipientAddress: string;
+      claimAmount?: string;
+      facts?: string;
+      chequeNumber?: string;
+      bankName?: string;
+      chequeDate?: string;
+      returnMemoDate?: string;
+      advocateName?: string;
+      statutoryNoticeDays?: number;
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notices/generate-draft`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(params),
+    });
+    return await res.json();
+  },
+
+  async deleteLegalNotice(token: string, id: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notices/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
     });
     return await res.json();
   },

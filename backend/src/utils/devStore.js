@@ -383,29 +383,107 @@ const DEFAULT_DOCUMENTS = [
 const DEFAULT_NOTICES = [
   {
     _id: "not_701",
+    id: "not_701",
     citizenId: "default_citizen",
     noticeType: "Cheque Bounce Demand (Sec 138 NI Act)",
     title: "Statutory Demand Notice for Dishonoured Cheque of ₹4,50,000",
+    senderName: "Gopakumar Nambiar",
     recipientName: "Coastal Logistics & Infra Ltd",
     recipientAddress: "Plot 12, Port Trust Road, Willingdon Island, Kochi 682003",
+    claimAmount: "₹4,50,000",
     statutoryNoticeDays: 15,
     dispatchDate: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
     speedPostTrackingNumber: "EK948102391IN",
     deliveryStatus: "Item Delivered",
     daysRemaining: 6,
+    advocateName: "Adv. Meera Krishnan",
+    draftContent: `DEMAND NOTICE UNDER SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881
+
+To,
+Coastal Logistics & Infra Ltd,
+Plot 12, Port Trust Road, Willingdon Island, Kochi 682003.
+
+Under instructions from my client, Sri. Gopakumar Nambiar, residing at Ernakulam, I do hereby serve upon you this statutory notice under proviso (b) of Section 138 of the Negotiable Instruments Act, 1881:
+
+1. That in discharge of your legally enforceable debt towards logistics consultancy and contract supervision, you had issued Cheque No. 492019 dated 25th September 2024 drawn on Federal Bank, Marine Drive Branch for a sum of ₹4,50,000/- (Rupees Four Lakhs Fifty Thousand only).
+2. That my client presented the said cheque for encashment through his banker, State Bank of India, but the same was dishonoured and returned unpaid on 04th October 2024 with the memo remarks 'FUNDS INSUFFICIENT'.
+3. You are hereby called upon to pay the said sum of ₹4,50,000/- within 15 (fifteen) days from the receipt of this statutory notice, failing which my client shall be constrained to initiate criminal proceedings against you under Section 138 of the Negotiable Instruments Act, 1881 without further reference.
+
+Adv. Meera Krishnan (Roll No: K/001429/2012)
+High Court of Kerala, Ernakulam`,
+    trackingHistory: [
+      { date: "16-Oct-2026", time: "14:18:22", location: "Willingdon Island SO", activity: "Item Delivered [Signed by Security Incharge]" },
+      { date: "16-Oct-2026", time: "09:30:15", location: "Willingdon Island SO", activity: "Out for Delivery" },
+      { date: "15-Oct-2026", time: "21:40:00", location: "NSH Kochi Hub", activity: "Item Dispatched to Delivery Sub Office" },
+      { date: "15-Oct-2026", time: "18:20:10", location: "NSH Kochi Hub", activity: "Item Received at Sorting Hub" },
+      { date: "12-Oct-2026", time: "11:24:10", location: "Ernakulam GPO", activity: "Item Booked via Speed Post (Weight: 80g)" },
+    ],
   },
   {
     _id: "not_702",
+    id: "not_702",
     citizenId: "default_citizen",
     noticeType: "Recovery of Money & Outstanding Invoices",
-    title: "Notice for Settlement of Outstanding Retainer Dues",
+    title: "Notice for Settlement of Outstanding Commercial Invoices of ₹1,85,000",
+    senderName: "Gopakumar Nambiar",
     recipientName: "Malabar Trading Enterprises",
     recipientAddress: "Broadway, Ernakulam, Kerala 682031",
+    claimAmount: "₹1,85,000",
     statutoryNoticeDays: 30,
     dispatchDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     speedPostTrackingNumber: "KL094812304IN",
-    deliveryStatus: "Dispatched",
+    deliveryStatus: "In Transit",
     daysRemaining: 28,
+    advocateName: "Adv. Meera Krishnan",
+    draftContent: `LEGAL NOTICE FOR RECOVERY OF OUTSTANDING DUES WITH 18% INTEREST
+
+To,
+Malabar Trading Enterprises,
+Broadway, Ernakulam, Kerala 682031.
+
+Take notice that my client, Sri. Gopakumar Nambiar, has retained me to demand immediate liquidation of outstanding commercial dues amounting to ₹1,85,000/- under Invoice Nos. INV-2024/08 and INV-2024/11. Despite repeated verbal requests and email reminders, you have deliberately withheld payment.
+
+You are hereby granted 30 (thirty) days to clear the outstanding sum of ₹1,85,000/- along with accrued commercial interest @ 18% per annum, failing which a civil summary suit under Order XXXVII CPC shall be instituted before the Sub Court, Ernakulam entirely at your risk as to costs and consequences.
+
+Adv. Meera Krishnan
+Chambers of Krishnan & Associates, Kochi`,
+    trackingHistory: [
+      { date: "19-Oct-2026", time: "16:45:00", location: "Ernakulam Nodal Hub", activity: "Item In Transit to Broadway SO" },
+      { date: "19-Oct-2026", time: "10:15:30", location: "Kochi GPO", activity: "Item Booked via Inland Speed Post" },
+    ],
+  },
+  {
+    _id: "not_703",
+    id: "not_703",
+    citizenId: "default_citizen",
+    noticeType: "Section 80 CPC Notice of Suit Against Statutory Authority",
+    title: "Statutory Notice under Section 80 CPC to Kerala State Electricity Board",
+    senderName: "Gopakumar Nambiar",
+    recipientName: "The Secretary, KSEB & Executive Engineer",
+    recipientAddress: "Vydyuthi Bhavanam, Pattom, Thiruvananthapuram 695004",
+    claimAmount: "Restitution & Injunctive Relief",
+    statutoryNoticeDays: 60,
+    dispatchDate: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(),
+    speedPostTrackingNumber: "EK810924715IN",
+    deliveryStatus: "Item Delivered",
+    daysRemaining: 18,
+    advocateName: "Adv. Meera Krishnan",
+    draftContent: `NOTICE UNDER SECTION 80 OF THE CODE OF CIVIL PROCEDURE, 1908
+
+To,
+1. The Secretary, Kerala State Electricity Board, Pattom, Thiruvananthapuram.
+2. The Executive Engineer, Electrical Division, Pala, Kottayam District.
+
+Take notice that on the expiry of two months from the date of receipt of this statutory notice under Section 80 CPC, my client, Sri. Gopakumar Nambiar, intends to institute a suit against the Board and its officers in the competent Court of Civil Jurisdiction for mandatory and prohibitory injunction restraining trespass into property in Sy. No. 441/2 of Kanjirappally Village.
+
+Cause of action arose when respondents entered the holding without prior statutory notice under Section 16 of the Indian Telegraph Act, 1885.
+
+Adv. Meera Krishnan, High Court of Kerala`,
+    trackingHistory: [
+      { date: "10-Sep-2026", time: "11:20:00", location: "Pattom SO, Thiruvananthapuram", activity: "Item Delivered [Signed by Despatch Section KSEB]" },
+      { date: "09-Sep-2026", time: "19:00:00", location: "Trivandrum NSH", activity: "Item Received at Sorting Hub" },
+      { date: "08-Sep-2026", time: "14:15:00", location: "Ernakulam GPO", activity: "Item Booked via Speed Post" },
+    ],
   },
 ];
 
@@ -1054,19 +1132,91 @@ export const devStore = {
 
   // --- Legal Notices ---
   getNotices(userId) {
-    return readFile("dev_notices.json", DEFAULT_NOTICES);
+    const notices = readFile("dev_notices.json", DEFAULT_NOTICES);
+    return notices.map((n) => {
+      const dispatch = n.dispatchDate ? new Date(n.dispatchDate).getTime() : Date.now();
+      const elapsedDays = Math.max(0, Math.floor((Date.now() - dispatch) / (1000 * 60 * 60 * 24)));
+      const statutory = Number(n.statutoryNoticeDays) || 15;
+      const dynamicDaysRemaining = Math.max(0, statutory - elapsedDays);
+      return {
+        ...n,
+        daysRemaining: n.daysRemaining !== undefined ? n.daysRemaining : dynamicDaysRemaining,
+      };
+    });
+  },
+
+  getNoticeById(id) {
+    const notices = this.getNotices();
+    return notices.find((n) => n._id === id || n.id === id) || null;
   },
 
   addNotice(data) {
     const notices = readFile("dev_notices.json", DEFAULT_NOTICES);
+    const trackingNum =
+      data.speedPostTrackingNumber ||
+      `EK${Math.floor(100000000 + Math.random() * 900000000)}IN`;
+    const now = new Date();
+    const dateStr = now
+      .toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+      .replace(/ /g, "-");
+    const timeStr = now.toTimeString().split(" ")[0];
+
+    const initialTracking =
+      data.trackingHistory && data.trackingHistory.length > 0
+        ? data.trackingHistory
+        : [
+            {
+              date: dateStr,
+              time: timeStr,
+              location: "Kochi Head Post Office",
+              activity: `Item Booked via Speed Post (Weight: 65g, Barcode: ${trackingNum})`,
+            },
+          ];
+
     const newNotice = {
       _id: "not_" + Date.now().toString(),
+      id: "not_" + Date.now().toString(),
+      citizenId: data.citizenId || "default_citizen",
+      senderName: data.senderName || "Gopakumar Nambiar",
+      recipientName: data.recipientName || "Recipient",
+      recipientAddress: data.recipientAddress || "Address",
+      claimAmount: data.claimAmount || "",
+      noticeType: data.noticeType || "Statutory Legal Notice",
+      title: data.title || "Legal Notice",
+      statutoryNoticeDays: Number(data.statutoryNoticeDays) || 15,
+      dispatchDate: data.dispatchDate || now.toISOString(),
+      speedPostTrackingNumber: trackingNum,
+      deliveryStatus: data.deliveryStatus || "Item Booked",
+      daysRemaining: Number(data.statutoryNoticeDays) || 15,
+      advocateName: data.advocateName || "Adv. Meera Krishnan",
+      draftContent: data.draftContent || "",
+      trackingHistory: initialTracking,
+      createdAt: now.toISOString(),
       ...data,
-      createdAt: new Date().toISOString(),
     };
     notices.unshift(newNotice);
     writeFile("dev_notices.json", notices);
     return newNotice;
+  },
+
+  updateNotice(id, updates) {
+    const notices = readFile("dev_notices.json", DEFAULT_NOTICES);
+    const idx = notices.findIndex((n) => n._id === id || n.id === id);
+    if (idx === -1) return null;
+    notices[idx] = { ...notices[idx], ...updates, updatedAt: new Date().toISOString() };
+    writeFile("dev_notices.json", notices);
+    return notices[idx];
+  },
+
+  deleteNotice(id) {
+    const notices = readFile("dev_notices.json", DEFAULT_NOTICES);
+    const filtered = notices.filter((n) => n._id !== id && n.id !== id);
+    writeFile("dev_notices.json", filtered);
+    return true;
   },
 
   // --- Advocates Directory ---

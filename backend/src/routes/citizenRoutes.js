@@ -24,6 +24,11 @@ import {
   deleteDocument,
   verifyDocumentHash,
   getLegalNotices,
+  getNoticeById,
+  createLegalNotice,
+  trackNoticeSpeedPost,
+  generateNoticeDraft,
+  deleteLegalNotice,
   citizenAiChat,
   getCitizenInvoices,
   payCitizenInvoice,
@@ -61,8 +66,11 @@ router.route("/documents/filings").get(protect, getFilings);
 router.route("/documents/:id").delete(protect, deleteDocument);
 router.route("/documents/:id/verify").get(protect, verifyDocumentHash);
 
-// 7. Statutory Legal Notices
-router.route("/notices").get(protect, getLegalNotices);
+// 7. Statutory Legal Notices & Speed Post Tracking
+router.route("/notices").get(protect, getLegalNotices).post(protect, createLegalNotice);
+router.route("/notices/generate-draft").post(protect, generateNoticeDraft);
+router.route("/notices/:id").get(protect, getNoticeById).delete(protect, deleteLegalNotice);
+router.route("/notices/:id/track").get(protect, trackNoticeSpeedPost);
 
 // 8. Plain-Language Citizen AI Copilot ("Ask AI")
 router.route("/ai/chat").post(protect, citizenAiChat);

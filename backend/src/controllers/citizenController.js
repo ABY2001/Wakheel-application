@@ -1595,9 +1595,389 @@ export const getLegalNotices = async (req, res) => {
     }
 
     let notices = await LegalNotice.find({ citizenId: userId }).sort({ createdAt: -1 });
-    res.json({ success: true, count: notices.length, notices, mode: "cloud_db" });
+    // Dynamically calculate daysRemaining for each Mongoose document
+    const enrichedNotices = notices.map((doc) => {
+      const n = doc.toObject();
+      const dispatch = n.dispatchDate ? new Date(n.dispatchDate).getTime() : Date.now();
+      const elapsedDays = Math.max(0, Math.floor((Date.now() - dispatch) / (1000 * 60 * 60 * 24)));
+      const statutory = Number(n.statutoryNoticeDays) || 15;
+      n.daysRemaining = Math.max(0, statutory - elapsedDays);
+      return n;
+    });
+
+    res.json({ success: true, count: enrichedNotices.length, notices: enrichedNotices, mode: "cloud_db" });
   } catch (error) {
     console.error("getLegalNotices error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get single legal notice by ID
+// @route   GET /api/citizen/notices/:id
+// @access  Private (Citizen)
+export const getNoticeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const notice = devStore.getNoticeById(id);
+      if (!notice) {
+        return res.status(404).json({ success: false, message: "Legal notice not found" });
+      }
+      return res.json({ success: true, notice, mode: "dummy_data" });
+    }
+
+    const doc = await LegalNotice.findById(id);
+    if (!doc) {
+      return res.status(404).json({ success: false, message: "Legal notice not found" });
+    }
+
+    const notice = doc.toObject();
+    const dispatch = notice.dispatchDate ? new Date(notice.dispatchDate).getTime() : Date.now();
+    const elapsedDays = Math.max(0, Math.floor((Date.now() - dispatch) / (1000 * 60 * 60 * 24)));
+    const statutory = Number(notice.statutoryNoticeDays) || 15;
+    notice.daysRemaining = Math.max(0, statutory - elapsedDays);
+
+    res.json({ success: true, notice, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getNoticeById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Create and issue a statutory legal notice
+// @route   POST /api/citizen/notices
+// @access  Private (Citizen)
+export const createLegalNotice = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const {
+      noticeType,
+      title,
+      senderName,
+      recipientName,
+      recipientAddress,
+      claimAmount,
+      statutoryNoticeDays,
+      dispatchDate,
+      speedPostTrackingNumber,
+      advocateName,
+      draftContent,
+      matterId,
+    } = req.body;
+
+    if (!recipientName || !recipientAddress) {
+      return res.status(400).json({
+        success: false,
+        message: "Recipient name and recipient postal address are required.",
+      });
+    }
+
+    const trackingNum =
+      speedPostTrackingNumber && speedPostTrackingNumber.trim()
+        ? speedPostTrackingNumber.trim().toUpperCase()
+        : `EK${Math.floor(100000000 + Math.random() * 900000000)}IN`;
+
+    const noticeDays = Number(statutoryNoticeDays) || 15;
+    const now = new Date();
+    const dateStr = now
+      .toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+      .replace(/ /g, "-");
+    const timeStr = now.toTimeString().split(" ")[0];
+
+    const initialTracking = [
+      {
+        date: dateStr,
+        time: timeStr,
+        location: "Kochi GPO / Sorting Hub",
+        activity: `Item Booked via Speed Post (Weight: 75g, Consignment: ${trackingNum})`,
+      },
+    ];
+
+    const noticeData = {
+      citizenId: userId,
+      matterId: matterId || null,
+      noticeType: noticeType || "Cheque Bounce Demand (Sec 138 NI Act)",
+      title: title || `Statutory Legal Notice to ${recipientName}`,
+      senderName: senderName || "Gopakumar Nambiar",
+      recipientName: recipientName.trim(),
+      recipientAddress: recipientAddress.trim(),
+      claimAmount: claimAmount || "",
+      statutoryNoticeDays: noticeDays,
+      dispatchDate: dispatchDate ? new Date(dispatchDate) : now,
+      speedPostTrackingNumber: trackingNum,
+      deliveryStatus: "Item Booked",
+      daysRemaining: noticeDays,
+      advocateName: advocateName || "Adv. Meera Krishnan",
+      draftContent: draftContent || "",
+      trackingHistory: initialTracking,
+    };
+
+    if (shouldUseDevStore()) {
+      const created = devStore.addNotice(noticeData);
+      return res.status(201).json({
+        success: true,
+        message: "Statutory notice registered and consignment booked successfully",
+        notice: created,
+        mode: "dummy_data",
+      });
+    }
+
+    const created = await LegalNotice.create(noticeData);
+    res.status(201).json({
+      success: true,
+      message: "Statutory notice registered and consignment booked successfully",
+      notice: created,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("createLegalNotice error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Track India Post Speed Post consignment
+// @route   GET /api/citizen/notices/:id/track
+// @access  Private (Citizen)
+export const trackNoticeSpeedPost = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let notice = null;
+    if (shouldUseDevStore()) {
+      notice = devStore.getNoticeById(id);
+      if (!notice) {
+        // Fallback: check if id is a speed post tracking barcode number
+        const allNotices = devStore.getNotices();
+        notice = allNotices.find((n) => n.speedPostTrackingNumber === id);
+      }
+    } else {
+      if (id.startsWith("not_")) {
+        notice = devStore.getNoticeById(id);
+      } else {
+        notice = await LegalNotice.findById(id).catch(() => null);
+        if (!notice) {
+          notice = await LegalNotice.findOne({ speedPostTrackingNumber: id });
+        }
+      }
+    }
+
+    if (notice) {
+      const n = notice.toObject ? notice.toObject() : notice;
+      const dispatch = n.dispatchDate ? new Date(n.dispatchDate).getTime() : Date.now();
+      const elapsedDays = Math.max(0, Math.floor((Date.now() - dispatch) / (1000 * 60 * 60 * 24)));
+      const statutory = Number(n.statutoryNoticeDays) || 15;
+      const daysRemaining = Math.max(0, statutory - elapsedDays);
+
+      return res.json({
+        success: true,
+        noticeId: n._id || n.id,
+        trackingNumber: n.speedPostTrackingNumber,
+        deliveryStatus: n.deliveryStatus,
+        recipientName: n.recipientName,
+        recipientAddress: n.recipientAddress,
+        dispatchDate: n.dispatchDate,
+        statutoryNoticeDays: statutory,
+        daysRemaining,
+        trackingHistory: n.trackingHistory || [],
+      });
+    }
+
+    // If tracking number entered directly and not found in DB, return India Post simulated trajectory
+    const barcode = id.toUpperCase();
+    const now = new Date();
+    const trackingHistory = [
+      {
+        date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        time: "10:30:00",
+        location: "Kochi GPO Nodal Delivery Centre",
+        activity: "Item Booked at Counter via Inland Speed Post",
+      },
+      {
+        date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        time: "15:45:10",
+        location: "National Sorting Hub (NSH) Kochi",
+        activity: "Item Received at Sorting Hub and Bagged",
+      },
+    ];
+
+    res.json({
+      success: true,
+      noticeId: null,
+      trackingNumber: barcode,
+      deliveryStatus: "In Transit",
+      recipientName: "Addressee",
+      recipientAddress: "Postal District",
+      dispatchDate: now.toISOString(),
+      statutoryNoticeDays: 15,
+      daysRemaining: 15,
+      trackingHistory,
+    });
+  } catch (error) {
+    console.error("trackNoticeSpeedPost error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Generate formal statutory legal notice draft with AI
+// @route   POST /api/citizen/notices/generate-draft
+// @access  Private (Citizen)
+export const generateNoticeDraft = async (req, res) => {
+  try {
+    const {
+      noticeType,
+      senderName = "Gopakumar Nambiar",
+      recipientName = "Recipient Name",
+      recipientAddress = "Recipient Address",
+      claimAmount = "",
+      facts = "",
+      chequeNumber = "",
+      bankName = "",
+      chequeDate = "",
+      returnMemoDate = "",
+      advocateName = "Adv. Meera Krishnan",
+      statutoryNoticeDays = 15,
+    } = req.body;
+
+    const todayStr = new Date().toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
+    let draftContent = "";
+    let statutoryDays = Number(statutoryNoticeDays) || 15;
+    let suggestedTitle = "";
+
+    if (noticeType?.includes("138") || noticeType?.toLowerCase().includes("cheque")) {
+      statutoryDays = 15;
+      suggestedTitle = `Statutory Demand Notice under Section 138 NI Act (${claimAmount || "Dishonoured Cheque"})`;
+      draftContent = `LEGAL DEMAND NOTICE UNDER PROVISO (b) TO SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881
+
+Date: ${todayStr}
+
+To,
+${recipientName}
+${recipientAddress}
+
+Under instructions from and on behalf of my client, Sri. ${senderName}, residing at Ernakulam, Kerala (hereinafter referred to as "my Client"), I, the undersigned Advocate, do hereby serve upon you this formal Statutory Demand Notice:
+
+1. That in discharge of your legally existing debt and liability towards my Client in respect of transaction/goods/services rendered${claimAmount ? ` amounting to ${claimAmount}` : ""}, you had issued Cheque bearing No. ${chequeNumber || "[Cheque Number]"} dated ${chequeDate || "[Cheque Date]"} drawn on ${bankName || "[Bank Name & Branch]"}${claimAmount ? ` for a sum of ${claimAmount}/-` : ""}.
+
+2. That my Client presented the aforesaid cheque for encashment through his banker, but to my Client's utter surprise and shock, the said cheque was dishonoured and returned unpaid by the drawee bank on ${returnMemoDate || "[Return Memo Date]"} with the bank endorsement/memo remarks: 'FUNDS INSUFFICIENT / EXCEEDS ARRANGEMENT'.
+
+3. ${facts ? `Additional facts: ${facts}` : "That despite knowledge of dishonour, you have failed and neglected to make payment of the cheque amount or offer any legitimate justification."}
+
+4. You are hereby called upon by this statutory notice to pay to my Client the full cheque sum of ${claimAmount || "the dishonoured cheque amount"} within 15 (FIFTEEN) DAYS from the date of receipt of this notice.
+
+5. Take notice that if you fail or neglect to make the payment within the statutory period of 15 days as stipulated under proviso (c) to Section 138 of the Negotiable Instruments Act, 1881, my Client shall be constrained to initiate criminal proceedings against you under Section 138 & Section 142 of the Negotiable Instruments Act, 1881 read with Section 420 of the Indian Penal Code / Bharatiya Nyaya Sanhita, 2023 before the competent Judicial First Class Magistrate Court entirely at your risk, cost, and legal peril.
+
+${advocateName}
+Advocate, High Court of Kerala
+Chambers: Ernakulam Law Chambers, Kochi`;
+    } else if (noticeType?.includes("80") || noticeType?.toLowerCase().includes("government")) {
+      statutoryDays = 60;
+      suggestedTitle = `Statutory Notice under Section 80 CPC to ${recipientName}`;
+      draftContent = `NOTICE UNDER SECTION 80 OF THE CODE OF CIVIL PROCEDURE, 1908
+(Pre-requisite to Institution of Suit against Government / Public Officers)
+
+Date: ${todayStr}
+
+To,
+${recipientName}
+${recipientAddress}
+
+Sir / Madam,
+
+Take notice that on the expiration of TWO MONTHS next after notice in writing has been delivered to or left at your office, my Client, Sri. ${senderName}, intends to institute a Civil Suit against you and the Authority in the competent Court of Civil Jurisdiction.
+
+1. NAME & DESCRIPTION OF THE PLAINTIFF:
+Sri. ${senderName}, adult, Indian inhabitant, residing at Kerala.
+
+2. CAUSE OF ACTION & FACTS OF THE CASE:
+${facts || "That the authority has initiated unauthorized actions/encroachment/omission without statutory adherence to natural justice and lawful procedure."}
+
+3. RELIEF SOUGHT:
+A decree for mandatory and prohibitory injunction, restitution of rights, and damages/compensation${claimAmount ? ` quantified at ${claimAmount}` : ""}.
+
+Take notice that if the aforesaid demands are not complied with within the mandatory statutory period of 60 (Sixty) days from the receipt hereof, the suit will be filed at your cost and risk.
+
+${advocateName}
+Advocate for the Intending Plaintiff`;
+    } else if (noticeType?.includes("Recovery") || noticeType?.toLowerCase().includes("money")) {
+      statutoryDays = 15;
+      suggestedTitle = `Notice for Demand & Recovery of Dues (${claimAmount || "Outstanding Invoices"})`;
+      draftContent = `LEGAL NOTICE FOR RECOVERY OF OUTSTANDING DUES WITH COMMERCIAL INTEREST
+
+Date: ${todayStr}
+
+To,
+${recipientName}
+${recipientAddress}
+
+Under instructions from my Client, Sri. ${senderName}, I hereby call upon you as under:
+
+1. That you entered into business transactions and availed services/materials from my Client, against which invoices were duly raised and acknowledged by you.
+
+2. That despite having received full consideration and benefit, you have willfully withheld and defaulted on payment of the outstanding amount of ${claimAmount || "[Claim Amount]"}.
+
+3. ${facts ? `Particulars: ${facts}` : "My Client issued several written reminders, statements of account, and requests, but you failed to liquidate the admitted dues."}
+
+4. You are hereby called upon to pay the entire outstanding sum of ${claimAmount || "[Claim Amount]"} along with interest @ 18% per annum within 15 (fifteen) days of receipt of this notice, failing which my Client will institute Summary Suit proceedings under Order XXXVII of the Code of Civil Procedure, 1908 along with an application for attachment before judgment before the competent Court.
+
+${advocateName}
+Advocate, Chambers of Legal Associates`;
+    } else {
+      statutoryDays = Number(statutoryNoticeDays) || 15;
+      suggestedTitle = `Legal Notice to ${recipientName}`;
+      draftContent = `FORMAL LEGAL NOTICE
+
+Date: ${todayStr}
+
+To,
+${recipientName}
+${recipientAddress}
+
+Under instructions from and on behalf of my Client, Sri. ${senderName}, I issue this legal notice as follows:
+
+1. ${facts || "That a dispute has arisen between you and my Client regarding contractual obligations and legal liabilities."}
+
+2. That your acts and omissions have caused severe prejudice, pecuniary loss, and hardship to my Client${claimAmount ? ` in the sum of ${claimAmount}` : ""}.
+
+3. You are hereby granted ${statutoryDays} days from the receipt of this notice to remedy the breach and fulfill your lawful commitments, failing which appropriate legal proceedings (both civil and criminal) shall be initiated against you without any further notice.
+
+${advocateName}
+Advocate`;
+    }
+
+    res.json({
+      success: true,
+      draftContent,
+      statutoryNoticeDays: statutoryDays,
+      suggestedTitle,
+    });
+  } catch (error) {
+    console.error("generateNoticeDraft error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete a legal notice
+// @route   DELETE /api/citizen/notices/:id
+// @access  Private (Citizen)
+export const deleteLegalNotice = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      devStore.deleteNotice(id);
+      return res.json({ success: true, message: "Notice deleted successfully", mode: "dummy_data" });
+    }
+
+    await LegalNotice.findByIdAndDelete(id);
+    res.json({ success: true, message: "Notice deleted successfully", mode: "cloud_db" });
+  } catch (error) {
+    console.error("deleteLegalNotice error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

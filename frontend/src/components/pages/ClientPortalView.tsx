@@ -71,6 +71,7 @@ import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
 import { ClientDocumentsView } from "@/components/client/ClientDocumentsView";
 import { DocumentFilingView } from "@/components/client/DocumentFilingView";
 import { CaseTimelineView } from "@/components/client/CaseTimelineView";
+import { LegalNoticesView } from "@/components/client/LegalNoticesView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -1263,7 +1264,7 @@ export function ClientPortalView() {
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#800020]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-black dark:bg-white" />
             </button>
 
             {/* User Profile Pill */}
@@ -1462,7 +1463,7 @@ export function ClientPortalView() {
                             {matter.caseNumber || matter.cnrNumber}
                           </span>
                           <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#800020]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />
                             {matter.status === "active" ? "Admitted" : matter.status === "notice_issued" ? "Notice Issued" : "In Progress"}
                           </span>
                         </div>
@@ -1564,7 +1565,7 @@ export function ClientPortalView() {
                   <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white flex items-center justify-center font-bold">
-                        <Sparkles className="w-4 h-4 text-[#800020]" />
+                        <Sparkles className="w-4 h-4 text-black dark:text-white" />
                       </div>
                       <span className="text-xs font-bold uppercase tracking-wider text-black dark:text-white">
                         ASK WAKHEEL AI
@@ -1594,7 +1595,7 @@ export function ClientPortalView() {
                       <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 space-y-2">
                         <div className="flex items-center justify-between text-[10px] font-bold text-black dark:text-white pb-1 border-b border-zinc-200 dark:border-zinc-800">
                           <span className="flex items-center gap-1 font-mono uppercase">
-                            <Sparkles className="w-3 h-3 text-[#800020]" /> Wakheel Legal Guidance
+                            <Sparkles className="w-3 h-3 text-black dark:text-white" /> Wakheel Legal Guidance
                           </span>
                           <button
                             type="button"
@@ -1750,64 +1751,12 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: Statutory Legal Notices                                  */}
+          {/* VIEW: Statutory Legal Notices & Speed Post Tracking            */}
           {/* ============================================================== */}
           {activeTab === "legal-notices" && (
-            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div>
-                  <h3 className="text-lg font-bold text-black dark:text-white">Statutory Legal Notices</h3>
-                  <p className="text-xs text-zinc-500">Track 15-day and 30-day statutory response countdowns under Indian laws.</p>
-                </div>
-                <button
-                  onClick={() => setActiveTab("draft")}
-                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Draft New Notice</span>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {legalNotices.map((notice) => (
-                  <div
-                    key={notice._id}
-                    className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <span className="text-xs font-mono font-bold text-zinc-500">{notice.noticeType}</span>
-                        <h4 className="text-base font-bold text-black dark:text-white mt-0.5">{notice.title}</h4>
-                      </div>
-                      {notice.daysRemaining !== undefined && (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#800020]/10 text-[#800020] border border-[#800020]/30 inline-flex items-center gap-1.5 self-start sm:self-auto">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#800020] animate-pulse" />
-                          {notice.daysRemaining} days remaining to respond
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2 border-t border-zinc-100 dark:border-zinc-900">
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">RECIPIENT</span>
-                        <span className="font-bold text-black dark:text-white">{notice.recipientName}</span>
-                        <p className="text-[11px] text-zinc-500 truncate">{notice.recipientAddress}</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">SPEED POST TRACKING</span>
-                        <span className="font-mono font-bold text-black dark:text-white">{notice.speedPostTrackingNumber}</span>
-                        <p className="text-[11px] text-zinc-500">{notice.deliveryStatus}</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">STATUTORY WINDOW</span>
-                        <span className="font-bold text-black dark:text-white">{notice.statutoryNoticeDays} Days Notice Period</span>
-                        <p className="text-[11px] text-zinc-500">Dispatched: {notice.dispatchDate?.split("T")[0]}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <LegalNoticesView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+            />
           )}
 
           {/* ============================================================== */}

@@ -3,26 +3,24 @@ import mongoose from "mongoose";
 const legalNoticeSchema = new mongoose.Schema(
   {
     citizenId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.Mixed,
       required: true,
+    },
+    matterId: {
+      type: mongoose.Schema.Types.Mixed,
     },
     noticeType: {
       type: String,
-      enum: [
-        "Cheque Bounce Demand (Sec 138 NI Act)",
-        "Recovery of Money & Outstanding Invoices",
-        "Tenant Eviction & Arrears of Rent",
-        "Breach of Contract & Liquidated Damages",
-        "Consumer Deficient Service Demand",
-        "Defamation & Cease and Desist",
-      ],
       required: true,
     },
     title: {
       type: String,
       required: true,
       trim: true,
+    },
+    senderName: {
+      type: String,
+      default: "Gopakumar Nambiar",
     },
     recipientName: {
       type: String,
@@ -33,9 +31,13 @@ const legalNoticeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    claimAmount: {
+      type: String,
+      default: "",
+    },
     statutoryNoticeDays: {
       type: Number,
-      default: 15, // 15 days for Sec 138 NI Act, 30 days for general
+      default: 15, // 15 days for Sec 138 NI Act, 30 days for general/Sec 80 CPC
     },
     dispatchDate: {
       type: Date,
@@ -47,8 +49,11 @@ const legalNoticeSchema = new mongoose.Schema(
     },
     deliveryStatus: {
       type: String,
-      enum: ["Drafted", "Dispatched", "Item Delivered", "Addressee Left / Unserved", "Awaiting Expiry of Statutory Period", "Escalated to Court Action"],
       default: "Dispatched",
+    },
+    daysRemaining: {
+      type: Number,
+      default: 15,
     },
     draftContent: {
       type: String,
@@ -58,6 +63,18 @@ const legalNoticeSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    advocateName: {
+      type: String,
+      default: "Adv. Meera Krishnan",
+    },
+    trackingHistory: [
+      {
+        date: String,
+        time: String,
+        location: String,
+        activity: String,
+      },
+    ],
   },
   {
     timestamps: true,

@@ -903,6 +903,82 @@ export interface ChamberDictationItem {
   createdAt?: string;
 }
 
+export interface TrustTransactionItem {
+  _id: string;
+  id?: string;
+  advocateId?: string;
+  type: "deposit" | "disbursement" | string;
+  clientName: string;
+  citizenId?: string;
+  matterTitle: string;
+  matterId?: string;
+  amount: number;
+  purpose: string;
+  referenceNumber: string;
+  verifiedBy: string;
+  date: string;
+  status: string;
+  createdAt?: string;
+}
+
+export interface ChamberExpenseItem {
+  _id: string;
+  id?: string;
+  advocateId?: string;
+  matterTitle: string;
+  matterId?: string;
+  clientName: string;
+  category: "Court Fee Stamps & Welfare" | "Process Service & Speed Post" | "Legal Research Subscriptions" | "Paperbook Binding & Scrutiny" | "Chamber Overhead" | string;
+  amount: number;
+  description: string;
+  paidBy: string;
+  date: string;
+  receiptNumber: string;
+  isReimbursable: boolean;
+  status: string;
+  createdAt?: string;
+}
+
+export interface AssociateItem {
+  _id: string;
+  id?: string;
+  advocateId?: string;
+  fullName: string;
+  role: string;
+  enrollmentNumber: string;
+  phone: string;
+  email: string;
+  status: string;
+  courtPass: string;
+  activeMattersAssigned: number;
+  attendanceToday: string;
+  createdAt?: string;
+}
+
+export interface ErpOverviewData {
+  financials: {
+    totalBilled: number;
+    totalCollected: number;
+    totalPending: number;
+    trustEscrowBalance: number;
+    totalTrustDeposits: number;
+    totalTrustDisbursements: number;
+    totalExpenses: number;
+    reimbursableExpenses: number;
+    totalGstBilled: number;
+    gstRcmEligibleCount: number;
+  };
+  counts: {
+    totalInvoices: number;
+    paidInvoices: number;
+    pendingInvoices: number;
+    trustTransactions: number;
+    expensesCount: number;
+    associatesCount: number;
+    retainersCount: number;
+  };
+}
+
 export const advocateApi = {
   getAuthHeader(token?: string) {
     const activeToken =
@@ -1539,6 +1615,115 @@ export const advocateApi = {
     const res = await fetch(`${API_BASE_URL}/advocate/dictations/${encodeURIComponent(id)}/convert-to-case-note`, {
       method: "POST",
       headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  // 13. Law Practice ERP & Trust/IOLTA Accounting
+  async getErpOverview(token?: string): Promise<{
+    success: boolean;
+    financials: ErpOverviewData["financials"];
+    counts: ErpOverviewData["counts"];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/overview`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getTrustTransactions(token?: string): Promise<{
+    success: boolean;
+    count: number;
+    transactions: TrustTransactionItem[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/trust`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async addTrustTransaction(
+    data: Partial<TrustTransactionItem>,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    transaction: TrustTransactionItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/trust`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getExpenses(token?: string): Promise<{
+    success: boolean;
+    count: number;
+    expenses: ChamberExpenseItem[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/expenses`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async addExpense(
+    data: Partial<ChamberExpenseItem>,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    expense: ChamberExpenseItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/expenses`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getAssociates(token?: string): Promise<{
+    success: boolean;
+    count: number;
+    associates: AssociateItem[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/associates`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async addAssociate(
+    data: Partial<AssociateItem>,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    associate: AssociateItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/erp/associates`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     });
     return await res.json();
   },

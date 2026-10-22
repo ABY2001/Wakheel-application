@@ -1178,6 +1178,196 @@ const DEFAULT_DICTATIONS = [
   },
 ];
 
+const DEFAULT_TRUST_TRANSACTIONS = [
+  {
+    _id: "tru_101",
+    id: "tru_101",
+    advocateId: "adv_1",
+    type: "deposit",
+    clientName: "Malabar Infotech Solutions Pvt Ltd",
+    citizenId: "client_malabar",
+    matterTitle: "ARB/NCLT/KOCHI/2024/041 — Commercial Arbitration Claim",
+    matterId: "mat_arb_041",
+    amount: 350000,
+    purpose: "Arbitrator Hearing Fee & Stenographer Advance Deposit",
+    referenceNumber: "NEFT/KLB2026/091244",
+    verifiedBy: "Adv. Meera Krishnan",
+    date: "14 Oct 2026",
+    status: "cleared",
+    createdAt: "2026-10-14T05:15:00.000Z",
+  },
+  {
+    _id: "tru_102",
+    id: "tru_102",
+    advocateId: "adv_1",
+    type: "deposit",
+    clientName: "Gopakumar Nambiar",
+    citizenId: "default_citizen",
+    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    amount: 150000,
+    purpose: "Advocate Commissioner Remuneration & Re-survey Deposit",
+    referenceNumber: "UPI/SBIN/88129014",
+    verifiedBy: "Adv. Meera Krishnan",
+    date: "18 Oct 2026",
+    status: "cleared",
+    createdAt: "2026-10-18T06:30:00.000Z",
+  },
+  {
+    _id: "tru_103",
+    id: "tru_103",
+    advocateId: "adv_1",
+    type: "disbursement",
+    clientName: "Gopakumar Nambiar",
+    citizenId: "default_citizen",
+    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    amount: 50000,
+    purpose: "Disbursement to Advocate Commissioner (High Court Warrant #82)",
+    referenceNumber: "CHQ/771920/AXIS",
+    verifiedBy: "Adv. Meera Krishnan",
+    date: "20 Oct 2026",
+    status: "cleared",
+    createdAt: "2026-10-20T04:15:00.000Z",
+  },
+  {
+    _id: "tru_104",
+    id: "tru_104",
+    advocateId: "adv_1",
+    type: "deposit",
+    clientName: "Vanguard Infrastructure Ltd",
+    citizenId: "client_vanguard",
+    matterTitle: "WP(C) 4921/2026 — Vanguard Infrastructure v. NHAI",
+    matterId: "mat_1792557595989",
+    amount: 200000,
+    purpose: "Court Registry Security Deposit (Conditional Stay)",
+    referenceNumber: "RTGS/HDFC/2026/0991",
+    verifiedBy: "Adv. Meera Krishnan",
+    date: "21 Oct 2026",
+    status: "cleared",
+    createdAt: "2026-10-21T09:00:00.000Z",
+  },
+];
+
+const DEFAULT_EXPENSES = [
+  {
+    _id: "exp_101",
+    id: "exp_101",
+    advocateId: "adv_1",
+    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    clientName: "Gopakumar Nambiar",
+    category: "Court Fee Stamps & Welfare",
+    amount: 2850,
+    description: "Kerala High Court e-filing judicial stamp duty and welfare fund tickets",
+    paidBy: "Suresh Rawat (Clerk)",
+    date: "16 Oct 2026",
+    receiptNumber: "KLHC-EF-2026-9812",
+    isReimbursable: true,
+    status: "approved",
+    createdAt: "2026-10-16T08:00:00.000Z",
+  },
+  {
+    _id: "exp_102",
+    id: "exp_102",
+    advocateId: "adv_1",
+    matterTitle: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
+    matterId: "mat_arb_041",
+    clientName: "Malabar Infotech Solutions Pvt Ltd",
+    category: "Process Service & Speed Post",
+    amount: 1420,
+    description: "Speed post statutory notice with AD to 4 respondent directors",
+    paidBy: "Chamber Petty Cash",
+    date: "18 Oct 2026",
+    receiptNumber: "SP-EKM-4412",
+    isReimbursable: true,
+    status: "approved",
+    createdAt: "2026-10-18T10:15:00.000Z",
+  },
+  {
+    _id: "exp_103",
+    id: "exp_103",
+    advocateId: "adv_1",
+    matterTitle: "General Chamber Operations",
+    matterId: "chamber_gen",
+    clientName: "Chamber Overhead",
+    category: "Legal Research Subscriptions",
+    amount: 8500,
+    description: "SCC Online & Manupatra Kerala High Court monthly research seats",
+    paidBy: "Adv. Meera Krishnan",
+    date: "19 Oct 2026",
+    receiptNumber: "INV-SCCO-8812",
+    isReimbursable: false,
+    status: "paid",
+    createdAt: "2026-10-19T06:00:00.000Z",
+  },
+  {
+    _id: "exp_104",
+    id: "exp_104",
+    advocateId: "adv_1",
+    matterTitle: "WP(C) 4921/2026 — Vanguard Infrastructure v. NHAI",
+    matterId: "mat_1792557595989",
+    clientName: "Vanguard Infrastructure Ltd",
+    category: "Paperbook Binding & Scrutiny",
+    amount: 3200,
+    description: "4 sets Division Bench paperbook binding, index tab sheets, and registry attestations",
+    paidBy: "Suresh Rawat (Clerk)",
+    date: "21 Oct 2026",
+    receiptNumber: "CH-PB-2026-401",
+    isReimbursable: true,
+    status: "approved",
+    createdAt: "2026-10-21T11:45:00.000Z",
+  },
+];
+
+const DEFAULT_ASSOCIATES = [
+  {
+    _id: "asc_101",
+    id: "asc_101",
+    advocateId: "adv_1",
+    fullName: "Adv. Rahul Nair",
+    role: "Senior Associate (Civil & Writs)",
+    enrollmentNumber: "K/002140/2017",
+    phone: "+91 94472 88120",
+    email: "rahul.nair@chamber.law",
+    status: "Active",
+    courtPass: "KHCAA Golden Jubilee Pass #104",
+    activeMattersAssigned: 8,
+    attendanceToday: "Present — Court Hall 2A",
+    createdAt: "2026-06-01T00:00:00.000Z",
+  },
+  {
+    _id: "asc_102",
+    id: "asc_102",
+    advocateId: "adv_1",
+    fullName: "Adv. Preeti Sharma",
+    role: "Litigation Junior (Arbitration & Corporate)",
+    enrollmentNumber: "K/003891/2021",
+    phone: "+91 98471 44520",
+    email: "preeti.sharma@chamber.law",
+    status: "Active",
+    courtPass: "KHCAA Pass #312",
+    activeMattersAssigned: 5,
+    attendanceToday: "Present — Arbitral Tribunal",
+    createdAt: "2026-07-15T00:00:00.000Z",
+  },
+  {
+    _id: "asc_103",
+    id: "asc_103",
+    advocateId: "adv_1",
+    fullName: "Suresh Rawat",
+    role: "Chief Court Clerk & Registry In-charge",
+    enrollmentNumber: "HC Clerk Badge #402",
+    phone: "+91 94470 22390",
+    email: "suresh.clerk@chamber.law",
+    status: "Active",
+    courtPass: "Registry Filing Pass #402",
+    activeMattersAssigned: 14,
+    attendanceToday: "Present — Filing Scrutiny Section",
+    createdAt: "2026-05-10T00:00:00.000Z",
+  },
+];
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -1978,8 +2168,8 @@ export const devStore = {
   // --- Advocate Invoices & Fee Billing ---
   getInvoices(advocateId = "adv_1") {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
-    if (!advocateId) return invoices;
-    return invoices.filter((inv) => inv.advocateId === advocateId || advocateId === "adv_1");
+    if (!advocateId || advocateId === "adv_1" || advocateId === "default_citizen") return invoices;
+    return invoices.filter((inv) => !inv.advocateId || inv.advocateId === advocateId || inv.advocateId === "adv_1");
   },
 
   createInvoice(data) {
@@ -2552,5 +2742,162 @@ export const devStore = {
     });
 
     return newNote;
+  },
+
+  // --- ERP: Trust / IOLTA Escrow Accounting ---
+  getTrustTransactions(advocateId = "adv_1") {
+    const transactions = readFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
+    if (!transactions || transactions.length === 0) {
+      writeFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
+      return DEFAULT_TRUST_TRANSACTIONS;
+    }
+    return transactions;
+  },
+
+  addTrustTransaction(data) {
+    const transactions = readFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
+    const newTx = {
+      _id: "tru_" + Date.now().toString(),
+      id: "tru_" + Date.now().toString(),
+      advocateId: data.advocateId || "adv_1",
+      type: data.type || "deposit",
+      clientName: data.clientName || "Client Deposit",
+      citizenId: data.citizenId || "default_citizen",
+      matterTitle: data.matterTitle || "General Client Escrow",
+      matterId: data.matterId || "",
+      amount: Number(data.amount) || 0,
+      purpose: data.purpose || "Advance Retainer Escrow",
+      referenceNumber: data.referenceNumber || `TXN/${Date.now()}`,
+      verifiedBy: data.verifiedBy || "Adv. Meera Krishnan",
+      date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      status: "cleared",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    transactions.unshift(newTx);
+    writeFile("dev_trust.json", transactions);
+    return newTx;
+  },
+
+  // --- ERP: Chamber Disbursements & Expenses ---
+  getExpenses(advocateId = "adv_1") {
+    const expenses = readFile("dev_expenses.json", DEFAULT_EXPENSES);
+    if (!expenses || expenses.length === 0) {
+      writeFile("dev_expenses.json", DEFAULT_EXPENSES);
+      return DEFAULT_EXPENSES;
+    }
+    return expenses;
+  },
+
+  addExpense(data) {
+    const expenses = readFile("dev_expenses.json", DEFAULT_EXPENSES);
+    const newExp = {
+      _id: "exp_" + Date.now().toString(),
+      id: "exp_" + Date.now().toString(),
+      advocateId: data.advocateId || "adv_1",
+      matterTitle: data.matterTitle || "Chamber Operations",
+      matterId: data.matterId || "general",
+      clientName: data.clientName || "Chamber Expense",
+      category: data.category || "Court Fee Stamps & Welfare",
+      amount: Number(data.amount) || 0,
+      description: data.description || "Chamber operating disbursement",
+      paidBy: data.paidBy || "Chamber Petty Cash",
+      date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      receiptNumber: data.receiptNumber || `RCP/${Date.now().toString().slice(-4)}`,
+      isReimbursable: data.isReimbursable !== undefined ? data.isReimbursable : true,
+      status: "approved",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    expenses.unshift(newExp);
+    writeFile("dev_expenses.json", expenses);
+    return newExp;
+  },
+
+  // --- ERP: Human Resource Management (Huremaso) ---
+  getAssociates(advocateId = "adv_1") {
+    const associates = readFile("dev_associates.json", DEFAULT_ASSOCIATES);
+    if (!associates || associates.length === 0) {
+      writeFile("dev_associates.json", DEFAULT_ASSOCIATES);
+      return DEFAULT_ASSOCIATES;
+    }
+    return associates;
+  },
+
+  addAssociate(data) {
+    const associates = readFile("dev_associates.json", DEFAULT_ASSOCIATES);
+    const newAsc = {
+      _id: "asc_" + Date.now().toString(),
+      id: "asc_" + Date.now().toString(),
+      advocateId: data.advocateId || "adv_1",
+      fullName: data.fullName,
+      role: data.role || "Litigation Junior",
+      enrollmentNumber: data.enrollmentNumber || "Bar Enrollment Pending",
+      phone: data.phone || "",
+      email: data.email || "",
+      status: "Active",
+      courtPass: data.courtPass || "KHCAA Temporary Pass",
+      activeMattersAssigned: Number(data.activeMattersAssigned) || 0,
+      attendanceToday: "Present — Chamber Desk",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    associates.unshift(newAsc);
+    writeFile("dev_associates.json", associates);
+    return newAsc;
+  },
+
+  // --- ERP: Overview & Financial Ledger Summary ---
+  getErpOverview(advocateId = "adv_1") {
+    const invoices = this.getInvoices(advocateId);
+    const trust = this.getTrustTransactions(advocateId);
+    const expenses = this.getExpenses(advocateId);
+    const associates = this.getAssociates(advocateId);
+    const clients = this.getClients(advocateId);
+
+    const totalBilled = invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+    const totalCollected = invoices
+      .filter((inv) => inv.status === "paid")
+      .reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+    const totalPending = totalBilled - totalCollected;
+
+    const totalTrustDeposits = trust
+      .filter((t) => t.type === "deposit")
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const totalTrustDisbursements = trust
+      .filter((t) => t.type === "disbursement")
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const trustEscrowBalance = totalTrustDeposits - totalTrustDisbursements;
+
+    const totalExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    const reimbursableExpenses = expenses
+      .filter((e) => e.isReimbursable)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    const totalGstBilled = invoices.reduce((sum, inv) => sum + (Number(inv.gstAmount) || 0), 0);
+
+    return {
+      financials: {
+        totalBilled,
+        totalCollected,
+        totalPending,
+        trustEscrowBalance,
+        totalTrustDeposits,
+        totalTrustDisbursements,
+        totalExpenses,
+        reimbursableExpenses,
+        totalGstBilled,
+        gstRcmEligibleCount: invoices.filter((i) => i.clientName?.toLowerCase().includes("ltd") || i.clientName?.toLowerCase().includes("llp")).length,
+      },
+      counts: {
+        totalInvoices: invoices.length,
+        paidInvoices: invoices.filter((i) => i.status === "paid").length,
+        pendingInvoices: invoices.filter((i) => i.status !== "paid").length,
+        trustTransactions: trust.length,
+        expensesCount: expenses.length,
+        associatesCount: associates.length,
+        retainersCount: clients.filter((c) => c.status === "Retainer" || c.category?.toLowerCase().includes("corporate")).length,
+      },
+    };
   },
 };

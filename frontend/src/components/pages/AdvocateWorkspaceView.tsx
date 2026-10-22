@@ -2957,7 +2957,12 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW: ERP (Huremaso, Curemaso, Acmaso, App Store)              */}
           {isERP && (
-            <ERPModulesView activeModule={activeTab} onSelectModule={(m) => setActiveTab(m)} />
+            <ERPModulesView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+            />
           )}
 
           {/* ============================================================== */}

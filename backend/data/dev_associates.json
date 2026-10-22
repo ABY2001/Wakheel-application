@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "asc_101",
+    "id": "asc_101",
+    "advocateId": "adv_1",
+    "fullName": "Adv. Rahul Nair",
+    "role": "Senior Associate (Civil & Writs)",
+    "enrollmentNumber": "K/002140/2017",
+    "phone": "+91 94472 88120",
+    "email": "rahul.nair@chamber.law",
+    "status": "Active",
+    "courtPass": "KHCAA Golden Jubilee Pass #104",
+    "activeMattersAssigned": 8,
+    "attendanceToday": "Present — Court Hall 2A",
+    "createdAt": "2026-06-01T00:00:00.000Z"
+  },
+  {
+    "_id": "asc_102",
+    "id": "asc_102",
+    "advocateId": "adv_1",
+    "fullName": "Adv. Preeti Sharma",
+    "role": "Litigation Junior (Arbitration & Corporate)",
+    "enrollmentNumber": "K/003891/2021",
+    "phone": "+91 98471 44520",
+    "email": "preeti.sharma@chamber.law",
+    "status": "Active",
+    "courtPass": "KHCAA Pass #312",
+    "activeMattersAssigned": 5,
+    "attendanceToday": "Present — Arbitral Tribunal",
+    "createdAt": "2026-07-15T00:00:00.000Z"
+  },
+  {
+    "_id": "asc_103",
+    "id": "asc_103",
+    "advocateId": "adv_1",
+    "fullName": "Suresh Rawat",
+    "role": "Chief Court Clerk & Registry In-charge",
+    "enrollmentNumber": "HC Clerk Badge #402",
+    "phone": "+91 94470 22390",
+    "email": "suresh.clerk@chamber.law",
+    "status": "Active",
+    "courtPass": "Registry Filing Pass #402",
+    "activeMattersAssigned": 14,
+    "attendanceToday": "Present — Filing Scrutiny Section",
+    "createdAt": "2026-05-10T00:00:00.000Z"
+  }
+]

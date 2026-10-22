@@ -1551,3 +1551,98 @@ export const convertDictationToCaseNote = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 13. LAW PRACTICE ERP & TRUST/IOLTA ACCOUNTING
+// ============================================================================
+export const getErpOverview = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const overview = devStore.getErpOverview(advocateId);
+    res.json({ success: true, ...overview, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
+  } catch (error) {
+    console.error("getErpOverview error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getTrustTransactions = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const transactions = devStore.getTrustTransactions(advocateId);
+    res.json({ success: true, count: transactions.length, transactions, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
+  } catch (error) {
+    console.error("getTrustTransactions error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addTrustTransaction = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const newTx = devStore.addTrustTransaction({ ...req.body, advocateId });
+    res.status(201).json({
+      success: true,
+      message: "Client trust transaction recorded in segregated escrow ledger",
+      transaction: newTx,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("addTrustTransaction error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getExpenses = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const expenses = devStore.getExpenses(advocateId);
+    res.json({ success: true, count: expenses.length, expenses, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
+  } catch (error) {
+    console.error("getExpenses error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addExpense = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const newExp = devStore.addExpense({ ...req.body, advocateId });
+    res.status(201).json({
+      success: true,
+      message: "Chamber disbursement recorded successfully",
+      expense: newExp,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("addExpense error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAssociates = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const associates = devStore.getAssociates(advocateId);
+    res.json({ success: true, count: associates.length, associates, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
+  } catch (error) {
+    console.error("getAssociates error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addAssociate = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const newAsc = devStore.addAssociate({ ...req.body, advocateId });
+    res.status(201).json({
+      success: true,
+      message: "Chamber personnel added successfully",
+      associate: newAsc,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("addAssociate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

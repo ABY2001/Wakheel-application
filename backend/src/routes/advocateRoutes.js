@@ -43,6 +43,13 @@ import {
   createDictation,
   deleteDictation,
   convertDictationToCaseNote,
+  getErpOverview,
+  getTrustTransactions,
+  addTrustTransaction,
+  getExpenses,
+  addExpense,
+  getAssociates,
+  addAssociate,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -113,5 +120,14 @@ router.get("/dictations", protect, getDictations);
 router.post("/dictations", protect, createDictation);
 router.delete("/dictations/:id", protect, deleteDictation);
 router.post("/dictations/:id/convert-to-case-note", protect, convertDictationToCaseNote);
+
+// 13. Law Practice ERP & Trust/IOLTA Accounting
+router.get("/erp/overview", protect, getErpOverview);
+router.get("/erp/trust", protect, getTrustTransactions);
+router.post("/erp/trust", protect, addTrustTransaction);
+router.get("/erp/expenses", protect, getExpenses);
+router.post("/erp/expenses", protect, addExpense);
+router.get("/erp/associates", protect, getAssociates);
+router.post("/erp/associates", protect, addAssociate);
 
 export default router;

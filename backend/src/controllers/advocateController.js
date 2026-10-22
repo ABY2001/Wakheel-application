@@ -6,9 +6,11 @@ import { Matter } from "../models/Matter.js";
 import { Consultation } from "../models/Consultation.js";
 import { Grievance } from "../models/Grievance.js";
 import { CitizenDocument } from "../models/CitizenDocument.js";
+import { Message } from "../models/Message.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
+import { broadcastMessageToUser } from "../socket.js";
 
 const shouldUseDevStore = () => {
   return process.env.USE_DUMMY_DATA === "true" || !getIsMongoConnected();
@@ -1028,6 +1030,226 @@ export const updateDocumentFilingStatus = async (req, res) => {
     res.json({ success: true, message: "Filing status updated", document: updated, mode: "cloud_db" });
   } catch (error) {
     console.error("updateDocumentFilingStatus error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 10. ADVOCATE PRIVILEGED CHAMBER MESSAGING & WEBSOCKET
+// ============================================================================
+
+// @desc    Get all conversation threads for advocate
+// @route   GET /api/advocate/messages
+// @access  Private (Advocate)
+export const getAdvocateMessages = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+
+    if (shouldUseDevStore()) {
+      const threads = devStore.getAdvocateThreads(advocateId);
+      const allMessages = devStore.getAdvocateMessages(advocateId);
+      return res.json({
+        success: true,
+        threads,
+        totalMessages: allMessages.length,
+        unreadCount: devStore.getAdvocateUnreadCount(advocateId),
+        mode: "dummy_data",
+      });
+    }
+
+    const messages = await Message.find({
+      $or: [{ senderId: advocateId }, { recipientId: advocateId }],
+    }).sort({ createdAt: -1 });
+
+    const threadsMap = new Map();
+    messages.forEach((msg) => {
+      const isOutbound = msg.senderId.toString() === advocateId.toString() || msg.senderRole === "advocate";
+      const citizenId = isOutbound ? msg.recipientId.toString() : msg.senderId.toString();
+      const citizenName = isOutbound ? msg.recipientName : msg.senderName;
+
+      if (!threadsMap.has(citizenId)) {
+        threadsMap.set(citizenId, {
+          citizenId,
+          citizenName: citizenName || "Citizen Client",
+          matterId: msg.matterId || "",
+          matterTitle: msg.matterTitle || "Chamber Representation",
+          messages: [],
+          lastMessage: msg,
+          unreadCount: 0,
+        });
+      }
+
+      const thread = threadsMap.get(citizenId);
+      thread.messages.push(msg);
+      if (!msg.isRead && !isOutbound) {
+        thread.unreadCount += 1;
+      }
+    });
+
+    const threads = Array.from(threadsMap.values());
+    const unreadCount = await Message.countDocuments({ recipientId: advocateId, isRead: false });
+
+    res.json({
+      success: true,
+      threads,
+      totalMessages: messages.length,
+      unreadCount,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("getAdvocateMessages error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get message thread with a specific citizen
+// @route   GET /api/advocate/messages/thread/:citizenId
+// @access  Private (Advocate)
+export const getAdvocateThread = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { citizenId } = req.params;
+
+    if (shouldUseDevStore()) {
+      const messages = devStore.getAdvocateThread(advocateId, citizenId);
+      return res.json({ success: true, count: messages.length, messages, mode: "dummy_data" });
+    }
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: advocateId, recipientId: citizenId },
+        { senderId: citizenId, recipientId: advocateId },
+      ],
+    }).sort({ createdAt: 1 });
+
+    res.json({ success: true, count: messages.length, messages, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getAdvocateThread error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Send privileged message or reply to citizen from advocate
+// @route   POST /api/advocate/messages/send
+// @access  Private (Advocate)
+export const sendAdvocateMessage = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const {
+      content,
+      recipientId = "default_citizen",
+      recipientName = "Gopakumar Nambiar",
+      matterId = "mat_wpc_19482",
+      matterTitle = "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+      attachments = [],
+      category = "general",
+    } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ success: false, message: "Message content cannot be empty" });
+    }
+
+    const messageData = {
+      senderId: advocateId,
+      senderRole: "advocate",
+      senderName: req.user?.fullName || "Adv. Meera Krishnan",
+      recipientId,
+      recipientRole: "citizen",
+      recipientName,
+      matterId,
+      matterTitle,
+      content: content.trim(),
+      attachments,
+      isRead: false,
+      isPrivileged: true,
+      category,
+    };
+
+    let createdMessage = null;
+
+    if (shouldUseDevStore()) {
+      createdMessage = devStore.sendAdvocateMessage(messageData);
+    } else {
+      createdMessage = await Message.create(messageData);
+    }
+
+    // Real-time broadcast to recipient via WebSocket
+    broadcastMessageToUser(recipientId, {
+      type: "new_message",
+      message: createdMessage,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Privileged legal communication dispatched to client",
+      messageData: createdMessage,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("sendAdvocateMessage error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Mark all messages from citizen as read
+// @route   PUT /api/advocate/messages/read/:citizenId
+// @access  Private (Advocate)
+export const markAdvocateMessagesRead = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { citizenId } = req.params;
+
+    if (shouldUseDevStore()) {
+      const count = devStore.markAdvocateThreadRead(advocateId, citizenId);
+      return res.json({ success: true, markedRead: count, mode: "dummy_data" });
+    }
+
+    const result = await Message.updateMany(
+      {
+        senderId: citizenId,
+        recipientId: advocateId,
+        isRead: false,
+      },
+      {
+        $set: { isRead: true, readAt: new Date() },
+      }
+    );
+
+    // Notify citizen via WebSocket that advocate read the messages
+    broadcastMessageToUser(citizenId, {
+      type: "messages_read_by_advocate",
+      advocateId,
+      citizenId,
+      readAt: new Date().toISOString(),
+    });
+
+    res.json({ success: true, markedRead: result.modifiedCount, mode: "cloud_db" });
+  } catch (error) {
+    console.error("markAdvocateMessagesRead error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get unread message badge count for advocate
+// @route   GET /api/advocate/messages/unread-count
+// @access  Private (Advocate)
+export const getAdvocateUnreadMessageCount = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+
+    if (shouldUseDevStore()) {
+      const count = devStore.getAdvocateUnreadCount(advocateId);
+      return res.json({ success: true, unreadCount: count, mode: "dummy_data" });
+    }
+
+    const count = await Message.countDocuments({
+      recipientId: advocateId,
+      isRead: false,
+    });
+
+    res.json({ success: true, unreadCount: count, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getAdvocateUnreadMessageCount error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

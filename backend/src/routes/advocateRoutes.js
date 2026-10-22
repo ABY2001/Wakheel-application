@@ -30,6 +30,11 @@ import {
   shareCourtDocument,
   getAdvocateDocuments,
   updateDocumentFilingStatus,
+  getAdvocateMessages,
+  getAdvocateThread,
+  sendAdvocateMessage,
+  markAdvocateMessagesRead,
+  getAdvocateUnreadMessageCount,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -81,5 +86,12 @@ router.post("/leads/:id/accept", protect, acceptLead);
 router.post("/documents/share", protect, shareCourtDocument);
 router.get("/documents", protect, getAdvocateDocuments);
 router.put("/documents/:id/status", protect, updateDocumentFilingStatus);
+
+// 10. Privileged Chamber Messaging & Two-Way Real-time Sync
+router.get("/messages", protect, getAdvocateMessages);
+router.get("/messages/unread-count", protect, getAdvocateUnreadMessageCount);
+router.get("/messages/thread/:citizenId", protect, getAdvocateThread);
+router.post("/messages/send", protect, sendAdvocateMessage);
+router.put("/messages/read/:citizenId", protect, markAdvocateMessagesRead);
 
 export default router;

@@ -2102,4 +2102,111 @@ export const devStore = {
     const messages = this.getMessages(userId);
     return messages.filter((m) => m.recipientId === userId && !m.isRead).length;
   },
+
+  // --- Advocate Messaging & Threads ---
+  getAdvocateMessages(advocateId = "adv_1") {
+    const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    return messages.filter(
+      (m) =>
+        m.senderId === advocateId ||
+        m.recipientId === advocateId ||
+        m.recipientRole === "advocate" ||
+        advocateId === "adv_1"
+    );
+  },
+
+  getAdvocateThreads(advocateId = "adv_1") {
+    const messages = this.getAdvocateMessages(advocateId);
+    const threadsMap = new Map();
+
+    messages.forEach((msg) => {
+      const isOutbound = msg.senderId === advocateId || msg.senderRole === "advocate";
+      const citizenId = isOutbound ? msg.recipientId : msg.senderId;
+      const citizenName = isOutbound ? msg.recipientName : msg.senderName;
+
+      if (!threadsMap.has(citizenId)) {
+        threadsMap.set(citizenId, {
+          citizenId,
+          citizenName: citizenName || "Citizen Client",
+          matterId: msg.matterId || "",
+          matterTitle: msg.matterTitle || "Chamber Representation",
+          messages: [],
+          lastMessage: msg,
+          unreadCount: 0,
+        });
+      }
+
+      const thread = threadsMap.get(citizenId);
+      thread.messages.push(msg);
+      if (new Date(msg.createdAt) >= new Date(thread.lastMessage.createdAt)) {
+        thread.lastMessage = msg;
+        if (msg.matterTitle) thread.matterTitle = msg.matterTitle;
+      }
+      if (!msg.isRead && !isOutbound) {
+        thread.unreadCount += 1;
+      }
+    });
+
+    return Array.from(threadsMap.values()).sort(
+      (a, b) => new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime()
+    );
+  },
+
+  getAdvocateThread(advocateId = "adv_1", citizenId = "default_citizen") {
+    const messages = this.getAdvocateMessages(advocateId);
+    return messages.filter(
+      (m) =>
+        (m.senderId === citizenId && (m.recipientId === advocateId || m.recipientRole === "advocate")) ||
+        (m.recipientId === citizenId && (m.senderId === advocateId || m.senderRole === "advocate")) ||
+        (citizenId === "default_citizen" && (m.senderId === "default_citizen" || m.recipientId === "default_citizen"))
+    ).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  },
+
+  sendAdvocateMessage(data) {
+    const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    const now = new Date();
+    const newMsg = {
+      _id: "msg_" + Date.now().toString(),
+      id: "msg_" + Date.now().toString(),
+      senderId: data.senderId || "adv_1",
+      senderRole: "advocate",
+      senderName: data.senderName || "Adv. Meera Krishnan",
+      recipientId: data.recipientId || "default_citizen",
+      recipientRole: "citizen",
+      recipientName: data.recipientName || "Gopakumar Nambiar",
+      matterId: data.matterId || "mat_wpc_19482",
+      matterTitle: data.matterTitle || "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+      content: data.content,
+      attachments: data.attachments || [],
+      isRead: false,
+      isPrivileged: true,
+      category: data.category || "general",
+      createdAt: now.toISOString(),
+    };
+    messages.push(newMsg);
+    writeFile("dev_messages.json", messages);
+    return newMsg;
+  },
+
+  markAdvocateThreadRead(advocateId = "adv_1", citizenId = "default_citizen") {
+    const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    let updatedCount = 0;
+    messages.forEach((m) => {
+      const isIncoming = m.senderId === citizenId || (citizenId === "default_citizen" && m.senderRole === "citizen");
+      if (isIncoming && !m.isRead) {
+        m.isRead = true;
+        m.readAt = new Date().toISOString();
+        updatedCount++;
+      }
+    });
+    if (updatedCount > 0) {
+      writeFile("dev_messages.json", messages);
+    }
+    return updatedCount;
+  },
+
+  getAdvocateUnreadCount(advocateId = "adv_1") {
+    const messages = this.getAdvocateMessages(advocateId);
+    return messages.filter((m) => m.recipientRole === "advocate" && !m.isRead).length;
+  },
 };

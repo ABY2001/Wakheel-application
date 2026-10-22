@@ -86,6 +86,59 @@ export const SecureInboxView: React.FC<SecureInboxViewProps> = ({
 
   useEffect(() => {
     fetchMessages();
+
+    // WebSocket real-time listener for incoming advocate replies
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+
+    const connectWebSocket = () => {
+      try {
+        const protocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
+        const host = typeof window !== "undefined" && window.location.hostname === "localhost" ? "localhost:5000" : window.location.host;
+        const wsUrl = `${protocol}//${host}/ws`;
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          ws?.send(
+            JSON.stringify({
+              type: "auth",
+              userId: "default_citizen",
+              role: "citizen",
+              name: "Gopakumar Nambiar",
+            })
+          );
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "new_message" && data.message) {
+              setMessages((prev) => {
+                const exists = prev.some((m) => (m._id || m.id) === (data.message._id || data.message.id));
+                if (exists) return prev;
+                return [...prev, data.message];
+              });
+            }
+          } catch (err) {
+            console.warn("WebSocket parse error:", err);
+          }
+        };
+
+        ws.onclose = () => {
+          reconnectTimeout = setTimeout(connectWebSocket, 4000);
+        };
+      } catch (err) {
+        console.warn("WebSocket setup error:", err);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (ws) ws.close();
+    };
   }, [token]);
 
   // Scroll to bottom of message thread

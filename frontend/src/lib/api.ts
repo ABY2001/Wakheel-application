@@ -1276,6 +1276,83 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 10. Privileged Chamber Messaging & Threads
+  async getAdvocateMessages(token?: string): Promise<{
+    success: boolean;
+    threads: any[];
+    totalMessages: number;
+    unreadCount: number;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/messages`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getAdvocateThread(citizenId: string, token?: string): Promise<{
+    success: boolean;
+    count: number;
+    messages: any[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/messages/thread/${encodeURIComponent(citizenId)}`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async sendAdvocateMessage(
+    data: {
+      content: string;
+      recipientId?: string;
+      recipientName?: string;
+      matterId?: string;
+      matterTitle?: string;
+      attachments?: { fileName: string; fileUrl: string; fileType: string; fileSize: string }[];
+      category?: "general" | "hearing_update" | "document_request" | "urgent";
+    },
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    messageData: any;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/messages/send`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async markAdvocateMessagesRead(citizenId: string, token?: string): Promise<{
+    success: boolean;
+    markedRead: number;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/messages/read/${encodeURIComponent(citizenId)}`, {
+      method: "PUT",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getAdvocateUnreadMessageCount(token?: string): Promise<{
+    success: boolean;
+    unreadCount: number;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/messages/unread-count`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

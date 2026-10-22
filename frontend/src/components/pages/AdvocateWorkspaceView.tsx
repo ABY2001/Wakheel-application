@@ -20,6 +20,7 @@ import { ERPModulesView } from "@/components/advocate/ERPModulesView";
 import { AnalyticsView } from "@/components/advocate/AnalyticsView";
 import { ProductivityView } from "@/components/advocate/ProductivityView";
 import { AdvocateConsultationsView } from "@/components/advocate/AdvocateConsultationsView";
+import { AdvocateInboxView } from "@/components/advocate/AdvocateInboxView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { PromoView } from "@/components/advocate/PromoView";
 import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
@@ -2876,53 +2877,11 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW 6B: Communications (Inbox, Messages, Chats, Video Meet)   */}
           {isCommunications && (
-            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
-                  Chamber Communications &amp; Virtual Consults
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-500">
-                  Encrypted client messaging, virtual courtroom consultation, and official court registry communications
-                </p>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500">
-                    LIVE COMMUNICATION CHANNELS
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("recordings")}
-                      className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Mic className="w-3.5 h-3.5 text-rose-500" />
-                      <span>Record Dictation</span>
-                    </button>
-                    <button className="px-4 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-                      Start Video Consultation
-                    </button>
-                  </div>
-                </div>
-
-                <div className="divide-y divide-zinc-100 dark:divide-zinc-900 text-xs">
-                  {[
-                    { from: "High Court Registry", subject: "Listing Alert: WP(C) 19482/2024 listed for Monday 10:30 AM", time: "10m ago" },
-                    { from: "Gopakumar Nambiar (Client)", subject: "Uploaded signed copy of site survey sketch", time: "1h ago" },
-                    { from: "Junior Counsel Rajesh", subject: "Draft rejoinder ready for review under S.16 Telegraph Act", time: "3h ago" },
-                  ].map((msg, idx) => (
-                    <div key={idx} className="py-3 flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-black dark:text-white block">{msg.from}</span>
-                        <span className="text-zinc-500">{msg.subject}</span>
-                      </div>
-                      <span className="text-zinc-400 font-mono text-[11px] shrink-0">{msg.time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <AdvocateInboxView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+              onOpenConsultation={() => setActiveTab("appointments")}
+            />
           )}
 
           {/* ============================================================== */}

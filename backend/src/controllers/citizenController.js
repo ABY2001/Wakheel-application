@@ -11,6 +11,7 @@ import { AdvocateProfile } from "../models/AdvocateProfile.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
+import { broadcastMessageToUser } from "../socket.js";
 
 // Check if dummy data mode is requested or if MongoDB is offline
 const shouldUseDevStore = () => {
@@ -2434,22 +2435,24 @@ export const sendCitizenMessage = async (req, res) => {
       isPrivileged: true,
     };
 
+    let created = null;
     if (shouldUseDevStore()) {
-      const created = devStore.sendMessage(messageData);
-      return res.status(201).json({
-        success: true,
-        message: "Privileged legal instruction delivered to advocate chamber",
-        messageData: created,
-        mode: "dummy_data",
-      });
+      created = devStore.sendMessage(messageData);
+    } else {
+      created = await Message.create(messageData);
     }
 
-    const created = await Message.create(messageData);
+    // Broadcast in real-time to advocate via WebSocket
+    broadcastMessageToUser(recipientId || "adv_1", {
+      type: "new_message",
+      message: created,
+    });
+
     res.status(201).json({
       success: true,
       message: "Privileged legal instruction delivered to advocate chamber",
       messageData: created,
-      mode: "cloud_db",
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
     });
   } catch (error) {
     console.error("sendCitizenMessage error:", error);
@@ -2466,6 +2469,13 @@ export const markMessageRead = async (req, res) => {
 
     if (shouldUseDevStore()) {
       const updated = devStore.markMessageAsRead(id);
+      if (updated) {
+        broadcastMessageToUser(updated.senderId, {
+          type: "message_read",
+          messageId: id,
+          readAt: updated.readAt,
+        });
+      }
       return res.json({ success: true, message: updated, mode: "dummy_data" });
     }
 
@@ -2474,6 +2484,13 @@ export const markMessageRead = async (req, res) => {
       { $set: { isRead: true, readAt: new Date() } },
       { new: true }
     );
+    if (updated) {
+      broadcastMessageToUser(updated.senderId, {
+        type: "message_read",
+        messageId: id,
+        readAt: updated.readAt,
+      });
+    }
     res.json({ success: true, message: updated, mode: "cloud_db" });
   } catch (error) {
     console.error("markMessageRead error:", error);

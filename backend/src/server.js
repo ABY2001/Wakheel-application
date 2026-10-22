@@ -1,3 +1,4 @@
+import http from "http";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -6,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import citizenRoutes from "./routes/citizenRoutes.js";
 import advocateRoutes from "./routes/advocateRoutes.js";
 import copilotRoutes from "./routes/copilotRoutes.js";
+import { initWebSocketServer } from "./socket.js";
 
 // Load environment variables
 dotenv.config();
@@ -63,6 +65,9 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+initWebSocketServer(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 Wakheel Server running on http://localhost:${PORT}`);
 });

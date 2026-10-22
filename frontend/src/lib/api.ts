@@ -1109,8 +1109,15 @@ export const advocateApi = {
   },
 
   // 7. Consultations & Client Appointments
-  async getConsultations(token?: string) {
+  async getConsultations(token?: string): Promise<{ success: boolean; consultations: any[]; count: number; mode: string }> {
     const res = await fetch(`${API_BASE_URL}/advocate/consultations`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getConsultationById(id: string, token?: string): Promise<{ success: boolean; consultation: any; mode: string }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/consultations/${id}`, {
       headers: advocateApi.getAuthHeader(token),
     });
     return await res.json();
@@ -1124,6 +1131,78 @@ export const advocateApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async recordConsultationAdvice(
+    id: string,
+    adviceNotes: string,
+    extra?: { actionItems?: string; followUpDate?: string },
+    token?: string
+  ): Promise<{ success: boolean; message: string; consultation: any; mode: string }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/consultations/${id}/advice`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ adviceNotes, ...extra }),
+    });
+    return await res.json();
+  },
+
+  async rescheduleConsultation(
+    id: string,
+    scheduledDate: string,
+    timeSlot?: string,
+    reason?: string,
+    token?: string
+  ): Promise<{ success: boolean; message: string; consultation: any; mode: string }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/consultations/${id}/reschedule`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ scheduledDate, timeSlot, reason }),
+    });
+    return await res.json();
+  },
+
+  async cancelConsultation(
+    id: string,
+    reason?: string,
+    token?: string
+  ): Promise<{ success: boolean; message: string; consultation: any; mode: string }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/consultations/${id}/cancel`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason }),
+    });
+    return await res.json();
+  },
+
+  async joinConsultationRoom(id: string, token?: string): Promise<{
+    success: boolean;
+    isHost: boolean;
+    hostName: string;
+    roomId: string;
+    meetingUrl: string;
+    consultationType: string;
+    scheduledDate: string;
+    timeSlot: string;
+    status: string;
+    subject: string;
+    clientNotes?: string;
+    adviceNotes?: string;
+    token: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/consultations/${id}/room`, {
+      headers: advocateApi.getAuthHeader(token),
     });
     return await res.json();
   },

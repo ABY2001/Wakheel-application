@@ -632,6 +632,215 @@ export const updateConsultation = async (req, res) => {
   }
 };
 
+// @desc    Get single consultation by ID for advocate
+// @route   GET /api/advocate/consultations/:id
+// @access  Private (Advocate)
+export const getConsultationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const consultation = devStore.getConsultationById(id);
+      if (!consultation) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({ success: true, consultation, mode: "dummy_data" });
+    }
+
+    const consultation = await Consultation.findById(id);
+    if (!consultation) return res.status(404).json({ success: false, message: "Consultation not found" });
+    res.json({ success: true, consultation, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getConsultationById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Record post-consultation written advice & legal findings notes
+// @route   POST /api/advocate/consultations/:id/advice
+// @access  Private (Advocate)
+export const recordConsultationAdvice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adviceNotes, actionItems, followUpDate } = req.body;
+
+    if (!adviceNotes || !adviceNotes.trim()) {
+      return res.status(400).json({ success: false, message: "Advice notes are required" });
+    }
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.recordConsultationAdvice(id, adviceNotes.trim(), {
+        actionItems: actionItems || "",
+        followUpDate: followUpDate || "",
+      });
+      if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({
+        success: true,
+        message: "Legal advice and findings recorded successfully. Synced to citizen consultation dossier.",
+        consultation: updated,
+        mode: "dummy_data",
+      });
+    }
+
+    const updated = await Consultation.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          adviceNotes: adviceNotes.trim(),
+          status: "completed",
+          completedAt: new Date(),
+          actionItems: actionItems || "",
+          followUpDate: followUpDate ? new Date(followUpDate) : null,
+        },
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+
+    res.json({
+      success: true,
+      message: "Legal advice and findings recorded successfully. Synced to citizen consultation dossier.",
+      consultation: updated,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("recordConsultationAdvice error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Reschedule consultation date/time by advocate
+// @route   PUT /api/advocate/consultations/:id/reschedule
+// @access  Private (Advocate)
+export const rescheduleConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { scheduledDate, timeSlot, reason } = req.body;
+
+    if (!scheduledDate) {
+      return res.status(400).json({ success: false, message: "New scheduled date is required" });
+    }
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.rescheduleConsultation(id, scheduledDate, timeSlot, reason);
+      if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({
+        success: true,
+        message: "Consultation rescheduled successfully. Citizen notified.",
+        consultation: updated,
+        mode: "dummy_data",
+      });
+    }
+
+    const updated = await Consultation.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          scheduledDate: new Date(scheduledDate),
+          timeSlot: timeSlot || "10:30 AM - 11:15 AM",
+          status: "rescheduled",
+          rescheduleReason: reason || "Chamber schedule adjournment",
+        },
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+
+    res.json({
+      success: true,
+      message: "Consultation rescheduled successfully. Citizen notified.",
+      consultation: updated,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("rescheduleConsultation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Cancel consultation by advocate
+// @route   PUT /api/advocate/consultations/:id/cancel
+// @access  Private (Advocate)
+export const cancelConsultation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.cancelConsultation(id, reason || "Advocate unavailable due to urgent court listing");
+      if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+      return res.json({
+        success: true,
+        message: "Consultation cancelled. Fee refund initiated to citizen.",
+        consultation: updated,
+        mode: "dummy_data",
+      });
+    }
+
+    const updated = await Consultation.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status: "cancelled",
+          cancellationReason: reason || "Advocate unavailable due to urgent court listing",
+        },
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ success: false, message: "Consultation not found" });
+
+    res.json({
+      success: true,
+      message: "Consultation cancelled. Fee refund initiated to citizen.",
+      consultation: updated,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("cancelConsultation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Launch and enter virtual video chamber room as Host Advocate
+// @route   GET /api/advocate/consultations/:id/room
+// @access  Private (Advocate)
+export const joinConsultationRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let consultation = null;
+    if (shouldUseDevStore()) {
+      consultation = devStore.getConsultationById(id);
+    } else {
+      consultation = await Consultation.findById(id);
+    }
+
+    if (!consultation) {
+      return res.status(404).json({ success: false, message: "Consultation not found" });
+    }
+
+    const roomId = `wakheel-chamber-${consultation._id || id}`;
+    const meetingUrl = consultation.meetingLink || `https://meet.wakheel.law/${roomId}`;
+
+    res.json({
+      success: true,
+      isHost: true,
+      hostName: consultation.advocateName || "Adv. Meera Krishnan",
+      roomId,
+      meetingUrl,
+      consultationType: consultation.consultationType,
+      scheduledDate: consultation.scheduledDate,
+      timeSlot: consultation.timeSlot,
+      status: consultation.status,
+      subject: consultation.subject,
+      clientNotes: consultation.clientNotes,
+      adviceNotes: consultation.adviceNotes,
+      token: `jwt_host_room_auth_${Date.now()}`,
+    });
+  } catch (error) {
+    console.error("joinConsultationRoom error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ============================================================================
 // 8. INCOMING LEADS & GRIEVANCE INTAKE
 // ============================================================================

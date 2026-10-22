@@ -25,6 +25,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { advocateApi, CaseNoteItem, CauseListItem } from "@/lib/api";
+import { AdvocateConsultationsView } from "./AdvocateConsultationsView";
 
 interface ProductivityViewProps {
   activeModule?: string;
@@ -169,6 +170,7 @@ export function ProductivityView({
   const tabs = [
     { id: "notes", label: "Notes", icon: StickyNote },
     { id: "calendar", label: "Calendar", icon: Calendar },
+    { id: "appointments", label: "Appointments", icon: Clock },
     { id: "taskmite", label: "Taskmite", icon: CheckCircle2 },
     { id: "time-sheet", label: "Time Sheet", icon: Clock },
     { id: "case-tracker", label: "Case Tracker", icon: Activity },
@@ -400,6 +402,11 @@ export function ProductivityView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* VIEW: Appointments */}
+      {currentTab === "appointments" && (
+        <AdvocateConsultationsView />
       )}
 
       {/* VIEW: Taskmite */}

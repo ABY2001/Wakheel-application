@@ -18,7 +18,12 @@ import {
   createCaseNote,
   deleteCaseNote,
   getConsultations,
+  getConsultationById,
   updateConsultation,
+  recordConsultationAdvice,
+  rescheduleConsultation,
+  cancelConsultation,
+  joinConsultationRoom,
   getIncomingLeads,
   acceptLead,
   addMatterTimelineEvent,
@@ -61,7 +66,12 @@ router.delete("/notes/:id", protect, deleteCaseNote);
 
 // 7. Consultations & Client Appointments
 router.get("/consultations", protect, getConsultations);
+router.get("/consultations/:id", protect, getConsultationById);
 router.put("/consultations/:id", protect, updateConsultation);
+router.post("/consultations/:id/advice", protect, recordConsultationAdvice);
+router.put("/consultations/:id/reschedule", protect, rescheduleConsultation);
+router.put("/consultations/:id/cancel", protect, cancelConsultation);
+router.get("/consultations/:id/room", protect, joinConsultationRoom);
 
 // 8. Lead Intake / Citizen Grievances
 router.get("/leads", protect, getIncomingLeads);

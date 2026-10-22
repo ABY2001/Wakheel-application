@@ -19,6 +19,7 @@ import { CollabView } from "@/components/advocate/CollabView";
 import { ERPModulesView } from "@/components/advocate/ERPModulesView";
 import { AnalyticsView } from "@/components/advocate/AnalyticsView";
 import { ProductivityView } from "@/components/advocate/ProductivityView";
+import { AdvocateConsultationsView } from "@/components/advocate/AdvocateConsultationsView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { PromoView } from "@/components/advocate/PromoView";
 import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
@@ -980,7 +981,7 @@ export function AdvocateWorkspaceView() {
   const isCollab = ["my-network", "my-hub", "my-team", "collask"].includes(activeTab);
   const isERP = ["huremaso", "curemaso", "acmaso", "app-store", "billings-earnings"].includes(activeTab);
   const isAnalytics = ["ai-analytics", "reports"].includes(activeTab);
-  const isProductivity = ["notes", "issues-authorities", "calendar", "appointments", "time-sheet", "case-tracker", "practice-ai", "taskmite"].includes(activeTab);
+  const isProductivity = ["notes", "issues-authorities", "calendar", "time-sheet", "case-tracker", "practice-ai", "taskmite"].includes(activeTab);
   const isBusiness = ["business-registration", "tax-compliance", "trademark-ip", "corporate-lawyer", "company-secretary", "auditor-ca"].includes(activeTab);
   const isPromo = ["marketing", "rd", "promotions"].includes(activeTab);
   const isCorporate = ["corp-ip-manager", "corp-compliances", "corp-contracts", "corp-documents", "corp-due-diligence"].includes(activeTab);
@@ -3053,6 +3054,16 @@ export function AdvocateWorkspaceView() {
           {/* VIEW: Productivity                                            */}
           {isProductivity && (
             <ProductivityView activeModule={activeTab} onSelectModule={(m) => setActiveTab(m)} />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Chamber Consultations & Video Appointments                */}
+          {/* ============================================================== */}
+          {(activeTab === "appointments" || activeTab === "consultations") && (
+            <AdvocateConsultationsView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+            />
           )}
 
           {/* ============================================================== */}

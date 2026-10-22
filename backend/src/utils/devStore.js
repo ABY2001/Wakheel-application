@@ -1737,9 +1737,24 @@ export const devStore = {
 
   updateConsultationStatus(id, updates) {
     const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
-    const idx = cons.findIndex((c) => c._id === id);
+    const idx = cons.findIndex((c) => c._id === id || c.id === id);
     if (idx !== -1) {
       cons[idx] = { ...cons[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_consultations.json", cons);
+      return cons[idx];
+    }
+    return null;
+  },
+
+  recordConsultationAdvice(id, adviceNotes, extraUpdates = {}) {
+    const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    const idx = cons.findIndex((c) => c._id === id || c.id === id);
+    if (idx !== -1) {
+      cons[idx].adviceNotes = adviceNotes;
+      cons[idx].status = "completed";
+      cons[idx].completedAt = new Date().toISOString();
+      cons[idx].updatedAt = new Date().toISOString();
+      Object.assign(cons[idx], extraUpdates);
       writeFile("dev_consultations.json", cons);
       return cons[idx];
     }

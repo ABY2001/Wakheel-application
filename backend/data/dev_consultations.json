@@ -1,5 +1,30 @@
 [
   {
+    "_id": "con_1792643182645",
+    "id": "con_1792643182646",
+    "citizenId": "default_citizen",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "barCouncilNumber": "K/001429/2012",
+    "consultationType": "video",
+    "scheduledDate": "2026-10-24T04:26:22.472Z",
+    "timeSlot": "04:30 PM - 05:15 PM",
+    "durationMinutes": 45,
+    "meetingLink": "https://meet.wakheel.law/chambers-krishnan-09",
+    "chamberAddress": "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Kochi 682031",
+    "subject": "Division Bench Urgent Mentioning on Property Encroachment",
+    "clientNotes": "Survey sketches and Village Office mahazar uploaded to vault. Urgent status quo needed.",
+    "adviceNotes": "Chamber findings: Move urgent interim stay application under Order XXXIX Rules 1 & 2 CPC before Sub Court. Issue statutory caveat to opposite party.",
+    "feeAmount": 2000,
+    "paymentStatus": "paid",
+    "status": "completed",
+    "createdAt": "2026-10-22T04:26:22.646Z",
+    "completedAt": "2026-10-22T04:26:22.694Z",
+    "updatedAt": "2026-10-22T04:26:22.694Z",
+    "actionItems": "Submit original registered sale deed No. 1429/1998 and tax receipts to chamber clerk by Friday.",
+    "followUpDate": "2026-10-27"
+  },
+  {
     "_id": "con_1792067603128",
     "citizenId": "dev_1791778051045",
     "advocateName": "Adv. Meera Krishnan",
@@ -12,8 +37,13 @@
     "clientNotes": "",
     "feeAmount": 1500,
     "paymentStatus": "paid",
-    "status": "scheduled",
-    "createdAt": "2026-10-15T12:33:23.128Z"
+    "status": "completed",
+    "createdAt": "2026-10-15T12:33:23.128Z",
+    "adviceNotes": "Advocate findings: Division Bench stay applicable. File caveat memo.",
+    "completedAt": "2026-10-22T04:10:53.927Z",
+    "updatedAt": "2026-10-22T04:10:53.927Z",
+    "actionItems": "",
+    "followUpDate": ""
   },
   {
     "_id": "con_1792065340888",

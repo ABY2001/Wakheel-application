@@ -2487,18 +2487,38 @@ export const devStore = {
 
   shareCourtDocument(data) {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
+    const docId = data.id || data._id || "doc_" + Date.now().toString();
+    const hash = data.hash || data.sha256Hash || `sha256:${Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
     const newDoc = {
-      _id: "doc_" + Date.now().toString(),
+      _id: docId,
+      id: docId,
       citizenId: data.citizenId || "default_citizen",
-      matterId: data.matterId || "",
+      matterId: data.matterId || "mat_wpc_19482",
+      matter: data.matter || "WP(C) 19482/2024 — Gopakumar v. KSEB",
       title: data.title || "Certified Court Order",
-      category: data.category || "Certified Court Order",
-      fileName: data.fileName || "Court_Order_Certified.pdf",
-      fileSize: data.fileSize || "1.8 MB",
+      name: data.fileName || data.title || "Certified_Court_Order.pdf",
+      fileName: data.fileName || data.title || "Certified_Court_Order.pdf",
+      category: data.category || "Certified Court Orders",
+      folder: "Certified Court Orders",
+      subType: data.subType || "certified-true-copies",
+      size: data.fileSize || data.size || "1.8 MB",
+      fileSize: data.fileSize || data.size || "1.8 MB",
       isSigned: true,
       signedAt: new Date().toISOString(),
+      uploadDate: "Today, Just now",
+      date: "Just now",
+      pages: data.pages || 4,
+      hash,
+      sha256Hash: hash,
       uploadedBy: data.uploadedBy || "Adv. Meera Krishnan",
+      advocateName: data.uploadedBy || "Adv. Meera Krishnan",
+      advocateId: data.advocateId || "adv_1",
+      filingStatus: data.filingStatus || "Counsel Certified & Served",
+      status: data.filingStatus || "Counsel Certified & Served",
+      notes: data.notes || data.details || "Certified court order attested and shared to client docket with digital chamber seal.",
+      details: data.notes || data.details || "Certified court order attested and shared to client docket with digital chamber seal.",
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     docs.unshift(newDoc);
     writeFile("dev_documents.json", docs);

@@ -30,6 +30,8 @@ import {
   shareCourtDocument,
   getAdvocateDocuments,
   updateDocumentFilingStatus,
+  uploadAdvocateDocument,
+  deleteAdvocateDocument,
   getAdvocateMessages,
   getAdvocateThread,
   sendAdvocateMessage,
@@ -103,7 +105,9 @@ router.post("/leads/:id/accept", protect, acceptLead);
 // 9. Shared Court Orders & Documents
 router.post("/documents/share", protect, shareCourtDocument);
 router.get("/documents", protect, getAdvocateDocuments);
+router.post("/documents", protect, uploadAdvocateDocument);
 router.put("/documents/:id/status", protect, updateDocumentFilingStatus);
+router.delete("/documents/:id", protect, deleteAdvocateDocument);
 
 // 10. Privileged Chamber Messaging & Two-Way Real-time Sync
 router.get("/messages", protect, getAdvocateMessages);

@@ -1,5 +1,18 @@
 [
   {
+    "_id": "doc_1792670566244",
+    "citizenId": "default_citizen",
+    "matterId": "mat_wpc_19482",
+    "title": "High Court Daily Order 22-Oct-2026",
+    "category": "Certified Court Order",
+    "fileName": "HC_Daily_Order_22Oct2026_StatusQuo.pdf",
+    "fileSize": "1.4 MB",
+    "isSigned": true,
+    "signedAt": "2026-10-22T12:02:46.245Z",
+    "uploadedBy": "Adv. Meera Krishnan",
+    "createdAt": "2026-10-22T12:02:46.246Z"
+  },
+  {
     "_id": "doc_1792561371908",
     "id": "doc_1792561371908",
     "name": "Additional_Affidavit_Ext_P11.pdf",
@@ -226,11 +239,12 @@
     "sha256Hash": "sha256:7bc012398a4d5e6f1a2b3c4d5e6",
     "hash": "sha256:7bc012398a4d5e6f1a2b3c4d5e6",
     "details": "Draft rejoinder answering allegations raised in KSEB executive engineer counter.",
-    "filingStatus": "Under Counsel Review",
-    "status": "Under Counsel Review",
+    "filingStatus": "Approved & Filed with Court Registry",
+    "status": "Approved & Filed with Court Registry",
     "advocateName": "Adv. Meera Krishnan",
     "advocateId": "adv_1",
-    "remarks": "Drafted rebuttal for senior counsel review."
+    "remarks": "Scrutiny approved by Adv. Meera Krishnan (K/1429/2016). Filed before Division Bench 2A.",
+    "updatedAt": "2026-10-22T11:57:46.412Z"
   },
   {
     "_id": "filing-03",

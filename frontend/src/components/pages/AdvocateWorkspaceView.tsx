@@ -3185,9 +3185,14 @@ export function AdvocateWorkspaceView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: 256-bit Encrypted Document Vault                          */}
+          {/* VIEW: 256-bit Encrypted Document Vault & Scrutiny              */}
           {activeTab === "vault" && (
-            <DocumentVaultView currentMatter={selectedMatter} />
+            <DocumentVaultView
+              currentMatter={selectedMatter}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+            />
           )}
 
           {["legal-drafting", "contract-intelligence", "case-preparation", "office-suite", "compliance"].includes(activeTab) && (

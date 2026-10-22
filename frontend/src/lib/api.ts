@@ -1195,6 +1195,26 @@ export const advocateApi = {
     return await res.json();
   },
 
+  async uploadDocument(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/documents`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async deleteDocument(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/documents/${id}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
   async updateDocumentFilingStatus(id: string, status: string, remarks?: string, token?: string) {
     const res = await fetch(`${API_BASE_URL}/advocate/documents/${id}/status`, {
       method: "PUT",
@@ -1423,7 +1443,18 @@ export const advocateApi = {
   },
 
   async shareCourtDocument(
-    data: { citizenId?: string; matterId: string; title: string; category?: string; fileName: string; fileSize?: string },
+    data: {
+      citizenId?: string;
+      matterId?: string;
+      matter?: string;
+      title: string;
+      category?: string;
+      fileName: string;
+      fileSize?: string;
+      notes?: string;
+      pages?: number;
+      filingStatus?: string;
+    },
     token?: string
   ) {
     const res = await fetch(`${API_BASE_URL}/advocate/documents/share`, {

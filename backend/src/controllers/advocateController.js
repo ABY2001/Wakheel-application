@@ -947,6 +947,13 @@ export const shareCourtDocument = async (req, res) => {
 
     if (shouldUseDevStore()) {
       const doc = devStore.shareCourtDocument(data);
+      if (doc.citizenId) {
+        broadcastMessageToUser(doc.citizenId, {
+          type: "court_order_shared",
+          document: doc,
+          message: `Advocate ${data.uploadedBy} has uploaded and shared a certified court order: ${doc.title || doc.name}`,
+        });
+      }
       return res.status(201).json({
         success: true,
         message: "Court document shared and synced to client vault.",
@@ -957,6 +964,7 @@ export const shareCourtDocument = async (req, res) => {
 
     const doc = await CitizenDocument.create({
       citizenId: data.citizenId || "default_citizen",
+      advocateId,
       title: data.title || "Certified Court Order",
       category: data.category || "Certified Court Order",
       fileName: data.fileName || "Court_Order.pdf",
@@ -964,6 +972,15 @@ export const shareCourtDocument = async (req, res) => {
       isSigned: true,
       signedAt: new Date(),
     });
+
+    if (data.citizenId) {
+      broadcastMessageToUser(data.citizenId, {
+        type: "court_order_shared",
+        document: doc,
+        message: `Advocate ${data.uploadedBy} has uploaded and shared a certified court order: ${doc.title}`,
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: "Court document shared and synced to client vault.",
@@ -999,7 +1016,7 @@ export const getAdvocateDocuments = async (req, res) => {
   }
 };
 
-// @desc    Update client document filing status
+// @desc    Update client document filing status / Scrutiny decision
 // @route   PUT /api/advocate/documents/:id/status
 // @access  Private (Advocate)
 export const updateDocumentFilingStatus = async (req, res) => {
@@ -1018,6 +1035,15 @@ export const updateDocumentFilingStatus = async (req, res) => {
         ...(remarks && { remarks }),
       });
       if (!updated) return res.status(404).json({ success: false, message: "Document not found" });
+
+      if (updated.citizenId) {
+        broadcastMessageToUser(updated.citizenId, {
+          type: "document_status_updated",
+          document: updated,
+          message: `Document "${updated.name || updated.title}" filing status updated to "${status}".`,
+        });
+      }
+
       return res.json({ success: true, message: "Filing status updated", document: updated, mode: "dummy_data" });
     }
 
@@ -1028,9 +1054,84 @@ export const updateDocumentFilingStatus = async (req, res) => {
     );
     if (!updated) return res.status(404).json({ success: false, message: "Document not found" });
 
+    if (updated.citizenId) {
+      broadcastMessageToUser(updated.citizenId, {
+        type: "document_status_updated",
+        document: updated,
+        message: `Document "${updated.title}" filing status updated to "${status}".`,
+      });
+    }
+
     res.json({ success: true, message: "Filing status updated", document: updated, mode: "cloud_db" });
   } catch (error) {
     console.error("updateDocumentFilingStatus error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Upload new document to encrypted chamber vault
+// @route   POST /api/advocate/documents
+// @access  Private (Advocate)
+export const uploadAdvocateDocument = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const advocateName = req.user?.fullName || "Adv. Meera Krishnan";
+    const data = {
+      ...req.body,
+      advocateId,
+      advocateName,
+      uploadedBy: advocateName,
+    };
+
+    if (shouldUseDevStore()) {
+      const doc = devStore.addDocument(data);
+      return res.status(201).json({
+        success: true,
+        message: "Document successfully encrypted and stored in chamber vault.",
+        document: doc,
+        mode: "dummy_data",
+      });
+    }
+
+    const doc = await CitizenDocument.create({
+      citizenId: data.citizenId || "default_citizen",
+      advocateId,
+      title: data.name || data.title,
+      fileName: data.fileName || data.name,
+      category: data.category || "Pleadings & Petitions",
+      subType: data.subType || "all",
+      fileSize: data.size || data.fileSize || "1.5 MB",
+      isSigned: true,
+      sha256Hash: data.hash || data.sha256Hash,
+      notes: data.notes || data.details,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Document successfully encrypted and stored in chamber vault.",
+      document: doc,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("uploadAdvocateDocument error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete document from vault
+// @route   DELETE /api/advocate/documents/:id
+// @access  Private (Advocate)
+export const deleteAdvocateDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (shouldUseDevStore()) {
+      const deleted = devStore.deleteDocument(id);
+      return res.json({ success: true, message: "Document removed from vault", deleted, mode: "dummy_data" });
+    }
+    await CitizenDocument.findByIdAndDelete(id);
+    res.json({ success: true, message: "Document removed from vault", mode: "cloud_db" });
+  } catch (error) {
+    console.error("deleteAdvocateDocument error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

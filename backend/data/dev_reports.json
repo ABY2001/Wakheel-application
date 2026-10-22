@@ -1,0 +1,70 @@
+[
+  {
+    "_id": "rep_1792650750047",
+    "id": "rep_1792650750047",
+    "title": "Kerala High Court Injunction & Stay Compliance Audit",
+    "category": "Court Compliance",
+    "period": "October 2026",
+    "generatedDate": "22 Oct 2026",
+    "metrics": {
+      "totalBriefs": 18,
+      "admittedRate": "92.0%",
+      "interimReliefObtained": 14,
+      "disposedFavorable": 11
+    },
+    "fileSize": "2.2 MB PDF",
+    "status": "Certified",
+    "createdAt": "2026-10-22T06:32:30.189Z",
+    "advocateId": "default_citizen"
+  },
+  {
+    "_id": "rep_2026_q3",
+    "id": "rep_2026_q3",
+    "title": "Q3 2026 High Court Chamber Audit & Performance Ledger",
+    "category": "Quarterly Audit",
+    "period": "Jul – Sep 2026",
+    "generatedDate": "01 Oct 2026",
+    "metrics": {
+      "totalBriefs": 24,
+      "admittedRate": "91.6%",
+      "interimReliefObtained": 18,
+      "disposedFavorable": 14,
+      "revenueCollected": 385000,
+      "trustEscrowBalance": 650000
+    },
+    "fileSize": "2.8 MB PDF",
+    "status": "Certified"
+  },
+  {
+    "_id": "rep_2026_causelist",
+    "id": "rep_2026_causelist",
+    "title": "Kerala High Court Cause List & Bench Appearance Compliance",
+    "category": "Court Compliance",
+    "period": "Sep – Oct 2026",
+    "generatedDate": "12 Oct 2026",
+    "metrics": {
+      "totalHearingsListed": 38,
+      "benchAppearances": 36,
+      "adjournmentsSought": 2,
+      "zeroDefaultRate": "100%"
+    },
+    "fileSize": "1.4 MB PDF",
+    "status": "Certified"
+  },
+  {
+    "_id": "rep_2026_trust",
+    "id": "rep_2026_trust",
+    "title": "Bar Council Rule 24 Trust Escrow & GST Reverse Charge Statement",
+    "category": "Tax & Trust Audit",
+    "period": "Q2 – Q3 2026",
+    "generatedDate": "18 Oct 2026",
+    "metrics": {
+      "trustDeposits": 700000,
+      "trustDisbursements": 50000,
+      "netEscrowBalance": 650000,
+      "gstRcmCompliance": "100% Reconciled"
+    },
+    "fileSize": "1.9 MB PDF",
+    "status": "Certified"
+  }
+]

@@ -2968,7 +2968,12 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW: Analytics (AI Analytics, Reports)                        */}
           {isAnalytics && (
-            <AnalyticsView activeModule={activeTab} onSelectModule={(m) => setActiveTab(m)} />
+            <AnalyticsView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+            />
           )}
 
           {/* ============================================================== */}

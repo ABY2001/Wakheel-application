@@ -1646,3 +1646,44 @@ export const addAssociate = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 14. BENCH ANALYTICS & PRACTICE REPORTS
+// ============================================================================
+export const getBenchAnalytics = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const analytics = devStore.getBenchAnalytics(advocateId);
+    res.json({ success: true, ...analytics, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
+  } catch (error) {
+    console.error("getBenchAnalytics error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getChamberReports = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const reports = devStore.getChamberReports(advocateId);
+    res.json({ success: true, count: reports.length, reports, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
+  } catch (error) {
+    console.error("getChamberReports error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const generateChamberReport = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const newReport = devStore.generateChamberReport({ ...req.body, advocateId });
+    res.status(201).json({
+      success: true,
+      message: "Chamber audit report generated and certified",
+      report: newReport,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("generateChamberReport error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

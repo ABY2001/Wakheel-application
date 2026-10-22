@@ -50,6 +50,9 @@ import {
   addExpense,
   getAssociates,
   addAssociate,
+  getBenchAnalytics,
+  getChamberReports,
+  generateChamberReport,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -129,5 +132,10 @@ router.get("/erp/expenses", protect, getExpenses);
 router.post("/erp/expenses", protect, addExpense);
 router.get("/erp/associates", protect, getAssociates);
 router.post("/erp/associates", protect, addAssociate);
+
+// 14. Bench Analytics & Certified Chamber Reports
+router.get("/analytics/bench", protect, getBenchAnalytics);
+router.get("/analytics/reports", protect, getChamberReports);
+router.post("/analytics/reports/generate", protect, generateChamberReport);
 
 export default router;

@@ -1368,6 +1368,59 @@ const DEFAULT_ASSOCIATES = [
   },
 ];
 
+const DEFAULT_CHAMBER_REPORTS = [
+  {
+    _id: "rep_2026_q3",
+    id: "rep_2026_q3",
+    title: "Q3 2026 High Court Chamber Audit & Performance Ledger",
+    category: "Quarterly Audit",
+    period: "Jul – Sep 2026",
+    generatedDate: "01 Oct 2026",
+    metrics: {
+      totalBriefs: 24,
+      admittedRate: "91.6%",
+      interimReliefObtained: 18,
+      disposedFavorable: 14,
+      revenueCollected: 385000,
+      trustEscrowBalance: 650000,
+    },
+    fileSize: "2.8 MB PDF",
+    status: "Certified",
+  },
+  {
+    _id: "rep_2026_causelist",
+    id: "rep_2026_causelist",
+    title: "Kerala High Court Cause List & Bench Appearance Compliance",
+    category: "Court Compliance",
+    period: "Sep – Oct 2026",
+    generatedDate: "12 Oct 2026",
+    metrics: {
+      totalHearingsListed: 38,
+      benchAppearances: 36,
+      adjournmentsSought: 2,
+      zeroDefaultRate: "100%",
+    },
+    fileSize: "1.4 MB PDF",
+    status: "Certified",
+  },
+  {
+    _id: "rep_2026_trust",
+    id: "rep_2026_trust",
+    title: "Bar Council Rule 24 Trust Escrow & GST Reverse Charge Statement",
+    category: "Tax & Trust Audit",
+    period: "Q2 – Q3 2026",
+    generatedDate: "18 Oct 2026",
+    metrics: {
+      trustDeposits: 700000,
+      trustDisbursements: 50000,
+      netEscrowBalance: 650000,
+      gstRcmCompliance: "100% Reconciled",
+    },
+    fileSize: "1.9 MB PDF",
+    status: "Certified",
+  },
+];
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -2899,5 +2952,91 @@ export const devStore = {
         retainersCount: clients.filter((c) => c.status === "Retainer" || c.category?.toLowerCase().includes("corporate")).length,
       },
     };
+  },
+
+  // --- Bench Analytics & Chamber Reports ---
+  getBenchAnalytics(advocateId = "adv_1") {
+    const matters = this.getMatters(advocateId);
+    const causelist = this.getCauseList(advocateId);
+    const invoices = this.getInvoices(advocateId);
+
+    return {
+      kpis: {
+        winRate: "89.2%",
+        judgmentsAnalyzed: 148,
+        avgDisposalMonths: "4.1 Mos",
+        citationEfficacy: "99.4%",
+        favorableSettlementRatio: "78.5%",
+        activeMattersCount: matters.length,
+        todayHearingsCount: causelist.length,
+      },
+      practiceAreas: [
+        { area: "Constitutional & Writ Petitions (Art. 226)", rate: "93%", count: `${matters.length + 8} matters` },
+        { area: "Commercial Arbitration & S.34 Appeals", rate: "88%", count: "6 matters" },
+        { area: "Land Property, Boundary & Telegraph Injunctions", rate: "86%", count: "8 matters" },
+        { area: "Corporate Retainer & MCA Compliance", rate: "95%", count: "5 matters" },
+        { area: "Cheque Dishonour (S. 138 NI Act) & Summary Suits", rate: "84%", count: "4 matters" },
+      ],
+      courtBenches: [
+        {
+          bench: "Court Hall 2A • Division Bench (High Court of Kerala)",
+          judge: "Hon'ble Division Bench",
+          matters: "14 hearings",
+          disposition: "92% Favorable Relief",
+        },
+        {
+          bench: "Court Hall 3B • Single Bench (Writ Jurisdiction)",
+          judge: "Hon'ble Single Bench",
+          matters: "11 hearings",
+          disposition: "88% Interim Relief",
+        },
+        {
+          bench: "Sub Court Ernakulam (Civil Suits & Injunctions)",
+          judge: "Principal Sub Judge",
+          matters: "6 hearings",
+          disposition: "85% Favorable Orders",
+        },
+        {
+          bench: "Arbitral Tribunal • Infopark Kakkanad",
+          judge: "Sole Arbitrator",
+          matters: "4 hearings",
+          disposition: "90% Favorable Discovery",
+        },
+      ],
+    };
+  },
+
+  getChamberReports(advocateId = "adv_1") {
+    const reports = readFile("dev_reports.json", DEFAULT_CHAMBER_REPORTS);
+    if (!reports || reports.length === 0) {
+      writeFile("dev_reports.json", DEFAULT_CHAMBER_REPORTS);
+      return DEFAULT_CHAMBER_REPORTS;
+    }
+    return reports;
+  },
+
+  generateChamberReport(data) {
+    const reports = readFile("dev_reports.json", DEFAULT_CHAMBER_REPORTS);
+    const newReport = {
+      _id: "rep_" + Date.now().toString(),
+      id: "rep_" + Date.now().toString(),
+      title: data.title || `Comprehensive Chamber Practice Audit — ${new Date().toLocaleDateString("en-IN")}`,
+      category: data.category || "General Audit",
+      period: data.period || "Current Quarter 2026",
+      generatedDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      metrics: data.metrics || {
+        totalBriefs: 18,
+        admittedRate: "92.0%",
+        interimReliefObtained: 14,
+        disposedFavorable: 11,
+      },
+      fileSize: "2.2 MB PDF",
+      status: "Certified",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    reports.unshift(newReport);
+    writeFile("dev_reports.json", reports);
+    return newReport;
   },
 };

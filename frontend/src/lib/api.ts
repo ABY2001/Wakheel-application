@@ -979,6 +979,42 @@ export interface ErpOverviewData {
   };
 }
 
+export interface BenchAnalyticsData {
+  kpis: {
+    winRate: string;
+    judgmentsAnalyzed: number;
+    avgDisposalMonths: string;
+    citationEfficacy: string;
+    favorableSettlementRatio: string;
+    activeMattersCount: number;
+    todayHearingsCount: number;
+  };
+  practiceAreas: {
+    area: string;
+    rate: string;
+    count: string;
+  }[];
+  courtBenches: {
+    bench: string;
+    judge: string;
+    matters: string;
+    disposition: string;
+  }[];
+}
+
+export interface ChamberReportItem {
+  _id: string;
+  id?: string;
+  title: string;
+  category: string;
+  period: string;
+  generatedDate: string;
+  metrics: Record<string, any>;
+  fileSize: string;
+  status: string;
+  createdAt?: string;
+}
+
 export const advocateApi = {
   getAuthHeader(token?: string) {
     const activeToken =
@@ -1718,6 +1754,52 @@ export const advocateApi = {
     mode: string;
   }> {
     const res = await fetch(`${API_BASE_URL}/advocate/erp/associates`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  // 14. Bench Analytics & Certified Chamber Reports
+  async getBenchAnalytics(token?: string): Promise<{
+    success: boolean;
+    kpis: BenchAnalyticsData["kpis"];
+    practiceAreas: BenchAnalyticsData["practiceAreas"];
+    courtBenches: BenchAnalyticsData["courtBenches"];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/analytics/bench`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getChamberReports(token?: string): Promise<{
+    success: boolean;
+    count: number;
+    reports: ChamberReportItem[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/analytics/reports`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async generateChamberReport(
+    data: Partial<ChamberReportItem>,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    report: ChamberReportItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/analytics/reports/generate`, {
       method: "POST",
       headers: {
         ...advocateApi.getAuthHeader(token),

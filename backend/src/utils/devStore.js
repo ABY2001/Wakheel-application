@@ -1092,6 +1092,92 @@ const DEFAULT_CLIENTS = [
   },
 ];
 
+const DEFAULT_DICTATIONS = [
+  {
+    _id: "dict_101",
+    id: "dict_101",
+    advocateId: "adv_1",
+    title: "WP(C) 19482/2024 — Bench Observation on Telegraph Line Alignment",
+    category: "Judge Directions",
+    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    matterId: "mat_wpc_19482",
+    duration: "00:48",
+    date: "18 Oct 2026, 11:45 AM",
+    transcript:
+      "Hon'ble Bench observed that Section 16 of Indian Telegraph Act does not empower KSEB to draw 11KV lines through petitioner's homestead without prior notice to the District Magistrate. Interim stay extended until November 14th. Bench asked Assistant Executive Engineer to be personally present if counter-affidavit is not filed within two weeks.",
+    actionItems: [
+      "Obtain certified copy of today's Bench interim extension order",
+      "Draft rejoinder addressing Section 16 jurisdictional bar",
+      "Brief client Sri. Gopakumar regarding next posting on Nov 14",
+    ],
+    status: "archived",
+    audioUrl: "",
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "dict_102",
+    id: "dict_102",
+    advocateId: "adv_1",
+    title: "CC 412/2024 — Post-Hearing Cross Examination Highlights",
+    category: "Cross-Exam Strategy",
+    matter: "CC 412/2024 — Cheque Dishonour (S.138 NI Act)",
+    matterId: "mat_cc_412",
+    duration: "01:15",
+    date: "19 Oct 2026, 04:20 PM",
+    transcript:
+      "Complainant admitted during cross-examination that no income tax returns were produced to substantiate cash lending of ₹5 Lakhs. Defense reliance on Supreme Court ratio in Basalingappa v. Mudibasappa (2019) 5 SCC 418 established foundational rebuttable presumption. Complainant's passbook reveals no corresponding withdrawal on 12/03/2023.",
+    actionItems: [
+      "File memo with excerpt of Complainant PW-1 cross-examination deposition",
+      "Compile citations on standard of preponderance of probability in Section 139 NI Act",
+      "Prepare Section 313 CrPC defense questionnaire for accused",
+    ],
+    status: "archived",
+    audioUrl: "",
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "dict_103",
+    id: "dict_103",
+    advocateId: "adv_1",
+    title: "OS 284/2023 — Client Conference on Survey Commission Report",
+    category: "Client Conference",
+    matter: "OS 284/2023 — Varghese v. Mathew (Sub Court)",
+    matterId: "mat_os_284",
+    duration: "00:34",
+    date: "20 Oct 2026, 02:15 PM",
+    transcript:
+      "Client instructed that Advocate Commissioner failed to measure the eastern boundary with reference to 1968 resettlement survey plan. The existing granite wall was ignored in sketch C-1. Need to file objection to commission report and pray for remitting the warrant back to the same commissioner.",
+    actionItems: [
+      "Draft objection petition to Advocate Commissioner report",
+      "Attach old resettlement survey sketch as defense Exhibit",
+    ],
+    status: "archived",
+    audioUrl: "",
+    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "dict_104",
+    id: "dict_104",
+    advocateId: "adv_1",
+    title: "ARB/NCLT/2024 — Arbitral Tribunal Order 11 Scope of Discovery",
+    category: "Court Hearing",
+    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
+    matterId: "mat_arb_041",
+    duration: "01:02",
+    date: "21 Oct 2026, 05:30 PM",
+    transcript:
+      "Sole Arbitrator allowed claimant's application under Section 27 of Arbitration and Conciliation Act for production of server audit trails. Respondent directed to supply digital logs within 10 days. Procedural hearing fixed for framing additional issues on 3rd November.",
+    actionItems: [
+      "Send official demand letter to vendor for production of AWS audit trails",
+      "Draft proposed issues on breach of SLA for Nov 3 hearing",
+      "Update MD Rajeev Menon on arbitrator ruling",
+    ],
+    status: "archived",
+    audioUrl: "",
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -2398,5 +2484,73 @@ export const devStore = {
       return clients[idx];
     }
     return null;
+  },
+
+  // --- Chamber Voice Dictations & Audio Notes ---
+  getDictations(advocateId = "adv_1") {
+    const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
+    if (!dictations || dictations.length === 0) {
+      writeFile("dev_dictations.json", DEFAULT_DICTATIONS);
+      return DEFAULT_DICTATIONS;
+    }
+    return dictations;
+  },
+
+  getDictationById(id) {
+    const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
+    return dictations.find((d) => d._id === id || d.id === id) || null;
+  },
+
+  createDictation(data) {
+    const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
+    const newDictation = {
+      _id: "dict_" + Date.now().toString(),
+      id: "dict_" + Date.now().toString(),
+      advocateId: data.advocateId || "adv_1",
+      title: data.title || `Chamber Dictation — ${new Date().toLocaleDateString("en-IN")}`,
+      category: data.category || "General Chamber",
+      matter: data.matter || "General Practice",
+      matterId: data.matterId || "",
+      duration: data.duration || "00:45",
+      date: data.date || "Just now",
+      transcript: data.transcript || "",
+      actionItems: Array.isArray(data.actionItems) ? data.actionItems : [],
+      audioUrl: data.audioUrl || "",
+      status: "archived",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    dictations.unshift(newDictation);
+    writeFile("dev_dictations.json", dictations);
+    return newDictation;
+  },
+
+  deleteDictation(id) {
+    const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
+    const filtered = dictations.filter((d) => d._id !== id && d.id !== id);
+    writeFile("dev_dictations.json", filtered);
+    return filtered.length < dictations.length;
+  },
+
+  convertDictationToCaseNote(id, advocateId = "adv_1") {
+    const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
+    const dict = dictations.find((d) => d._id === id || d.id === id);
+    if (!dict) return null;
+
+    const actionList = (dict.actionItems || []).map((a, i) => `${i + 1}. ${a}`).join("\n");
+    const noteContent = `${dict.transcript}\n\nKey Action Items:\n${actionList}`;
+
+    const newNote = this.addCaseNote({
+      advocateId,
+      matterId: dict.matterId || "general",
+      matterTitle: dict.matter || "General Chamber Practice",
+      title: `[Audio Dictation] ${dict.title}`,
+      content: noteContent,
+      category: dict.category === "Cross-Exam Strategy" ? "precedent_notes" : "client_instructions",
+      isConfidential: true,
+      tags: ["Voice Dictation", dict.category, "Chamber Memo"],
+    });
+
+    return newNote;
   },
 };

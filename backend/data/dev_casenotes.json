@@ -1,5 +1,21 @@
 [
   {
+    "_id": "note_1792648193119",
+    "advocateId": "default_citizen",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — Gopakumar v. KSEB",
+    "title": "[Audio Dictation] WP(C) 19482/2024 — Bench Observation on Telegraph Line Alignment",
+    "content": "Hon'ble Bench observed that Section 16 of Indian Telegraph Act does not empower KSEB to draw 11KV lines through petitioner's homestead without prior notice to the District Magistrate. Interim stay extended until November 14th. Bench asked Assistant Executive Engineer to be personally present if counter-affidavit is not filed within two weeks.\n\nKey Action Items:\n1. Obtain certified copy of today's Bench interim extension order\n2. Draft rejoinder addressing Section 16 jurisdictional bar\n3. Brief client Sri. Gopakumar regarding next posting on Nov 14",
+    "category": "client_instructions",
+    "isConfidential": true,
+    "tags": [
+      "Voice Dictation",
+      "Judge Directions",
+      "Chamber Memo"
+    ],
+    "createdAt": "2026-10-22T05:49:53.119Z"
+  },
+  {
     "_id": "note_1792124983978",
     "advocateId": "adv_1",
     "matterId": "",

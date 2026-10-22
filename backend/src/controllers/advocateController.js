@@ -1463,3 +1463,91 @@ export const updateClient = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 12. CHAMBER VOICE DICTATIONS & AUDIO NOTES
+// ============================================================================
+export const getDictations = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+
+    if (shouldUseDevStore()) {
+      const dictations = devStore.getDictations(advocateId);
+      return res.json({ success: true, count: dictations.length, dictations, mode: "dummy_data" });
+    }
+
+    const dictations = devStore.getDictations(advocateId);
+    res.json({ success: true, count: dictations.length, dictations, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getDictations error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createDictation = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { title, category, matter, matterId, duration, transcript, actionItems, audioUrl } = req.body;
+
+    const newDictation = devStore.createDictation({
+      advocateId,
+      title: title || `Dictation — ${new Date().toLocaleDateString("en-IN")}`,
+      category: category || "General Chamber",
+      matter: matter || "General Practice",
+      matterId: matterId || "",
+      duration: duration || "00:45",
+      date: "Just now",
+      transcript: transcript || "",
+      actionItems: Array.isArray(actionItems) ? actionItems : [],
+      audioUrl: audioUrl || "",
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Chamber voice dictation successfully saved to archive",
+      dictation: newDictation,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("createDictation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteDictation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = devStore.deleteDictation(id);
+
+    res.json({
+      success: true,
+      message: deleted ? "Dictation removed from chamber archive" : "Dictation not found",
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("deleteDictation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const convertDictationToCaseNote = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+
+    const caseNote = devStore.convertDictationToCaseNote(id, advocateId);
+    if (!caseNote) {
+      return res.status(404).json({ success: false, message: "Dictation not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Voice dictation successfully converted to Matter Case Note & Precedent Research",
+      caseNote,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("convertDictationToCaseNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

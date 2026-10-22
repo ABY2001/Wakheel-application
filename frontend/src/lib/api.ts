@@ -886,6 +886,23 @@ export interface AdvocateClientDossier {
   };
 }
 
+export interface ChamberDictationItem {
+  _id: string;
+  id?: string;
+  advocateId?: string;
+  title: string;
+  category: "Court Hearing" | "Client Conference" | "Judge Directions" | "Cross-Exam Strategy" | "General Chamber" | string;
+  matter: string;
+  matterId?: string;
+  duration: string;
+  date: string;
+  transcript: string;
+  actionItems: string[];
+  audioUrl?: string;
+  status?: string;
+  createdAt?: string;
+}
+
 export const advocateApi = {
   getAuthHeader(token?: string) {
     const activeToken =
@@ -1458,6 +1475,70 @@ export const advocateApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  // 12. Chamber Voice Dictations & Audio Notes
+  async getDictations(token?: string): Promise<{
+    success: boolean;
+    count: number;
+    dictations: ChamberDictationItem[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/dictations`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createDictation(
+    data: Partial<ChamberDictationItem>,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    dictation: ChamberDictationItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/dictations`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async deleteDictation(
+    id: string,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/dictations/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async convertDictationToCaseNote(
+    id: string,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    caseNote: CaseNoteItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/dictations/${encodeURIComponent(id)}/convert-to-case-note`, {
+      method: "POST",
+      headers: advocateApi.getAuthHeader(token),
     });
     return await res.json();
   },

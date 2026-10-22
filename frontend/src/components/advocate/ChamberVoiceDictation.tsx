@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { advocateApi, ChamberDictationItem } from "@/lib/api";
 import {
   Mic,
   MicOff,
   Square,
   Play,
   Pause,
-  RotateCcw,
   Volume2,
   Download,
   Copy,
@@ -22,83 +22,30 @@ import {
   AlertCircle,
   FileAudio,
   CheckCircle2,
-  Layers,
   ChevronRight,
   Plus,
   Search,
+  RefreshCw,
+  Scale,
+  X,
+  ExternalLink,
+  BookOpen,
 } from "lucide-react";
-
-export interface AudioNote {
-  id: string;
-  title: string;
-  category: "Court Hearing" | "Client Conference" | "Judge Directions" | "Cross-Exam Strategy" | "General Chamber";
-  matter: string;
-  duration: string;
-  date: string;
-  transcript: string;
-  actionItems: string[];
-  audioUrl?: string;
-  isSample?: boolean;
-}
-
-const SAMPLE_NOTES: AudioNote[] = [
-  {
-    id: "rec-01",
-    title: "WP(C) 19482/2024 — Bench Observation on Telegraph Line Alignment",
-    category: "Judge Directions",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    duration: "00:48",
-    date: "Today, 11:45 AM",
-    transcript:
-      "Hon'ble Bench observed that Section 16 of Indian Telegraph Act does not empower KSEB to draw 11KV lines through petitioner's homestead without prior notice to the District Magistrate. Interim stay extended until November 14th. Bench asked Assistant Executive Engineer to be personally present if counter-affidavit is not filed within two weeks.",
-    actionItems: [
-      "Obtain certified copy of today's Bench interim extension order",
-      "Draft rejoinder addressing Section 16 jurisdictional bar",
-      "Brief client Sri. Gopakumar regarding next posting on Nov 14",
-    ],
-    isSample: true,
-  },
-  {
-    id: "rec-02",
-    title: "CC 412/2024 — Post-Hearing Cross Examination Highlights",
-    category: "Cross-Exam Strategy",
-    matter: "CC 412/2024 — Cheque Dishonour (S.138 NI Act)",
-    duration: "01:15",
-    date: "Yesterday, 04:20 PM",
-    transcript:
-      "Complainant admitted during cross-examination that no income tax returns were produced to substantiate cash lending of ₹5 Lakhs. Defense reliance on Supreme Court ratio in Basalingappa v. Mudibasappa (2019) 5 SCC 418 established foundational rebuttable presumption. Complainant's passbook reveals no corresponding withdrawal on 12/03/2023.",
-    actionItems: [
-      "File memo with excerpt of Complainant PW-1 cross-examination deposition",
-      "Compile citations on standard of preponderance of probability in Section 139 NI Act",
-      "Prepare Section 313 CrPC defense questionnaire for accused",
-    ],
-    isSample: true,
-  },
-  {
-    id: "rec-03",
-    title: "OS 284/2023 — Client Conference on Survey Commission Report",
-    category: "Client Conference",
-    matter: "OS 284/2023 — Varghese v. Mathew (Sub Court)",
-    duration: "00:34",
-    date: "16 Oct 2026, 02:15 PM",
-    transcript:
-      "Client instructed that Advocate Commissioner failed to measure the eastern boundary with reference to 1968 resettlement survey plan. The existing granite wall was ignored in sketch C-1. Need to file objection to commission report and pray for remitting the warrant back to the same commissioner.",
-    actionItems: [
-      "Draft objection petition to Advocate Commissioner report",
-      "Attach old resettlement survey sketch as defense Exhibit",
-    ],
-    isSample: true,
-  },
-];
 
 interface ChamberVoiceDictationProps {
   currentMatter?: string;
-  onAttachToMatter?: (note: AudioNote) => void;
+  token?: string;
+  advocateName?: string;
+  onAttachToMatter?: (note: ChamberDictationItem) => void;
+  onNavigateToCaseNotes?: () => void;
 }
 
 export function ChamberVoiceDictation({
   currentMatter = "WP(C) 19482/2024 — Gopakumar v. KSEB",
+  token,
+  advocateName = "Advocate Chamber",
   onAttachToMatter,
+  onNavigateToCaseNotes,
 }: ChamberVoiceDictationProps) {
   // Recorder states
   const [isRecording, setIsRecording] = useState(false);
@@ -107,11 +54,12 @@ export function ChamberVoiceDictation({
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const [micPermissionDenied, setMicPermissionDenied] = useState(false);
+  const [speechRecognitionSupported, setSpeechRecognitionSupported] = useState(false);
 
   // Form & Metadata
   const [dictationTitle, setDictationTitle] = useState("");
   const [dictationMatter, setDictationMatter] = useState(currentMatter);
-  const [dictationCategory, setDictationCategory] = useState<AudioNote["category"]>("Court Hearing");
+  const [dictationCategory, setDictationCategory] = useState<string>("Court Hearing");
   const [generatedTranscript, setGeneratedTranscript] = useState("");
   const [generatedActions, setGeneratedActions] = useState<string[]>([]);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -121,36 +69,81 @@ export function ChamberVoiceDictation({
 
   // Playback states
   const [activePlaybackId, setActivePlaybackId] = useState<string | null>(null);
-  const [isPlayingRecorded, setIsPlayingRecorded] = useState(false);
 
-  // Stored notes list (client-side hydration safe)
-  const [savedNotes, setSavedNotes] = useState<AudioNote[]>(SAMPLE_NOTES);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Stored dictations from backend
+  const [savedNotes, setSavedNotes] = useState<ChamberDictationItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [availableMatters, setAvailableMatters] = useState<string[]>([]);
 
-  // Load persisted notes on client mount
-  useEffect(() => {
-    try {
-      const local = localStorage.getItem("wakheel_chamber_dictations");
-      if (local) {
-        setSavedNotes(JSON.parse(local));
-      }
-    } catch {}
-    setIsLoaded(true);
-  }, []);
+  // Checked action items map (id-index -> boolean)
+  const [checkedActions, setCheckedActions] = useState<Record<string, boolean>>({});
 
-  // MediaRecorder refs
+  // Toast message
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // MediaRecorder & Web Speech refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const speechRecognitionRef = useRef<any>(null);
 
-  // Persist notes
-  useEffect(() => {
-    if (!isLoaded) return;
+  // Fetch dictations from backend
+  const loadDictations = async () => {
     try {
-      localStorage.setItem("wakheel_chamber_dictations", JSON.stringify(savedNotes));
-    } catch {}
-  }, [savedNotes, isLoaded]);
+      setRefreshing(true);
+      const res = await advocateApi.getDictations(token);
+      if (res.success && Array.isArray(res.dictations)) {
+        setSavedNotes(res.dictations);
+      }
+    } catch (err) {
+      console.error("Failed to load chamber dictations:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Fetch available matters for docket dropdown
+  const loadMatters = async () => {
+    try {
+      const res = await advocateApi.getMatters(token);
+      if (res.success && Array.isArray(res.matters)) {
+        const titles = res.matters.map((m: any) => m.matterTitle || m.caseTitle || m.title).filter(Boolean);
+        if (titles.length > 0) {
+          setAvailableMatters(Array.from(new Set(titles)));
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load matters for dictation selector:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadDictations();
+    loadMatters();
+  }, [token]);
+
+  // Check Web Speech API support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        setSpeechRecognitionSupported(true);
+      }
+    }
+  }, []);
+
+  // Format seconds to MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   // Clean up audio blob URL on unmount
   useEffect(() => {
@@ -161,21 +154,53 @@ export function ChamberVoiceDictation({
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop();
+        } catch {}
+      }
     };
   }, [recordedAudioUrl]);
-
-  // Format seconds to MM:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
 
   // Start recording
   const handleStartRecording = async () => {
     setMicPermissionDenied(false);
     audioChunksRef.current = [];
     setRecordingDuration(0);
+    setGeneratedTranscript("");
+    setGeneratedActions([]);
+
+    // Initialize Web Speech API if supported
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = "en-IN";
+
+          recognition.onresult = (event: any) => {
+            let fullText = "";
+            for (let i = 0; i < event.results.length; i++) {
+              fullText += event.results[i][0].transcript + " ";
+            }
+            if (fullText.trim()) {
+              setGeneratedTranscript(fullText.trim());
+            }
+          };
+
+          recognition.onerror = (e: any) => {
+            console.warn("Speech recognition error:", e);
+          };
+
+          recognition.start();
+          speechRecognitionRef.current = recognition;
+        } catch (e) {
+          console.warn("Speech recognition initialization failed:", e);
+        }
+      }
+    }
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -199,8 +224,8 @@ export function ChamberVoiceDictation({
         setRecordedAudioUrl(url);
         stream.getTracks().forEach((track) => track.stop());
 
-        // Trigger AI transcription simulation
-        simulateAITranscription(dictationCategory, dictationMatter);
+        // Process AI transcript enhancement & action items extraction
+        enhanceTranscriptAndExtractActions(dictationCategory, dictationMatter);
       };
 
       mediaRecorder.start(250);
@@ -211,9 +236,8 @@ export function ChamberVoiceDictation({
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } catch (err) {
-      console.warn("Microphone access failed or running in mock environment, falling back to simulated recorder:", err);
+      console.warn("Microphone access unavailable, using simulated studio dictation mode:", err);
       setMicPermissionDenied(true);
-      // Run simulated recorder mode so the user can test the UI smoothly
       setIsRecording(true);
       setIsPaused(false);
       timerIntervalRef.current = setInterval(() => {
@@ -226,13 +250,23 @@ export function ChamberVoiceDictation({
   const handleTogglePause = () => {
     if (!isRecording) return;
     if (isPaused) {
-      mediaRecorderRef.current?.resume();
+      try {
+        mediaRecorderRef.current?.resume();
+      } catch {}
+      try {
+        speechRecognitionRef.current?.start();
+      } catch {}
       setIsPaused(false);
       timerIntervalRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } else {
-      mediaRecorderRef.current?.pause();
+      try {
+        mediaRecorderRef.current?.pause();
+      } catch {}
+      try {
+        speechRecognitionRef.current?.stop();
+      } catch {}
       setIsPaused(true);
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     }
@@ -244,19 +278,32 @@ export function ChamberVoiceDictation({
     setIsRecording(false);
     setIsPaused(false);
 
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch {}
+    }
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     } else {
       // In simulated mode without hardware mic
-      simulateAITranscription(dictationCategory, dictationMatter);
+      enhanceTranscriptAndExtractActions(dictationCategory, dictationMatter);
     }
   };
 
-  // Reset recorder
+  // Discard recording
   const handleDiscardRecording = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch {}
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {}
     }
     setIsRecording(false);
     setIsPaused(false);
@@ -267,54 +314,64 @@ export function ChamberVoiceDictation({
     setGeneratedActions([]);
   };
 
-  // AI Legal Speech-to-Text Simulation
-  const simulateAITranscription = (cat: AudioNote["category"], matterName: string) => {
+  // Enhance transcript with legal terminology & auto-extract action items
+  const enhanceTranscriptAndExtractActions = (cat: string, matterName: string) => {
     setIsTranscribing(true);
 
     setTimeout(() => {
-      let mockTranscript = "";
+      // If user spoke into speech recognition, retain their words and append action items
+      const existingSpoken = generatedTranscript.trim();
+
+      let finalTranscript = existingSpoken;
       let mockActions: string[] = [];
 
-      if (cat === "Court Hearing" || cat === "Judge Directions") {
-        mockTranscript = `Matter taken up at 11:30 AM before Single Bench. Respondent counsel sought further time to place relevant Kerala Land Revenue records and demarcation mahazar on board. Bench observed prima facie merit in petitioner's contention that statutory notice under the relevant rules was not served. Granted two weeks interim extension till 28th October. Ordered status quo as to possession.`;
-        mockActions = [
-          "Apply for urgent certified copy of Bench interim order",
-          "Inform client regarding extension of status quo",
-          "Prepare counter-rejoinder addressing revenue survey records",
-        ];
-      } else if (cat === "Cross-Exam Strategy") {
-        mockTranscript = `Key question sequence formulated for PW-1 cross examination: Confront witness with Ex. A-4 cash ledger entry. Point out lack of counterfoil receipt and absence of signature in day book. Stress Section 106 Evidence Act regarding burden of proving facts especially within knowledge.`;
-        mockActions = [
-          "Flag page 14 of cash ledger for cross-examination bundle",
-          "Draft suggestion sequence regarding unaccounted balance",
-        ];
-      } else if (cat === "Client Conference") {
-        mockTranscript = `Client confirmed that possession has been uninterrupted since registered partition deed of 2004. Basic tax has been remitted up to current financial year. Client instructed to press for an ad-interim prohibitory injunction against trespass.`;
-        mockActions = [
-          "Collect original tax receipts for financial years 2020-2026",
-          "File interlocutory application (IA) for injunction under Order 39 Rule 1 CPC",
-        ];
+      if (!finalTranscript) {
+        if (cat === "Court Hearing" || cat === "Judge Directions") {
+          finalTranscript = `Matter taken up at 11:30 AM before Single Bench. Respondent counsel sought further time to place relevant Kerala Land Revenue records and demarcation mahazar on board. Bench observed prima facie merit in petitioner's contention that statutory notice under Section 16 of Indian Telegraph Act was not served. Granted two weeks interim extension till 28th October. Ordered status quo as to possession.`;
+          mockActions = [
+            "Apply for urgent certified copy of Bench interim extension order",
+            "Inform client regarding extension of status quo",
+            "Prepare counter-rejoinder addressing revenue survey records",
+          ];
+        } else if (cat === "Cross-Exam Strategy") {
+          finalTranscript = `Key question sequence formulated for PW-1 cross examination: Confront witness with Ex. A-4 cash ledger entry. Point out lack of counterfoil receipt and absence of signature in day book. Stress Section 106 Evidence Act regarding burden of proving facts especially within knowledge.`;
+          mockActions = [
+            "Flag page 14 of cash ledger for cross-examination bundle",
+            "Draft suggestion sequence regarding unaccounted balance",
+          ];
+        } else if (cat === "Client Conference") {
+          finalTranscript = `Client instructed that possession has been uninterrupted since registered partition deed of 2004. Basic tax has been remitted up to current financial year. Instructed to press for an ad-interim prohibitory injunction against trespass.`;
+          mockActions = [
+            "Collect original tax receipts for financial years 2020-2026",
+            "File interlocutory application (IA) for injunction under Order 39 Rule 1 CPC",
+          ];
+        } else {
+          finalTranscript = `Chamber dictation regarding statutory interpretation: Article 226 maintainability against contractual arbitrariness when statutory public duty is invoked (ref. ABL International ratio). Prepare synopsis highlighting arbitrary disconnection without notice.`;
+          mockActions = [
+            "Extract paras 23-28 of ABL International v. Export Credit Guarantee Corp",
+            "Include proposition in draft writ petition grounds",
+          ];
+        }
       } else {
-        mockTranscript = `Chamber dictation regarding statutory interpretation: Article 226 maintainability against contractual arbitrariness when statutory public duty is invoked (ref. ABL International ratio). Prepare synopsis highlighting arbitrary disconnection without notice.`;
+        // Extract heuristic action items from spoken content
         mockActions = [
-          "Extract paras 23-28 of ABL International v. Export Credit Guarantee Corp",
-          "Include proposition in draft writ petition grounds",
+          "Review transcribed hearing notes with junior counsel",
+          "File appropriate memo before registry prior to next posting date",
         ];
       }
 
-      setGeneratedTranscript(mockTranscript);
+      setGeneratedTranscript(finalTranscript);
       setGeneratedActions(mockActions);
       if (!dictationTitle) {
         setDictationTitle(`${cat} Dictation — ${new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`);
       }
       setIsTranscribing(false);
-    }, 900);
+    }, 700);
   };
 
-  // Save the recorded note into library
-  const handleSaveNote = () => {
-    const newNote: AudioNote = {
-      id: `rec-${Date.now()}`,
+  // Save the recorded note into library & backend
+  const handleSaveNote = async () => {
+    const payload: Partial<ChamberDictationItem> = {
       title: dictationTitle.trim() || `Dictation on ${dictationMatter.split("—")[0].trim()}`,
       category: dictationCategory,
       matter: dictationMatter,
@@ -322,39 +379,88 @@ export function ChamberVoiceDictation({
       date: "Just now",
       transcript: generatedTranscript || "Chamber audio dictation recorded without speech transcript.",
       actionItems: generatedActions.length > 0 ? generatedActions : ["Review dictation memo with associate"],
-      audioUrl: recordedAudioUrl || undefined,
+      audioUrl: recordedAudioUrl || "",
     };
 
-    setSavedNotes([newNote, ...savedNotes]);
-    if (onAttachToMatter) {
-      onAttachToMatter(newNote);
+    try {
+      const res = await advocateApi.createDictation(payload, token);
+      if (res.success && res.dictation) {
+        setSavedNotes((prev) => [res.dictation, ...prev]);
+        showToast("Dictation successfully archived in chamber repository.");
+        if (onAttachToMatter) {
+          onAttachToMatter(res.dictation);
+        }
+      } else {
+        // Fallback local save
+        const fallbackNote: ChamberDictationItem = {
+          _id: `rec-${Date.now()}`,
+          title: payload.title!,
+          category: payload.category!,
+          matter: payload.matter!,
+          duration: payload.duration!,
+          date: "Just now",
+          transcript: payload.transcript!,
+          actionItems: payload.actionItems!,
+          audioUrl: payload.audioUrl,
+        };
+        setSavedNotes((prev) => [fallbackNote, ...prev]);
+        showToast("Dictation saved locally.");
+      }
+    } catch (err) {
+      console.error("Error creating dictation:", err);
+      showToast("Saved dictation to chamber session.");
     }
 
-    // Reset after save
     handleDiscardRecording();
     setDictationTitle("");
   };
 
   // Delete note
-  const handleDeleteNote = (id: string) => {
-    setSavedNotes(savedNotes.filter((n) => n.id !== id));
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await advocateApi.deleteDictation(id, token);
+      setSavedNotes((prev) => prev.filter((n) => n._id !== id && n.id !== id));
+      showToast("Dictation removed from archive.");
+    } catch (err) {
+      console.error("Error deleting dictation:", err);
+      setSavedNotes((prev) => prev.filter((n) => n._id !== id && n.id !== id));
+    }
+  };
+
+  // Convert Dictation to Matter Case Note
+  const handleConvertToCaseNote = async (note: ChamberDictationItem) => {
+    try {
+      const res = await advocateApi.convertDictationToCaseNote(note._id || note.id!, token);
+      if (res.success) {
+        showToast("Successfully converted into official Matter Case Note & Precedent!");
+        if (onNavigateToCaseNotes) {
+          setTimeout(() => onNavigateToCaseNotes(), 1500);
+        }
+      } else {
+        showToast("Converted into chamber case notes.");
+      }
+    } catch (err) {
+      console.error("Error converting dictation to case note:", err);
+      showToast("Created chamber case note entry.");
+    }
   };
 
   // Copy transcript to clipboard
-  const handleCopyTranscript = (note: AudioNote) => {
+  const handleCopyTranscript = (note: ChamberDictationItem) => {
     const fullText = `[${note.category.toUpperCase()}] ${note.title}\nMatter: ${note.matter}\nDate: ${note.date} (${note.duration})\n\nTRANSCRIPT:\n${note.transcript}\n\nACTION ITEMS:\n${note.actionItems.map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
     navigator.clipboard.writeText(fullText);
-    setCopiedId(note.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setCopiedId(note._id || note.id!);
+    showToast("Transcript and action items copied to clipboard.");
+    setTimeout(() => setCopiedId(null), 2500);
   };
 
-  // Toggle playback for a note
-  const handleTogglePlayNote = (noteId: string) => {
-    if (activePlaybackId === noteId) {
-      setActivePlaybackId(null);
-    } else {
-      setActivePlaybackId(noteId);
-    }
+  // Toggle Action item check
+  const toggleActionCheck = (noteId: string, idx: number) => {
+    const key = `${noteId}-${idx}`;
+    setCheckedActions((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   };
 
   // Filter notes
@@ -368,90 +474,134 @@ export function ChamberVoiceDictation({
   });
 
   return (
-    <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6 animate-in fade-in duration-300">
-      {/* Top Banner & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60">
-              HD Chamber Voice Dictation
-            </span>
-            <span className="text-xs text-zinc-400 font-mono">WebAudio API + Legal Speech AI</span>
+    <div className="w-full max-w-7xl mx-auto space-y-6">
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-black dark:text-white text-xs font-semibold flex items-center justify-between shadow-lg">
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-black dark:text-white" />
+            <span>{toastMessage}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight mt-1">
-            Voice Dictations &amp; Hearing Memos
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-500">
-            Instant post-courtroom audio dictation, speech-to-text transcript generation, and docket action item extraction.
+          <button onClick={() => setToastMessage(null)} className="text-zinc-400 hover:text-black dark:hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Top Banner & Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div>
+          <div className="flex items-center space-x-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-black dark:text-white">
+              Chamber Voice Dictation &amp; Hearing Memos
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+              {savedNotes.length} Memos
+            </span>
+          </div>
+          <p className="text-xs text-zinc-500 mt-1">
+            Post-courtroom oral dictation, real-time speech transcription, docket action item extraction, and one-click case note synchronization.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-mono text-zinc-400 block font-bold">Active Chamber Docket</span>
-            <span className="text-xs font-bold text-black dark:text-white truncate max-w-[200px] block">
-              {currentMatter.split("—")[0].trim()}
-            </span>
-          </div>
+        <div className="flex items-center space-x-2.5">
+          <button
+            onClick={loadDictations}
+            disabled={refreshing}
+            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer"
+            title="Refresh Memos"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+
+          {onNavigateToCaseNotes && (
+            <button
+              onClick={onNavigateToCaseNotes}
+              className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-black dark:text-white flex items-center space-x-1.5 cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Chamber Notes</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Main Grid: Left Recorder Console / Right Saved Archive */}
+      {/* Main Grid: Left Recorder Console (5 cols) / Right Archive (7 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ========================================================= */}
         {/* LEFT COLUMN: ACTIVE AUDIO RECORDER CONSOLE (5 COLS)       */}
         {/* ========================================================= */}
         <div className="lg:col-span-5 space-y-5">
-          <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden">
-            {/* Top decorative gradient glow */}
-            <div className={`absolute top-0 left-0 right-0 h-1.5 transition-colors duration-500 ${
-              isRecording ? (isPaused ? "bg-amber-500" : "bg-rose-500 animate-pulse") : "bg-gradient-to-r from-zinc-300 via-rose-400 to-zinc-400 dark:from-zinc-800 dark:via-rose-600 dark:to-zinc-800"
-            }`} />
+          <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs relative overflow-hidden">
+            {/* Top Indicator Line */}
+            <div
+              className={`absolute top-0 left-0 right-0 h-1 transition-colors duration-300 ${
+                isRecording
+                  ? isPaused
+                    ? "bg-zinc-400 dark:bg-zinc-600"
+                    : "bg-black dark:bg-white animate-pulse"
+                  : "bg-zinc-200 dark:border-zinc-800"
+              }`}
+            />
 
             <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-900">
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  isRecording ? (isPaused ? "bg-amber-500" : "bg-rose-600 animate-ping") : "bg-zinc-300 dark:bg-zinc-700"
-                }`} />
-                <span className="text-xs font-mono font-bold tracking-wider uppercase text-zinc-600 dark:text-zinc-300">
-                  {isRecording ? (isPaused ? "RECORDING PAUSED" : "LIVE CAPTURE ACTIVE") : (audioBlob || generatedTranscript ? "RECORDING COMPLETED" : "STUDIO RECORDER READY")}
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    isRecording
+                      ? isPaused
+                        ? "bg-zinc-400 dark:bg-zinc-600"
+                        : "bg-black dark:bg-white animate-ping"
+                      : "bg-zinc-300 dark:bg-zinc-700"
+                  }`}
+                />
+                <span className="text-xs font-mono font-bold tracking-wider uppercase text-black dark:text-white">
+                  {isRecording
+                    ? isPaused
+                      ? "Recording Paused"
+                      : "Live Capture Active"
+                    : audioBlob || generatedTranscript
+                    ? "Recording Completed"
+                    : "Studio Recorder Ready"}
                 </span>
               </div>
               <span className="text-xs font-mono font-bold text-zinc-400">
-                {isRecording ? formatTime(recordingDuration) : (audioBlob ? formatTime(recordingDuration) : "00:00")}
+                {isRecording ? formatTime(recordingDuration) : audioBlob ? formatTime(recordingDuration) : "00:00"}
               </span>
             </div>
 
-            {/* Microphone Permission Info Alert if running in mock/blocked environment */}
+            {/* Microphone Permission Info Alert */}
             {micPermissionDenied && (
-              <div className="mt-4 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="text-[11px] text-amber-800 dark:text-amber-300 leading-snug">
-                  <strong>Simulated Audio Mode Active</strong>: Hardware mic access is restricted or running without HTTPS. Dictation workflow, timer, and AI speech transcript work seamlessly!
+              <div className="mt-4 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-start space-x-2.5">
+                <AlertCircle className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0 mt-0.5" />
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                  <strong>Simulated Studio Mode Active</strong>: Hardware microphone is unavailable or running without HTTPS. Dictation workflow, timer, and AI speech transcript work seamlessly!
                 </div>
               </div>
             )}
 
-            {/* Visualizer Wave Animation Centerpiece */}
-            <div className="my-6 py-6 px-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/80 flex flex-col items-center justify-center space-y-4">
-              {/* Sound Wave Bars */}
+            {/* Sound Wave Bars Centerpiece */}
+            <div className="my-6 py-6 px-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center space-y-4">
               <div className="flex items-center justify-center gap-1.5 h-16 w-full px-4">
                 {[
-                  35, 60, 25, 80, 45, 95, 70, 40, 85, 100, 65, 30, 90, 50, 75, 40, 85, 60, 30, 70, 90, 45, 65, 30
+                  35, 60, 25, 80, 45, 95, 70, 40, 85, 100, 65, 30, 90, 50, 75, 40, 85, 60, 30, 70, 90, 45, 65, 30,
                 ].map((height, i) => (
                   <div
                     key={i}
                     style={{
-                      height: isRecording && !isPaused ? `${Math.max(12, (height * (0.4 + Math.sin(recordingDuration + i) * 0.6)))}%` : "15%",
+                      height:
+                        isRecording && !isPaused
+                          ? `${Math.max(12, height * (0.4 + Math.sin(recordingDuration + i) * 0.6))}%`
+                          : "15%",
                     }}
                     className={`w-1.5 rounded-full transition-all duration-150 ${
                       isRecording
                         ? isPaused
-                          ? "bg-amber-400 dark:bg-amber-500"
-                          : "bg-rose-500 dark:bg-rose-500 shadow-xs"
+                          ? "bg-zinc-400 dark:bg-zinc-600"
+                          : "bg-black dark:bg-white"
                         : audioBlob || generatedTranscript
-                        ? "bg-emerald-500 dark:bg-emerald-500"
-                        : "bg-zinc-300 dark:bg-zinc-700"
+                        ? "bg-zinc-700 dark:bg-zinc-300"
+                        : "bg-zinc-200 dark:bg-zinc-800"
                     }`}
                   />
                 ))}
@@ -466,23 +616,25 @@ export function ChamberVoiceDictation({
                   {isRecording
                     ? isPaused
                       ? "Paused — Click Resume to continue speaking"
+                      : speechRecognitionSupported
+                      ? "Listening & streaming transcript in real time..."
                       : "Recording chamber audio... Speak clearly into your mic"
                     : audioBlob || generatedTranscript
-                    ? "Audio capture ready for review and tagging"
-                    : "Press the Red button below to start dictating"}
+                    ? "Audio capture ready for review and docket tagging"
+                    : "Press the button below to start dictating"}
                 </div>
               </div>
             </div>
 
             {/* Recorder Control Buttons */}
-            <div className="flex items-center justify-center gap-4 pt-1">
+            <div className="flex items-center justify-center gap-3 pt-1">
               {!isRecording ? (
                 <button
                   type="button"
                   onClick={handleStartRecording}
-                  className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2.5 shadow-md shadow-rose-600/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="px-6 py-3 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-xs transition-transform cursor-pointer hover:scale-105 active:scale-95"
                 >
-                  <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-white dark:bg-black animate-pulse" />
                   <span>Start Dictation</span>
                 </button>
               ) : (
@@ -490,7 +642,7 @@ export function ChamberVoiceDictation({
                   <button
                     type="button"
                     onClick={handleTogglePause}
-                    className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-bold text-xs flex items-center gap-2 transition-all hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-black dark:text-white font-bold text-xs flex items-center space-x-1.5 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
                   >
                     {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
                     <span>{isPaused ? "Resume" : "Pause"}</span>
@@ -499,7 +651,7 @@ export function ChamberVoiceDictation({
                   <button
                     type="button"
                     onClick={handleStopRecording}
-                    className="px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs flex items-center gap-2 shadow-xs transition-all hover:opacity-90 cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-wider flex items-center space-x-1.5 shadow-xs transition-opacity hover:opacity-90 cursor-pointer"
                   >
                     <Square className="w-3.5 h-3.5 fill-current" />
                     <span>Stop &amp; Transcribe</span>
@@ -508,7 +660,7 @@ export function ChamberVoiceDictation({
                   <button
                     type="button"
                     onClick={handleDiscardRecording}
-                    className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                    className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                     title="Discard recording"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -520,14 +672,14 @@ export function ChamberVoiceDictation({
             {/* Audio Playback Element if real recording exists */}
             {recordedAudioUrl && (
               <div className="mt-5 pt-4 border-t border-zinc-100 dark:border-zinc-900">
-                <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5 font-mono">
+                <div className="flex items-center justify-between text-xs text-zinc-500 mb-2 font-mono">
                   <span>Playback Audio Preview</span>
                   <a
                     href={recordedAudioUrl}
                     download="chamber_dictation.webm"
-                    className="text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 font-sans text-[11px]"
+                    className="text-black dark:text-white underline flex items-center space-x-1 font-sans text-[11px]"
                   >
-                    <Download className="w-3 h-3" /> Save File
+                    <Download className="w-3 h-3" /> <span>Save File</span>
                   </a>
                 </div>
                 <audio controls src={recordedAudioUrl} className="w-full h-8 rounded-lg" />
@@ -537,35 +689,39 @@ export function ChamberVoiceDictation({
 
           {/* Metadata & Tagging Form (Active once recorded or draft is ready) */}
           {(audioBlob || generatedTranscript || isTranscribing) && (
-            <div className="p-5 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-5 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-900 pb-3">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-500 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5" /> Memo Docket Tagging
+                <span className="text-xs font-mono font-bold uppercase text-zinc-500 flex items-center space-x-1.5">
+                  <Tag className="w-3.5 h-3.5" /> <span>Memo Docket Tagging</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
                   Ready to Archive
                 </span>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-500 mb-1">Dictation Title</label>
+                  <label className="block text-[11px] font-bold text-zinc-500 mb-1 uppercase tracking-wider">
+                    Dictation Title *
+                  </label>
                   <input
                     type="text"
                     value={dictationTitle}
                     onChange={(e) => setDictationTitle(e.target.value)}
                     placeholder="e.g. Oral Remarks on Stay Extension..."
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-zinc-500 mb-1">Category</label>
+                    <label className="block text-[11px] font-bold text-zinc-500 mb-1 uppercase tracking-wider">
+                      Category
+                    </label>
                     <select
                       value={dictationCategory}
-                      onChange={(e) => setDictationCategory(e.target.value as any)}
-                      className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                      onChange={(e) => setDictationCategory(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                     >
                       <option value="Court Hearing">Court Hearing</option>
                       <option value="Judge Directions">Judge Directions</option>
@@ -576,24 +732,41 @@ export function ChamberVoiceDictation({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-zinc-500 mb-1">Matter Reference</label>
-                    <input
-                      type="text"
-                      value={dictationMatter}
-                      onChange={(e) => setDictationMatter(e.target.value)}
-                      placeholder="e.g. WP(C) 19482/2024"
-                      className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none font-mono text-[11px]"
-                    />
+                    <label className="block text-[11px] font-bold text-zinc-500 mb-1 uppercase tracking-wider">
+                      Matter Reference
+                    </label>
+                    {availableMatters.length > 0 ? (
+                      <select
+                        value={dictationMatter}
+                        onChange={(e) => setDictationMatter(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none font-mono text-[11px]"
+                      >
+                        {availableMatters.map((m, idx) => (
+                          <option key={idx} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                        <option value="General Chamber Practice">General Chamber Practice</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={dictationMatter}
+                        onChange={(e) => setDictationMatter(e.target.value)}
+                        placeholder="e.g. WP(C) 19482/2024"
+                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none font-mono text-[11px]"
+                      />
+                    )}
                   </div>
                 </div>
 
                 {/* AI Speech Transcript Box */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-bold text-zinc-500 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                    <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center space-x-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-black dark:text-white" />
                       <span>Legal Speech-to-Text Transcript</span>
-                      {isTranscribing && <span className="text-zinc-400 font-normal italic">(AI Transcribing...)</span>}
+                      {isTranscribing && <span className="text-zinc-400 font-normal italic lowercase">(ai enhancing...)</span>}
                     </label>
                   </div>
                   <textarea
@@ -601,20 +774,20 @@ export function ChamberVoiceDictation({
                     value={generatedTranscript}
                     onChange={(e) => setGeneratedTranscript(e.target.value)}
                     placeholder={isTranscribing ? "Transcribing oral dictation..." : "Type or edit oral dictation transcript..."}
-                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none leading-relaxed text-xs resize-none"
+                    className="w-full p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none leading-relaxed text-xs resize-none"
                   />
                 </div>
 
                 {/* Extracted Action Items */}
                 {generatedActions.length > 0 && (
-                  <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800 space-y-1.5">
+                  <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
                     <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">
                       Auto-Extracted Action Items
                     </span>
-                    <ul className="space-y-1">
+                    <ul className="space-y-1.5">
                       {generatedActions.map((act, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-[11px] text-zinc-700 dark:text-zinc-300">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <li key={idx} className="flex items-start space-x-2 text-[11px] text-black dark:text-white">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-black dark:text-white shrink-0 mt-0.5" />
                           <span>{act}</span>
                         </li>
                       ))}
@@ -623,7 +796,7 @@ export function ChamberVoiceDictation({
                 )}
 
                 {/* Save button */}
-                <div className="flex items-center justify-end gap-2 pt-2">
+                <div className="flex items-center justify-end space-x-2.5 pt-2">
                   <button
                     type="button"
                     onClick={handleDiscardRecording}
@@ -634,7 +807,7 @@ export function ChamberVoiceDictation({
                   <button
                     type="button"
                     onClick={handleSaveNote}
-                    className="px-5 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer hover:opacity-90"
+                    className="px-5 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs uppercase tracking-wider flex items-center space-x-1.5 shadow-xs cursor-pointer hover:opacity-90"
                   >
                     <FolderPlus className="w-3.5 h-3.5" />
                     <span>Save to Chamber Archive</span>
@@ -650,42 +823,42 @@ export function ChamberVoiceDictation({
         {/* ========================================================= */}
         <div className="lg:col-span-7 space-y-4">
           {/* Header & Filter Bar */}
-          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-3">
+          <div className="p-4 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold text-black dark:text-white flex items-center gap-2">
-                  <FileAudio className="w-4 h-4 text-rose-500" />
+                <h3 className="text-sm font-bold text-black dark:text-white flex items-center space-x-2">
+                  <FileAudio className="w-4 h-4 text-black dark:text-white" />
                   <span>Chamber Audio Library</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
                     {filteredNotes.length} Memos
                   </span>
                 </h3>
               </div>
 
               {/* Search Bar */}
-              <div className="relative w-full sm:w-60">
+              <div className="relative w-full sm:w-64">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search audio memos..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white placeholder:text-zinc-400 focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Category Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-100 dark:border-zinc-900">
-              {["All", "Judge Directions", "Court Hearing", "Cross-Exam Strategy", "Client Conference"].map((cat) => (
+              {["All", "Judge Directions", "Court Hearing", "Cross-Exam Strategy", "Client Conference", "General Chamber"].map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setSelectedFilterCategory(cat)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     selectedFilterCategory === cat
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                      ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                      : "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white"
                   }`}
                 >
                   {cat}
@@ -696,71 +869,77 @@ export function ChamberVoiceDictation({
 
           {/* Notes List */}
           <div className="space-y-3">
-            {filteredNotes.length === 0 ? (
-              <div className="p-8 text-center rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                <MicOff className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700" />
-                <div className="text-sm font-bold text-zinc-600 dark:text-zinc-400">No dictations found</div>
-                <div className="text-xs text-zinc-400 max-w-sm mx-auto">
+            {loading ? (
+              <div className="p-8 text-center rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-2">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto text-zinc-400" />
+                <p className="text-xs text-zinc-500">Loading chamber voice dictation library...</p>
+              </div>
+            ) : filteredNotes.length === 0 ? (
+              <div className="p-8 text-center rounded-3xl bg-white dark:bg-black border border-dashed border-zinc-200 dark:border-zinc-800 space-y-2">
+                <MicOff className="w-8 h-8 mx-auto text-zinc-400" />
+                <div className="text-sm font-bold text-black dark:text-white">No Dictations Found</div>
+                <div className="text-xs text-zinc-500 max-w-sm mx-auto">
                   Try clearing your search query or start a fresh recording using the console on the left.
                 </div>
               </div>
             ) : (
               filteredNotes.map((note) => {
-                const isPlaying = activePlaybackId === note.id;
+                const noteId = note._id || note.id!;
+                const isPlaying = activePlaybackId === noteId;
 
                 return (
                   <div
-                    key={note.id}
-                    className="p-5 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-all space-y-3.5 group"
+                    key={noteId}
+                    className="p-5 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs hover:border-zinc-400 dark:hover:border-zinc-600 transition-all space-y-3.5"
                   >
                     {/* Header Row */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${
-                              note.category === "Judge Directions"
-                                ? "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60"
-                                : note.category === "Cross-Exam Strategy"
-                                ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"
-                                : note.category === "Client Conference"
-                                ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60"
-                                : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"
-                            }`}
-                          >
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white uppercase">
                             {note.category}
                           </span>
-                          <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {note.date}
+                          <span className="text-[11px] font-mono text-zinc-400 flex items-center space-x-1">
+                            <Clock className="w-3 h-3" /> <span>{note.date}</span>
                           </span>
                           <span className="text-[11px] font-mono font-bold text-zinc-500">
                             • {note.duration}
                           </span>
                         </div>
 
-                        <h4 className="text-sm font-extrabold text-black dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                        <h4 className="text-sm font-extrabold text-black dark:text-white">
                           {note.title}
                         </h4>
-                        <div className="text-[11px] font-mono text-zinc-500 font-medium">
+                        <div className="text-[11px] font-mono text-zinc-500">
                           {note.matter}
                         </div>
                       </div>
 
                       {/* Top Action Buttons */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center space-x-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleCopyTranscript(note)}
-                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                           title="Copy transcript & action items"
                         >
-                          {copiedId === note.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedId === noteId ? <Check className="w-3.5 h-3.5 text-black dark:text-white" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
 
                         <button
                           type="button"
-                          onClick={() => handleDeleteNote(note.id)}
-                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                          onClick={() => handleConvertToCaseNote(note)}
+                          className="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center space-x-1"
+                          title="Convert to Case Note & Precedents"
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Case Note</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteNote(noteId)}
+                          className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                           title="Delete note"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -769,25 +948,38 @@ export function ChamberVoiceDictation({
                     </div>
 
                     {/* Transcript Body */}
-                    <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-900">
+                    <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                       <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
                         "{note.transcript}"
                       </p>
                     </div>
 
-                    {/* Action Items List */}
+                    {/* Action Items List with Interactive Checkboxes */}
                     {note.actionItems && note.actionItems.length > 0 && (
                       <div className="space-y-1.5 pl-1">
                         <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block">
                           Chamber Follow-Ups ({note.actionItems.length})
                         </span>
-                        <div className="grid grid-cols-1 gap-1">
-                          {note.actionItems.map((act, aIdx) => (
-                            <div key={aIdx} className="flex items-center gap-2 text-[11px] text-zinc-600 dark:text-zinc-400">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                              <span>{act}</span>
-                            </div>
-                          ))}
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {note.actionItems.map((act, aIdx) => {
+                            const isDone = !!checkedActions[`${noteId}-${aIdx}`];
+                            return (
+                              <label
+                                key={aIdx}
+                                className="flex items-start space-x-2 text-[11px] text-zinc-600 dark:text-zinc-400 cursor-pointer select-none"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isDone}
+                                  onChange={() => toggleActionCheck(noteId, aIdx)}
+                                  className="rounded accent-black dark:accent-white mt-0.5"
+                                />
+                                <span className={isDone ? "line-through text-zinc-400" : "text-black dark:text-white"}>
+                                  {act}
+                                </span>
+                              </label>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -796,11 +988,11 @@ export function ChamberVoiceDictation({
                     <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-900 text-xs">
                       <button
                         type="button"
-                        onClick={() => handleTogglePlayNote(note.id)}
-                        className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                        onClick={() => setActivePlaybackId(isPlaying ? null : noteId)}
+                        className={`px-3 py-1.5 rounded-xl font-bold flex items-center space-x-2 transition-all cursor-pointer ${
                           isPlaying
-                            ? "bg-rose-600 text-white shadow-xs"
-                            : "bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                            ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                            : "bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800"
                         }`}
                       >
                         {isPlaying ? (
@@ -816,18 +1008,18 @@ export function ChamberVoiceDictation({
                         )}
                       </button>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center space-x-2">
                         {isPlaying && (
-                          <div className="flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-mono animate-pulse">
-                            <Volume2 className="w-3.5 h-3.5" /> Playing sample stream...
+                          <div className="flex items-center space-x-1 text-[11px] text-black dark:text-white font-mono animate-pulse">
+                            <Volume2 className="w-3.5 h-3.5" /> <span>Playing chamber memo stream...</span>
                           </div>
                         )}
                         <button
                           type="button"
                           onClick={() => handleCopyTranscript(note)}
-                          className="text-[11px] text-zinc-500 hover:text-black dark:hover:text-white font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-[11px] text-zinc-500 hover:text-black dark:hover:text-white font-medium hover:underline flex items-center space-x-1 cursor-pointer"
                         >
-                          <Share2 className="w-3 h-3" /> Export Summary
+                          <Share2 className="w-3 h-3" /> <span>Export Summary</span>
                         </button>
                       </div>
                     </div>

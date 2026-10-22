@@ -39,6 +39,10 @@ import {
   getClientDetails,
   addClient,
   updateClient,
+  getDictations,
+  createDictation,
+  deleteDictation,
+  convertDictationToCaseNote,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -103,5 +107,11 @@ router.get("/clients", protect, getClients);
 router.get("/clients/:id", protect, getClientDetails);
 router.post("/clients", protect, addClient);
 router.put("/clients/:id", protect, updateClient);
+
+// 12. Chamber Voice Dictations & Audio Notes
+router.get("/dictations", protect, getDictations);
+router.post("/dictations", protect, createDictation);
+router.delete("/dictations/:id", protect, deleteDictation);
+router.post("/dictations/:id/convert-to-case-note", protect, convertDictationToCaseNote);
 
 export default router;

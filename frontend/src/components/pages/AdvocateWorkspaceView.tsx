@@ -2825,6 +2825,9 @@ export function AdvocateWorkspaceView() {
           {isRecordings && (
             <ChamberVoiceDictation
               currentMatter={selectedMatter}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+              onNavigateToCaseNotes={() => setActiveTab("notes")}
             />
           )}
 

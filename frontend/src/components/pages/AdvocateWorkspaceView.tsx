@@ -21,6 +21,7 @@ import { AnalyticsView } from "@/components/advocate/AnalyticsView";
 import { ProductivityView } from "@/components/advocate/ProductivityView";
 import { AdvocateConsultationsView } from "@/components/advocate/AdvocateConsultationsView";
 import { AdvocateInboxView } from "@/components/advocate/AdvocateInboxView";
+import { AdvocateClientsView } from "@/components/advocate/AdvocateClientsView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { PromoView } from "@/components/advocate/PromoView";
 import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
@@ -2810,60 +2811,13 @@ export function AdvocateWorkspaceView() {
           {/* VIEW 5: Clients / Citizens Directory                           */}
           {/* ============================================================== */}
           {activeTab === "clients" && (
-            <div className="max-w-6xl mx-auto space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
-                <div>
-                  <h2 className="text-xl font-bold text-black dark:text-white">
-                    Citizen &amp; Client Representation Roster
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    Verified citizen consultation bookings, active briefs, and retainer accounts.
-                  </p>
-                </div>
-                <button className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs uppercase tracking-wider cursor-pointer">
-                  + Add New Client
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  {
-                    name: "Gopakumar Nambiar",
-                    location: "Kochi, Kerala",
-                    matter: "WP(C) 19482/2024 (Writ Petition — KSEB)",
-                    nextEvent: "Hearing 18 Oct 2026",
-                    status: "Active Matter",
-                  },
-                  {
-                    name: "Malabar Infotech Solutions",
-                    location: "Ernakulam, Kerala",
-                    matter: "ARB/NCLT/KOCHI/2024/041 (Arbitration Claim)",
-                    nextEvent: "Drafting settlement statement",
-                    status: "Pre Filing",
-                  },
-                ].map((c, idx) => (
-                  <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-base font-bold text-black dark:text-white">{c.name}</span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                        {c.status}
-                      </span>
-                    </div>
-                    <span className="text-xs text-zinc-500 block">{c.location}</span>
-                    <p className="text-xs font-semibold text-black dark:text-white">{c.matter}</p>
-                    <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-900 text-xs">
-                      <span className="text-zinc-400 font-mono text-[11px]">{c.nextEvent}</span>
-                      <button
-                        onClick={() => setActiveTab("messages")}
-                        className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold cursor-pointer"
-                      >
-                        Message
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AdvocateClientsView
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              advocateName={displayFullName}
+              onOpenChat={() => setActiveTab("messages")}
+              onOpenConsultation={() => setActiveTab("appointments")}
+              onOpenMatter={() => setActiveTab("matters")}
+            />
           )}
 
           {/* ============================================================== */}

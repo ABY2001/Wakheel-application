@@ -6,6 +6,7 @@ import { Matter } from "../models/Matter.js";
 import { Consultation } from "../models/Consultation.js";
 import { Grievance } from "../models/Grievance.js";
 import { CitizenDocument } from "../models/CitizenDocument.js";
+import { CitizenProfile } from "../models/CitizenProfile.js";
 import { Message } from "../models/Message.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
@@ -1250,6 +1251,215 @@ export const getAdvocateUnreadMessageCount = async (req, res) => {
     res.json({ success: true, unreadCount: count, mode: "cloud_db" });
   } catch (error) {
     console.error("getAdvocateUnreadMessageCount error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 11. ADVOCATE CLIENTS ROSTER & 360° CLIENT DOSSIER
+// ============================================================================
+
+// @desc    Get all represented clients for advocate
+// @route   GET /api/advocate/clients
+// @access  Private (Advocate)
+export const getClients = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+
+    if (shouldUseDevStore()) {
+      const clients = devStore.getClients(advocateId);
+      return res.json({ success: true, count: clients.length, clients, mode: "dummy_data" });
+    }
+
+    const profiles = await CitizenProfile.find().sort({ createdAt: -1 });
+    const matters = await Matter.find({ advocateId });
+
+    const clients = profiles.map((p) => {
+      const clientMatters = matters.filter((m) => m.citizenId?.toString() === p.userId?.toString());
+      return {
+        _id: p._id,
+        citizenId: p.userId,
+        fullName: p.fullName,
+        email: p.email,
+        phone: p.phone,
+        location: `${p.address?.city || "Ernakulam"}, ${p.address?.state || "Kerala"}`,
+        category: p.panNumber ? "Individual Citizen" : "Individual",
+        kycVerified: p.kycVerified || false,
+        vakalatnamaExecuted: true,
+        status: clientMatters.length > 0 ? "Active Matter" : "Pre Filing",
+        activeMattersCount: clientMatters.length,
+        activeMatters: clientMatters.map((m) => m.matterTitle),
+        totalBilled: clientMatters.reduce((acc, m) => acc + (m.totalFeesBilled || 0), 0),
+        totalPaid: clientMatters.reduce((acc, m) => acc + (m.feesPaid || 0), 0),
+        nextHearing: clientMatters[0]?.nextHearingDate || "Pending Registry Listing",
+      };
+    });
+
+    res.json({ success: true, count: clients.length, clients, mode: "cloud_db" });
+  } catch (error) {
+    console.error("getClients error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get complete 360° client dossier
+// @route   GET /api/advocate/clients/:id
+// @access  Private (Advocate)
+export const getClientDetails = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const client = devStore.getClientById(id);
+      if (!client) return res.status(404).json({ success: false, message: "Client not found" });
+
+      const citizenId = client.citizenId;
+      const allMatters = devStore.getMatters(citizenId);
+      const allConsultations = devStore.getConsultations(citizenId);
+      const allInvoices = devStore.getInvoices(advocateId);
+      const clientInvoices = allInvoices.filter((inv) => inv.citizenId === citizenId || citizenId === "default_citizen");
+      const clientDocs = devStore.getDocuments(citizenId);
+
+      return res.json({
+        success: true,
+        client,
+        dossier: {
+          matters: allMatters,
+          consultations: allConsultations,
+          invoices: clientInvoices,
+          documents: clientDocs,
+        },
+        mode: "dummy_data",
+      });
+    }
+
+    const client = await CitizenProfile.findById(id);
+    if (!client) return res.status(404).json({ success: false, message: "Client not found" });
+
+    const citizenId = client.userId;
+    const clientMatters = await Matter.find({ citizenId });
+    const clientConsultations = await Consultation.find({ citizenId });
+    const clientInvoices = await Invoice.find({ citizenId });
+    const clientDocs = await CitizenDocument.find({ citizenId });
+
+    res.json({
+      success: true,
+      client,
+      dossier: {
+        matters: clientMatters,
+        consultations: clientConsultations,
+        invoices: clientInvoices,
+        documents: clientDocs,
+      },
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("getClientDetails error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Onboard a new client into the chamber representation roster
+// @route   POST /api/advocate/clients
+// @access  Private (Advocate)
+export const addClient = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const {
+      fullName,
+      email,
+      phone,
+      category = "Individual Citizen",
+      contactPerson,
+      city = "Kochi",
+      initialMatter,
+      totalBilled = 0,
+      notes = "",
+      vakalatnamaExecuted = false,
+    } = req.body;
+
+    if (!fullName || !fullName.trim()) {
+      return res.status(400).json({ success: false, message: "Client full name is required" });
+    }
+
+    const clientPayload = {
+      fullName: fullName.trim(),
+      email: email ? email.trim() : "",
+      phone: phone ? phone.trim() : "",
+      category,
+      contactPerson: contactPerson || "",
+      city,
+      location: `${city}, Kerala`,
+      initialMatter: initialMatter ? initialMatter.trim() : "",
+      totalBilled: Number(totalBilled) || 0,
+      totalPaid: 0,
+      notes: notes.trim(),
+      vakalatnamaExecuted: !!vakalatnamaExecuted,
+      kycVerified: true,
+      status: initialMatter ? "Active Matter" : "Pre Filing",
+      advocateId,
+    };
+
+    if (shouldUseDevStore()) {
+      const created = devStore.addClient(clientPayload);
+      return res.status(201).json({
+        success: true,
+        message: "Client successfully onboarded to chamber representation roster",
+        client: created,
+        mode: "dummy_data",
+      });
+    }
+
+    const created = await CitizenProfile.create({
+      fullName: clientPayload.fullName,
+      email: clientPayload.email || `client_${Date.now()}@wakheel.law`,
+      phone: clientPayload.phone,
+      address: { city, state: "Kerala" },
+      kycVerified: true,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Client successfully onboarded to chamber representation roster",
+      client: created,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("addClient error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update client information, KYC status, or vakalatnama
+// @route   PUT /api/advocate/clients/:id
+// @access  Private (Advocate)
+export const updateClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.updateClient(id, req.body);
+      if (!updated) return res.status(404).json({ success: false, message: "Client not found" });
+      return res.json({
+        success: true,
+        message: "Client representation details updated",
+        client: updated,
+        mode: "dummy_data",
+      });
+    }
+
+    const updated = await CitizenProfile.findByIdAndUpdate(id, { $set: req.body }, { new: true });
+    if (!updated) return res.status(404).json({ success: false, message: "Client not found" });
+
+    res.json({
+      success: true,
+      message: "Client representation details updated",
+      client: updated,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("updateClient error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

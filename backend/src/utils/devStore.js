@@ -964,6 +964,134 @@ const DEFAULT_MESSAGES = [
   },
 ];
 
+const DEFAULT_CLIENTS = [
+  {
+    _id: "cli_101",
+    id: "cli_101",
+    citizenId: "default_citizen",
+    advocateId: "adv_1",
+    fullName: "Gopakumar Nambiar",
+    category: "Individual Citizen",
+    email: "gopakumar.law@gmail.com",
+    phone: "+91 94471 28400",
+    alternatePhone: "+91 98460 31200",
+    address: {
+      street: "Nambiar Nilayam, Panampilly Nagar",
+      city: "Kochi",
+      district: "Ernakulam",
+      state: "Kerala",
+      pincode: "682036",
+    },
+    location: "Kochi, Kerala",
+    kycVerified: true,
+    vakalatnamaExecuted: true,
+    status: "Active Matter",
+    activeMatters: [
+      "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
+      "Sec. 138 NI Act — Statutory Notice v. Coastal Logistics",
+    ],
+    activeMattersCount: 2,
+    totalBilled: 35000,
+    totalPaid: 25000,
+    nextHearing: "18 Oct 2026 • Court Hall 2A (High Court)",
+    notes: "Main agricultural land transmission line dispute. Very responsive on WhatsApp and speed post notices.",
+    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "cli_102",
+    id: "cli_102",
+    citizenId: "client_malabar",
+    advocateId: "adv_1",
+    fullName: "Malabar Infotech Solutions Pvt Ltd",
+    category: "Corporate Enterprise",
+    contactPerson: "Rajeev Menon (Managing Director)",
+    email: "legal@malabarinfotech.in",
+    phone: "+91 484 298100",
+    alternatePhone: "+91 94470 55100",
+    address: {
+      street: "Module 4B, Phase II, Infopark Kakkanad",
+      city: "Kochi",
+      district: "Ernakulam",
+      state: "Kerala",
+      pincode: "682042",
+    },
+    location: "Infopark Kochi, Kerala",
+    kycVerified: true,
+    vakalatnamaExecuted: true,
+    status: "Active Matter",
+    activeMatters: [
+      "ARB/NCLT/KOCHI/2024/041 — Commercial Arbitration Claim",
+    ],
+    activeMattersCount: 1,
+    totalBilled: 120000,
+    totalPaid: 120000,
+    nextHearing: "24 Oct 2026 • Arbitral Tribunal Chamber",
+    notes: "Corporate retainer account. Software development contractual dispute with vendor.",
+    createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "cli_103",
+    id: "cli_103",
+    citizenId: "client_deepa",
+    advocateId: "adv_1",
+    fullName: "Deepa V. Kurup",
+    category: "Individual Citizen",
+    email: "deepa.kurup@outlook.com",
+    phone: "+91 98470 11234",
+    address: {
+      street: "Kurup House, Bank Junction",
+      city: "Aluva",
+      district: "Ernakulam",
+      state: "Kerala",
+      pincode: "683101",
+    },
+    location: "Aluva, Kerala",
+    kycVerified: true,
+    vakalatnamaExecuted: true,
+    status: "Pre Filing",
+    activeMatters: [
+      "Sub Court OS 412/2023 — Property Demarcation & Boundary Injunction",
+    ],
+    activeMattersCount: 1,
+    totalBilled: 18000,
+    totalPaid: 15000,
+    nextHearing: "28 Oct 2026 • Sub Court Ernakulam",
+    notes: "Boundary dispute with neighboring plot. Commission mahazar inspection scheduled.",
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: "cli_104",
+    id: "cli_104",
+    citizenId: "client_vanguard",
+    advocateId: "adv_1",
+    fullName: "Vanguard Infrastructure Ltd",
+    category: "Corporate Enterprise",
+    contactPerson: "K. S. Narayanan (VP Legal)",
+    email: "contracts@vanguardinfra.com",
+    phone: "+91 484 410290",
+    address: {
+      street: "Chamber #8, Marine Drive Commercial Center",
+      city: "Kochi",
+      district: "Ernakulam",
+      state: "Kerala",
+      pincode: "682011",
+    },
+    location: "Marine Drive, Kochi",
+    kycVerified: true,
+    vakalatnamaExecuted: false,
+    status: "Retainer",
+    activeMatters: [
+      "WP(C) 4921/2026 — Vanguard Infrastructure v. NHAI & Ors.",
+    ],
+    activeMattersCount: 1,
+    totalBilled: 85000,
+    totalPaid: 50000,
+    nextHearing: "12 Nov 2026 • High Court of Kerala",
+    notes: "Highway concessionaire alignment dispute. Special Leave Petition grounds under preparation.",
+    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -2208,5 +2336,67 @@ export const devStore = {
   getAdvocateUnreadCount(advocateId = "adv_1") {
     const messages = this.getAdvocateMessages(advocateId);
     return messages.filter((m) => m.recipientRole === "advocate" && !m.isRead).length;
+  },
+
+  // --- Advocate Clients & Representation Roster ---
+  getClients(advocateId = "adv_1") {
+    const clients = readFile("dev_clients.json", DEFAULT_CLIENTS);
+    if (!clients || clients.length === 0) {
+      writeFile("dev_clients.json", DEFAULT_CLIENTS);
+      return DEFAULT_CLIENTS;
+    }
+    return clients;
+  },
+
+  getClientById(id) {
+    const clients = readFile("dev_clients.json", DEFAULT_CLIENTS);
+    return clients.find((c) => c._id === id || c.id === id || c.citizenId === id) || null;
+  },
+
+  addClient(data) {
+    const clients = readFile("dev_clients.json", DEFAULT_CLIENTS);
+    const newClient = {
+      _id: "cli_" + Date.now().toString(),
+      id: "cli_" + Date.now().toString(),
+      citizenId: data.citizenId || "cit_" + Date.now().toString(),
+      advocateId: data.advocateId || "adv_1",
+      fullName: data.fullName,
+      category: data.category || "Individual Citizen",
+      contactPerson: data.contactPerson || "",
+      email: data.email || "",
+      phone: data.phone || "",
+      alternatePhone: data.alternatePhone || "",
+      address: data.address || {
+        city: data.city || "Kochi",
+        state: "Kerala",
+        district: "Ernakulam",
+      },
+      location: data.location || `${data.city || "Kochi"}, Kerala`,
+      kycVerified: data.kycVerified !== undefined ? data.kycVerified : true,
+      vakalatnamaExecuted: data.vakalatnamaExecuted !== undefined ? data.vakalatnamaExecuted : false,
+      status: data.status || "Active Matter",
+      activeMatters: data.initialMatter ? [data.initialMatter] : [],
+      activeMattersCount: data.initialMatter ? 1 : 0,
+      totalBilled: Number(data.totalBilled) || 0,
+      totalPaid: Number(data.totalPaid) || 0,
+      nextHearing: data.nextHearing || "Initial Chamber Conference",
+      notes: data.notes || "",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    clients.unshift(newClient);
+    writeFile("dev_clients.json", clients);
+    return newClient;
+  },
+
+  updateClient(id, updates) {
+    const clients = readFile("dev_clients.json", DEFAULT_CLIENTS);
+    const idx = clients.findIndex((c) => c._id === id || c.id === id || c.citizenId === id);
+    if (idx !== -1) {
+      clients[idx] = { ...clients[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_clients.json", clients);
+      return clients[idx];
+    }
+    return null;
   },
 };

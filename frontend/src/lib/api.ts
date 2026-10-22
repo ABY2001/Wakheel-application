@@ -855,6 +855,37 @@ export interface AdvocateProfileData {
   upiId?: string;
 }
 
+export interface AdvocateClientItem {
+  _id: string;
+  citizenId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  category: "Individual Citizen" | "Corporate Enterprise" | "MSME" | "Retainer Client" | string;
+  kycVerified: boolean;
+  vakalatnamaExecuted: boolean;
+  status: "Active Matter" | "Pre Filing" | "Retainer" | "Disposed" | string;
+  activeMattersCount: number;
+  activeMatters: string[];
+  totalBilled: number;
+  totalPaid: number;
+  nextHearing: string;
+  panOrGstin?: string;
+  notes?: string;
+  since?: string;
+}
+
+export interface AdvocateClientDossier {
+  client: AdvocateClientItem;
+  dossier: {
+    matters: any[];
+    consultations: any[];
+    invoices: any[];
+    documents: any[];
+  };
+}
+
 export const advocateApi = {
   getAuthHeader(token?: string) {
     const activeToken =
@@ -1350,6 +1381,83 @@ export const advocateApi = {
   }> {
     const res = await fetch(`${API_BASE_URL}/advocate/messages/unread-count`, {
       headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  // 11. Client Representation Roster & 360 Dossiers
+  async getClients(token?: string): Promise<{
+    success: boolean;
+    count: number;
+    clients: AdvocateClientItem[];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/clients`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getClientDetails(id: string, token?: string): Promise<{
+    success: boolean;
+    client: AdvocateClientItem;
+    dossier: AdvocateClientDossier["dossier"];
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/clients/${encodeURIComponent(id)}`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async addClient(
+    data: {
+      fullName: string;
+      email?: string;
+      phone?: string;
+      location?: string;
+      category?: string;
+      panOrGstin?: string;
+      initialMatterTitle?: string;
+      vakalatnamaExecuted?: boolean;
+      kycVerified?: boolean;
+      notes?: string;
+    },
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    client: AdvocateClientItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/clients`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateClient(
+    id: string,
+    updates: Partial<AdvocateClientItem>,
+    token?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    client: AdvocateClientItem;
+    mode: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/advocate/clients/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
     });
     return await res.json();
   },

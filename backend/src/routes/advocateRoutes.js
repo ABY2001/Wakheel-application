@@ -35,6 +35,10 @@ import {
   sendAdvocateMessage,
   markAdvocateMessagesRead,
   getAdvocateUnreadMessageCount,
+  getClients,
+  getClientDetails,
+  addClient,
+  updateClient,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -93,5 +97,11 @@ router.get("/messages/unread-count", protect, getAdvocateUnreadMessageCount);
 router.get("/messages/thread/:citizenId", protect, getAdvocateThread);
 router.post("/messages/send", protect, sendAdvocateMessage);
 router.put("/messages/read/:citizenId", protect, markAdvocateMessagesRead);
+
+// 11. Client Representation Roster & 360 Dossiers
+router.get("/clients", protect, getClients);
+router.get("/clients/:id", protect, getClientDetails);
+router.post("/clients", protect, addClient);
+router.put("/clients/:id", protect, updateClient);
 
 export default router;

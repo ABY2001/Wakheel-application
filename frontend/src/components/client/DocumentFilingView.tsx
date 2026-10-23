@@ -82,11 +82,12 @@ const CATEGORIES_LIST = [
 
 interface DocumentFilingViewProps {
   onFilingSubmitted?: (filing: any) => void;
+  initialMatter?: string;
 }
 
-export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProps) {
+export function DocumentFilingView({ onFilingSubmitted, initialMatter }: DocumentFilingViewProps) {
   const [mattersList, setMattersList] = useState<string[]>(MATTERS_LIST);
-  const [selectedMatter, setSelectedMatter] = useState(MATTERS_LIST[0]);
+  const [selectedMatter, setSelectedMatter] = useState(initialMatter || MATTERS_LIST[0]);
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES_LIST[0]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filingRemarks, setFilingRemarks] = useState("");
@@ -95,6 +96,55 @@ export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProp
   const [submittedHistory, setSubmittedHistory] = useState<SubmittedFiling[]>(DEFAULT_FILINGS);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Sync selected matter if initialMatter changes from header switcher
+  useEffect(() => {
+    if (initialMatter) {
+      const match = mattersList.find(
+        (m) =>
+          m.toLowerCase().includes(initialMatter.toLowerCase().slice(0, 15)) ||
+          initialMatter.toLowerCase().includes(m.toLowerCase().slice(0, 15))
+      );
+      setSelectedMatter(match || initialMatter);
+    }
+  }, [initialMatter, mattersList]);
+
+  // Resolve assigned advocate name and credentials for the selected matter
+  const resolveAdvocate = (matter: string) => {
+    const m = matter.toLowerCase();
+    if (m.includes("19482") || m.includes("kseb")) {
+      return {
+        name: "Adv. Meera Krishnan",
+        enrolment: "K/001429/2012",
+        chamber: "High Court of Kerala (Court Hall 2A)",
+        specialization: "Senior Counsel • Constitutional & Writs",
+      };
+    }
+    if (m.includes("nclt") || m.includes("malabar")) {
+      return {
+        name: "Adv. Rajesh V. Varma",
+        enrolment: "K/002194/2015",
+        chamber: "NCLT Kochi Bench & Commercial Court",
+        specialization: "Corporate & Insolvency Counsel",
+      };
+    }
+    if (m.includes("412") || m.includes("varghese")) {
+      return {
+        name: "Adv. Rajesh V. Varma",
+        enrolment: "K/002194/2015",
+        chamber: "Sub Court, Ernakulam",
+        specialization: "Civil & Land Title Dispute Counsel",
+      };
+    }
+    return {
+      name: "Adv. Meera Krishnan",
+      enrolment: "K/001429/2012",
+      chamber: "High Court of Kerala",
+      specialization: "Senior Counsel • High Court Writs",
+    };
+  };
+
+  const currentAdvocate = resolveAdvocate(selectedMatter);
 
   // Sync matters list and filings history from backend API
   useEffect(() => {
@@ -175,7 +225,7 @@ export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProp
         size: fileSize,
         fileSize,
         remarks: filingRemarks,
-        advocateName: "Adv. Meera Krishnan",
+        advocateName: currentAdvocate.name,
       });
 
       if (res?.success && res.filing) {
@@ -190,7 +240,7 @@ export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProp
           size: fileSize,
           date: "Just now",
           status: "Transmitted to Advocate",
-          advocateName: "Adv. Meera Krishnan",
+          advocateName: currentAdvocate.name,
         };
         setSubmittedHistory([newFiling, ...submittedHistory]);
         if (onFilingSubmitted) onFilingSubmitted(newFiling);
@@ -241,13 +291,13 @@ export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProp
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-black dark:text-white" />
             <span className="font-bold text-black dark:text-white">
-              Document securely transmitted to Adv. Meera Krishnan for review!
+              Document securely transmitted to {currentAdvocate.name} for review!
             </span>
           </div>
           <button
             type="button"
             onClick={() => setShowSuccessBanner(false)}
-            className="text-zinc-400 hover:text-black dark:hover:text-white p-1"
+            className="text-zinc-400 hover:text-black dark:hover:text-white p-1 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -257,17 +307,29 @@ export function DocumentFilingView({ onFilingSubmitted }: DocumentFilingViewProp
       {/* Main Submission Form Card (Matching exact screenshot fields & our color palette) */}
       <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-6 sm:p-8 space-y-6 shadow-xs">
         <form onSubmit={handleSubmit} className="space-y-5 text-xs sm:text-sm">
-          {/* Field 1: Select Matter */}
+          {/* Field 1: Select Matter & Assigned Counsel */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
-              Select Matter
-            </label>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                Select Matter
+              </label>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-black dark:text-white">
+                <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white shrink-0" />
+                <span className="text-zinc-500 font-medium">Assigned Counsel:</span>
+                <strong className="font-bold underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-2">
+                  {currentAdvocate.name}
+                </strong>
+                <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+                  ({currentAdvocate.enrolment})
+                </span>
+              </div>
+            </div>
             <select
               value={selectedMatter}
               onChange={(e) => setSelectedMatter(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs sm:text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
             >
-              {MATTERS_LIST.map((m) => (
+              {mattersList.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>

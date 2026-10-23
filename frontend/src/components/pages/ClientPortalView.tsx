@@ -107,6 +107,7 @@ export function ClientPortalView() {
 
   // Active Matter Switcher state
   const [selectedMatter, setSelectedMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+  const [advocatePopoverOpen, setAdvocatePopoverOpen] = useState(false);
 
   // Collapsible Submenu States
   const [askAiOpen, setAskAiOpen] = useState(true);
@@ -837,6 +838,116 @@ export function ClientPortalView() {
 
   const isAnalytics = ["ai-analytics", "ai-reports"].includes(activeTab);
 
+  // Helper to resolve assigned advocate for the active matter
+  const getAssignedAdvocate = (matterTitle: string) => {
+    const found = matters.find(
+      (m) =>
+        (m.matterTitle && m.matterTitle.toLowerCase().includes(matterTitle.toLowerCase().slice(0, 15))) ||
+        (m.caseNumber && matterTitle.toLowerCase().includes(m.caseNumber.toLowerCase())) ||
+        m._id === matterTitle
+    );
+
+    if (found && found.advocateName) {
+      const isMeera = found.advocateName.toLowerCase().includes("meera");
+      return {
+        name: found.advocateName,
+        enrolment: isMeera ? "K/001429/2012" : "K/002194/2015",
+        chamber: found.courtForum || "High Court of Kerala (Ernakulam)",
+        specialization: isMeera ? "Senior Counsel • Constitutional & Civil Writs" : "Corporate & Commercial Litigation",
+        avatarText: isMeera ? "MK" : "RV",
+        status: "Active Representation",
+        verified: true,
+      };
+    }
+
+    if (matterTitle.toLowerCase().includes("19482") || matterTitle.toLowerCase().includes("kseb")) {
+      return {
+        name: "Adv. Meera Krishnan",
+        enrolment: "K/001429/2012",
+        chamber: "High Court of Kerala (Court Hall 2A)",
+        specialization: "Senior Counsel • Constitutional & Writs",
+        avatarText: "MK",
+        status: "Active Representation",
+        verified: true,
+      };
+    }
+
+    if (matterTitle.toLowerCase().includes("nclt") || matterTitle.toLowerCase().includes("malabar")) {
+      return {
+        name: "Adv. Rajesh V. Varma",
+        enrolment: "K/002194/2015",
+        chamber: "NCLT Kochi Bench & Commercial Court",
+        specialization: "Corporate & Insolvency Counsel",
+        avatarText: "RV",
+        status: "Active Representation",
+        verified: true,
+      };
+    }
+
+    if (matterTitle.toLowerCase().includes("412") || matterTitle.toLowerCase().includes("varghese")) {
+      return {
+        name: "Adv. Rajesh V. Varma",
+        enrolment: "K/002194/2015",
+        chamber: "Sub Court, Ernakulam",
+        specialization: "Civil & Land Title Dispute Counsel",
+        avatarText: "RV",
+        status: "Active Representation",
+        verified: true,
+      };
+    }
+
+    if (matterTitle === "new") {
+      return {
+        name: "Counsel Matching Pending",
+        enrolment: "Bar Council of Kerala",
+        chamber: "Chamber Registry Intake",
+        specialization: "Intake Triage in Progress",
+        avatarText: "AI",
+        status: "Awaiting Counsel Assignment",
+        verified: false,
+      };
+    }
+
+    return {
+      name: "Adv. Meera Krishnan",
+      enrolment: "K/001429/2012",
+      chamber: "High Court of Kerala (Ernakulam)",
+      specialization: "Senior Counsel • High Court Writs",
+      avatarText: "MK",
+      status: "Active Representation",
+      verified: true,
+    };
+  };
+
+  const availableMatters =
+    matters.length > 0
+      ? matters.map((m) => ({
+          id: m._id || m.caseNumber,
+          title: m.matterTitle || `${m.caseNumber} — ${m.title || "Legal Matter"}`,
+          shortTitle: m.caseNumber
+            ? `${m.caseNumber} — ${((m.matterTitle || m.title || "").split("—")[1] || (m.matterTitle || m.title || "")).slice(0, 16).trim()}...`
+            : m.matterTitle,
+        }))
+      : [
+          {
+            id: "mat_wpc_19482",
+            title: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+            shortTitle: "WP(C) 19482/2024 — Gopakumar ...",
+          },
+          {
+            id: "mat_nclt_041",
+            title: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
+            shortTitle: "ARB/NCLT/KOCHI/2024/041 — Malabar ...",
+          },
+          {
+            id: "mat_os_412",
+            title: "OS 412/2023 — Gopakumar v. Varghese Builders",
+            shortTitle: "OS 412/2023 — Gopakumar v. Varghese ...",
+          },
+        ];
+
+  const assignedAdvocate = getAssignedAdvocate(selectedMatter);
+
   return (
     <div className="h-screen w-screen flex bg-white dark:bg-black text-black dark:text-white font-sans overflow-hidden transition-colors duration-200">
       
@@ -1207,26 +1318,140 @@ export function ClientPortalView() {
           MAIN CANVAS (Matching Screenshot Exactly)
       ========================================================================= */}
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden bg-zinc-50 dark:bg-black">
-        
         {/* Top Header Bar */}
-        <header className="px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex items-center justify-between shrink-0 shadow-xs">
-          
-          {/* Left: Active Matter Switcher */}
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white font-medium">
-              <Scale className="w-3.5 h-3.5 text-black dark:text-white" />
-              <span className="font-bold">Active Matter:</span>
-              <select
-                value={selectedMatter}
-                onChange={(e) => setSelectedMatter(e.target.value)}
-                className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white"
-              >
-                <option value="WP(C) 19482/2024 — Gopakumar v. KSEB">WP(C) 19482/2024 — Gopakumar ...</option>
-                <option value="ARB/NCLT/KOCHI/2024/041 — Malabar Infotech">ARB/NCLT/KOCHI/2024/041 — Malabar ...</option>
-                <option value="new">+ Intake New Legal Issue</option>
-              </select>
-            </div>
-          </div>
+            <header className="px-4 sm:px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex items-center justify-between shrink-0 shadow-xs gap-3">
+              {/* Left: Active Matter Switcher & Assigned Advocate Section */}
+              <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+                {/* Active Matter Switcher */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white font-medium shadow-2xs">
+                  <Scale className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                  <span className="font-bold shrink-0">Active Matter:</span>
+                  <select
+                    value={selectedMatter}
+                    onChange={(e) => {
+                      if (e.target.value === "new") {
+                        setActiveTab("ai-copilot");
+                      }
+                      setSelectedMatter(e.target.value);
+                    }}
+                    className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white max-w-[140px] sm:max-w-[210px] md:max-w-none truncate"
+                  >
+                    {availableMatters.map((m) => (
+                      <option key={m.id} value={m.title}>
+                        {m.shortTitle || m.title}
+                      </option>
+                    ))}
+                    <option value="new">+ Intake New Legal Issue</option>
+                  </select>
+                </div>
+
+                {/* Assigned Advocate Pill (Right Next to Active Matter Section) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setAdvocatePopoverOpen(!advocatePopoverOpen)}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white text-xs text-black dark:text-white font-medium transition-all cursor-pointer group shadow-2xs"
+                    title="Assigned Legal Counsel for this matter — Click for credentials & chamber actions"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-mono font-bold text-[10px] shrink-0">
+                      {assignedAdvocate.avatarText}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-zinc-500 font-normal hidden sm:inline">Assigned Counsel:</span>
+                      <span className="font-bold underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-2 group-hover:decoration-black dark:group-hover:decoration-white transition-all truncate max-w-[130px] sm:max-w-none">
+                        {assignedAdvocate.name}
+                      </span>
+                    </div>
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hidden md:inline">
+                      {assignedAdvocate.enrolment}
+                    </span>
+                    <ChevronDown className={`w-3 h-3 text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-transform ${advocatePopoverOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {/* Advocate Details Popover */}
+                  {advocatePopoverOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setAdvocatePopoverOpen(false)} />
+                      <div className="absolute top-full left-0 mt-2 w-80 sm:w-88 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xl p-4 z-40 space-y-3 animate-in fade-in zoom-in-95 duration-150 text-xs">
+                        {/* Header */}
+                        <div className="flex items-start justify-between pb-2.5 border-b border-zinc-100 dark:border-zinc-900">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center font-bold text-xs font-mono text-black dark:text-white shrink-0">
+                              {assignedAdvocate.avatarText}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-black dark:text-white text-sm">
+                                  {assignedAdvocate.name}
+                                </span>
+                                {assignedAdvocate.verified && (
+                                  <span title="Verified Bar Council Enrolment">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-black dark:text-white shrink-0" />
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-zinc-500 font-mono block">
+                                {assignedAdvocate.enrolment} • {assignedAdvocate.chamber}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setAdvocatePopoverOpen(false)}
+                            className="text-zinc-400 hover:text-black dark:hover:text-white p-1 cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Metadata */}
+                        <div className="space-y-1.5 text-[11px]">
+                          <div className="flex items-center justify-between py-1 border-b border-zinc-50 dark:border-zinc-900">
+                            <span className="text-zinc-400">Specialization</span>
+                            <span className="font-semibold text-black dark:text-white text-right">{assignedAdvocate.specialization}</span>
+                          </div>
+                          <div className="flex items-center justify-between py-1 border-b border-zinc-50 dark:border-zinc-900">
+                            <span className="text-zinc-400">Representation</span>
+                            <span className="font-mono font-bold text-black dark:text-white">{assignedAdvocate.status}</span>
+                          </div>
+                          <div className="flex items-center justify-between py-1">
+                            <span className="text-zinc-400">Matter Docket</span>
+                            <span className="font-mono text-zinc-600 dark:text-zinc-300 truncate max-w-[170px]">
+                              {selectedMatter.split("—")[0].trim()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Quick Chamber Actions */}
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-900">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdvocatePopoverOpen(false);
+                              setActiveTab("inbox");
+                            }}
+                            className="px-3 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-[11px] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>Privileged Inbox</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdvocatePopoverOpen(false);
+                              setActiveTab("consultations");
+                            }}
+                            className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold text-[11px] flex items-center justify-center gap-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                          >
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>Consultations</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
           {/* Right Controls */}
           <div className="flex items-center gap-3">
@@ -1712,7 +1937,7 @@ export function ClientPortalView() {
           {/* VIEW: Document Submission for Advocate Review                   */}
           {/* ============================================================== */}
           {activeTab === "document-filing" && (
-            <DocumentFilingView />
+            <DocumentFilingView initialMatter={selectedMatter} />
           )}
 
           {/* ============================================================== */}

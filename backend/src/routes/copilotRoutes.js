@@ -4,6 +4,7 @@ import {
   summarizeJudgment,
   draftPleading,
   getCopilotTemplates,
+  refineLegalDraft,
   copilotQuery,
   extractCaseChronology,
   auditChronologyConflicts,
@@ -21,6 +22,7 @@ router.post("/summarize-judgment", summarizeJudgment);
 // 3. Automated Statutory Legal Notice & Writ Drafter
 router.post("/draft", draftPleading);
 router.get("/templates", getCopilotTemplates);
+router.post("/refine", refineLegalDraft);
 
 // 4. Live Copilot Query Engine (Chat Canvas)
 router.post("/query", copilotQuery);

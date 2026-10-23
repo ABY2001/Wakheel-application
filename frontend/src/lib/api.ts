@@ -1892,6 +1892,20 @@ export const copilotApi = {
     return await res.json();
   },
 
+  async refineDraft(data: {
+    content: string;
+    action?: string;
+    customPrompt?: string;
+    matterContext?: Record<string, any>;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/refine`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
   async query(data: {
     prompt: string;
     mode?: string;

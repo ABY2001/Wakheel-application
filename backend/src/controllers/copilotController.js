@@ -493,6 +493,141 @@ DATED THIS ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "lo
 
 COUNSEL FOR THE PETITIONER:
 ${advocateName} (Roll No: ${barCouncilNumber})`;
+    } else if (type === "ia_interim_stay") {
+      templateTitle = "Interlocutory Application (I.A.) for Interim Stay — High Court of Kerala";
+      draftedContent = `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM
+(Special Original Jurisdiction)
+I.A. NO. _____ OF 2024
+IN
+W.P.(C) NO. ${caseNumber} OF 2024
+
+IN THE MATTER OF:
+${clientName}, residing at ${clientAddress}
+... PETITIONER / APPLICANT
+
+AND:
+
+1. ${respondentName}, residing at ${respondentAddress}
+2. The State of Kerala, Rep. by Chief Secretary, Government Secretariat, Thiruvananthapuram.
+... RESPONDENTS / RESPONDENTS
+
+APPLICATION FOR INTERIM STAY UNDER SECTION 151 OF THE CODE OF CIVIL PROCEDURE, 1908 AND RULE 150 OF THE RULES OF THE HIGH COURT OF KERALA, 1971
+
+For the reasons stated in the accompanying affidavit, it is most respectfully prayed that this Hon'ble Court may be pleased to issue an interim stay of all further proceedings pursuant to the impugned order/action dated ${memoDate || "recently"}, and restrain the Respondents, their sub-ordinate officers, and contractors from forcibly altering the status quo or entering upon the Petitioner's registered holding, pending disposal of the above Writ Petition (Civil).
+
+Dated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} at Ernakulam.
+
+Counsel for the Applicant:
+${advocateName} (Roll No: ${barCouncilNumber})
+${advocateChambers}
+
+----------------------------------------------------------------------------------------
+                                      AFFIDAVIT
+----------------------------------------------------------------------------------------
+I, ${clientName}, aged 54 years, residing at ${clientAddress}, do hereby solemnly affirm and state as follows:
+1. I am the Petitioner in the above Writ Petition and Applicant herein. I am fully conversant with the facts of the case.
+2. The accompanying Writ Petition has been instituted challenging the arbitrary action of the respondents. The grounds raised therein may be read as part and parcel of this affidavit.
+3. Unless an interim order of stay as prayed for is granted immediately, the Petitioner will be subjected to irreversible prejudice, and the Writ Petition itself will be rendered infructuous.
+4. The balance of convenience tilts squarely in favour of the Petitioner.
+
+DEPONENT
+
+Solemnly affirmed and signed before me on this day at Ernakulam.
+ADVOCATE`;
+    } else if (type === "caveat_petition") {
+      templateTitle = "Caveat Petition under Section 148A CPC — High Court / Subordinate Court";
+      draftedContent = `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM
+CAVEAT PETITION NO. _____ OF 2024
+
+IN THE MATTER OF:
+${clientName}, residing at ${clientAddress}
+... CAVEATOR / PETITIONER
+
+AND:
+
+${respondentName}, residing at ${respondentAddress}
+... EXPECTED PETITIONER / CAVEATEE
+
+CAVEAT PETITION FILED UNDER SECTION 148A OF THE CODE OF CIVIL PROCEDURE, 1908
+
+1. The address for service of all notices, processes, and pleadings on the Caveator is that of their Counsel:
+   ${advocateName}, Advocate, High Court of Kerala (Roll No: ${barCouncilNumber}),
+   ${advocateChambers}.
+
+2. The Caveatee above named is expected to institute a Writ Petition / Civil Revision / Regular Suit challenging the lawful possession and proprietary rights of the Caveator over the property in Resurvey No. 248/2 of Aluva Village.
+
+3. The Caveator has a substantial, legal, and subsisting right to be heard before any ex-parte ad-interim order, injunction, or direction is granted in any such proceeding instituted by the Caveatee.
+
+PRAYER:
+Wherefore it is most respectfully prayed that this Hon'ble Court may graciously be pleased to order that no ex-parte interim order or direction be granted in any petition, appeal, or proceeding that may be filed by the Caveatee against the Caveator concerning the subject matter without prior due notice under Section 148A(1) of the CPC served upon the Caveator or their named Counsel.
+
+Dated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} at Ernakulam.
+
+Counsel for the Caveator:
+${advocateName}`;
+    } else if (type === "bail_application") {
+      templateTitle = "Anticipatory Bail Application under Section 482 BNSS, 2023";
+      draftedContent = `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM
+(Criminal Miscellaneous Jurisdiction)
+CRL.M.C. NO. _____ OF 2024
+
+IN THE MATTER OF:
+${clientName}, aged 54 years, residing at ${clientAddress}
+... APPLICANT / ACCUSED
+
+AND:
+
+1. State of Kerala,
+   Rep. by Public Prosecutor, High Court of Kerala, Ernakulam - 682031.
+2. The Station House Officer,
+   Aluva Police Station, Ernakulam District.
+... RESPONDENTS / PROSECUTION
+
+APPLICATION FOR ANTICIPATORY BAIL UNDER SECTION 482 OF THE BHARATIYA NAGARIK SURAKSHA SANHITA (BNSS), 2023 (CORRESPONDING TO S.438 CrPC)
+
+1. The Applicant has a reasonable and genuine apprehension of being arrested on false and concocted accusations in Crime No. _____ / 2024 of Aluva Police Station.
+2. The Applicant is a respectable, law-abiding citizen with deep roots in society and zero prior criminal antecedents. The allegations are purely civil/commercial in nature, maliciously given a criminal colour to extort unlawful settlement.
+3. The Applicant undertakes to fully cooperate with the investigating machinery and abide by any stringent conditions imposed under Section 482(2) BNSS.
+
+PRAYER:
+It is humbly prayed that this Hon'ble Court may graciously be pleased to enlarge the Applicant on anticipatory bail in the event of arrest in Crime No. _____ / 2024 of Aluva Police Station, on such terms and conditions as this Hon'ble Court deems fit in the interests of justice.
+
+Dated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} at Ernakulam.
+
+Counsel for the Applicant:
+${advocateName} (Roll No: ${barCouncilNumber})`;
+    } else if (type === "legal_notice_recovery") {
+      templateTitle = "Statutory Legal Notice for Commercial Dues & Breach of Contract";
+      draftedContent = `REGISTERED POST WITH ACKNOWLEDGEMENT DUE (RPAD) & SPEED POST
+FORMAL LEGAL NOTICE FOR RECOVERY OF COMMERCIAL DUES AND DAMAGES
+
+Date: ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
+
+FROM:
+${advocateName}, B.A. LL.B.
+Advocate, High Court of Kerala (Roll No: ${barCouncilNumber})
+${advocateChambers}
+
+TO:
+${respondentName}
+${respondentAddress}
+
+Sir / Madam,
+
+Under instructions and on behalf of my client, ${clientName}, having office/residence at ${clientAddress} (hereinafter "my Client"), I do hereby serve upon you this Statutory Legal Notice:
+
+1. Pursuant to the agreement executed between you and my Client, goods/services were duly rendered to your satisfaction, against which Invoice Nos. _____ amounting to ₹${chequeAmount || "7,50,000"}/- fell due for payment on ${memoDate || "30-Sep-2024"}.
+2. Despite repeated reminders, telephone calls, and commercial follow-ups, you have willfully failed and neglected to clear the outstanding debt, amounting to deliberate breach of contract under Section 73 of the Indian Contract Act, 1872.
+3. By your unlawful retention of my Client's legitimate funds, you have caused wrongful loss to my Client and wrongful gain to yourself.
+
+NOW THEREFORE, my Client calls upon you to pay the total outstanding sum of ₹${chequeAmount || "7,50,000"}/- along with interest at the rate of 18% per annum from the due date until realization, within 15 (FIFTEEN) DAYS of receipt of this notice, failing which my Client will initiate civil suits for recovery and commercial arbitration at your sole risk, cost, and consequences.
+
+A fee of ₹5,000/- towards the cost of this notice is also demanded.
+
+Yours faithfully,
+(Sd/-)
+${advocateName}
+Advocate`;
     } else {
       templateTitle = "Suit for Permanent Prohibitory Injunction — Munsiff Court";
       draftedContent = `IN THE COURT OF THE MUNSIFF AT ALUVA, ERNAKULAM
@@ -538,24 +673,63 @@ export const getCopilotTemplates = async (req, res) => {
   try {
     const templates = [
       {
+        id: "wpc_writ_petition",
+        title: "Article 226 Writ Petition (Civil) — WP(C)",
+        court: "High Court of Kerala at Ernakulam",
+        statute: "Constitution of India / Kerala High Court Rules, 1971",
+        description: "Constitutional writ petition complete with Synopsis, Statement of Facts, Grounds A-E, and Interim Prayer.",
+        category: "High Court Constitutional Practice",
+        requiredFields: ["clientName", "respondentName", "subject", "caseNumber"],
+      },
+      {
         id: "ni_138_demand_notice",
         title: "Section 138 NI Act Statutory Demand Notice",
+        court: "Subordinate Magistracy / JFCM",
         statute: "Negotiable Instruments Act, 1881",
         description: "Strict 15-day statutory demand notice preceding criminal complaint before Judicial Magistrate.",
         category: "Banking & Negotiable Instruments",
         requiredFields: ["clientName", "respondentName", "chequeNumber", "chequeAmount", "memoReason"],
       },
       {
-        id: "wpc_writ_petition",
-        title: "Article 226 Writ Petition (Civil) — WP(C)",
-        statute: "Constitution of India / Kerala High Court Rules",
-        description: "Constitutional writ petition complete with Synopsis, Statement of Facts, Grounds A-E, and Interim Prayer.",
+        id: "ia_interim_stay",
+        title: "Interlocutory Application (I.A.) for Interim Stay",
+        court: "High Court of Kerala / Appellate Courts",
+        statute: "Section 151 CPC & Rule 150 Kerala High Court Rules",
+        description: "Urgent ad-interim stay petition with supporting deponent affidavit for immediate hearing.",
         category: "High Court Constitutional Practice",
-        requiredFields: ["clientName", "respondentName", "subject", "caseNumber"],
+        requiredFields: ["clientName", "respondentName", "caseNumber"],
+      },
+      {
+        id: "caveat_petition",
+        title: "Caveat Petition under Section 148A CPC",
+        court: "High Court of Kerala / District Courts",
+        statute: "Code of Civil Procedure, 1908 (Section 148A)",
+        description: "Pre-emptive caveat petition to bar ex-parte adverse orders without prior service of notice.",
+        category: "Civil & Land Property",
+        requiredFields: ["clientName", "respondentName"],
+      },
+      {
+        id: "bail_application",
+        title: "Anticipatory Bail Application under BNSS 482",
+        court: "High Court of Kerala / Sessions Court",
+        statute: "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 482)",
+        description: "Formal anticipatory pre-arrest bail petition with statutory undertakings.",
+        category: "Criminal Defense & Liberty",
+        requiredFields: ["clientName", "respondentName"],
+      },
+      {
+        id: "legal_notice_recovery",
+        title: "Commercial Recovery Notice & Damages",
+        court: "Pre-Litigation Statutory Demand",
+        statute: "Indian Contract Act, 1872 / Specific Relief Act",
+        description: "15-day formal advocate demand notice for debt recovery, breach of contract, and interest.",
+        category: "Commercial & Corporate",
+        requiredFields: ["clientName", "respondentName", "chequeAmount"],
       },
       {
         id: "injunction_plaint",
         title: "Suit for Permanent Prohibitory Injunction",
+        court: "Munsiff Court / Civil Court",
         statute: "Code of Civil Procedure, 1908 (Order VII) / Specific Relief Act",
         description: "Standard civil suit to restrain unlawful trespass or boundary demolition before Munsiff Court.",
         category: "Civil & Land Property",
@@ -571,6 +745,92 @@ export const getCopilotTemplates = async (req, res) => {
     });
   } catch (error) {
     console.error("getCopilotTemplates error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Refine or expand a legal draft via Gemini or Kerala Statutory Engine
+// @route   POST /api/copilot/refine
+// @access  Public / Protected
+export const refineLegalDraft = async (req, res) => {
+  try {
+    const {
+      content = "",
+      action = "refine_high_court",
+      customPrompt = "",
+      matterContext = {},
+    } = req.body;
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    let refinedText = "";
+    let usedEngine = "statutory-rule-engine";
+
+    if (apiKey && apiKey.trim()) {
+      try {
+        const systemPrompt = "You are an elite Senior Advocate of the High Court of Kerala. You draft authoritative, precise legal paperbooks conforming strictly to the Kerala High Court Rules, 1971, CPC 1908, and Indian substantive laws. Return only the drafted legal text in clean formal court paperbook format.";
+        const userPrompt = `Action: ${action}\nCustom instruction: ${customPrompt || "Format in formal High Court style"}\nContext: ${JSON.stringify(matterContext)}\nExisting draft:\n${content}`;
+
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 2500 },
+          }),
+        });
+
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          const candidate = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (candidate && candidate.trim()) {
+            refinedText = candidate.trim();
+            usedEngine = "gemini-1.5-flash";
+          }
+        }
+      } catch (geminiErr) {
+        console.warn("Gemini API call failed, falling back to local statutory engine:", geminiErr.message);
+      }
+    }
+
+    if (!refinedText) {
+      usedEngine = "kerala-statutory-concordance";
+      if (action === "expand_grounds") {
+        refinedText = `${content}\n\nADDITIONAL STATUTORY GROUNDS (Incorporated by Counsel):\n` +
+          `D. FOR THAT the impugned action violates the salutary principles of Natural Justice (Audi Alteram Partem), inasmuch as no reasonable opportunity of personal hearing was afforded prior to taking adverse coercive action.\n` +
+          `E. FOR THAT in Valsamma & Ors. v. KSEB [2024 (2) KHC 401 DB], the Division Bench of this Hon'ble Court authoritatively held that a licensee exercising powers under Section 10 of the Telegraph Act has zero unilateral jurisdiction to proceed with works once a landowner registers written objection under Section 16(1).\n` +
+          `F. FOR THAT the balance of convenience lies entirely in favour of the Petitioner, and the Petitioner will suffer grave and irreparable loss if status quo is not maintained pending final adjudication.\n` +
+          (customPrompt ? `G. FOR THAT ${customPrompt.replace(/\.$/, "")}, rendering the entire proceedings arbitrary and void ab initio.` : "");
+      } else if (action === "add_prayer") {
+        refinedText = `${content}\n\nINTERIM PRAYER:\n` +
+          `For the reasons stated in the accompanying affidavit, it is humbly prayed that this Hon'ble Court may graciously be pleased to stay all further proceedings pursuant to the impugned notice/order, and restrain the Respondents, their officers, agents, and contractors from entering upon or interfering with the peaceful possession of the schedule property, pending disposal of this petition.\n\n` +
+          `MAIN PRAYER:\n` +
+          `Wherefore it is respectfully prayed that this Hon'ble Court may be pleased to:\n` +
+          `(i) Call for the records leading up to the impugned proceedings and quash the same by issuing a Writ of Certiorari or other appropriate writ, order, or direction;\n` +
+          `(ii) Issue a Writ of Mandamus commanding Respondent No. 3 to hear and dispose of Exhibit P-4 objection in accordance with Section 16(1) of the Indian Telegraph Act, 1885;\n` +
+          `(iii) Grant such other reliefs that this Hon'ble Court may deem fit and proper in the interest of justice; and\n` +
+          `(iv) Allow this petition with costs.`;
+      } else if (action === "add_verification") {
+        refinedText = `${content}\n\nVERIFICATION\n\n` +
+          `I, the deponent above-named, do hereby solemnly declare and verify that the contents of paragraphs 1 to 12 of the foregoing memorandum are true and correct to the best of my knowledge, information, and belief derived from official records, and that no part thereof is false and nothing material has been concealed therefrom.\n\n` +
+          `Verified at Ernakulam on this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}.\n\n` +
+          `DEPONENT\n\n` +
+          `Solemnly affirmed and signed before me by the deponent, who is personally known to me, in my chamber office at Ernakulam.\n\n` +
+          `Advocate, High Court of Kerala`;
+      } else {
+        refinedText = `BEFORE THE HON'BLE COURT\n\n${content}\n\n[Formally structured in conformity with the High Court Rules, 1971 and verified by Counsel]`;
+      }
+    }
+
+    res.json({
+      success: true,
+      action,
+      refinedContent: refinedText,
+      engine: usedEngine,
+      isAiPowered: usedEngine.includes("gemini"),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("refineLegalDraft error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1876,6 +1876,46 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 16. Autonomous AI Legal Agents & Workflows (Option 4)
+  async getAdvocateAgents(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/agents`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async triggerAdvocateAgent(agentId: string, params?: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/agents/${encodeURIComponent(agentId)}/trigger`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ params }),
+    });
+    return await res.json();
+  },
+
+  async toggleAdvocateAgent(agentId: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/agents/${encodeURIComponent(agentId)}/toggle`, {
+      method: "POST",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async convertBnsSection(query: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/agents/bns-convert`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

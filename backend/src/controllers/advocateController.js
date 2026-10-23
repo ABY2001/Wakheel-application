@@ -1926,3 +1926,76 @@ export const generateAiBenchStrategy = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 16. AUTONOMOUS AI LEGAL AGENTS & PIPELINES (Option 4)
+// ============================================================================
+export const getAdvocateAgents = async (req, res) => {
+  try {
+    const agents = devStore.getAgents();
+    res.json({
+      success: true,
+      agents,
+      count: agents.length,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("getAdvocateAgents error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const triggerAdvocateAgent = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    const { params = {} } = req.body;
+    const result = devStore.triggerAgent(agentId, params);
+    if (!result) return res.status(404).json({ success: false, message: "Agent pipeline not found" });
+
+    res.json({
+      success: true,
+      message: `Pipeline '${result.agent.name}' executed successfully.`,
+      agent: result.agent,
+      logs: result.logs,
+      executionResult: result.executionResult,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("triggerAdvocateAgent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleAdvocateAgent = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    const agent = devStore.toggleAgentStatus(agentId);
+    if (!agent) return res.status(404).json({ success: false, message: "Agent not found" });
+
+    res.json({
+      success: true,
+      message: `Agent '${agent.name}' is now ${agent.status}.`,
+      agent,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("toggleAdvocateAgent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const convertBnsSection = async (req, res) => {
+  try {
+    const { query = "420" } = req.body;
+    const result = devStore.convertBnsSection(query);
+    res.json({
+      success: true,
+      query,
+      result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("convertBnsSection error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

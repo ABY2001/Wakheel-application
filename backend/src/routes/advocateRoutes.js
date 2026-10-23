@@ -58,6 +58,10 @@ import {
   getCasePrep,
   saveCasePrep,
   generateAiBenchStrategy,
+  getAdvocateAgents,
+  triggerAdvocateAgent,
+  toggleAdvocateAgent,
+  convertBnsSection,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -149,5 +153,11 @@ router.post("/analytics/reports/generate", protect, generateChamberReport);
 router.get("/case-prep/:matterId", protect, getCasePrep);
 router.post("/case-prep/:matterId", protect, saveCasePrep);
 router.post("/case-prep/:matterId/ai-assist", protect, generateAiBenchStrategy);
+
+// 16. Autonomous AI Legal Agents & Workflows (Option 4)
+router.get("/agents", protect, getAdvocateAgents);
+router.post("/agents/:agentId/trigger", protect, triggerAdvocateAgent);
+router.post("/agents/:agentId/toggle", protect, toggleAdvocateAgent);
+router.post("/agents/bns-convert", protect, convertBnsSection);
 
 export default router;

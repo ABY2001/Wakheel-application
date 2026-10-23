@@ -14,6 +14,7 @@ import { DocumentVaultView } from "@/components/advocate/DocumentVaultView";
 import { LegalDraftingStudioView } from "@/components/advocate/LegalDraftingStudioView";
 import { CasePreparationView } from "@/components/advocate/CasePreparationView";
 import { ContractIntelligenceView } from "@/components/advocate/ContractIntelligenceView";
+import { AutonomousAgentsView } from "@/components/advocate/AutonomousAgentsView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ElectronicConsentView } from "@/components/advocate/ElectronicConsentView";
 import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
@@ -2847,36 +2848,12 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW 7: AI Legal Agents (Work Flows & Chamber Skills)          */}
           {isAgents && (
-            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
-                  AI Legal Agents &amp; Automated Pipelines
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-500">
-                  Autonomous agents for causelist scraping, lead intake triage, and statutory concordance
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { name: "Kerala High Court Causelist Scraper", status: "Active (Daily 07:00 IST)", trigger: "eCourts API Connector", items: "Monitors Bench 2A & 3B" },
-                  { name: "BNS-BNSS Cross-Section Concordance Agent", status: "Ready", trigger: "Document Ingestion", items: "Translates IPC charges to BNS sections" },
-                  { name: "High Court Caveat Monitoring Agent", status: "Active", trigger: "Registry Sync", items: "Alerts when caveat is lodged against client" },
-                  { name: "Client Lead Intake Triage Agent", status: "Active", trigger: "Citizen Submission", items: "Scores jurisdiction and conflict checks" },
-                ].map((agent, idx) => (
-                  <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-black dark:text-white">{agent.name}</span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                        {agent.status}
-                      </span>
-                    </div>
-                    <span className="text-xs text-zinc-500 block">Trigger: {agent.trigger}</span>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">{agent.items}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AutonomousAgentsView
+              initialSubTab={activeTab === "chamber-skills" ? "chamber-skills" : "workflows"}
+              advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+            />
           )}
 
           {/* ============================================================== */}

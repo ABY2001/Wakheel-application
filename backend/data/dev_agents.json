@@ -1,0 +1,200 @@
+[
+  {
+    "id": "agent_causelist",
+    "name": "Kerala High Court Causelist Scraper",
+    "description": "Queries eCourts Kerala Judicial Gateway daily at 07:00 IST for advocate Bar Council Roll No. K/1429/2016. Scrapes Court Hall, Item No, and Bench stage.",
+    "triggerType": "Scheduled (Cron: 0 7 * * 1-5)",
+    "scheduleText": "Daily at 07:00 IST (Mon-Fri)",
+    "target": "High Court of Kerala (Ernakulam) & Subordinate Courts",
+    "status": "active",
+    "lastRunAt": "2026-10-23T06:40:25.481Z",
+    "lastStatus": "success",
+    "itemsProcessed": 2,
+    "metrics": {
+      "totalRuns": 143,
+      "successRate": "99.2%",
+      "itemsDiscovered": 48
+    },
+    "recentLogs": [
+      {
+        "timestamp": "12:10:25 pm IST",
+        "level": "info",
+        "message": "Connecting to eCourts High Court of Kerala API Gateway..."
+      },
+      {
+        "timestamp": "12:10:25 pm IST",
+        "level": "info",
+        "message": "Executing query for Advocate Roll No: K/1429/2016"
+      },
+      {
+        "timestamp": "12:10:25 pm IST",
+        "level": "info",
+        "message": "Parsing Court Hall 2A (Division Bench) & Court Hall 1 (Sub Court) daily rosters..."
+      },
+      {
+        "timestamp": "12:10:25 pm IST",
+        "level": "success",
+        "message": "Discovered 2 Active Items: Item #14 in Court Hall 2A (WP(C) 19482/2024) and Item #22 in Sub Court (OS 412/2023)."
+      },
+      {
+        "timestamp": "12:10:25 pm IST",
+        "level": "success",
+        "message": "Causelist synchronized with chamber calendar & WhatsApp alerts dispatched."
+      },
+      {
+        "timestamp": "07:00:02 IST",
+        "level": "info",
+        "message": "Connecting to eCourts Kerala High Court API Gateway..."
+      },
+      {
+        "timestamp": "07:00:05 IST",
+        "level": "info",
+        "message": "Authenticating Advocate Roll: K/1429/2016 (Adv. Meera Krishnan)"
+      },
+      {
+        "timestamp": "07:00:08 IST",
+        "level": "info",
+        "message": "Parsing Daily Cause List for Division Bench 2A (Coram: Mustaque & Eapen, JJ.)"
+      },
+      {
+        "timestamp": "07:00:11 IST",
+        "level": "success",
+        "message": "Item #14 Discovered: WP(C) 19482/2024 (Gopakumar v. KSEB) - Listed for Interim Stay"
+      },
+      {
+        "timestamp": "07:00:14 IST",
+        "level": "success",
+        "message": "Chamber Cause List updated and synced to ERP dashboard."
+      }
+    ],
+    "config": {
+      "barRollNumber": "K/1429/2016",
+      "autoSyncCalendar": true,
+      "alertUrgentItemThreshold": 20
+    }
+  },
+  {
+    "id": "agent_caveat",
+    "name": "High Court Caveat Monitoring Agent",
+    "description": "Monitors the High Court of Kerala Section 148A CPC Caveat Registry for preemptive caveats filed against active chamber clients.",
+    "triggerType": "Registry Polling (Hourly)",
+    "scheduleText": "Every 60 Minutes",
+    "target": "High Court Caveat Registry & Sub Court Ernakulam",
+    "status": "active",
+    "lastRunAt": "2026-10-23T05:54:57.969Z",
+    "lastStatus": "success",
+    "itemsProcessed": 1,
+    "metrics": {
+      "totalRuns": 420,
+      "successRate": "100%",
+      "itemsDiscovered": 3
+    },
+    "recentLogs": [
+      {
+        "timestamp": "10:15:00 IST",
+        "level": "info",
+        "message": "Polling e-Filing Registry: Caveat Petitions under Section 148A CPC..."
+      },
+      {
+        "timestamp": "10:15:03 IST",
+        "level": "info",
+        "message": "Cross-matching with active client roster (8 Active Litigants)..."
+      },
+      {
+        "timestamp": "10:15:06 IST",
+        "level": "success",
+        "message": "Caveat verified: No new adverse caveat lodged against Gopakumar Nambiar in last 24h."
+      },
+      {
+        "timestamp": "10:15:08 IST",
+        "level": "info",
+        "message": "Next scheduled check at 11:15 IST."
+      }
+    ],
+    "config": {
+      "watchActiveClientsOnly": true,
+      "expiryAlertDays": 14
+    }
+  },
+  {
+    "id": "agent_bns_concordance",
+    "name": "BNS-BNSS Statutory Concordance Agent",
+    "description": "Parses FIRs, criminal complaints, and chargesheets to cross-reference Indian Penal Code (IPC) and CrPC sections with the Bharatiya Nyaya Sanhita (BNS) 2023.",
+    "triggerType": "Document Ingestion / On-Demand",
+    "scheduleText": "Real-time Event Triggered",
+    "target": "Criminal Law / Trial Chamber",
+    "status": "active",
+    "lastRunAt": "2026-10-22T18:39:57.969Z",
+    "lastStatus": "success",
+    "itemsProcessed": 6,
+    "metrics": {
+      "totalRuns": 89,
+      "successRate": "100%",
+      "itemsDiscovered": 89
+    },
+    "recentLogs": [
+      {
+        "timestamp": "Yesterday 23:10 IST",
+        "level": "info",
+        "message": "Pleading ingested: Anticipatory Bail Application (BNSS Section 482)"
+      },
+      {
+        "timestamp": "Yesterday 23:10 IST",
+        "level": "info",
+        "message": "Cross-checked legacy Section 438 CrPC with Section 482 BNSS 2023: Concordant."
+      },
+      {
+        "timestamp": "Yesterday 23:11 IST",
+        "level": "success",
+        "message": "Verification completed with zero statutory conflict."
+      }
+    ],
+    "config": {
+      "flagPunishmentChanges": true,
+      "highlightCommunityService": true
+    }
+  },
+  {
+    "id": "agent_lead_triage",
+    "name": "Client Lead Intake & Conflict Check Triage Agent",
+    "description": "Evaluates citizen legal inquiries, performs automatic Bar Council Rule 33 conflict-of-interest screening against existing clients, and calculates forum jurisdiction.",
+    "triggerType": "Citizen Submission Webhook",
+    "scheduleText": "Instantaneous Webhook",
+    "target": "Intake Pipeline",
+    "status": "active",
+    "lastRunAt": "2026-10-23T00:39:57.969Z",
+    "lastStatus": "success",
+    "itemsProcessed": 1,
+    "metrics": {
+      "totalRuns": 64,
+      "successRate": "98.4%",
+      "itemsDiscovered": 12
+    },
+    "recentLogs": [
+      {
+        "timestamp": "05:30:12 IST",
+        "level": "info",
+        "message": "New Citizen Grievance received: 'Transmission line across rubber plantation'"
+      },
+      {
+        "timestamp": "05:30:13 IST",
+        "level": "info",
+        "message": "Executing automated Conflict Check: Respondent KSEB vs Chamber Roster..."
+      },
+      {
+        "timestamp": "05:30:14 IST",
+        "level": "success",
+        "message": "Conflict Check Clear: Advocate has not represented KSEB in past 3 years."
+      },
+      {
+        "timestamp": "05:30:15 IST",
+        "level": "success",
+        "message": "Forum jurisdiction scored: High Court of Kerala (WP(C)) [Confidence: 94%]."
+      }
+    ],
+    "config": {
+      "strictConflictCheck": true,
+      "autoNotifyAdvocate": true
+    }
+  }
+]

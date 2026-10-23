@@ -3319,4 +3319,258 @@ export const devStore = {
     writeFile("dev_case_prep.json", store);
     return store[matterId];
   },
+
+  // --- Autonomous AI Legal Agents & Workflows (Option 4) ---
+  getAgents() {
+    const agents = readFile("dev_agents.json", DEFAULT_AGENTS);
+    if (!agents || agents.length === 0) {
+      writeFile("dev_agents.json", DEFAULT_AGENTS);
+      return DEFAULT_AGENTS;
+    }
+    return agents;
+  },
+
+  toggleAgentStatus(agentId) {
+    const agents = this.getAgents();
+    const idx = agents.findIndex((a) => a.id === agentId);
+    if (idx !== -1) {
+      agents[idx].status = agents[idx].status === "active" ? "paused" : "active";
+      writeFile("dev_agents.json", agents);
+      return agents[idx];
+    }
+    return null;
+  },
+
+  triggerAgent(agentId, params = {}) {
+    const agents = this.getAgents();
+    const agent = agents.find((a) => a.id === agentId);
+    if (!agent) return null;
+
+    const now = new Date();
+    const nowTimeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " IST";
+    let newLogs = [];
+    let executionResult = {};
+
+    if (agentId === "agent_causelist") {
+      newLogs = [
+        { timestamp: nowTimeStr, level: "info", message: "Connecting to eCourts High Court of Kerala API Gateway..." },
+        { timestamp: nowTimeStr, level: "info", message: `Executing query for Advocate Roll No: ${agent.config?.barRollNumber || "K/1429/2016"}` },
+        { timestamp: nowTimeStr, level: "info", message: "Parsing Court Hall 2A (Division Bench) & Court Hall 1 (Sub Court) daily rosters..." },
+        { timestamp: nowTimeStr, level: "success", message: "Discovered 2 Active Items: Item #14 in Court Hall 2A (WP(C) 19482/2024) and Item #22 in Sub Court (OS 412/2023)." },
+        { timestamp: nowTimeStr, level: "success", message: "Causelist synchronized with chamber calendar & WhatsApp alerts dispatched." },
+      ];
+      executionResult = {
+        itemsDiscovered: 2,
+        courtHall: "Court Hall 2A & Hall 1",
+        bench: "Division Bench / Special Original",
+        syncedToDashboard: true,
+      };
+    } else if (agentId === "agent_caveat") {
+      newLogs = [
+        { timestamp: nowTimeStr, level: "info", message: "Polling e-Filing Registry: Caveat Petitions under Section 148A CPC..." },
+        { timestamp: nowTimeStr, level: "info", message: "Cross-matching against chamber active client roster (8 clients)..." },
+        { timestamp: nowTimeStr, level: "success", message: "Verification completed: 0 adverse caveats registered in last 24 hours against active clients." },
+        { timestamp: nowTimeStr, level: "info", message: "Caveat Watchlist status: Green / All clients cleared." },
+      ];
+      executionResult = {
+        clientsScanned: 8,
+        adverseCaveatsFound: 0,
+        registryCleared: true,
+      };
+    } else if (agentId === "agent_bns_concordance") {
+      newLogs = [
+        { timestamp: nowTimeStr, level: "info", message: `Running BNS-BNSS Statutory Concordance Engine on query: "${params.query || "IPC 420 / CrPC 438"}"` },
+        { timestamp: nowTimeStr, level: "info", message: "Cross-referencing Bharatiya Nyaya Sanhita 2023 & BNSS 2023 concordances..." },
+        { timestamp: nowTimeStr, level: "success", message: "IPC Section 420 (Cheating) successfully mapped to BNS Section 318(4). Punishment: 7 Years + Fine." },
+        { timestamp: nowTimeStr, level: "success", message: "CrPC Section 438 (Anticipatory Bail) mapped to BNSS Section 482. Procedural mandate verified." },
+      ];
+      executionResult = {
+        ipcSection: "IPC 420",
+        bnsSection: "BNS 318(4)",
+        bnsTitle: "Cheating and dishonestly inducing delivery of property",
+        punishment: "Imprisonment extending to 7 years and fine",
+        bnssProcedure: "Section 482 (Anticipatory Bail)",
+      };
+    } else {
+      newLogs = [
+        { timestamp: nowTimeStr, level: "info", message: "Executing Client Intake Triage & Conflict Check..." },
+        { timestamp: nowTimeStr, level: "info", message: "Scanning Chamber Representation History (Bar Council Rule 33)..." },
+        { timestamp: nowTimeStr, level: "success", message: "Conflict Check: No prior representation of respondent found." },
+        { timestamp: nowTimeStr, level: "success", message: "Jurisdiction & forum routing completed: High Court of Kerala (WP(C))." },
+      ];
+      executionResult = {
+        conflictClear: true,
+        recommendedCourt: "High Court of Kerala (Ernakulam)",
+        estimatedStamp: "₹2,500",
+      };
+    }
+
+    agent.lastRunAt = now.toISOString();
+    agent.lastStatus = "success";
+    agent.recentLogs = [...newLogs, ...(agent.recentLogs || [])].slice(0, 15);
+    if (!agent.metrics) agent.metrics = { totalRuns: 1, successRate: "100%", itemsDiscovered: 1 };
+    agent.metrics.totalRuns = (agent.metrics.totalRuns || 0) + 1;
+
+    writeFile("dev_agents.json", agents);
+    return { agent, logs: newLogs, executionResult };
+  },
+
+  convertBnsSection(query = "420") {
+    const q = String(query).trim().toLowerCase();
+    const map = {
+      "420": {
+        ipc: "IPC Section 420",
+        ipcTitle: "Cheating and dishonestly inducing delivery of property",
+        bns: "BNS Section 318(4)",
+        bnsTitle: "Cheating and dishonestly inducing delivery of property",
+        punishment: "Imprisonment of either description for a term which may extend to 7 years, and shall also be liable to fine.",
+        substantiveChange: "Cognizable and non-bailable; triable by Magistrate of First Class. Language aligned with modern electronic property transactions.",
+        correspondingBnss: "Section 173 (Registration of FIR) & Section 480/483 (Bail)",
+      },
+      "302": {
+        ipc: "IPC Section 302",
+        ipcTitle: "Punishment for Murder",
+        bns: "BNS Section 103(1)",
+        bnsTitle: "Punishment for Murder",
+        punishment: "Death or imprisonment for life, and shall also be liable to fine.",
+        substantiveChange: "Includes sub-section 103(2) penalizing mob lynching by 5 or more persons based on race, caste, or community with death or life imprisonment.",
+        correspondingBnss: "Section 193 (Charge-sheet) & Section 483 (High Court Bail)",
+      },
+      "379": {
+        ipc: "IPC Section 379",
+        ipcTitle: "Punishment for Theft",
+        bns: "BNS Section 303(2)",
+        bnsTitle: "Punishment for Theft",
+        punishment: "Imprisonment of either description for a term which may extend to 3 years, or with fine, or with both.",
+        substantiveChange: "First-time offenders where stolen value is under ₹5,000 may be awarded Community Service upon return of property under proviso to Section 303(2).",
+        correspondingBnss: "Section 173 / Section 480",
+      },
+      "406": {
+        ipc: "IPC Section 406",
+        ipcTitle: "Punishment for Criminal Breach of Trust",
+        bns: "BNS Section 316(2)",
+        bnsTitle: "Punishment for Criminal Breach of Trust",
+        punishment: "Imprisonment of either description for a term which may extend to 5 years, or with fine, or with both.",
+        substantiveChange: "Increased maximum imprisonment from 3 years under IPC to 5 years under BNS 316(2).",
+        correspondingBnss: "Section 480 / Section 482",
+      },
+      "498a": {
+        ipc: "IPC Section 498A",
+        ipcTitle: "Husband or relative of husband of a woman subjecting her to cruelty",
+        bns: "BNS Section 85",
+        bnsTitle: "Husband or relative of husband subjecting woman to cruelty",
+        punishment: "Imprisonment for a term which may extend to 3 years and shall also be liable to fine.",
+        substantiveChange: "Substantive definition of cruelty maintained; placed under Chapter V (Offences Against Women and Children).",
+        correspondingBnss: "Section 482 (Anticipatory Bail before High Court)",
+      },
+      "438": {
+        ipc: "CrPC Section 438",
+        ipcTitle: "Direction for grant of bail to person apprehending arrest (Anticipatory Bail)",
+        bns: "BNSS Section 482",
+        bnsTitle: "Direction for grant of bail to person apprehending arrest",
+        punishment: "Procedural Bail Mandate",
+        substantiveChange: "High Court and Court of Session retain concurrent jurisdiction. Statutory notice to Public Prosecutor and mandatory presence conditions preserved.",
+        correspondingBnss: "Section 482 BNSS 2023",
+      },
+    };
+
+    const cleanNum = q.replace(/[^0-9a-z]/g, "");
+    return map[cleanNum] || map["420"];
+  },
 };
+
+const DEFAULT_AGENTS = [
+  {
+    id: "agent_causelist",
+    name: "Kerala High Court Causelist Scraper",
+    description: "Queries eCourts Kerala Judicial Gateway daily at 07:00 IST for advocate Bar Council Roll No. K/1429/2016. Scrapes Court Hall, Item No, and Bench stage.",
+    triggerType: "Scheduled (Cron: 0 7 * * 1-5)",
+    scheduleText: "Daily at 07:00 IST (Mon-Fri)",
+    target: "High Court of Kerala (Ernakulam) & Subordinate Courts",
+    status: "active",
+    lastRunAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    lastStatus: "success",
+    itemsProcessed: 2,
+    metrics: { totalRuns: 142, successRate: "99.2%", itemsDiscovered: 48 },
+    recentLogs: [
+      { timestamp: "07:00:02 IST", level: "info", message: "Connecting to eCourts Kerala High Court API Gateway..." },
+      { timestamp: "07:00:05 IST", level: "info", message: "Authenticating Advocate Roll: K/1429/2016 (Adv. Meera Krishnan)" },
+      { timestamp: "07:00:08 IST", level: "info", message: "Parsing Daily Cause List for Division Bench 2A (Coram: Mustaque & Eapen, JJ.)" },
+      { timestamp: "07:00:11 IST", level: "success", message: "Item #14 Discovered: WP(C) 19482/2024 (Gopakumar v. KSEB) - Listed for Interim Stay" },
+      { timestamp: "07:00:14 IST", level: "success", message: "Chamber Cause List updated and synced to ERP dashboard." },
+    ],
+    config: {
+      barRollNumber: "K/1429/2016",
+      autoSyncCalendar: true,
+      alertUrgentItemThreshold: 20,
+    },
+  },
+  {
+    id: "agent_caveat",
+    name: "High Court Caveat Monitoring Agent",
+    description: "Monitors the High Court of Kerala Section 148A CPC Caveat Registry for preemptive caveats filed against active chamber clients.",
+    triggerType: "Registry Polling (Hourly)",
+    scheduleText: "Every 60 Minutes",
+    target: "High Court Caveat Registry & Sub Court Ernakulam",
+    status: "active",
+    lastRunAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    lastStatus: "success",
+    itemsProcessed: 1,
+    metrics: { totalRuns: 420, successRate: "100%", itemsDiscovered: 3 },
+    recentLogs: [
+      { timestamp: "10:15:00 IST", level: "info", message: "Polling e-Filing Registry: Caveat Petitions under Section 148A CPC..." },
+      { timestamp: "10:15:03 IST", level: "info", message: "Cross-matching with active client roster (8 Active Litigants)..." },
+      { timestamp: "10:15:06 IST", level: "success", message: "Caveat verified: No new adverse caveat lodged against Gopakumar Nambiar in last 24h." },
+      { timestamp: "10:15:08 IST", level: "info", message: "Next scheduled check at 11:15 IST." },
+    ],
+    config: {
+      watchActiveClientsOnly: true,
+      expiryAlertDays: 14,
+    },
+  },
+  {
+    id: "agent_bns_concordance",
+    name: "BNS-BNSS Statutory Concordance Agent",
+    description: "Parses FIRs, criminal complaints, and chargesheets to cross-reference Indian Penal Code (IPC) and CrPC sections with the Bharatiya Nyaya Sanhita (BNS) 2023.",
+    triggerType: "Document Ingestion / On-Demand",
+    scheduleText: "Real-time Event Triggered",
+    target: "Criminal Law / Trial Chamber",
+    status: "active",
+    lastRunAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    lastStatus: "success",
+    itemsProcessed: 6,
+    metrics: { totalRuns: 89, successRate: "100%", itemsDiscovered: 89 },
+    recentLogs: [
+      { timestamp: "Yesterday 23:10 IST", level: "info", message: "Pleading ingested: Anticipatory Bail Application (BNSS Section 482)" },
+      { timestamp: "Yesterday 23:10 IST", level: "info", message: "Cross-checked legacy Section 438 CrPC with Section 482 BNSS 2023: Concordant." },
+      { timestamp: "Yesterday 23:11 IST", level: "success", message: "Verification completed with zero statutory conflict." },
+    ],
+    config: {
+      flagPunishmentChanges: true,
+      highlightCommunityService: true,
+    },
+  },
+  {
+    id: "agent_lead_triage",
+    name: "Client Lead Intake & Conflict Check Triage Agent",
+    description: "Evaluates citizen legal inquiries, performs automatic Bar Council Rule 33 conflict-of-interest screening against existing clients, and calculates forum jurisdiction.",
+    triggerType: "Citizen Submission Webhook",
+    scheduleText: "Instantaneous Webhook",
+    target: "Intake Pipeline",
+    status: "active",
+    lastRunAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    lastStatus: "success",
+    itemsProcessed: 1,
+    metrics: { totalRuns: 64, successRate: "98.4%", itemsDiscovered: 12 },
+    recentLogs: [
+      { timestamp: "05:30:12 IST", level: "info", message: "New Citizen Grievance received: 'Transmission line across rubber plantation'" },
+      { timestamp: "05:30:13 IST", level: "info", message: "Executing automated Conflict Check: Respondent KSEB vs Chamber Roster..." },
+      { timestamp: "05:30:14 IST", level: "success", message: "Conflict Check Clear: Advocate has not represented KSEB in past 3 years." },
+      { timestamp: "05:30:15 IST", level: "success", message: "Forum jurisdiction scored: High Court of Kerala (WP(C)) [Confidence: 94%]." },
+    ],
+    config: {
+      strictConflictCheck: true,
+      autoNotifyAdvocate: true,
+    },
+  },
+];

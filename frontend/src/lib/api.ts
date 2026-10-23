@@ -1942,6 +1942,30 @@ export const copilotApi = {
     return await res.json();
   },
 
+  // Option C: Contract Intelligence & Commercial Redlining
+  async auditContract(data: { contractText?: string; contractType?: string }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/contract/audit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async redlineClause(data: {
+    clauseNumber?: string;
+    clauseText: string;
+    defectType?: string;
+    counselGoal?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/contract/redline`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
   async query(data: {
     prompt: string;
     mode?: string;

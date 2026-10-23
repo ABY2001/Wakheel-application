@@ -1840,6 +1840,42 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 15. Case Preparation & Bench Argument Dossier (Option B)
+  async getCasePrep(matterId: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/case-prep/${encodeURIComponent(matterId)}`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async saveCasePrep(matterId: string, data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/case-prep/${encodeURIComponent(matterId)}`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async generateAiBenchStrategy(
+    matterId: string,
+    data: { action: string; prompt?: string; context?: any },
+    token?: string
+  ) {
+    const res = await fetch(`${API_BASE_URL}/advocate/case-prep/${encodeURIComponent(matterId)}/ai-assist`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

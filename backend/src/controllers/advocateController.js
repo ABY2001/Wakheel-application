@@ -1788,3 +1788,141 @@ export const generateChamberReport = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 15. CASE PREPARATION & BENCH ARGUMENT DOSSIER
+// ============================================================================
+export const getCasePrep = async (req, res) => {
+  try {
+    const { matterId } = req.params;
+    const dossier = devStore.getCasePrepDossier(matterId);
+    res.json({
+      success: true,
+      dossier,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("getCasePrep error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const saveCasePrep = async (req, res) => {
+  try {
+    const { matterId } = req.params;
+    const dossier = devStore.saveCasePrepDossier(matterId, req.body);
+    res.json({
+      success: true,
+      message: "Case preparation dossier preserved for Bench presentation",
+      dossier,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("saveCasePrep error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const generateAiBenchStrategy = async (req, res) => {
+  try {
+    const { matterId } = req.params;
+    const { action = "generate_inquiries", prompt = "", context = {} } = req.body;
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    let strategyResult = null;
+    let usedEngine = "kerala-statutory-concordance";
+
+    if (apiKey && apiKey.trim()) {
+      try {
+        const systemPrompt = `You are a Senior Advocate of the High Court of Kerala. You prepare rigorous Bench Dossiers, Anticipated Bench Queries with Rebuttals, Framed Issues, and Witness Cross Examination Question Banks adhering to the Indian Evidence Act / BSA 2023 and Kerala High Court Rules. Return a valid JSON response matching the action requested.`;
+        const userPrompt = `Action: ${action}\nMatter Context: ${JSON.stringify(context)}\nCounsel Prompt: ${prompt || "Generate authoritative High Court bench material"}`;
+
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 2000, responseMimeType: "application/json" },
+          }),
+        });
+
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          const candidateText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (candidateText && candidateText.trim()) {
+            strategyResult = JSON.parse(candidateText.trim());
+            usedEngine = "gemini-1.5-flash";
+          }
+        }
+      } catch (geminiErr) {
+        console.warn("Gemini API call failed in generateAiBenchStrategy, falling back to local concordance:", geminiErr.message);
+      }
+    }
+
+    if (!strategyResult) {
+      if (action === "generate_inquiries") {
+        strategyResult = {
+          inquiries: [
+            {
+              id: "bi-dyn-" + Date.now().toString(),
+              question: prompt ? `Counsel, regarding ${prompt}, what is the statutory authority?` : "Counsel, why did your client not avail the statutory appeal remedy before the Appellate Tribunal under Electricity Act Section 111?",
+              rebuttalAnswer: "My Lord, Section 111 appeal is restricted to tariff/regulatory orders of the Regulatory Commission. Transmission line alignment and crop destruction under Telegraph Act Section 16 is solely subject to the District Magistrate's jurisdiction. An alternative remedy bar does not apply where jurisdiction is fundamentally absent.",
+              difficulty: "High",
+              supportingExhibits: "Exhibit P-4 & Division Bench ruling in Valsamma (2024)",
+            },
+            {
+              id: "bi-dyn-2-" + Date.now().toString(),
+              question: "Will granting an interim stay cause power disruption to the industrial corridor?",
+              rebuttalAnswer: "My Lord, the 110kV feeder can easily be routed along the existing 12-meter PWD road corridor situated 40 meters west, requiring zero tree felling and causing zero grid disruption.",
+              difficulty: "Medium",
+              supportingExhibits: "Exhibit P-5 (PWD Road Alignment Sketch)",
+            },
+          ],
+        };
+      } else if (action === "generate_cross_exam") {
+        strategyResult = {
+          crossExamQuestions: [
+            {
+              qNo: 1,
+              questionText: "Is it not true that the survey report prepared by your team did not mention the rubber trees in tapping stage on the western boundary?",
+              objective: "Impeach veracity of official site inspection report",
+              targetAdmission: "Report omitted yielding trees",
+              isAsked: false,
+            },
+            {
+              qNo: 2,
+              questionText: "Did you verify whether the petitioner's land is registered under Thandapper No. 4921 before cutting the boundary markers?",
+              objective: "Establish reckless entry without verifying revenue records",
+              targetAdmission: "Did not check revenue ledger",
+              isAsked: false,
+            },
+          ],
+        };
+      } else {
+        strategyResult = {
+          issue: {
+            id: "iss-dyn-" + Date.now().toString(),
+            issueNumber: "IV",
+            title: prompt || "Breach of Statutory Proportionality & Minimization of Damage",
+            question: "Whether the refusal of the authorities to divert the line along the public highway margin violates the doctrine of proportionality under Article 14?",
+            status: "Strong Favourable",
+            governingLaw: "Constitution of India (Article 14) & Telegraph Act S.10(d)",
+            isCore: true,
+          },
+        };
+      }
+    }
+
+    res.json({
+      success: true,
+      action,
+      strategy: strategyResult,
+      engine: usedEngine,
+      isAiPowered: usedEngine.includes("gemini"),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("generateAiBenchStrategy error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

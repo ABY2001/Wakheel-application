@@ -3059,4 +3059,264 @@ export const devStore = {
     writeFile("dev_reports.json", reports);
     return newReport;
   },
+
+  // --- Case Preparation & Bench Argument Dossiers ---
+  getCasePrepDossier(matterId = "mat_wpc_19482") {
+    const store = readFile("dev_case_prep.json", {});
+    if (store[matterId]) {
+      return store[matterId];
+    }
+
+    // Default High Court Benchmark Dossier for WP(C) 19482/2024
+    if (matterId === "mat_wpc_19482" || matterId.includes("19482") || matterId.toLowerCase().includes("gopakumar")) {
+      const defaultDossier = {
+        matterId: "mat_wpc_19482",
+        matterTitle: "WP(C) 19482/2024 — Gopakumar v. Kerala State Electricity Board & Anr.",
+        caseNumber: "WP(C) 19482/2024",
+        courtForum: "High Court of Kerala (Ernakulam)",
+        bench: "Court Hall 2A (Division Bench)",
+        coram: "Hon'ble Mr. Justice A. Muhamed Mustaque & Hon'ble Mrs. Justice Shoba Annamma Eapen",
+        hearingStage: "Urgent Motion for Ad-Interim Injunction & Direction",
+        itemNumber: "Item #14",
+        listedDate: "02-Nov-2024",
+        issues: [
+          {
+            id: "iss-1",
+            issueNumber: "I",
+            title: "Jurisdictional Bar under Section 16(1) Telegraph Act",
+            question: "Whether the licensee (KSEB) has unilateral statutory jurisdiction to proceed with stringing overhead lines across petitioner's yielding land once written objection under Section 16(1) has been registered, without referral to the District Magistrate?",
+            status: "Strong Favourable (Governed by Valsamma DB 2024)",
+            governingLaw: "Indian Telegraph Act, 1885 (Section 10 & 16(1))",
+            isCore: true,
+          },
+          {
+            id: "iss-2",
+            issueNumber: "II",
+            title: "Breach of Natural Justice & Article 14/300A",
+            question: "Whether Exhibit P-6 alignment notice passed behind the petitioner's back without spot inspection or personal hearing violates Audi Alteram Partem and proprietary protections under Article 300A?",
+            status: "Strong Favourable",
+            governingLaw: "Constitution of India (Articles 14 & 300A)",
+            isCore: true,
+          },
+          {
+            id: "iss-3",
+            issueNumber: "III",
+            title: "Statutory Duty to Minimize Damage (Section 10(d))",
+            question: "Whether the respondents are bound to divert the alignment along the unobstructed public PWD road margin which runs 40 meters away, thereby causing 'least possible damage'?",
+            status: "Disputed (KSEB Counter Filed)",
+            governingLaw: "Indian Telegraph Act, 1885 (Section 10(d))",
+            isCore: false,
+          },
+        ],
+        precedents: [
+          {
+            id: "prec-1",
+            citation: "2024 (2) KHC 401 (DB)",
+            caseName: "Valsamma & Ors. v. Kerala State Electricity Board & Anr.",
+            court: "High Court of Kerala (Division Bench)",
+            benchCoram: "Mustaque & Eapen, JJ.",
+            ratio: "Licensee has no unbridled discretion to cut trees or draw lines through private land once an objection is raised. Referral to the District Magistrate under Section 16(1) is mandatory prior to commencement of works.",
+            keyParagraphs: "Paras 14, 18 & 22",
+            howToApply: "Directly binding on Single Bench and Division Bench. Hand up certified true copy when countering Standing Counsel's contention on emergent grid needs.",
+            isBookmarked: true,
+          },
+          {
+            id: "prec-2",
+            citation: "(2017) 5 SCC 143",
+            caseName: "Power Grid Corporation of India Ltd. v. Century Textiles & Industries Ltd.",
+            court: "Supreme Court of India (3-Judge Bench)",
+            benchCoram: "A.K. Sikri & R.K. Agrawal, JJ.",
+            ratio: "Powers under Section 10 are subject to landowner's right to resist, which immediately triggers the adjudicatory jurisdiction of the District Magistrate under Section 16.",
+            keyParagraphs: "Para 26",
+            howToApply: "Cite to show Supreme Court concord with Kerala High Court doctrine.",
+            isBookmarked: true,
+          },
+          {
+            id: "prec-3",
+            citation: "1970 KLT 872 (FB)",
+            caseName: "Bharat Plywood and Timber Products v. KSEB",
+            court: "High Court of Kerala (Full Bench)",
+            benchCoram: "Raman Nayar, C.J.",
+            ratio: "Section 10(d) imposes an affirmative duty on electricity authorities to do the least possible damage to private lands.",
+            keyParagraphs: "Paras 6 & 8",
+            howToApply: "Use to argue for PWD road margin diversion.",
+            isBookmarked: false,
+          },
+        ],
+        benchInquiries: [
+          {
+            id: "bi-1",
+            question: "Counsel, why did your client wait 7 months between Exhibit P-6 order and filing this Article 226 petition?",
+            rebuttalAnswer: "My Lord, the petitioner was diligently pursuing statutory representation Exhibit P-4 before the District Magistrate as commanded by Section 16(1). The delay is bona fide pursuit of administrative remedies, not contumacious laches. Moreover, physical entry was only threatened on 14-Aug-2024.",
+            difficulty: "High",
+            supportingExhibits: "Exhibit P-4 (Speed Post A/D) & Exhibit P-7 (Collectorate Diary Receipt)",
+          },
+          {
+            id: "bi-2",
+            question: "Is the line stringing already completed or are foundation towers erected?",
+            rebuttalAnswer: "No, My Lord. Only wooden surveyor pegs were driven on 14-Aug-2024. No conductor stringing has occurred. An ad-interim stay preserves the absolute status quo with zero disruption to the statewide transmission network.",
+            difficulty: "Medium",
+            supportingExhibits: "Exhibit P-3 (Spot Mahazar & Photos)",
+          },
+          {
+            id: "bi-3",
+            question: "Can an individual landowner stall a public infrastructure transmission project of state importance?",
+            rebuttalAnswer: "My Lord, the petitioner is not stalling the grid. We are praying for route alignment along the unobstructed PWD road margin 40 meters west, or that the District Magistrate conduct the statutory hearing under Section 16(1) as required by the Division Bench in Valsamma.",
+            difficulty: "High",
+            supportingExhibits: "Exhibit P-5 (Re-survey Sketch & Alignment Comparison Map)",
+          },
+        ],
+        speakingNotes: [
+          {
+            order: 1,
+            timeMark: "00:00 - 01:30",
+            heading: "Opening & Impugned Memo",
+            content: "May it please your Lordships: This Writ Petition challenges Exhibit P-6 unilateral alignment notice dated 04-03-2024. Petitioner is an agricultural smallholder in Aluva holding 28.5 Cents of registered rubber and fruit groves vide Exhibit P-1 title deed.",
+            focusExhibit: "Exhibit P-1 & P-6",
+          },
+          {
+            order: 2,
+            timeMark: "01:30 - 03:30",
+            heading: "Statutory Violation of Section 16(1)",
+            content: "On 14-Aug-2024, respondents entered the property without prior statutory notice. Petitioner immediately registered written objection Exhibit P-4. Section 16(1) of the Indian Telegraph Act is peremptory: the moment resistance is offered, licensee's executive power ceases until the District Magistrate orders entry.",
+            focusExhibit: "Exhibit P-4",
+          },
+          {
+            order: 3,
+            timeMark: "03:30 - 06:00",
+            heading: "Binding Division Bench Doctrine",
+            content: "Handing up Valsamma v. KSEB [2024 (2) KHC 401 DB]. At Paragraph 18, their Lordships held that the licensee cannot sit in judgment of its own cause. Entry without Collector's order is illegal trespass.",
+            focusExhibit: "2024 (2) KHC 401 DB (Para 18)",
+          },
+          {
+            order: 4,
+            timeMark: "06:00 - 07:30",
+            heading: "Interim Ad-Interim Relief Prayer",
+            content: "Praying for an interim order restraining tree felling and conductor stringing until Respondent No. 3 District Magistrate conducts hearing and renders formal decision on Exhibit P-4 objection.",
+            focusExhibit: "Interim Stay I.A.",
+          },
+        ],
+        witnessQuestions: [
+          {
+            id: "wq-1",
+            witnessName: "DW-1 (Executive Engineer, KSEB Transmission Division)",
+            witnessRole: "Respondent Official Witness",
+            questions: [
+              {
+                qNo: 1,
+                questionText: "Did your office receive Exhibit P-4 written objection sent by the Petitioner on 22-Aug-2024?",
+                objective: "Establish formal notice and concession of receipt",
+                targetAdmission: "Must admit receipt via Speed Post A/D",
+                isAsked: false,
+              },
+              {
+                qNo: 2,
+                questionText: "Before ordering the contractors to enter the property, did your department obtain an authorization order under Section 16(1) from the District Magistrate, Ernakulam?",
+                objective: "Establish complete lack of statutory jurisdiction and violation of Valsamma ruling",
+                targetAdmission: "No DM order was obtained",
+                isAsked: false,
+              },
+              {
+                qNo: 3,
+                questionText: "Is it not a fact that a 12-meter wide public PWD road runs parallel to the western boundary of the petitioner's property?",
+                objective: "Prove feasible alternative alignment causing zero damage under Section 10(d)",
+                targetAdmission: "Admits existence of public road margin",
+                isAsked: false,
+              },
+            ],
+          },
+        ],
+        evidenceExhibits: [
+          { mark: "Ext. P-1", title: "Registered Title Deed No. 1842/2018 (SRO Aluva)", verified: true, admissibility: "Admitted" },
+          { mark: "Ext. P-2", title: "Basic Land Tax Remittance Receipt (FY 2024-25)", verified: true, admissibility: "Admitted" },
+          { mark: "Ext. P-3", title: "Scene Mahazar & Tree Census prepared by Village Officer", verified: true, admissibility: "Verified by Court Commissioner" },
+          { mark: "Ext. P-4", title: "Written Statutory Objection under Section 16(1) with Speed Post Receipt", verified: true, admissibility: "Admitted" },
+          { mark: "Ext. P-5", title: "Comparative Alignment Map showing Public Road Corridor", verified: true, admissibility: "Expert Surveyor Map" },
+          { mark: "Ext. P-6", title: "Impugned Order / Route Marking Notice No. TD/ALV/104", verified: true, admissibility: "Under Challenge" },
+        ],
+        lastUpdated: new Date().toISOString(),
+      };
+      store[matterId] = defaultDossier;
+      writeFile("dev_case_prep.json", store);
+      return defaultDossier;
+    }
+
+    // Dynamic Initial Dossier for other matters
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const m = matters.find((item) => item._id === matterId || item.caseNumber === matterId) || {};
+
+    const initializedDossier = {
+      matterId,
+      matterTitle: m.matterTitle || "Pleading Matter",
+      caseNumber: m.caseNumber || "Case Pending",
+      courtForum: m.courtForum || "High Court of Kerala (Ernakulam)",
+      bench: m.courtHall || "Court Hall 1",
+      coram: "Hon'ble Presiding Judge",
+      hearingStage: "Hearing on Admission / Preliminary Objections",
+      itemNumber: "Item #12",
+      listedDate: m.nextHearingDate ? new Date(m.nextHearingDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Next Cause List",
+      issues: [
+        {
+          id: "iss-dyn-1",
+          issueNumber: "I",
+          title: "Maintainability & Prima Facie Cause of Action",
+          question: `Whether the matter discloses a justiciable cause of action under ${m.statutoryActs?.[0] || "applicable statutes"}?`,
+          status: "Strong Favourable",
+          governingLaw: m.statutoryActs?.[0] || "Statutory Law",
+          isCore: true,
+        },
+      ],
+      precedents: [
+        {
+          id: "prec-dyn-1",
+          citation: "2024 (2) KHC 401",
+          caseName: "Valsamma & Ors. v. KSEB",
+          court: "High Court of Kerala",
+          benchCoram: "Division Bench",
+          ratio: "Statutory powers must be exercised strictly within prescribed statutory procedural parameters.",
+          keyParagraphs: "Para 14",
+          howToApply: "Cite in opening arguments.",
+          isBookmarked: true,
+        },
+      ],
+      benchInquiries: [
+        {
+          id: "bi-dyn-1",
+          question: "Counsel, what is the precise ad-interim relief sought today?",
+          rebuttalAnswer: "My Lord, maintaining status quo pending receipt of respondent records.",
+          difficulty: "Medium",
+          supportingExhibits: "Pleading Affidavit",
+        },
+      ],
+      speakingNotes: [
+        {
+          order: 1,
+          timeMark: "00:00 - 02:00",
+          heading: "Brief Factual Background",
+          content: `May it please your Honour: Outlining the sequence of events leading to this petition under ${m.statutoryActs?.[0] || "the Act"}.`,
+          focusExhibit: "Exhibit P-1",
+        },
+      ],
+      witnessQuestions: [],
+      evidenceExhibits: [
+        { mark: "Ext. 1", title: "Primary Impugned Document / Deed", verified: true, admissibility: "Admitted" },
+      ],
+      lastUpdated: new Date().toISOString(),
+    };
+
+    store[matterId] = initializedDossier;
+    writeFile("dev_case_prep.json", store);
+    return initializedDossier;
+  },
+
+  saveCasePrepDossier(matterId, dossierData) {
+    const store = readFile("dev_case_prep.json", {});
+    store[matterId] = {
+      ...dossierData,
+      matterId,
+      lastUpdated: new Date().toISOString(),
+    };
+    writeFile("dev_case_prep.json", store);
+    return store[matterId];
+  },
 };

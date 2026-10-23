@@ -55,6 +55,9 @@ import {
   getBenchAnalytics,
   getChamberReports,
   generateChamberReport,
+  getCasePrep,
+  saveCasePrep,
+  generateAiBenchStrategy,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -141,5 +144,10 @@ router.post("/erp/associates", protect, addAssociate);
 router.get("/analytics/bench", protect, getBenchAnalytics);
 router.get("/analytics/reports", protect, getChamberReports);
 router.post("/analytics/reports/generate", protect, generateChamberReport);
+
+// 15. Case Preparation & Bench Argument Dossier (Option B)
+router.get("/case-prep/:matterId", protect, getCasePrep);
+router.post("/case-prep/:matterId", protect, saveCasePrep);
+router.post("/case-prep/:matterId/ai-assist", protect, generateAiBenchStrategy);
 
 export default router;

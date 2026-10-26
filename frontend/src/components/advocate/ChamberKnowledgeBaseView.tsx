@@ -23,7 +23,89 @@ import {
   X,
   Filter,
 } from "lucide-react";
-import { advocateApi } from "@/lib/api";
+import { advocateApi, API_BASE_URL } from "@/lib/api";
+
+const BASE_URL =
+  API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+// Safe API helpers to handle stale HMR/Turbopack module cache transitions gracefully
+const fetchBareActs = async (query: string = "", token?: string) => {
+  try {
+    if (typeof advocateApi?.getBareActs === "function") {
+      return await advocateApi.getBareActs(query, token);
+    }
+  } catch {
+    // fallback to direct fetch
+  }
+  const url = query
+    ? `${BASE_URL}/advocate/kb/acts?q=${encodeURIComponent(query)}`
+    : `${BASE_URL}/advocate/kb/acts`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+  });
+  return await res.json();
+};
+
+const fetchPlaybooks = async (token?: string) => {
+  try {
+    if (typeof advocateApi?.getPlaybooks === "function") {
+      return await advocateApi.getPlaybooks(token);
+    }
+  } catch {
+    // fallback to direct fetch
+  }
+  const res = await fetch(`${BASE_URL}/advocate/kb/playbooks`, {
+    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+  });
+  return await res.json();
+};
+
+const fetchKbArticles = async (token?: string) => {
+  try {
+    if (typeof advocateApi?.getKbArticles === "function") {
+      return await advocateApi.getKbArticles(token);
+    }
+  } catch {
+    // fallback to direct fetch
+  }
+  const res = await fetch(`${BASE_URL}/advocate/kb/articles`, {
+    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+  });
+  return await res.json();
+};
+
+const fetchResearchBriefs = async (token?: string) => {
+  try {
+    if (typeof advocateApi?.getResearchBriefs === "function") {
+      return await advocateApi.getResearchBriefs(token);
+    }
+  } catch {
+    // fallback to direct fetch
+  }
+  const res = await fetch(`${BASE_URL}/advocate/kb/briefs`, {
+    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+  });
+  return await res.json();
+};
+
+const postResearchBrief = async (data: any, token?: string) => {
+  try {
+    if (typeof advocateApi?.createResearchBrief === "function") {
+      return await advocateApi.createResearchBrief(data, token);
+    }
+  } catch {
+    // fallback to direct fetch
+  }
+  const res = await fetch(`${BASE_URL}/advocate/kb/briefs`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token || "advocate_token"}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return await res.json();
+};
 
 interface ChamberKnowledgeBaseViewProps {
   initialSubTab?: "library" | "playbooks" | "kb-articles" | "kb-research" | string;
@@ -176,10 +258,10 @@ export default function ChamberKnowledgeBaseView({
     setIsLoading(true);
     try {
       const [actsRes, playbooksRes, articlesRes, briefsRes] = await Promise.all([
-        advocateApi.getBareActs("", token),
-        advocateApi.getPlaybooks(token),
-        advocateApi.getKbArticles(token),
-        advocateApi.getResearchBriefs(token),
+        fetchBareActs("", token),
+        fetchPlaybooks(token),
+        fetchKbArticles(token),
+        fetchResearchBriefs(token),
       ]);
 
       if (actsRes?.acts) {
@@ -321,7 +403,7 @@ export default function ChamberKnowledgeBaseView({
         });
       }
 
-      const res = await advocateApi.createResearchBrief(
+      const res = await postResearchBrief(
         {
           title: newBriefTitle,
           matterReference: newBriefMatter,

@@ -601,6 +601,19 @@ export default function MultiPartyCollaborationRoom({
     });
   }, [chatMessages, chatScope]);
 
+  // Deduplicated participants roster
+  const uniqueParticipants = useMemo(() => {
+    const map = new Map<string, Participant>();
+    DEFAULT_PARTICIPANTS.forEach((dp) => map.set(dp.id, dp));
+    participants.forEach((p) => {
+      if (p && p.id) {
+        const existing = map.get(p.id) || ({} as any);
+        map.set(p.id, { ...existing, ...p });
+      }
+    });
+    return Array.from(map.values());
+  }, [participants]);
+
   return (
     <div className="fixed inset-0 z-50 bg-black text-white flex flex-col overflow-hidden font-sans select-none animate-in fade-in duration-150">
       {/* ============================================================== */}
@@ -696,9 +709,9 @@ export default function MultiPartyCollaborationRoom({
           {/* Top Video Tiles Strip (in Stage Focus mode) */}
           {viewMode === "stage_focus" && (
             <div className="h-44 p-3 border-b border-zinc-800 bg-black/60 flex items-center gap-3 overflow-x-auto shrink-0">
-              {participants.map((p) => (
+              {uniqueParticipants.map((p, idx) => (
                 <div
-                  key={p.id}
+                  key={`${p.id}-${idx}`}
                   className="w-52 h-full rounded-2xl bg-zinc-900 border border-zinc-800 relative overflow-hidden flex flex-col justify-between p-2.5 shrink-0 shadow-xs"
                 >
                   {/* Status header */}
@@ -738,9 +751,9 @@ export default function MultiPartyCollaborationRoom({
           {/* GALLERY GRID MODE (When toggled) */}
           {viewMode === "gallery_grid" && (
             <div className="flex-1 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-y-auto">
-              {participants.map((p) => (
+              {uniqueParticipants.map((p, idx) => (
                 <div
-                  key={p.id}
+                  key={`grid-${p.id}-${idx}`}
                   className="rounded-3xl bg-zinc-900 border border-zinc-800 relative overflow-hidden flex flex-col justify-between p-4 min-h-[220px]"
                 >
                   <div className="flex items-center justify-between text-xs text-zinc-400">
@@ -1044,7 +1057,7 @@ export default function MultiPartyCollaborationRoom({
                   activeSideTab === "participants" ? "bg-white text-black" : "bg-zinc-900 text-zinc-400 hover:text-white"
                 }`}
               >
-                Roster ({participants.length})
+                Roster ({uniqueParticipants.length})
               </button>
             </div>
           </div>
@@ -1193,9 +1206,9 @@ export default function MultiPartyCollaborationRoom({
               </div>
 
               <div className="space-y-2">
-                {participants.map((p) => (
+                {uniqueParticipants.map((p, idx) => (
                   <div
-                    key={p.id}
+                    key={`roster-${p.id}-${idx}`}
                     className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 truncate">

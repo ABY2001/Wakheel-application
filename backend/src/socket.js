@@ -176,8 +176,17 @@ export const initWebSocketServer = (httpServer) => {
           case "collab:join": {
             const { roomId = "room_wpc_19482", user = {} } = payload;
             const room = getOrCreateCollabRoom(roomId);
+            const targetUserId = user.id || authenticatedUserId || "adv_1";
+
+            // Purge any stale socket previously registered to this user in this room
+            room.participants.forEach((existingUser, existingWs) => {
+              if (existingUser.id === targetUserId && existingWs !== ws) {
+                room.participants.delete(existingWs);
+              }
+            });
+
             const userInfo = {
-              id: user.id || authenticatedUserId || "adv_1",
+              id: targetUserId,
               name: user.name || "Advocate Participant",
               role: user.role || authenticatedRole || "Advocate",
               enrollment: user.enrollment || "K/1429/2016",

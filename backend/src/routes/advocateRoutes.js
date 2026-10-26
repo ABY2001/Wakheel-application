@@ -72,6 +72,9 @@ import {
   getCollabRoomById,
   createCollabRoom,
   saveCollabNotes,
+  simulateBenchTurn,
+  getCourtroomSessions,
+  saveCourtroomSession,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -183,5 +186,10 @@ router.get("/collab/rooms", protect, getCollabRooms);
 router.get("/collab/rooms/:roomId", protect, getCollabRoomById);
 router.post("/collab/rooms", protect, createCollabRoom);
 router.post("/collab/rooms/:roomId/notes", protect, saveCollabNotes);
+
+// 19. Courtroom Oral Argument AI Simulator (Milestone 3)
+router.post("/courtroom/simulate", protect, simulateBenchTurn);
+router.get("/courtroom/sessions", protect, getCourtroomSessions);
+router.post("/courtroom/sessions", protect, saveCourtroomSession);
 
 export default router;

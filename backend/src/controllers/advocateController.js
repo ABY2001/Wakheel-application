@@ -2172,3 +2172,56 @@ export const saveCollabNotes = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 19. COURTROOM ORAL ARGUMENT AI SIMULATOR & BENCH COACH (Milestone 3)
+// ============================================================================
+export const simulateBenchTurn = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const result = devStore.simulateBenchTurn({
+      ...req.body,
+      advocateId,
+    });
+    res.json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error("simulateBenchTurn error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCourtroomSessions = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const sessions = devStore.getCourtroomSessions(advocateId);
+    res.json({
+      success: true,
+      count: sessions.length,
+      sessions,
+    });
+  } catch (error) {
+    console.error("getCourtroomSessions error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const saveCourtroomSession = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const session = devStore.saveCourtroomSession({
+      ...req.body,
+      advocateId,
+    });
+    res.status(201).json({
+      success: true,
+      message: "Courtroom hearing rehearsal session saved successfully.",
+      session,
+    });
+  } catch (error) {
+    console.error("saveCourtroomSession error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

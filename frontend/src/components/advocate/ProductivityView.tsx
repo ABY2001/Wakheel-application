@@ -26,15 +26,30 @@ import {
 } from "lucide-react";
 import { advocateApi, CaseNoteItem, CauseListItem } from "@/lib/api";
 import { AdvocateConsultationsView } from "./AdvocateConsultationsView";
+import dynamic from "next/dynamic";
+
+const CourtroomVoiceSimulatorView = dynamic(
+  () => import("./CourtroomVoiceSimulatorView").then((mod) => mod.CourtroomVoiceSimulatorView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+        Loading Courtroom Oral Hearing Simulator...
+      </div>
+    ),
+  }
+);
 
 interface ProductivityViewProps {
   activeModule?: string;
   onSelectModule?: (mod: string) => void;
+  advocateName?: string;
 }
 
 export function ProductivityView({
   activeModule = "notes",
   onSelectModule,
+  advocateName = "Adv. Meera Krishnan",
 }: ProductivityViewProps) {
   const [currentTab, setCurrentTab] = useState<string>(activeModule);
   const [activeTaskFilter, setActiveTaskFilter] = useState<"all" | "urgent" | "causelist">("all");
@@ -779,48 +794,9 @@ export function ProductivityView({
         </div>
       )}
 
-      {/* VIEW: Practice with AI */}
+      {/* VIEW: Practice with AI - Milestone 3 Interactive Courtroom Voice Simulator */}
       {currentTab === "practice-ai" && (
-        <div className="p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-zinc-800">
-            <div>
-              <h3 className="text-lg font-bold text-black dark:text-white">Courtroom Oral Argument AI Simulator</h3>
-              <p className="text-xs text-zinc-500">Simulate tough judicial bench questions, moot court argument rebuttal, and procedural cross-examination.</p>
-            </div>
-            <span className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 text-xs font-bold text-black dark:text-white border border-zinc-200 dark:border-zinc-800">
-              Judge Persona: Rigorous Division Bench
-            </span>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold text-xs shrink-0">
-                BENCH
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-black dark:text-white">Hon&apos;ble Presiding Judge AI:</span>
-                <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
-                  &ldquo;Counsel, before you delve into merits of Article 226, kindly satisfy this Court on the availability of an efficacious alternate statutory remedy under the specialized tribunal framework. How do you bypass the bar in Whirlpool Corporation?&rdquo;
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <textarea
-              rows={3}
-              placeholder="Speak or type your oral rebuttal argument to the Bench..."
-              defaultValue="My Lords, we rely directly on the four exceptions carved in Whirlpool Corporation (1998) 8 SCC 1. Here, the impugned notice is completely without jurisdiction and in ex-facie violation of principles of natural justice..."
-              className="w-full p-4 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
-            />
-            <div className="flex justify-between items-center">
-              <span className="text-[11px] text-zinc-500">AI Scoring: Persuasiveness 96% • Statutory Precision 98%</span>
-              <button className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-                Submit Rebuttal to Bench
-              </button>
-            </div>
-          </div>
-        </div>
+        <CourtroomVoiceSimulatorView advocateName={advocateName} />
       )}
     </div>
   );

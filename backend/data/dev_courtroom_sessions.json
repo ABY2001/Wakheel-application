@@ -1,0 +1,61 @@
+[
+  {
+    "id": "session_001",
+    "advocateId": "adv_1",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
+    "benchPersona": "division_bench_2a",
+    "benchName": "Kerala High Court Division Bench 2A (Coram: Mustaque & Eapen, JJ.)",
+    "finalScore": 94,
+    "statutoryPrecision": 96,
+    "disposition": "Interim Stay Granted (4 Weeks)",
+    "duration": "08:15",
+    "date": "24 Oct 2024",
+    "summary": "Oral argument successfully countered initial maintainability skepticism by invoking Whirlpool exceptions and secured 4-week interim stay on tree-felling based on the Valsamma Full Bench doctrine.",
+    "turns": [
+      {
+        "turnIndex": 1,
+        "benchQuery": "Counsel, before we examine the merits of your tree-felling grievance, why should this Division Bench exercise extraordinary prerogative writ jurisdiction when Section 16(3) of the Telegraph Act provides an alternate forum before the District Court?",
+        "advocateArgument": "My Lords, we rely directly on the four exceptions carved in Whirlpool Corporation (1998) 8 SCC 1. Here, the impugned entry is completely without jurisdiction and in ex-facie violation of principles of natural justice without prior notice.",
+        "score": 88,
+        "statutoryPrecision": 90,
+        "disposition": "Engaged on Statutory Jurisdiction",
+        "recommendedCitation": "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1"
+      },
+      {
+        "turnIndex": 2,
+        "benchQuery": "Very well, Counsel. Valsamma is a Full Bench decision binding on us. If resistance was formally lodged and the licensee did not approach the District Magistrate, the entry appears prima facie without authority of law. What interim directions are you seeking?",
+        "advocateArgument": "My Lords, under Valsamma v. KSEB (2012) 2 KLT 368, the authority has no power to adjudicate resistance unilaterally. We pray for an ad-interim stay restraining the respondents from drawing lines or felling 45 yielding rubber trees in Sy. 142/3.",
+        "score": 96,
+        "statutoryPrecision": 98,
+        "disposition": "Interim Stay Granted",
+        "recommendedCitation": "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)"
+      }
+    ]
+  },
+  {
+    "id": "session_002",
+    "advocateId": "adv_1",
+    "matterId": "mat_not_701",
+    "matterTitle": "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
+    "benchPersona": "single_bench_writs",
+    "benchName": "Judicial Magistrate First Class (Court Hall 1)",
+    "finalScore": 91,
+    "statutoryPrecision": 93,
+    "disposition": "Pre-Summoning Cognizance Issued",
+    "duration": "05:40",
+    "date": "22 Oct 2024",
+    "summary": "Established postal service presumption under Section 27 General Clauses Act and payee branch territorial jurisdiction under Section 142(2) post-2015 amendment.",
+    "turns": [
+      {
+        "turnIndex": 1,
+        "benchQuery": "Counsel, the postal tracking record shows the envelope was returned as 'Not Claimed'. How do you satisfy the statutory requirement of notice 'receipt' under Section 138(c)?",
+        "advocateArgument": "Your Honour, as held by the Supreme Court in C.C. Alavi Haji and K. Bhaskaran, when notice is sent to the correct address by registered post, deliberate evasion or non-claiming constitutes deemed service under Section 27 General Clauses Act.",
+        "score": 91,
+        "statutoryPrecision": 93,
+        "disposition": "Satisfied on Deemed Service",
+        "recommendedCitation": "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555"
+      }
+    ]
+  }
+]

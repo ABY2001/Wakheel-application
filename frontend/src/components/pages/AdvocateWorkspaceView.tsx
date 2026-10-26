@@ -2926,7 +2926,11 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW: Productivity                                            */}
           {isProductivity && (
-            <ProductivityView activeModule={activeTab} onSelectModule={(m) => setActiveTab(m)} />
+            <ProductivityView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+              advocateName={displayFullName}
+            />
           )}
 
           {/* ============================================================== */}

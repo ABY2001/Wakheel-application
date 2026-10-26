@@ -2006,6 +2006,38 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 19. Courtroom Oral Argument AI Simulator (Milestone 3)
+  async simulateBenchTurn(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/courtroom/simulate`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getCourtroomSessions(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/courtroom/sessions`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async saveCourtroomSession(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/courtroom/sessions`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

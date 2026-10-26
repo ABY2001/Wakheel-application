@@ -3598,6 +3598,160 @@ export const devStore = {
     }
     return null;
   },
+
+  // --- Courtroom Oral Argument AI Simulator & Bench Query Coach (Milestone 3) ---
+  simulateBenchTurn(data) {
+    const {
+      matterId = "mat_wpc_19482",
+      benchPersona = "division_bench_2a",
+      argument = "",
+      turnIndex = 0,
+    } = data;
+
+    const lowerArg = argument.toLowerCase();
+
+    // Check for legal keywords in argument
+    const hasValsamma = lowerArg.includes("valsamma");
+    const hasSection16 = lowerArg.includes("16") || lowerArg.includes("section 16");
+    const hasWhirlpool = lowerArg.includes("whirlpool");
+    const hasNaturalJustice = lowerArg.includes("natural justice") || lowerArg.includes("audi alteram");
+    const hasArbitrary = lowerArg.includes("arbitrary") || lowerArg.includes("article 14");
+    const hasPrecedent = lowerArg.includes("scc") || lowerArg.includes("klt") || lowerArg.includes("air");
+    const hasJurisdiction = lowerArg.includes("jurisdiction") || lowerArg.includes("maintainable");
+    const hasInjunction = lowerArg.includes("injunction") || lowerArg.includes("stay") || lowerArg.includes("status quo");
+
+    // Calculate dynamic scores based on legal quality
+    let persuasiveness = 74;
+    let statutoryPrecision = 72;
+    let disposition = "Skeptical on Maintainability";
+    let nextQuery = "";
+    let recommendedCitation = "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1";
+    let coachCritique = "Good opening demeanor. However, address the statutory remedy under Section 16(3) before pressing for Article 226.";
+
+    if (benchPersona === "division_bench_2a") {
+      // Mustaque & Eapen, JJ. - Kerala High Court Division Bench 2A
+      if (turnIndex === 0) {
+        if (hasWhirlpool || hasJurisdiction || hasNaturalJustice) {
+          persuasiveness = 88;
+          statutoryPrecision = 90;
+          disposition = "Engaged on Statutory Jurisdiction";
+          nextQuery =
+            "Counsel, we take note of Whirlpool. But look at paragraph 8 of the KSEB counter affidavit. They claim the transmission line falls under an already notified gazette corridor under Section 164. What is your specific factual answer to the gazette alignment?";
+          recommendedCitation = "Power Grid Corp of India v. Century Textiles Ltd (2017) 5 SCC 143";
+          coachCritique =
+            "Strong rebuttal establishing lack of jurisdiction. Now pivot directly to the absence of landowner notice prior to the gazette notification.";
+        } else {
+          persuasiveness = 75;
+          statutoryPrecision = 72;
+          disposition = "Skeptical on Alternative Remedy";
+          nextQuery =
+            "Counsel, before we examine the merits of your tree-felling grievance, why should this Division Bench exercise extraordinary prerogative writ jurisdiction when Section 16(3) of the Telegraph Act provides an efficacious statutory forum before the District Court?";
+          recommendedCitation = "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1";
+          coachCritique =
+            "You must invoke the three exceptions in Whirlpool Corporation (breach of natural justice, total lack of jurisdiction, or violation of fundamental rights) to bypass the alternate remedy bar.";
+        }
+      } else if (turnIndex === 1) {
+        if (hasValsamma || hasSection16) {
+          persuasiveness = 94;
+          statutoryPrecision = 96;
+          disposition = "Inclined to Grant Interim Order";
+          nextQuery =
+            "Very well, Counsel. Valsamma is a Full Bench decision binding on us. If resistance was formally lodged and the licensee did not approach the District Magistrate, the entry appears prima facie without authority of law. What interim directions are you seeking pending counter from the Board?";
+          recommendedCitation = "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)";
+          coachCritique =
+            "Outstanding invocation of the Valsamma Full Bench ratio! You have persuaded the Bench that the board cannot enter private land upon objection without a District Magistrate order under Section 16(1). Frame your interim prayer concisely.";
+        } else {
+          persuasiveness = 78;
+          statutoryPrecision = 80;
+          disposition = "Pressing for Precedent Authority";
+          nextQuery =
+            "You argue that the utility cannot enter upon resistance, but which binding precedent of this Court establishes that the authority MUST refer the matter to the District Magistrate rather than proceeding unilaterally?";
+          recommendedCitation = "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)";
+          coachCritique =
+            "Immediately cite Valsamma v. KSEB 2012 (2) KLT 368 (FB). That judgment directly settles that unilateral entry upon landowner objection is an actionable trespass.";
+        }
+      } else {
+        if (hasInjunction || hasArbitrary || hasValsamma) {
+          persuasiveness = 96;
+          statutoryPrecision = 98;
+          disposition = "Interim Stay Granted";
+          nextQuery =
+            "We have heard the Counsel. In view of the law laid down in Valsamma and absence of an order under Section 16(1), there shall be an interim stay of all felling activities in Sy. No. 142/3 for a period of four weeks. Standing counsel to file detailed counter.";
+          recommendedCitation = "Executive Engineer, KSEB v. Doddakka (2015) 15 SCC 738";
+          coachCritique =
+            "Full oral argument victory! Bench disposition converted from skeptical to an interim stay of execution.";
+        } else {
+          persuasiveness = 85;
+          statutoryPrecision = 84;
+          disposition = "Notice Before Admission Issued";
+          nextQuery =
+            "We will issue Notice Before Admission to respondents 1 to 3 returnable in two weeks. Status quo to be maintained in the interregnum.";
+          recommendedCitation = "Century Textiles & Industries Ltd (2017) 5 SCC 143";
+          coachCritique =
+            "Favorable result achieved. For next rehearsal, emphasize the precise survey number to secure an absolute stay rather than mere status quo.";
+        }
+      }
+    } else {
+      // Single Bench / General Criminal / Commercial Bench
+      if (hasPrecedent || hasSection16 || hasWhirlpool) {
+        persuasiveness = 91;
+        statutoryPrecision = 92;
+        disposition = "Persuaded on Merits";
+        nextQuery =
+          "Counsel, your precedent formulation is coherent. How do you respond to the question of delay and laches in approaching this Court?";
+        recommendedCitation = "State of M.P. v. Bhailal Bhai AIR 1964 SC 1006";
+        coachCritique = "Well argued on substantive grounds. Rebut the laches query by showing immediate cause of action.";
+      } else {
+        persuasiveness = 76;
+        statutoryPrecision = 74;
+        disposition = "Seeking Clarification";
+        nextQuery =
+          "Counsel, substantiate your oral submission with specific statutory provisions and judicial ratios. Which Section is violated?";
+        recommendedCitation = "Arnesh Kumar v. State of Bihar (2014) 8 SCC 273";
+        coachCritique = "Anchor your argument in statutory subsections rather than broad assertions.";
+      }
+    }
+
+    return {
+      success: true,
+      turnIndex: turnIndex + 1,
+      benchPersona,
+      matterId,
+      benchQuery: nextQuery,
+      persuasiveness,
+      statutoryPrecision,
+      disposition,
+      recommendedCitation,
+      coachCritique,
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+    };
+  },
+
+  getCourtroomSessions(advocateId = "adv_1") {
+    return readFile("dev_courtroom_sessions.json", DEFAULT_COURTROOM_SESSIONS);
+  },
+
+  saveCourtroomSession(data) {
+    const sessions = readFile("dev_courtroom_sessions.json", DEFAULT_COURTROOM_SESSIONS);
+    const newSession = {
+      id: "session_" + Date.now().toString(),
+      advocateId: data.advocateId || "adv_1",
+      matterId: data.matterId || "mat_wpc_19482",
+      matterTitle: data.matterTitle || "WP(C) 19482/2024",
+      benchPersona: data.benchPersona || "division_bench_2a",
+      benchName: data.benchName || "Kerala High Court Division Bench 2A",
+      finalScore: data.finalScore || 92,
+      statutoryPrecision: data.statutoryPrecision || 94,
+      disposition: data.disposition || "Interim Stay Granted",
+      turns: data.turns || [],
+      date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      duration: data.duration || "06:42",
+      ...data,
+    };
+    sessions.unshift(newSession);
+    writeFile("dev_courtroom_sessions.json", sessions);
+    return newSession;
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -4544,5 +4698,78 @@ export const DEFAULT_COLLAB_ROOMS = [
     ],
     notes: "15-day statutory cure window expires in 6 days. Complaint draft ready for JFCM Ernakulam.",
     createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+// ============================================================================
+// DEFAULT SEED DATA FOR COURTROOM VOICE HEARING SIMULATOR (Milestone 3)
+// ============================================================================
+export const DEFAULT_COURTROOM_SESSIONS = [
+  {
+    id: "session_001",
+    advocateId: "adv_1",
+    matterId: "mat_wpc_19482",
+    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
+    benchPersona: "division_bench_2a",
+    benchName: "Kerala High Court Division Bench 2A (Coram: Mustaque & Eapen, JJ.)",
+    finalScore: 94,
+    statutoryPrecision: 96,
+    disposition: "Interim Stay Granted (4 Weeks)",
+    duration: "08:15",
+    date: "24 Oct 2024",
+    summary:
+      "Oral argument successfully countered initial maintainability skepticism by invoking Whirlpool exceptions and secured 4-week interim stay on tree-felling based on the Valsamma Full Bench doctrine.",
+    turns: [
+      {
+        turnIndex: 1,
+        benchQuery:
+          "Counsel, before we examine the merits of your tree-felling grievance, why should this Division Bench exercise extraordinary prerogative writ jurisdiction when Section 16(3) of the Telegraph Act provides an alternate forum before the District Court?",
+        advocateArgument:
+          "My Lords, we rely directly on the four exceptions carved in Whirlpool Corporation (1998) 8 SCC 1. Here, the impugned entry is completely without jurisdiction and in ex-facie violation of principles of natural justice without prior notice.",
+        score: 88,
+        statutoryPrecision: 90,
+        disposition: "Engaged on Statutory Jurisdiction",
+        recommendedCitation: "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1",
+      },
+      {
+        turnIndex: 2,
+        benchQuery:
+          "Very well, Counsel. Valsamma is a Full Bench decision binding on us. If resistance was formally lodged and the licensee did not approach the District Magistrate, the entry appears prima facie without authority of law. What interim directions are you seeking?",
+        advocateArgument:
+          "My Lords, under Valsamma v. KSEB (2012) 2 KLT 368, the authority has no power to adjudicate resistance unilaterally. We pray for an ad-interim stay restraining the respondents from drawing lines or felling 45 yielding rubber trees in Sy. 142/3.",
+        score: 96,
+        statutoryPrecision: 98,
+        disposition: "Interim Stay Granted",
+        recommendedCitation: "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)",
+      },
+    ],
+  },
+  {
+    id: "session_002",
+    advocateId: "adv_1",
+    matterId: "mat_not_701",
+    matterTitle: "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
+    benchPersona: "single_bench_writs",
+    benchName: "Judicial Magistrate First Class (Court Hall 1)",
+    finalScore: 91,
+    statutoryPrecision: 93,
+    disposition: "Pre-Summoning Cognizance Issued",
+    duration: "05:40",
+    date: "22 Oct 2024",
+    summary:
+      "Established postal service presumption under Section 27 General Clauses Act and payee branch territorial jurisdiction under Section 142(2) post-2015 amendment.",
+    turns: [
+      {
+        turnIndex: 1,
+        benchQuery:
+          "Counsel, the postal tracking record shows the envelope was returned as 'Not Claimed'. How do you satisfy the statutory requirement of notice 'receipt' under Section 138(c)?",
+        advocateArgument:
+          "Your Honour, as held by the Supreme Court in C.C. Alavi Haji and K. Bhaskaran, when notice is sent to the correct address by registered post, deliberate evasion or non-claiming constitutes deemed service under Section 27 General Clauses Act.",
+        score: 91,
+        statutoryPrecision: 93,
+        disposition: "Satisfied on Deemed Service",
+        recommendedCitation: "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555",
+      },
+    ],
   },
 ];

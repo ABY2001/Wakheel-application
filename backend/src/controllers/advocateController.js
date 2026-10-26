@@ -1999,3 +1999,102 @@ export const convertBnsSection = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 17. CHAMBER KNOWLEDGE BASE & BARE ACT STUDIO (Milestone 1)
+// ============================================================================
+export const getBareActs = async (req, res) => {
+  try {
+    const { q = "" } = req.query;
+    const acts = devStore.getBareActs(q);
+    res.json({
+      success: true,
+      count: acts.length,
+      acts,
+      query: q,
+    });
+  } catch (error) {
+    console.error("getBareActs error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getBareActDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const act = devStore.getBareActDetails(id);
+    if (!act) {
+      return res.status(404).json({ success: false, message: "Bare Act not found" });
+    }
+    res.json({
+      success: true,
+      act,
+    });
+  } catch (error) {
+    console.error("getBareActDetails error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getPlaybooks = async (req, res) => {
+  try {
+    const playbooks = devStore.getPlaybooks();
+    res.json({
+      success: true,
+      count: playbooks.length,
+      playbooks,
+    });
+  } catch (error) {
+    console.error("getPlaybooks error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getKbArticles = async (req, res) => {
+  try {
+    const articles = devStore.getKbArticles();
+    res.json({
+      success: true,
+      count: articles.length,
+      articles,
+    });
+  } catch (error) {
+    console.error("getKbArticles error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getResearchBriefs = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const briefs = devStore.getResearchBriefs(advocateId);
+    res.json({
+      success: true,
+      count: briefs.length,
+      briefs,
+    });
+  } catch (error) {
+    console.error("getResearchBriefs error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createResearchBrief = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const briefData = {
+      ...req.body,
+      advocateId,
+      author: req.user?.fullName || req.body.author || "Adv. Meera Krishnan",
+    };
+    const brief = devStore.createResearchBrief(briefData);
+    res.status(201).json({
+      success: true,
+      message: "Research brief saved to Chamber Knowledge Base.",
+      brief,
+    });
+  } catch (error) {
+    console.error("createResearchBrief error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -62,6 +62,12 @@ import {
   triggerAdvocateAgent,
   toggleAdvocateAgent,
   convertBnsSection,
+  getBareActs,
+  getBareActDetails,
+  getPlaybooks,
+  getKbArticles,
+  getResearchBriefs,
+  createResearchBrief,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -159,5 +165,13 @@ router.get("/agents", protect, getAdvocateAgents);
 router.post("/agents/:agentId/trigger", protect, triggerAdvocateAgent);
 router.post("/agents/:agentId/toggle", protect, toggleAdvocateAgent);
 router.post("/agents/bns-convert", protect, convertBnsSection);
+
+// 17. Chamber Knowledge Base & Bare Act Studio (Milestone 1)
+router.get("/kb/acts", protect, getBareActs);
+router.get("/kb/acts/:id", protect, getBareActDetails);
+router.get("/kb/playbooks", protect, getPlaybooks);
+router.get("/kb/articles", protect, getKbArticles);
+router.get("/kb/briefs", protect, getResearchBriefs);
+router.post("/kb/briefs", protect, createResearchBrief);
 
 export default router;

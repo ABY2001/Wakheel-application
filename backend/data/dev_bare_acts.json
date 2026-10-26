@@ -1,0 +1,245 @@
+[
+  {
+    "id": "act_telegraph_1885",
+    "title": "Indian Telegraph Act, 1885",
+    "shortTitle": "Telegraph Act, 1885",
+    "actNumber": "Act No. 13 of 1885",
+    "category": "Central Statutory Act / Infrastructure & Utilities",
+    "enactmentYear": 1885,
+    "lastAmended": "2016 (Tribunal Reforms Alignment)",
+    "jurisdiction": "Supreme Court of India & High Court of Kerala",
+    "overview": "Statute providing powers to telegraph authorities and electricity transmission utilities (under Section 164 of the Electricity Act 2003) to place transmission towers, overhead lines, and cables across private lands, while prescribing statutory dispute resolution before District Magistrates and compensation assessment before District Courts.",
+    "sections": [
+      {
+        "sectionNumber": "Section 10",
+        "heading": "Power for telegraph authority to place and maintain telegraph lines and posts",
+        "fullText": "The telegraph authority may, from time to time, place and maintain a telegraph line under, over, along, or across, and posts in or upon, any immovable property: Provided that— (a) the telegraph authority shall not exercise the powers conferred by this section except for the purposes of a telegraph established or maintained by the Central Government, or to be so established or maintained; (b) the Central Government shall not acquire any right other than that of user only in the property under, over, along, across in or upon which the telegraph authority places any telegraph line or post; (c) except as hereinafter provided, the telegraph authority shall not exercise those powers in respect of any property vested in or under the control or management of any local authority, without the permission of that authority; and (d) in the exercise of the powers conferred by this section, the telegraph authority shall do as little damage as possible, and, when the exercise of those powers has caused damage to any property, shall pay full compensation to all persons interested for any damage sustained by them by reason of the exercise of those powers.",
+        "commentary": "High Court of Kerala settled law establishes that the utility acquires only a right of user and NOT title or ownership. Minimum damage is an express statutory condition precedent. Landowners cannot be arbitrarily dispossessed without valuation.",
+        "landmarkCitations": [
+          "Valsamma v. KSEB 2012 (2) KLT 368",
+          "Executive Engineer, KSEB v. Doddakka (2015) 15 SCC 738"
+        ],
+        "amendments": "Preserved under Section 164 of the Electricity Act, 2003 for transmission licensees."
+      },
+      {
+        "sectionNumber": "Section 16",
+        "heading": "Exercise of powers confers upon telegraph authority, and disputes as to compensation",
+        "fullText": "(1) If the exercise of the powers mentioned in section 10 in respect of property referred to in clause (d) of that section is resisted or obstructed, the District Magistrate may, in his discretion, order that the telegraph authority shall be permitted to exercise them.\n(2) If, after the making of an order under sub-section (1), any person resists the exercise of those powers, or, having control over the property, does not give all facilities for their being exercised, he shall be deemed to have committed an offence under section 188 of the Indian Penal Code (or corresponding section of BNS 2023).\n(3) If any dispute arises concerning the sufficiency of the compensation to be paid under section 10, clause (d), it shall, on application for that purpose by either of the disputing parties to the District Judge within whose jurisdiction the property is situate, be determined by him.",
+        "commentary": "The utility has NO jurisdiction to unilaterally adjudicate resistance. Upon the slightest objection by a landowner or occupier, the transmission licensee MUST pause works and petition the District Magistrate under Section 16(1). Entering without a Section 16 order is actionable trespass and amenable to Article 226 Writ Petition.",
+        "landmarkCitations": [
+          "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)",
+          "Power Grid Corporation of India v. Century Textiles & Industries Ltd. (2017) 5 SCC 143"
+        ],
+        "amendments": "Remains core statutory shield for agricultural and plantation properties in Kerala."
+      },
+      {
+        "sectionNumber": "Section 17",
+        "heading": "Removal or alteration of telegraph line or post on request of owner or occupier",
+        "fullText": "(1) When, under the foregoing provisions of this Act, a telegraph line or post has been placed by the telegraph authority under, over, along, across, in or upon any property, and any person entitled to do so desires to deal with that property in such a manner as to render it necessary or convenient that the telegraph line or post should be removed to another part thereof or to a higher or lower level or altered in form, he may require the telegraph authority to remove or alter the line or post accordingly.\n(2) If compensation has been paid under section 10, clause (d), he shall, when making the requisition, tender to the telegraph authority the amount requisite to defray the expenses of the removal or alteration.",
+        "commentary": "Empowers property owners who subsequently construct buildings or develop plots to requisition line realignment. The High Court has directed KSEB to furnish cost estimates and accommodate feasible alternate routes without undue delay.",
+        "landmarkCitations": [
+          "KSEB v. Sudhakaran 2008 (4) KLT 302"
+        ],
+        "amendments": "Subject to Central Electricity Authority (CEA) safety clearances."
+      }
+    ]
+  },
+  {
+    "id": "act_ni_1881",
+    "title": "Negotiable Instruments Act, 1881",
+    "shortTitle": "NI Act, 1881",
+    "actNumber": "Act No. 26 of 1881",
+    "category": "Banking & Commercial Law",
+    "enactmentYear": 1881,
+    "lastAmended": "2018 (Section 143A & 148 Insertions)",
+    "jurisdiction": "Judicial Magistrate First Class / High Court / Supreme Court",
+    "overview": "Regulates negotiable instruments including promissory notes, cheques, and bills of exchange. Chapter XVII provides penal remedies for dishonour of cheques for insufficiency of funds or exceeding arrangements, ensuring commercial credibility.",
+    "sections": [
+      {
+        "sectionNumber": "Section 138",
+        "heading": "Dishonour of cheque for insufficiency, etc., of funds in the account",
+        "fullText": "Where any cheque drawn by a person on an account maintained by him with a banker for payment of any amount of money to another person from out of that account for the discharge, in whole or in part, of any debt or other liability, is returned by the bank unpaid, either because of the amount of money standing to the credit of that account is insufficient to honour the cheque or that it exceeds the amount arranged to be paid from that account by an agreement made with that bank, such person shall be deemed to have committed an offence and shall, without prejudice to any other provision of this Act, be punished with imprisonment for a term which may be extended to two years, or with fine which may extend to twice the amount of the cheque, or with both.",
+        "commentary": "Strict statutory conditions precedent: (1) Cheque presented within validity (3 months); (2) Bank memo received; (3) Statutory demand notice dispatched within 30 days of memo; (4) Drawer fails to pay within 15 days of notice receipt. Cause of action crystallizes on the 16th day.",
+        "landmarkCitations": [
+          "MSR Leathers v. S. Palaniappan (2013) 1 SCC 177",
+          "Rangappa v. Sri Mohan (2010) 11 SCC 441",
+          "K. Bhaskaran v. Sankaran Vaidhyan Balan (1999) 7 SCC 510"
+        ],
+        "amendments": "Amended in 2002 to enhance imprisonment to 2 years."
+      },
+      {
+        "sectionNumber": "Section 139",
+        "heading": "Presumption in favour of holder",
+        "fullText": "It shall be presumed, unless the contrary is proved, that the holder of a cheque received the cheque of the nature referred to in section 138 for the discharge, in whole or in part, of any debt or other liability.",
+        "commentary": "Constitutes a reverse burden of proof. The initial presumption operates against the accused upon admission of signature. The accused may rebut only through a preponderance of probabilities, not mere denials.",
+        "landmarkCitations": [
+          "Bir Singh v. Mukesh Kumar (2019) 4 SCC 197",
+          "Kalamani Tex v. P. Balasubramanian (2021) 5 SCC 283"
+        ],
+        "amendments": "Reaffirmed by 3-judge Bench in Rangappa (2010)."
+      },
+      {
+        "sectionNumber": "Section 141",
+        "heading": "Offences by companies",
+        "fullText": "(1) If the person committing an offence under section 138 is a company, every person who; at the time the offence was committed, was in charge of, and was responsible to the company for the conduct of the business of the company, as well as the company, shall be deemed to be guilty of the offence and shall be liable to be proceeded against and punished accordingly.",
+        "commentary": "Mandatory requirement of specific pleading: The complaint must explicitly aver the role played by the individual director or signatory at the time the offence was committed. Managing Directors and signatories are liable by virtue of office.",
+        "landmarkCitations": [
+          "SMS Pharmaceuticals Ltd. v. Neeta Bhalla (2005) 8 SCC 89",
+          "Sunita Palita v. Panchami Stone Quarry (2022) 10 SCC 152"
+        ],
+        "amendments": "Extended to Limited Liability Partnerships (LLPs)."
+      },
+      {
+        "sectionNumber": "Section 143A",
+        "heading": "Power to direct interim compensation",
+        "fullText": "(1) Notwithstanding anything contained in the Code of Criminal Procedure, 1973, the Court trying an offence under section 138 may order the drawer of the cheque to pay interim compensation to the complainant— (a) in a summary trial or a summons case, where he pleads not guilty to the accusation made in the complaint; and (b) in any other case, upon framing of charge.\n(2) The interim compensation under sub-section (1) shall not exceed twenty per cent of the amount of the cheque.\n(3) The interim compensation shall be paid within sixty days from the date of the order.",
+        "commentary": "Substantive amendment introduced in 2018. Supreme Court in G.J. Raja v. Tejraj Sharma held Section 143A is prospective in nature. The award is discretionary and court must record reasons before imposing the maximum 20% cap.",
+        "landmarkCitations": [
+          "G.J. Raja v. Tejraj Sharma (2019) 19 SCC 469",
+          "Rakesh Ranjan Shrivastava v. State of Jharkhand (2024) 4 SCC 419"
+        ],
+        "amendments": "Inserted by Act 20 of 2018, w.e.f. 01-09-2018."
+      }
+    ]
+  },
+  {
+    "id": "act_bns_2023",
+    "title": "Bharatiya Nyaya Sanhita, 2023",
+    "shortTitle": "BNS, 2023",
+    "actNumber": "Act No. 45 of 2023",
+    "category": "Criminal Law / Substantive Penal Code",
+    "enactmentYear": 2023,
+    "lastAmended": "2024 (Enforced 1 July 2024)",
+    "jurisdiction": "All India Sessions & Magistrate Courts",
+    "overview": "Modernized penal code repealing the Indian Penal Code 1860. Restructures offences against property, economic crimes, bodily injuries, and introduces community service for specified petty offences.",
+    "sections": [
+      {
+        "sectionNumber": "Section 318",
+        "heading": "Cheating",
+        "fullText": "(1) Whoever, by deceiving any person, fraudulently or dishonestly induces the person so deceived to deliver any property to any person, or to consent that any person shall retain any property, or intentionally induces the person so deceived to do or omit to do anything which he would not do or omit if he were not so deceived, is said to 'cheat'.\n(2) Whoever cheats shall be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both.\n(3) Whoever cheats and thereby dishonestly induces the person deceived to deliver any property, shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine.",
+        "commentary": "Direct replacement for legacy Sections 415, 417, and 420 of the IPC. Sub-section (4) consolidates legacy Section 420 IPC (cheating and dishonestly inducing delivery of property). Retains the strict requirement of dishonest intention existing from the inception of the transaction.",
+        "landmarkCitations": [
+          "Concordance with Hridaya Ranjan Prasad Verma v. State of Bihar (2000) 4 SCC 168",
+          "Prof. R.K. Vijayasarathy v. Sudha Seetharam (2019) 16 SCC 739"
+        ],
+        "amendments": "Effective from 1 July 2024 across all new FIRs."
+      },
+      {
+        "sectionNumber": "Section 316",
+        "heading": "Criminal breach of trust",
+        "fullText": "(1) Whoever, being in any manner entrusted with property, or with any dominion over property, dishonestly misappropriates or converts to his own use that property, or dishonestly uses or disposes of that property in violation of any direction of law prescribing the mode in which such trust is to be discharged, commits 'criminal breach of trust'.",
+        "commentary": "Consolidates legacy Sections 405 and 406 of the IPC. Retains the essential dual ingredients: entrustment of property and subsequent dishonest conversion. In commercial disputes, pure accounts discrepancy cannot sustain a Section 316 prosecution.",
+        "landmarkCitations": [
+          "S.W. Palanitkar v. State of Bihar (2002) 1 SCC 241"
+        ],
+        "amendments": "Effective 1 July 2024."
+      }
+    ]
+  },
+  {
+    "id": "act_bnss_2023",
+    "title": "Bharatiya Nagarik Suraksha Sanhita, 2023",
+    "shortTitle": "BNSS, 2023",
+    "actNumber": "Act No. 46 of 2023",
+    "category": "Criminal Procedure & Police Powers",
+    "enactmentYear": 2023,
+    "lastAmended": "2024 (Enforced 1 July 2024)",
+    "jurisdiction": "High Court of Kerala, Sessions & Magistrate Courts",
+    "overview": "Procedural code repealing the Code of Criminal Procedure, 1973 (CrPC). Codifies electronic summons, audio-video recording of search and seizure, forensic mandates, and preserves inherent high court powers.",
+    "sections": [
+      {
+        "sectionNumber": "Section 482",
+        "heading": "Direction for grant of bail to person apprehending arrest (Anticipatory Bail)",
+        "fullText": "(1) When any person has reason to believe that he may be arrested on an accusation of having committed a non-bailable offence, he may apply to the High Court or the Court of Session for a direction under this section; and that Court may, if it thinks fit, direct that in the event of such arrest, he shall be released on bail.\n(2) When the High Court or the Court of Session makes a direction under sub-section (1), it may include such conditions in such directions in the light of the facts of the particular case, as it may think fit.",
+        "commentary": "Corresponds directly to legacy Section 438 of the CrPC. Concurrent jurisdiction of Court of Session and High Court preserved. The Kerala High Court practice requires applicant to approach Court of Session first unless exceptional urgency or district-wide jurisdiction is demonstrated.",
+        "landmarkCitations": [
+          "Sushila Aggarwal v. State (NCT of Delhi) (2020) 5 SCC 1 (Constitutional Bench)",
+          "Gurbaksh Singh Sibbia v. State of Punjab (1980) 2 SCC 565"
+        ],
+        "amendments": "Effective 1 July 2024. Replaces Section 438 CrPC."
+      },
+      {
+        "sectionNumber": "Section 528",
+        "heading": "Saving of inherent powers of High Court",
+        "fullText": "Nothing in this Sanhita shall be deemed to limit or affect the inherent powers of the High Court to make such orders as may be necessary to give effect to any order under this Sanhita, or to prevent abuse of the process of any Court or otherwise to secure the ends of justice.",
+        "commentary": "Direct concordance with legacy Section 482 CrPC. High Court retains plenary inherent jurisdiction to quash FIRs, complaint cases, and chargesheets where allegations do not disclose any cognizable offence or where proceedings are initiated with malafides.",
+        "landmarkCitations": [
+          "State of Haryana v. Bhajan Lal 1992 Supp (1) SCC 335",
+          "Neeharika Infrastructure Pvt Ltd v. State of Maharashtra (2021) 19 SCC 401"
+        ],
+        "amendments": "Effective 1 July 2024."
+      }
+    ]
+  },
+  {
+    "id": "act_arb_1996",
+    "title": "Arbitration and Conciliation Act, 1996",
+    "shortTitle": "Arbitration Act, 1996",
+    "actNumber": "Act No. 26 of 1996",
+    "category": "Commercial Arbitration & Dispute Resolution",
+    "enactmentYear": 1996,
+    "lastAmended": "2019 (Arbitration Council of India Alignment)",
+    "jurisdiction": "High Court of Kerala (Commercial Division) & District Courts",
+    "overview": "Comprehensive law relating to domestic arbitration, international commercial arbitration, and enforcement of arbitral awards. Provides speedy resolution mechanisms and curtails judicial intervention.",
+    "sections": [
+      {
+        "sectionNumber": "Section 9",
+        "heading": "Interim measures, etc., by Court",
+        "fullText": "A party may, before or during arbitral proceedings or at any time after the making of the arbitral award but before it is enforced in accordance with section 36, apply to a Court: (i) for the appointment of a guardian for a minor or person of unsound mind; or (ii) for an interim measure of protection in respect of: (a) preservation, interim custody or sale of any goods which are the subject-matter of the arbitration agreement; (b) securing the amount in dispute in the arbitration; (c) the detention, preservation or inspection of any property or thing...",
+        "commentary": "Section 9 petitions may be moved prior to arbitral tribunal constitution. Once arbitral proceedings commence, Section 9(2) mandates that arbitration must commence within 90 days of an interim order.",
+        "landmarkCitations": [
+          "Essar House Private Limited v. Arcellor Mittal Nippon Steel India Ltd (2022) SCC OnLine SC 1219",
+          "Firm Ashok Traders v. Gurumukh Das Saluja (2004) 3 SCC 155"
+        ],
+        "amendments": "Amended by Act 3 of 2016 to impose 90-day tribunal initiation timeline."
+      },
+      {
+        "sectionNumber": "Section 12(5)",
+        "heading": "Grounds for challenge & Seventh Schedule ineligibility",
+        "fullText": "Notwithstanding any prior agreement to the contrary, any person whose relationship, with the parties or counsel or the subject-matter of the dispute, falls under any of the categories specified in the Seventh Schedule shall be ineligible to be appointed as an arbitrator: Provided that parties may, subsequent to disputes having arisen between them, waive the applicability of this sub-section by an express agreement in writing.",
+        "commentary": "The Perkins Eastman doctrine establishes that an interested party who is ineligible to act as an arbitrator cannot nominate or unilaterally appoint an arbitrator. Standard PSU/governmental clauses appointing managing directors or their nominees are void ab initio.",
+        "landmarkCitations": [
+          "Perkins Eastman Architects DPC v. HSCC (India) Ltd (2020) 20 SCC 760",
+          "TRF Limited v. Energo Engineering Projects Ltd (2017) 8 SCC 377",
+          "Bharat Broadband Network Ltd v. United Telecoms Ltd (2019) 5 SCC 755"
+        ],
+        "amendments": "Inserted by Act 3 of 2016 w.e.f. 23-10-2015."
+      }
+    ]
+  },
+  {
+    "id": "act_klr_1963",
+    "title": "Kerala Land Reforms Act, 1963",
+    "shortTitle": "KLR Act, 1963",
+    "actNumber": "Act 1 of 1964",
+    "category": "Kerala State Enactment / Agrarian Law",
+    "enactmentYear": 1963,
+    "lastAmended": "2015 (Ceiling Revision & Plantation Definitions)",
+    "jurisdiction": "Land Tribunals, Taluk Land Boards & High Court of Kerala",
+    "overview": "Pivotal Kerala statute conferring proprietary rights upon cultivating tenants, eliminating intermediary tenures, establishing ceiling limits on land holdings, and setting statutory exemptions for commercial plantations.",
+    "sections": [
+      {
+        "sectionNumber": "Section 72",
+        "heading": "Vesting in Government of landlord's rights in respect of holdings held by cultivating tenants",
+        "fullText": "(1) On a date to be notified by the Government in this behalf, all right, title and interest of the landowners and intermediaries in respect of holdings held by cultivating tenants entitled to fixity of tenure under section 13 shall, subject to the provisions of this section, vest in the Government free from all encumbrances.",
+        "commentary": "Statutory abolition of landlordism in Kerala. Cultivating tenants obtain absolute title upon issuance of Purchase Certificate (KLR Form 24) by the Land Tribunal. Purchase certificate is conclusive proof of title against subsequent challenge.",
+        "landmarkCitations": [
+          "Govinda Pillai v. Land Tribunal 1978 KLT 234",
+          "Sreedharan v. State of Kerala 1999 (2) KLT 456"
+        ],
+        "amendments": "Vesting date notified as 1 January 1970."
+      },
+      {
+        "sectionNumber": "Section 81",
+        "heading": "Exemptions from ceiling area",
+        "fullText": "(1) The provisions of this Chapter shall not apply to— (a) lands owned or held by the Government of India or the Government of any State; (e) plantations of tea, coffee, cocoa, rubber, cardamom or cinnamon exceeding such limit as may be prescribed.",
+        "commentary": "Crucial exemption protecting Kerala rubber and tea estates from land ceiling fragmentation. If plantation land is fragmented or used for non-plantation purposes, the exemption may be scrutinized under Section 85.",
+        "landmarkCitations": [
+          "State of Kerala v. Moosa 1994 (2) KLT 318",
+          "Harrison Malayalam Ltd. v. State of Kerala 2018 (2) KLT 369"
+        ],
+        "amendments": "Clarification on ancillary factory and labor quarters inclusion."
+      }
+    ]
+  }
+]

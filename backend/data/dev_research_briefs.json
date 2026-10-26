@@ -1,0 +1,157 @@
+[
+  {
+    "_id": "brief_1792991842422",
+    "id": "brief_1792991842423",
+    "title": "Kerala Land Reforms S.81 Exemption Protection for Rubber Holdings",
+    "matterReference": "WP(C) 19482/2024",
+    "category": "Kerala State Agrarian Law",
+    "legalPropositions": [
+      "Rubber plantation land is statutorily exempted under Section 81."
+    ],
+    "citations": [
+      {
+        "citation": "State of Kerala v. Moosa",
+        "proposition": "Plantation character is determined on vesting date.",
+        "court": "High Court of Kerala",
+        "reporter": "1994 (2) KLT 318"
+      }
+    ],
+    "author": "Adv. Meera Krishnan",
+    "summary": "Plantation exemption under Section 81(1)(e) remains immune from ceiling surrender.",
+    "createdAt": "26 Oct 2026",
+    "advocateId": "adv_1"
+  },
+  {
+    "id": "brief_001",
+    "_id": "brief_001",
+    "title": "Telegraph Act Section 16 Injunction & Mandatory Magistrate Referral",
+    "matterReference": "WP(C) 19482/2024 (Gopakumar v. KSEB)",
+    "category": "Constitutional Writs",
+    "author": "Adv. Meera Krishnan",
+    "createdAt": "18 Oct 2024",
+    "summary": "Precedent synthesis establishing that the transmission licensee has no authority to proceed with high-tension line drawing over agricultural holdings upon resistance without obtaining a prior order from the District Magistrate under Section 16(1).",
+    "legalPropositions": [
+      "Transmission licensee acquires only right of user under Section 10(b), not proprietary ownership.",
+      "Upon objection by landowner or lawful occupier, work must be paused and referred to District Magistrate.",
+      "Land diminution compensation under Section 10(d) & 16(3) is mandatory for line corridor restriction."
+    ],
+    "citations": [
+      {
+        "citation": "Valsamma v. K.S.E.B.",
+        "court": "High Court of Kerala (Full Bench)",
+        "reporter": "2012 (2) KLT 368",
+        "proposition": "Telegraph authority has no power to adjudicate landowner resistance unilaterally."
+      },
+      {
+        "citation": "Executive Engineer, KSEB v. Doddakka",
+        "court": "Supreme Court of India",
+        "reporter": "(2015) 15 SCC 738",
+        "proposition": "Permanent diminution in land market value must be assessed under Section 10(d)."
+      },
+      {
+        "citation": "Power Grid Corp of India v. Century Textiles Ltd",
+        "court": "Supreme Court of India",
+        "reporter": "(2017) 5 SCC 143",
+        "proposition": "Section 164 Electricity Act confers Telegraph Act powers subject to Section 10/16 safeguards."
+      }
+    ]
+  },
+  {
+    "id": "brief_002",
+    "_id": "brief_002",
+    "title": "Invalidity of Unilateral Arbitrator Appointment Clause in Commercial Contracts",
+    "matterReference": "ARB/NCLT/KOCHI/2024/041 (Malabar Infotech)",
+    "category": "Commercial Arbitration",
+    "author": "Adv. Meera Krishnan",
+    "createdAt": "15 Oct 2024",
+    "summary": "Authority bundle establishing that unilateral appointment of a sole arbitrator by one party or its Managing Director is void ab initio under Section 12(5) read with Seventh Schedule of the 1996 Act.",
+    "legalPropositions": [
+      "A party interested in dispute outcome cannot unilaterally nominate a sole arbitrator.",
+      "Ineligible nominee cannot be cured by private contract terms without post-dispute written waiver.",
+      "The competent High Court under Section 11(6) must appoint an independent sole arbitrator."
+    ],
+    "citations": [
+      {
+        "citation": "Perkins Eastman Architects DPC v. HSCC (India) Ltd.",
+        "court": "Supreme Court of India",
+        "reporter": "(2020) 20 SCC 760",
+        "proposition": "A person disqualified from acting as arbitrator cannot nominate an arbitrator."
+      },
+      {
+        "citation": "TRF Limited v. Energo Engineering Projects Ltd.",
+        "court": "Supreme Court of India",
+        "reporter": "(2017) 8 SCC 377",
+        "proposition": "Statutory disqualification under Section 12(5) renders nomination authority void."
+      },
+      {
+        "citation": "Bharat Broadband Network Ltd. v. United Telecoms Ltd.",
+        "court": "Supreme Court of India",
+        "reporter": "(2019) 5 SCC 755",
+        "proposition": "Express agreement in writing required for waiver under Section 12(5) proviso."
+      }
+    ]
+  },
+  {
+    "id": "brief_003",
+    "_id": "brief_003",
+    "title": "Section 482 BNSS Anticipatory Bail for Commercial Dishonour / Cheating Allegations",
+    "matterReference": "General Chamber Precedent Pool",
+    "category": "Criminal Jurisprudence",
+    "author": "Adv. Meera Krishnan",
+    "createdAt": "12 Oct 2024",
+    "summary": "Synthesis of High Court and Supreme Court authorities guarding against criminalization of civil contractual breaches under IPC 420 / BNS 318 where Section 138 NI Act remedy exists.",
+    "legalPropositions": [
+      "Mere failure to repay a loan or dishonour of a cheque does not constitute cheating without fraudulent intent from inception.",
+      "Simultaneous invocation of Section 138 NI Act and criminal cheating requires strict scrutiny to prevent abuse of process.",
+      "Custodial interrogation is unwarranted where transaction is fully evidenced by bank statements and contracts."
+    ],
+    "citations": [
+      {
+        "citation": "Dalip Kaur v. Jagnar Singh",
+        "court": "Supreme Court of India",
+        "reporter": "(2009) 14 SCC 696",
+        "proposition": "Breach of contractual promise does not amount to cheating without dishonest inception."
+      },
+      {
+        "citation": "Arnesh Kumar v. State of Bihar",
+        "court": "Supreme Court of India",
+        "reporter": "(2014) 8 SCC 273",
+        "proposition": "Arrest cannot be made mechanically for offences punishable with up to 7 years imprisonment."
+      },
+      {
+        "citation": "Sushila Aggarwal v. State (NCT of Delhi)",
+        "court": "Supreme Court of India (Constitution Bench)",
+        "reporter": "(2020) 5 SCC 1",
+        "proposition": "Anticipatory bail should not ordinarily be restricted to a predetermined time period."
+      }
+    ]
+  },
+  {
+    "id": "brief_004",
+    "_id": "brief_004",
+    "title": "Specific Performance & Discretionary Injunction under Specific Relief Act 1963",
+    "matterReference": "OS 412/2023 (Gopakumar v. Varghese Builders)",
+    "category": "Civil Property & Injunctions",
+    "author": "Adv. Rajesh V. Varma",
+    "createdAt": "09 Oct 2024",
+    "summary": "Analysis of Section 10 post-2018 amendment to Specific Relief Act removing judicial discretion in enforcing valid immovable property agreements.",
+    "legalPropositions": [
+      "Specific performance of contracts is mandatory post-2018 amendment unless barred by Section 11, 14, or 16.",
+      "Injunction against alienation pendente lite is necessary to preserve property status quo under Section 52 TP Act."
+    ],
+    "citations": [
+      {
+        "citation": "B. Santoshamma v. D. Sarala",
+        "court": "Supreme Court of India",
+        "reporter": "(2020) 19 SCC 80",
+        "proposition": "Post-2018 amendment, court is bound to enforce specific performance of contracts."
+      },
+      {
+        "citation": "Maharwal Khewaji Trust v. Baldev Dass",
+        "court": "Supreme Court of India",
+        "reporter": "(2004) 8 SCC 488",
+        "proposition": "Status quo must be maintained unless irreparable loss is demonstrated."
+      }
+    ]
+  }
+]

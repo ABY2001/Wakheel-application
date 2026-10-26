@@ -134,5 +134,15 @@
     "icsiNumber": "",
     "icaiNumber": "",
     "createdAt": "2026-10-15T10:08:53.434Z"
+  },
+  {
+    "_id": "dev_1792990203118",
+    "fullName": "citizen",
+    "email": "citizen@inworth.law",
+    "password": "$2a$10$7Cn1IHWWmiA3Os1Otzv7XekOx51YD7iPUk2WpcLBobmMCqFp0V8NS",
+    "role": "client",
+    "verifyMethod": "email",
+    "isVerified": false,
+    "createdAt": "2026-10-26T04:50:03.119Z"
   }
 ]

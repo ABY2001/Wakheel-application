@@ -1,0 +1,159 @@
+[
+  {
+    "id": "sop_writ_wp_c",
+    "code": "SOP-KLHC-WPC-01",
+    "title": "High Court of Kerala Writ Petition (Civil) Article 226 SOP",
+    "shortTitle": "Article 226 WP(C) Filing Playbook",
+    "forum": "High Court of Kerala (Ernakulam)",
+    "category": "Constitutional Writs",
+    "turnaround": "24-48 Hours",
+    "description": "Chamber standard operating procedure for drafting, vetting, formatting, e-filing, scrutiny clearance, and urgent bench mentioning for Writ Petitions before the High Court of Kerala.",
+    "checklist": [
+      {
+        "stage": "Stage 1: Pre-Filing Due Diligence & Statutory Audit",
+        "items": [
+          "Exhaustion of Alternative Remedies: Verify whether statutory appeal, revision, or Magistrate application under Section 16 Telegraph Act was pursued or if patent arbitrariness warrants direct Article 226 intervention.",
+          "High Court Caveat Registry Search: Query eCourts Caveat Registry under Section 148A CPC for respondent state authorities or opposite parties to ensure caveator notice is served.",
+          "Statutory Representation Proof: Verify that a formal representation or notice was served on the official respondent with registered postal proof or acknowledgement receipt."
+        ]
+      },
+      {
+        "stage": "Stage 2: Pleadings Drafting & Formatting Compliance",
+        "items": [
+          "Rule 146 Margin Compliance: Ensure strict 2.0-inch (5 cm) left margin, 1.2-inch right, top, and bottom margins on legal size paper (8.5 x 14 in).",
+          "Pleading Hierarchy: Synopsis & List of Dates -> Index of Pleadings -> Memo of Writ Petition (Civil) -> Verification Affidavit -> Exhibits Annexure P-1 to P-n.",
+          "Affidavit True Copy Attestation: Each exhibit copy must bear the mandatory stamp 'True Copy / Advocate' along with Advocate Roll No. and signature."
+        ]
+      },
+      {
+        "stage": "Stage 3: e-Filing & Court Registry Scrutiny",
+        "items": [
+          "eCourts EF Portal Ingestion: Upload unified PDF bundle with embedded OCR text layer and digital sign verification.",
+          "Writ Stamp & Court Fee: Affix ₹100 High Court Writ Stamp, ₹25 Advocate Welfare Fund stamp, and requisite process memo fees.",
+          "Registry Defect Rectification: Monitor filing status for scrutiny notes (Filing No. EF/KLHC/...). Clear objections within 48 hours to prevent registry laches."
+        ]
+      },
+      {
+        "stage": "Stage 4: Bench Listing & Motion Mentioning",
+        "items": [
+          "Service on Standing Counsel: Deliver advanced copy with acknowledgement to the designated Standing Counsel (e.g., KSEB, Corporation, Government Pleader).",
+          "Urgent Listing Memo: File Urgent Memo before the Registrar (Judicial) specifying the irreparable harm or date of impending execution.",
+          "Bench Appearance Brief: Hand over Bench Argument Dossier with highlighted copies of landmark rulings to Senior Counsel."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sop_sec_138_ni",
+    "code": "SOP-NI138-TRIAL-02",
+    "title": "Section 138 Negotiable Instruments Act — Trial SOP",
+    "shortTitle": "Cheque Dishonour End-to-End SOP",
+    "forum": "Judicial First Class Magistrate (JFCM) Court",
+    "category": "Criminal & Banking",
+    "turnaround": "15-45 Days",
+    "description": "Chamber protocol covering the complete timeline from bank memo receipt, 30-day statutory demand notice, postal presumption tracking, cure countdown, to Section 142 complaint institution and Section 143A interim compensation.",
+    "checklist": [
+      {
+        "stage": "Stage 1: Cheque Return Audit & Timeline Calculation",
+        "items": [
+          "Memo Scrutiny: Verify return memo reason code ('Funds Insufficient', 'Account Closed', 'Exceeds Arrangement', 'Refer to Drawer').",
+          "Presentation Validity: Ensure cheque was presented within 3 months of issuance date.",
+          "30-Day Notice Deadline: Calculate the strict 30-day statutory limit from the date of intimation/return memo receipt."
+        ]
+      },
+      {
+        "stage": "Stage 2: Statutory Demand Notice Dispatch",
+        "items": [
+          "Demand Specificity: Make an unequivocal demand for the exact cheque amount; avoid clubbing unliquidated damages or interest in the principal demand.",
+          "Speed Post with Delivery Tracking: Dispatch notice via India Post Speed Post / Registered Post with A/D to all known residential and business addresses.",
+          "Section 27 General Clauses Presumption: Download and preserve the certified India Post tracking report reflecting 'Item Delivered' or 'Refused / Unclaimed'."
+        ]
+      },
+      {
+        "stage": "Stage 3: 15-Day Cure Window & Cause of Action",
+        "items": [
+          "Cure Period Monitoring: Track the mandatory 15 days from the date of confirmed delivery. The drawer has until the 15th day midnight to pay.",
+          "Cause of Action Crystallization: The offence is committed on the 16th day following notice receipt. The complaint must be filed within 30 days of the 16th day."
+        ]
+      },
+      {
+        "stage": "Stage 4: Section 142 Complaint Institution",
+        "items": [
+          "Jurisdiction Verification under S.142(2): Determine competent JFCM court based on the branch where the payee maintains his bank account.",
+          "Section 145(1) Affidavit in Lieu of Sworn Statement: Accompany complaint with complainant's sworn evidence affidavit to dispense with physical presence.",
+          "Section 143A Application: Move interim application praying for 20% interim compensation deposit upon appearance of the accused."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sop_anticipatory_bail",
+    "code": "SOP-BNSS482-BAIL-03",
+    "title": "Section 482 BNSS 2023 Anticipatory Bail SOP",
+    "shortTitle": "Pre-Arrest Protection Protocol",
+    "forum": "Court of Session / High Court of Kerala",
+    "category": "Criminal Procedure",
+    "turnaround": "24-72 Hours",
+    "description": "Protocol for securing anticipatory bail under Section 482 BNSS 2023 (formerly Section 438 CrPC), reviewing police summons under Section 35 BNSS, establishing clean antecedents, and obtaining interim protection.",
+    "checklist": [
+      {
+        "stage": "Stage 1: Offence Cognizance & Notice Audit",
+        "items": [
+          "FIR & Complaint Scrutiny: Obtain certified copy or eCourts web copy of the FIR; analyze penal sections charged under BNS 2023.",
+          "Section 35 BNSS Notice Verification: Check if police served mandatory notice to appear under Section 35 BNSS (legacy 41A CrPC); document compliance or arbitrary arrest threats.",
+          "Bailable vs Non-Bailable Classification: Confirm that at least one offence invoked is non-bailable under the First Schedule of BNSS."
+        ]
+      },
+      {
+        "stage": "Stage 2: Grounds Drafting & Personal Liberty Factors",
+        "items": [
+          "Establish Bona Fides & Clean Antecedents: Formulate clear averments that applicant has no prior criminal records, is a permanent resident, and is not a flight risk.",
+          "Absence of Custodial Interrogation Need: Establish that the case hinges on documentary or digital evidence already available, rendering custodial torture or custody unnecessary.",
+          "Readiness to Cooperate: Include unconditional undertaking to appear before the Investigating Officer as and when summoned."
+        ]
+      },
+      {
+        "stage": "Stage 3: Public Prosecutor Service & Interim Order",
+        "items": [
+          "Advance Service: Serve physical copy of bail application upon the Office of the Director General of Prosecution / Public Prosecutor.",
+          "Interim Protection Motion: In high-urgency matters, move for interim direction that applicant shall not be arrested pending receipt of Case Diary (CD).",
+          "Surety Readiness: Prepare two local solvent sureties with Aadhaar, tax receipts, or solvency certificates for immediate bail bond execution upon grant."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sop_caveat_cpc",
+    "code": "SOP-CPC148A-CAV-04",
+    "title": "Preemptive Caveat Petition under Section 148A CPC",
+    "shortTitle": "Caveat Lodgement & Monitoring SOP",
+    "forum": "High Court of Kerala & Subordinate District Courts",
+    "category": "Civil Procedure",
+    "turnaround": "Same-Day Execution",
+    "description": "Chamber workflow for preparing and lodging caveats under Section 148A CPC to guarantee advance notice before any ex-parte interim injunction or stay order can be granted against the client.",
+    "checklist": [
+      {
+        "stage": "Stage 1: Risk Assessment & Adverse Party Identification",
+        "items": [
+          "Apprehended Proceedings: Identify the anticipated suit, appeal, or writ petition likely to be filed by the opposing party.",
+          "Exact Party Particulars: Extract verified names, official addresses, and designations of both caveator and proposed applicants."
+        ]
+      },
+      {
+        "stage": "Stage 2: Caveat Drafting & Formalities",
+        "items": [
+          "High Court Form No. 19 / Civil Rules of Practice: Draft caveat petition reciting that caveator has right to appear on any application for interim relief.",
+          "Supporting Affidavit: Execute solemn affidavit affirmed by caveator or power of attorney holder."
+        ]
+      },
+      {
+        "stage": "Stage 3: Service & Registry Registration",
+        "items": [
+          "Pre-Filing Postal Service: Despatch caveat petition by Registered Post A/D to the proposed applicant; preserve postal booking receipts.",
+          "Registry Lodgement: File caveat petition with registry receipt proof; obtain Caveat Registration Number.",
+          "90-Day Renewal Calendar: Tag caveat expiry in ERP calendar (valid for 90 days from filing under Section 148A(5))."
+        ]
+      }
+    ]
+  }
+]

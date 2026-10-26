@@ -1916,6 +1916,57 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 17. Chamber Knowledge Base & Bare Act Studio (Milestone 1)
+  async getBareActs(query?: string, token?: string) {
+    const url = query
+      ? `${API_BASE_URL}/advocate/kb/acts?q=${encodeURIComponent(query)}`
+      : `${API_BASE_URL}/advocate/kb/acts`;
+    const res = await fetch(url, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getBareActDetails(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/kb/acts/${encodeURIComponent(id)}`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getPlaybooks(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/kb/playbooks`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getKbArticles(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/kb/articles`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getResearchBriefs(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/kb/briefs`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createResearchBrief(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/kb/briefs`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

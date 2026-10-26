@@ -3477,6 +3477,57 @@ export const devStore = {
     const cleanNum = q.replace(/[^0-9a-z]/g, "");
     return map[cleanNum] || map["420"];
   },
+
+  // --- Chamber Knowledge Base & Bare Act Studio (Milestone 1) ---
+  getBareActs(query = "") {
+    const acts = readFile("dev_bare_acts.json", DEFAULT_BARE_ACTS);
+    if (!query || !query.trim()) return acts;
+    const q = query.toLowerCase();
+    return acts.filter(
+      (a) =>
+        a.title.toLowerCase().includes(q) ||
+        a.shortTitle.toLowerCase().includes(q) ||
+        a.category.toLowerCase().includes(q) ||
+        a.sections.some((s) => s.sectionNumber.toLowerCase().includes(q) || s.heading.toLowerCase().includes(q))
+    );
+  },
+
+  getBareActDetails(actId) {
+    const acts = readFile("dev_bare_acts.json", DEFAULT_BARE_ACTS);
+    return acts.find((a) => a.id === actId) || acts[0];
+  },
+
+  getPlaybooks() {
+    return readFile("dev_playbooks.json", DEFAULT_PLAYBOOKS);
+  },
+
+  getKbArticles() {
+    return readFile("dev_kb_articles.json", DEFAULT_KB_ARTICLES);
+  },
+
+  getResearchBriefs(advocateId = "adv_1") {
+    return readFile("dev_research_briefs.json", DEFAULT_RESEARCH_BRIEFS);
+  },
+
+  createResearchBrief(data) {
+    const briefs = readFile("dev_research_briefs.json", DEFAULT_RESEARCH_BRIEFS);
+    const newBrief = {
+      _id: "brief_" + Date.now().toString(),
+      id: "brief_" + Date.now().toString(),
+      title: data.title || "Untitled Research Brief",
+      matterReference: data.matterReference || "General Chamber Research",
+      category: data.category || "Constitutional Law",
+      legalPropositions: data.legalPropositions || [],
+      citations: data.citations || [],
+      author: data.author || "Adv. Meera Krishnan",
+      summary: data.summary || "",
+      createdAt: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      ...data,
+    };
+    briefs.unshift(newBrief);
+    writeFile("dev_research_briefs.json", briefs);
+    return newBrief;
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -3572,5 +3623,706 @@ const DEFAULT_AGENTS = [
       strictConflictCheck: true,
       autoNotifyAdvocate: true,
     },
+  },
+];
+
+// ============================================================================
+// DEFAULT SEED DATA FOR CHAMBER KNOWLEDGE BASE & BARE ACT STUDIO (Milestone 1)
+// ============================================================================
+export const DEFAULT_BARE_ACTS = [
+  {
+    id: "act_telegraph_1885",
+    title: "Indian Telegraph Act, 1885",
+    shortTitle: "Telegraph Act, 1885",
+    actNumber: "Act No. 13 of 1885",
+    category: "Central Statutory Act / Infrastructure & Utilities",
+    enactmentYear: 1885,
+    lastAmended: "2016 (Tribunal Reforms Alignment)",
+    jurisdiction: "Supreme Court of India & High Court of Kerala",
+    overview:
+      "Statute providing powers to telegraph authorities and electricity transmission utilities (under Section 164 of the Electricity Act 2003) to place transmission towers, overhead lines, and cables across private lands, while prescribing statutory dispute resolution before District Magistrates and compensation assessment before District Courts.",
+    sections: [
+      {
+        sectionNumber: "Section 10",
+        heading: "Power for telegraph authority to place and maintain telegraph lines and posts",
+        fullText:
+          "The telegraph authority may, from time to time, place and maintain a telegraph line under, over, along, or across, and posts in or upon, any immovable property: Provided that— (a) the telegraph authority shall not exercise the powers conferred by this section except for the purposes of a telegraph established or maintained by the Central Government, or to be so established or maintained; (b) the Central Government shall not acquire any right other than that of user only in the property under, over, along, across in or upon which the telegraph authority places any telegraph line or post; (c) except as hereinafter provided, the telegraph authority shall not exercise those powers in respect of any property vested in or under the control or management of any local authority, without the permission of that authority; and (d) in the exercise of the powers conferred by this section, the telegraph authority shall do as little damage as possible, and, when the exercise of those powers has caused damage to any property, shall pay full compensation to all persons interested for any damage sustained by them by reason of the exercise of those powers.",
+        commentary:
+          "High Court of Kerala settled law establishes that the utility acquires only a right of user and NOT title or ownership. Minimum damage is an express statutory condition precedent. Landowners cannot be arbitrarily dispossessed without valuation.",
+        landmarkCitations: [
+          "Valsamma v. KSEB 2012 (2) KLT 368",
+          "Executive Engineer, KSEB v. Doddakka (2015) 15 SCC 738",
+        ],
+        amendments: "Preserved under Section 164 of the Electricity Act, 2003 for transmission licensees.",
+      },
+      {
+        sectionNumber: "Section 16",
+        heading: "Exercise of powers confers upon telegraph authority, and disputes as to compensation",
+        fullText:
+          "(1) If the exercise of the powers mentioned in section 10 in respect of property referred to in clause (d) of that section is resisted or obstructed, the District Magistrate may, in his discretion, order that the telegraph authority shall be permitted to exercise them.\n(2) If, after the making of an order under sub-section (1), any person resists the exercise of those powers, or, having control over the property, does not give all facilities for their being exercised, he shall be deemed to have committed an offence under section 188 of the Indian Penal Code (or corresponding section of BNS 2023).\n(3) If any dispute arises concerning the sufficiency of the compensation to be paid under section 10, clause (d), it shall, on application for that purpose by either of the disputing parties to the District Judge within whose jurisdiction the property is situate, be determined by him.",
+        commentary:
+          "The utility has NO jurisdiction to unilaterally adjudicate resistance. Upon the slightest objection by a landowner or occupier, the transmission licensee MUST pause works and petition the District Magistrate under Section 16(1). Entering without a Section 16 order is actionable trespass and amenable to Article 226 Writ Petition.",
+        landmarkCitations: [
+          "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)",
+          "Power Grid Corporation of India v. Century Textiles & Industries Ltd. (2017) 5 SCC 143",
+        ],
+        amendments: "Remains core statutory shield for agricultural and plantation properties in Kerala.",
+      },
+      {
+        sectionNumber: "Section 17",
+        heading: "Removal or alteration of telegraph line or post on request of owner or occupier",
+        fullText:
+          "(1) When, under the foregoing provisions of this Act, a telegraph line or post has been placed by the telegraph authority under, over, along, across, in or upon any property, and any person entitled to do so desires to deal with that property in such a manner as to render it necessary or convenient that the telegraph line or post should be removed to another part thereof or to a higher or lower level or altered in form, he may require the telegraph authority to remove or alter the line or post accordingly.\n(2) If compensation has been paid under section 10, clause (d), he shall, when making the requisition, tender to the telegraph authority the amount requisite to defray the expenses of the removal or alteration.",
+        commentary:
+          "Empowers property owners who subsequently construct buildings or develop plots to requisition line realignment. The High Court has directed KSEB to furnish cost estimates and accommodate feasible alternate routes without undue delay.",
+        landmarkCitations: ["KSEB v. Sudhakaran 2008 (4) KLT 302"],
+        amendments: "Subject to Central Electricity Authority (CEA) safety clearances.",
+      },
+    ],
+  },
+  {
+    id: "act_ni_1881",
+    title: "Negotiable Instruments Act, 1881",
+    shortTitle: "NI Act, 1881",
+    actNumber: "Act No. 26 of 1881",
+    category: "Banking & Commercial Law",
+    enactmentYear: 1881,
+    lastAmended: "2018 (Section 143A & 148 Insertions)",
+    jurisdiction: "Judicial Magistrate First Class / High Court / Supreme Court",
+    overview:
+      "Regulates negotiable instruments including promissory notes, cheques, and bills of exchange. Chapter XVII provides penal remedies for dishonour of cheques for insufficiency of funds or exceeding arrangements, ensuring commercial credibility.",
+    sections: [
+      {
+        sectionNumber: "Section 138",
+        heading: "Dishonour of cheque for insufficiency, etc., of funds in the account",
+        fullText:
+          "Where any cheque drawn by a person on an account maintained by him with a banker for payment of any amount of money to another person from out of that account for the discharge, in whole or in part, of any debt or other liability, is returned by the bank unpaid, either because of the amount of money standing to the credit of that account is insufficient to honour the cheque or that it exceeds the amount arranged to be paid from that account by an agreement made with that bank, such person shall be deemed to have committed an offence and shall, without prejudice to any other provision of this Act, be punished with imprisonment for a term which may be extended to two years, or with fine which may extend to twice the amount of the cheque, or with both.",
+        commentary:
+          "Strict statutory conditions precedent: (1) Cheque presented within validity (3 months); (2) Bank memo received; (3) Statutory demand notice dispatched within 30 days of memo; (4) Drawer fails to pay within 15 days of notice receipt. Cause of action crystallizes on the 16th day.",
+        landmarkCitations: [
+          "MSR Leathers v. S. Palaniappan (2013) 1 SCC 177",
+          "Rangappa v. Sri Mohan (2010) 11 SCC 441",
+          "K. Bhaskaran v. Sankaran Vaidhyan Balan (1999) 7 SCC 510",
+        ],
+        amendments: "Amended in 2002 to enhance imprisonment to 2 years.",
+      },
+      {
+        sectionNumber: "Section 139",
+        heading: "Presumption in favour of holder",
+        fullText:
+          "It shall be presumed, unless the contrary is proved, that the holder of a cheque received the cheque of the nature referred to in section 138 for the discharge, in whole or in part, of any debt or other liability.",
+        commentary:
+          "Constitutes a reverse burden of proof. The initial presumption operates against the accused upon admission of signature. The accused may rebut only through a preponderance of probabilities, not mere denials.",
+        landmarkCitations: [
+          "Bir Singh v. Mukesh Kumar (2019) 4 SCC 197",
+          "Kalamani Tex v. P. Balasubramanian (2021) 5 SCC 283",
+        ],
+        amendments: "Reaffirmed by 3-judge Bench in Rangappa (2010).",
+      },
+      {
+        sectionNumber: "Section 141",
+        heading: "Offences by companies",
+        fullText:
+          "(1) If the person committing an offence under section 138 is a company, every person who; at the time the offence was committed, was in charge of, and was responsible to the company for the conduct of the business of the company, as well as the company, shall be deemed to be guilty of the offence and shall be liable to be proceeded against and punished accordingly.",
+        commentary:
+          "Mandatory requirement of specific pleading: The complaint must explicitly aver the role played by the individual director or signatory at the time the offence was committed. Managing Directors and signatories are liable by virtue of office.",
+        landmarkCitations: [
+          "SMS Pharmaceuticals Ltd. v. Neeta Bhalla (2005) 8 SCC 89",
+          "Sunita Palita v. Panchami Stone Quarry (2022) 10 SCC 152",
+        ],
+        amendments: "Extended to Limited Liability Partnerships (LLPs).",
+      },
+      {
+        sectionNumber: "Section 143A",
+        heading: "Power to direct interim compensation",
+        fullText:
+          "(1) Notwithstanding anything contained in the Code of Criminal Procedure, 1973, the Court trying an offence under section 138 may order the drawer of the cheque to pay interim compensation to the complainant— (a) in a summary trial or a summons case, where he pleads not guilty to the accusation made in the complaint; and (b) in any other case, upon framing of charge.\n(2) The interim compensation under sub-section (1) shall not exceed twenty per cent of the amount of the cheque.\n(3) The interim compensation shall be paid within sixty days from the date of the order.",
+        commentary:
+          "Substantive amendment introduced in 2018. Supreme Court in G.J. Raja v. Tejraj Sharma held Section 143A is prospective in nature. The award is discretionary and court must record reasons before imposing the maximum 20% cap.",
+        landmarkCitations: [
+          "G.J. Raja v. Tejraj Sharma (2019) 19 SCC 469",
+          "Rakesh Ranjan Shrivastava v. State of Jharkhand (2024) 4 SCC 419",
+        ],
+        amendments: "Inserted by Act 20 of 2018, w.e.f. 01-09-2018.",
+      },
+    ],
+  },
+  {
+    id: "act_bns_2023",
+    title: "Bharatiya Nyaya Sanhita, 2023",
+    shortTitle: "BNS, 2023",
+    actNumber: "Act No. 45 of 2023",
+    category: "Criminal Law / Substantive Penal Code",
+    enactmentYear: 2023,
+    lastAmended: "2024 (Enforced 1 July 2024)",
+    jurisdiction: "All India Sessions & Magistrate Courts",
+    overview:
+      "Modernized penal code repealing the Indian Penal Code 1860. Restructures offences against property, economic crimes, bodily injuries, and introduces community service for specified petty offences.",
+    sections: [
+      {
+        sectionNumber: "Section 318",
+        heading: "Cheating",
+        fullText:
+          "(1) Whoever, by deceiving any person, fraudulently or dishonestly induces the person so deceived to deliver any property to any person, or to consent that any person shall retain any property, or intentionally induces the person so deceived to do or omit to do anything which he would not do or omit if he were not so deceived, is said to 'cheat'.\n(2) Whoever cheats shall be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both.\n(3) Whoever cheats and thereby dishonestly induces the person deceived to deliver any property, shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine.",
+        commentary:
+          "Direct replacement for legacy Sections 415, 417, and 420 of the IPC. Sub-section (4) consolidates legacy Section 420 IPC (cheating and dishonestly inducing delivery of property). Retains the strict requirement of dishonest intention existing from the inception of the transaction.",
+        landmarkCitations: [
+          "Concordance with Hridaya Ranjan Prasad Verma v. State of Bihar (2000) 4 SCC 168",
+          "Prof. R.K. Vijayasarathy v. Sudha Seetharam (2019) 16 SCC 739",
+        ],
+        amendments: "Effective from 1 July 2024 across all new FIRs.",
+      },
+      {
+        sectionNumber: "Section 316",
+        heading: "Criminal breach of trust",
+        fullText:
+          "(1) Whoever, being in any manner entrusted with property, or with any dominion over property, dishonestly misappropriates or converts to his own use that property, or dishonestly uses or disposes of that property in violation of any direction of law prescribing the mode in which such trust is to be discharged, commits 'criminal breach of trust'.",
+        commentary:
+          "Consolidates legacy Sections 405 and 406 of the IPC. Retains the essential dual ingredients: entrustment of property and subsequent dishonest conversion. In commercial disputes, pure accounts discrepancy cannot sustain a Section 316 prosecution.",
+        landmarkCitations: ["S.W. Palanitkar v. State of Bihar (2002) 1 SCC 241"],
+        amendments: "Effective 1 July 2024.",
+      },
+    ],
+  },
+  {
+    id: "act_bnss_2023",
+    title: "Bharatiya Nagarik Suraksha Sanhita, 2023",
+    shortTitle: "BNSS, 2023",
+    actNumber: "Act No. 46 of 2023",
+    category: "Criminal Procedure & Police Powers",
+    enactmentYear: 2023,
+    lastAmended: "2024 (Enforced 1 July 2024)",
+    jurisdiction: "High Court of Kerala, Sessions & Magistrate Courts",
+    overview:
+      "Procedural code repealing the Code of Criminal Procedure, 1973 (CrPC). Codifies electronic summons, audio-video recording of search and seizure, forensic mandates, and preserves inherent high court powers.",
+    sections: [
+      {
+        sectionNumber: "Section 482",
+        heading: "Direction for grant of bail to person apprehending arrest (Anticipatory Bail)",
+        fullText:
+          "(1) When any person has reason to believe that he may be arrested on an accusation of having committed a non-bailable offence, he may apply to the High Court or the Court of Session for a direction under this section; and that Court may, if it thinks fit, direct that in the event of such arrest, he shall be released on bail.\n(2) When the High Court or the Court of Session makes a direction under sub-section (1), it may include such conditions in such directions in the light of the facts of the particular case, as it may think fit.",
+        commentary:
+          "Corresponds directly to legacy Section 438 of the CrPC. Concurrent jurisdiction of Court of Session and High Court preserved. The Kerala High Court practice requires applicant to approach Court of Session first unless exceptional urgency or district-wide jurisdiction is demonstrated.",
+        landmarkCitations: [
+          "Sushila Aggarwal v. State (NCT of Delhi) (2020) 5 SCC 1 (Constitutional Bench)",
+          "Gurbaksh Singh Sibbia v. State of Punjab (1980) 2 SCC 565",
+        ],
+        amendments: "Effective 1 July 2024. Replaces Section 438 CrPC.",
+      },
+      {
+        sectionNumber: "Section 528",
+        heading: "Saving of inherent powers of High Court",
+        fullText:
+          "Nothing in this Sanhita shall be deemed to limit or affect the inherent powers of the High Court to make such orders as may be necessary to give effect to any order under this Sanhita, or to prevent abuse of the process of any Court or otherwise to secure the ends of justice.",
+        commentary:
+          "Direct concordance with legacy Section 482 CrPC. High Court retains plenary inherent jurisdiction to quash FIRs, complaint cases, and chargesheets where allegations do not disclose any cognizable offence or where proceedings are initiated with malafides.",
+        landmarkCitations: [
+          "State of Haryana v. Bhajan Lal 1992 Supp (1) SCC 335",
+          "Neeharika Infrastructure Pvt Ltd v. State of Maharashtra (2021) 19 SCC 401",
+        ],
+        amendments: "Effective 1 July 2024.",
+      },
+    ],
+  },
+  {
+    id: "act_arb_1996",
+    title: "Arbitration and Conciliation Act, 1996",
+    shortTitle: "Arbitration Act, 1996",
+    actNumber: "Act No. 26 of 1996",
+    category: "Commercial Arbitration & Dispute Resolution",
+    enactmentYear: 1996,
+    lastAmended: "2019 (Arbitration Council of India Alignment)",
+    jurisdiction: "High Court of Kerala (Commercial Division) & District Courts",
+    overview:
+      "Comprehensive law relating to domestic arbitration, international commercial arbitration, and enforcement of arbitral awards. Provides speedy resolution mechanisms and curtails judicial intervention.",
+    sections: [
+      {
+        sectionNumber: "Section 9",
+        heading: "Interim measures, etc., by Court",
+        fullText:
+          "A party may, before or during arbitral proceedings or at any time after the making of the arbitral award but before it is enforced in accordance with section 36, apply to a Court: (i) for the appointment of a guardian for a minor or person of unsound mind; or (ii) for an interim measure of protection in respect of: (a) preservation, interim custody or sale of any goods which are the subject-matter of the arbitration agreement; (b) securing the amount in dispute in the arbitration; (c) the detention, preservation or inspection of any property or thing...",
+        commentary:
+          "Section 9 petitions may be moved prior to arbitral tribunal constitution. Once arbitral proceedings commence, Section 9(2) mandates that arbitration must commence within 90 days of an interim order.",
+        landmarkCitations: [
+          "Essar House Private Limited v. Arcellor Mittal Nippon Steel India Ltd (2022) SCC OnLine SC 1219",
+          "Firm Ashok Traders v. Gurumukh Das Saluja (2004) 3 SCC 155",
+        ],
+        amendments: "Amended by Act 3 of 2016 to impose 90-day tribunal initiation timeline.",
+      },
+      {
+        sectionNumber: "Section 12(5)",
+        heading: "Grounds for challenge & Seventh Schedule ineligibility",
+        fullText:
+          "Notwithstanding any prior agreement to the contrary, any person whose relationship, with the parties or counsel or the subject-matter of the dispute, falls under any of the categories specified in the Seventh Schedule shall be ineligible to be appointed as an arbitrator: Provided that parties may, subsequent to disputes having arisen between them, waive the applicability of this sub-section by an express agreement in writing.",
+        commentary:
+          "The Perkins Eastman doctrine establishes that an interested party who is ineligible to act as an arbitrator cannot nominate or unilaterally appoint an arbitrator. Standard PSU/governmental clauses appointing managing directors or their nominees are void ab initio.",
+        landmarkCitations: [
+          "Perkins Eastman Architects DPC v. HSCC (India) Ltd (2020) 20 SCC 760",
+          "TRF Limited v. Energo Engineering Projects Ltd (2017) 8 SCC 377",
+          "Bharat Broadband Network Ltd v. United Telecoms Ltd (2019) 5 SCC 755",
+        ],
+        amendments: "Inserted by Act 3 of 2016 w.e.f. 23-10-2015.",
+      },
+    ],
+  },
+  {
+    id: "act_klr_1963",
+    title: "Kerala Land Reforms Act, 1963",
+    shortTitle: "KLR Act, 1963",
+    actNumber: "Act 1 of 1964",
+    category: "Kerala State Enactment / Agrarian Law",
+    enactmentYear: 1963,
+    lastAmended: "2015 (Ceiling Revision & Plantation Definitions)",
+    jurisdiction: "Land Tribunals, Taluk Land Boards & High Court of Kerala",
+    overview:
+      "Pivotal Kerala statute conferring proprietary rights upon cultivating tenants, eliminating intermediary tenures, establishing ceiling limits on land holdings, and setting statutory exemptions for commercial plantations.",
+    sections: [
+      {
+        sectionNumber: "Section 72",
+        heading: "Vesting in Government of landlord's rights in respect of holdings held by cultivating tenants",
+        fullText:
+          "(1) On a date to be notified by the Government in this behalf, all right, title and interest of the landowners and intermediaries in respect of holdings held by cultivating tenants entitled to fixity of tenure under section 13 shall, subject to the provisions of this section, vest in the Government free from all encumbrances.",
+        commentary:
+          "Statutory abolition of landlordism in Kerala. Cultivating tenants obtain absolute title upon issuance of Purchase Certificate (KLR Form 24) by the Land Tribunal. Purchase certificate is conclusive proof of title against subsequent challenge.",
+        landmarkCitations: [
+          "Govinda Pillai v. Land Tribunal 1978 KLT 234",
+          "Sreedharan v. State of Kerala 1999 (2) KLT 456",
+        ],
+        amendments: "Vesting date notified as 1 January 1970.",
+      },
+      {
+        sectionNumber: "Section 81",
+        heading: "Exemptions from ceiling area",
+        fullText:
+          "(1) The provisions of this Chapter shall not apply to— (a) lands owned or held by the Government of India or the Government of any State; (e) plantations of tea, coffee, cocoa, rubber, cardamom or cinnamon exceeding such limit as may be prescribed.",
+        commentary:
+          "Crucial exemption protecting Kerala rubber and tea estates from land ceiling fragmentation. If plantation land is fragmented or used for non-plantation purposes, the exemption may be scrutinized under Section 85.",
+        landmarkCitations: [
+          "State of Kerala v. Moosa 1994 (2) KLT 318",
+          "Harrison Malayalam Ltd. v. State of Kerala 2018 (2) KLT 369",
+        ],
+        amendments: "Clarification on ancillary factory and labor quarters inclusion.",
+      },
+    ],
+  },
+];
+
+export const DEFAULT_PLAYBOOKS = [
+  {
+    id: "sop_writ_wp_c",
+    code: "SOP-KLHC-WPC-01",
+    title: "High Court of Kerala Writ Petition (Civil) Article 226 SOP",
+    shortTitle: "Article 226 WP(C) Filing Playbook",
+    forum: "High Court of Kerala (Ernakulam)",
+    category: "Constitutional Writs",
+    turnaround: "24-48 Hours",
+    description:
+      "Chamber standard operating procedure for drafting, vetting, formatting, e-filing, scrutiny clearance, and urgent bench mentioning for Writ Petitions before the High Court of Kerala.",
+    checklist: [
+      {
+        stage: "Stage 1: Pre-Filing Due Diligence & Statutory Audit",
+        items: [
+          "Exhaustion of Alternative Remedies: Verify whether statutory appeal, revision, or Magistrate application under Section 16 Telegraph Act was pursued or if patent arbitrariness warrants direct Article 226 intervention.",
+          "High Court Caveat Registry Search: Query eCourts Caveat Registry under Section 148A CPC for respondent state authorities or opposite parties to ensure caveator notice is served.",
+          "Statutory Representation Proof: Verify that a formal representation or notice was served on the official respondent with registered postal proof or acknowledgement receipt.",
+        ],
+      },
+      {
+        stage: "Stage 2: Pleadings Drafting & Formatting Compliance",
+        items: [
+          "Rule 146 Margin Compliance: Ensure strict 2.0-inch (5 cm) left margin, 1.2-inch right, top, and bottom margins on legal size paper (8.5 x 14 in).",
+          "Pleading Hierarchy: Synopsis & List of Dates -> Index of Pleadings -> Memo of Writ Petition (Civil) -> Verification Affidavit -> Exhibits Annexure P-1 to P-n.",
+          "Affidavit True Copy Attestation: Each exhibit copy must bear the mandatory stamp 'True Copy / Advocate' along with Advocate Roll No. and signature.",
+        ],
+      },
+      {
+        stage: "Stage 3: e-Filing & Court Registry Scrutiny",
+        items: [
+          "eCourts EF Portal Ingestion: Upload unified PDF bundle with embedded OCR text layer and digital sign verification.",
+          "Writ Stamp & Court Fee: Affix ₹100 High Court Writ Stamp, ₹25 Advocate Welfare Fund stamp, and requisite process memo fees.",
+          "Registry Defect Rectification: Monitor filing status for scrutiny notes (Filing No. EF/KLHC/...). Clear objections within 48 hours to prevent registry laches.",
+        ],
+      },
+      {
+        stage: "Stage 4: Bench Listing & Motion Mentioning",
+        items: [
+          "Service on Standing Counsel: Deliver advanced copy with acknowledgement to the designated Standing Counsel (e.g., KSEB, Corporation, Government Pleader).",
+          "Urgent Listing Memo: File Urgent Memo before the Registrar (Judicial) specifying the irreparable harm or date of impending execution.",
+          "Bench Appearance Brief: Hand over Bench Argument Dossier with highlighted copies of landmark rulings to Senior Counsel.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "sop_sec_138_ni",
+    code: "SOP-NI138-TRIAL-02",
+    title: "Section 138 Negotiable Instruments Act — Trial SOP",
+    shortTitle: "Cheque Dishonour End-to-End SOP",
+    forum: "Judicial First Class Magistrate (JFCM) Court",
+    category: "Criminal & Banking",
+    turnaround: "15-45 Days",
+    description:
+      "Chamber protocol covering the complete timeline from bank memo receipt, 30-day statutory demand notice, postal presumption tracking, cure countdown, to Section 142 complaint institution and Section 143A interim compensation.",
+    checklist: [
+      {
+        stage: "Stage 1: Cheque Return Audit & Timeline Calculation",
+        items: [
+          "Memo Scrutiny: Verify return memo reason code ('Funds Insufficient', 'Account Closed', 'Exceeds Arrangement', 'Refer to Drawer').",
+          "Presentation Validity: Ensure cheque was presented within 3 months of issuance date.",
+          "30-Day Notice Deadline: Calculate the strict 30-day statutory limit from the date of intimation/return memo receipt.",
+        ],
+      },
+      {
+        stage: "Stage 2: Statutory Demand Notice Dispatch",
+        items: [
+          "Demand Specificity: Make an unequivocal demand for the exact cheque amount; avoid clubbing unliquidated damages or interest in the principal demand.",
+          "Speed Post with Delivery Tracking: Dispatch notice via India Post Speed Post / Registered Post with A/D to all known residential and business addresses.",
+          "Section 27 General Clauses Presumption: Download and preserve the certified India Post tracking report reflecting 'Item Delivered' or 'Refused / Unclaimed'.",
+        ],
+      },
+      {
+        stage: "Stage 3: 15-Day Cure Window & Cause of Action",
+        items: [
+          "Cure Period Monitoring: Track the mandatory 15 days from the date of confirmed delivery. The drawer has until the 15th day midnight to pay.",
+          "Cause of Action Crystallization: The offence is committed on the 16th day following notice receipt. The complaint must be filed within 30 days of the 16th day.",
+        ],
+      },
+      {
+        stage: "Stage 4: Section 142 Complaint Institution",
+        items: [
+          "Jurisdiction Verification under S.142(2): Determine competent JFCM court based on the branch where the payee maintains his bank account.",
+          "Section 145(1) Affidavit in Lieu of Sworn Statement: Accompany complaint with complainant's sworn evidence affidavit to dispense with physical presence.",
+          "Section 143A Application: Move interim application praying for 20% interim compensation deposit upon appearance of the accused.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "sop_anticipatory_bail",
+    code: "SOP-BNSS482-BAIL-03",
+    title: "Section 482 BNSS 2023 Anticipatory Bail SOP",
+    shortTitle: "Pre-Arrest Protection Protocol",
+    forum: "Court of Session / High Court of Kerala",
+    category: "Criminal Procedure",
+    turnaround: "24-72 Hours",
+    description:
+      "Protocol for securing anticipatory bail under Section 482 BNSS 2023 (formerly Section 438 CrPC), reviewing police summons under Section 35 BNSS, establishing clean antecedents, and obtaining interim protection.",
+    checklist: [
+      {
+        stage: "Stage 1: Offence Cognizance & Notice Audit",
+        items: [
+          "FIR & Complaint Scrutiny: Obtain certified copy or eCourts web copy of the FIR; analyze penal sections charged under BNS 2023.",
+          "Section 35 BNSS Notice Verification: Check if police served mandatory notice to appear under Section 35 BNSS (legacy 41A CrPC); document compliance or arbitrary arrest threats.",
+          "Bailable vs Non-Bailable Classification: Confirm that at least one offence invoked is non-bailable under the First Schedule of BNSS.",
+        ],
+      },
+      {
+        stage: "Stage 2: Grounds Drafting & Personal Liberty Factors",
+        items: [
+          "Establish Bona Fides & Clean Antecedents: Formulate clear averments that applicant has no prior criminal records, is a permanent resident, and is not a flight risk.",
+          "Absence of Custodial Interrogation Need: Establish that the case hinges on documentary or digital evidence already available, rendering custodial torture or custody unnecessary.",
+          "Readiness to Cooperate: Include unconditional undertaking to appear before the Investigating Officer as and when summoned.",
+        ],
+      },
+      {
+        stage: "Stage 3: Public Prosecutor Service & Interim Order",
+        items: [
+          "Advance Service: Serve physical copy of bail application upon the Office of the Director General of Prosecution / Public Prosecutor.",
+          "Interim Protection Motion: In high-urgency matters, move for interim direction that applicant shall not be arrested pending receipt of Case Diary (CD).",
+          "Surety Readiness: Prepare two local solvent sureties with Aadhaar, tax receipts, or solvency certificates for immediate bail bond execution upon grant.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "sop_caveat_cpc",
+    code: "SOP-CPC148A-CAV-04",
+    title: "Preemptive Caveat Petition under Section 148A CPC",
+    shortTitle: "Caveat Lodgement & Monitoring SOP",
+    forum: "High Court of Kerala & Subordinate District Courts",
+    category: "Civil Procedure",
+    turnaround: "Same-Day Execution",
+    description:
+      "Chamber workflow for preparing and lodging caveats under Section 148A CPC to guarantee advance notice before any ex-parte interim injunction or stay order can be granted against the client.",
+    checklist: [
+      {
+        stage: "Stage 1: Risk Assessment & Adverse Party Identification",
+        items: [
+          "Apprehended Proceedings: Identify the anticipated suit, appeal, or writ petition likely to be filed by the opposing party.",
+          "Exact Party Particulars: Extract verified names, official addresses, and designations of both caveator and proposed applicants.",
+        ],
+      },
+      {
+        stage: "Stage 2: Caveat Drafting & Formalities",
+        items: [
+          "High Court Form No. 19 / Civil Rules of Practice: Draft caveat petition reciting that caveator has right to appear on any application for interim relief.",
+          "Supporting Affidavit: Execute solemn affidavit affirmed by caveator or power of attorney holder.",
+        ],
+      },
+      {
+        stage: "Stage 3: Service & Registry Registration",
+        items: [
+          "Pre-Filing Postal Service: Despatch caveat petition by Registered Post A/D to the proposed applicant; preserve postal booking receipts.",
+          "Registry Lodgement: File caveat petition with registry receipt proof; obtain Caveat Registration Number.",
+          "90-Day Renewal Calendar: Tag caveat expiry in ERP calendar (valid for 90 days from filing under Section 148A(5)).",
+        ],
+      },
+    ],
+  },
+];
+
+export const DEFAULT_KB_ARTICLES = [
+  {
+    id: "art_valsamma_telegraph",
+    title: "Valsamma v. KSEB & Beyond: Navigating Section 16 Telegraph Act Injunctions in Kerala",
+    author: "Adv. Meera Krishnan",
+    designation: "Senior Chamber Counsel",
+    category: "Constitutional Writs & Utilities",
+    readTime: "8 min read",
+    date: "14 Oct 2024",
+    summary:
+      "A comprehensive review of the Full Bench doctrine in Valsamma v. KSEB (2012) regarding the mandatory requirement for electricity authorities to obtain an order from the District Magistrate upon landowner objection before drawing high-tension lines or felling yielding trees.",
+    keyTakeaways: [
+      "Telegraph authorities do not possess unilateral adjudicatory power to override private property resistance.",
+      "Any entry onto land following objection without an order under Section 16(1) is an actionable statutory trespass.",
+      "Landowners are entitled to comprehensive diminution-in-land-value compensation under Section 10(d) and Section 16(3).",
+    ],
+    fullContent: `
+### Background & The Statutory Scheme
+Under Section 10 of the Indian Telegraph Act, 1885, read with Section 164 of the Electricity Act, 2003, the transmission licensee is authorized to place electric lines and posts under, over, along, or across any immovable property. However, this power is conditioned by Section 10(b), which explicitly provides that the authority acquires ONLY a right of user, and by Section 10(d), which mandates that the authority shall do as little damage as possible and pay full compensation for all damages sustained.
+
+### The Landmark Full Bench Ruling in Valsamma
+In Valsamma v. K.S.E.B. [2012 (2) KLT 368], the Full Bench of the High Court of Kerala settled the long-standing controversy regarding what happens when a property owner objects to the entry of KSEB officials. The court held in unequivocal terms:
+
+1. **Mandatory Referral to District Magistrate**: When a landowner or lawful occupier raises an objection or resistance to the proposed line, the transmission authority has NO authority to determine the validity of the objection itself.
+2. **Cessation of Work**: The authority must immediately cease execution work on that parcel of land and approach the District Magistrate under Section 16(1) of the Act.
+3. **Quasi-Judicial Consideration**: The District Magistrate must issue notice to the landowner, consider alternative routes suggested, evaluate technical feasibility, and pass a speaking order.
+4. **Remedy under Article 226**: Any attempt by utility contractors to bypass the District Magistrate and enter with police protection without a Section 16(1) order constitutes an arbitrary exercise of state power, warranting an urgent Writ of Mandamus or Prohibition from the High Court of Kerala.
+
+### Diminution of Land Value: The Doddakka Precedent
+In Executive Engineer, KSEB v. Doddakka [(2015) 15 SCC 738], the Hon'ble Supreme Court affirmed that compensation under Section 10(d) is not limited to tree value or crop damage. The corridor beneath high-voltage lines (220kV / 110kV / 66kV) suffers severe building restrictions under the Indian Electricity Rules, leading to permanent diminution in land market value. The District Judge under Section 16(3) is bound to award diminution compensation, generally ranging between 30% and 50% of the land value within the corridor strip.
+    `,
+  },
+  {
+    id: "art_bns_concordance",
+    title: "The Practical Shift: Transitioning from CrPC 438 to BNSS 482 Before the Kerala High Court",
+    author: "Adv. Meera Krishnan",
+    designation: "Criminal Practice Desk",
+    category: "Criminal Law & Procedure",
+    readTime: "7 min read",
+    date: "20 Oct 2024",
+    summary:
+      "A strategic practitioner's guide to the procedural and substantive shifts in anticipatory bail practice following the commencement of the Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023 on 1 July 2024.",
+    keyTakeaways: [
+      "Section 482 BNSS 2023 replaces legacy Section 438 CrPC for anticipatory bail.",
+      "Section 35 BNSS notice of appearance replaces legacy Section 41A CrPC safeguards against arbitrary arrest.",
+      "Pleadings must explicitly reference concordance between old IPC sections and new BNS provisions.",
+    ],
+    fullContent: `
+### The New Statutory Landscape
+With the formal enforcement of the new criminal codes on 1 July 2024, criminal chamber practice has undergone significant structural realignment. Section 482 of the Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023, now embodies the provisions governing anticipatory bail, formerly codified under Section 438 of the Code of Criminal Procedure, 1973.
+
+### Concordance & The Principle of Prospective Application
+Where offences are alleged to have occurred prior to 1 July 2024, the substantive offences remain governed by the Indian Penal Code, 1860, while procedural remedies instituted post-July 1 are governed by BNSS 2023. Our chamber briefs adhere to strict concordance mapping:
+- Legacy IPC 420 (Cheating) corresponds to BNS Section 318(4).
+- Legacy IPC 406 (Criminal Breach of Trust) corresponds to BNS Section 316.
+- Legacy IPC 468/471 (Forgery) corresponds to BNS Section 336/340.
+
+### The Power of Section 35 BNSS (Legacy 41A CrPC)
+In matters where the alleged punishment is 7 years or less, Section 35 BNSS makes issuance of a notice of appearance mandatory unless reasons for immediate arrest are recorded in writing. High Court of Kerala practice demonstrates that demonstrating compliance with Section 35 BNSS is often the quickest path to obtaining interim protection against coercive steps.
+    `,
+  },
+  {
+    id: "art_perkins_arbitration",
+    title: "Unilateral Appointment of Arbitrators Post Perkins Eastman & TRF Limited",
+    author: "Chamber Commercial Desk",
+    designation: "Arbitration & Insolvency Desk",
+    category: "Commercial Arbitration",
+    readTime: "11 min read",
+    date: "16 Oct 2024",
+    summary:
+      "An in-depth analysis of Section 12(5) of the Arbitration and Conciliation Act 1996 and the Supreme Court rulings disqualifying unilateral appointment of sole arbitrators in government and commercial contracts.",
+    keyTakeaways: [
+      "A party interested in the dispute outcome cannot appoint a sole arbitrator.",
+      "Unilateral appointment clauses in standard form contracts are void ab initio.",
+      "Remedy lies in filing Section 11(6) petition before the High Court for independent arbitrator appointment.",
+    ],
+    fullContent: `
+### The Seventh Schedule Revolution
+Following the 2015 Amendments to the Arbitration and Conciliation Act, 1996, the legislature introduced Section 12(5) along with the Seventh Schedule, codifying non-derogable grounds of arbitrator ineligibility based on the IBA Guidelines on Conflicts of Interest.
+
+### From TRF Limited to Perkins Eastman
+In TRF Limited v. Energo Engineering Projects Ltd. [(2017) 8 SCC 377], the Supreme Court held that once a person becomes ineligible by operation of law under Section 12(5) (e.g., Managing Director), that person also loses the legal capacity to nominate someone else as arbitrator.
+
+This principle was expanded in Perkins Eastman Architects DPC v. HSCC (India) Ltd. [(2020) 20 SCC 760]. The Court ruled that even if the Managing Director is not acting as the arbitrator himself, he cannot have the unilateral power to choose the sole arbitrator, as the nominating authority has an inherent interest in the outcome.
+
+### Practical Implications for Active Contracts
+Any arbitral award rendered by a unilaterally appointed sole arbitrator is vulnerable to challenge under Section 34 on the ground of patent illegality and lack of jurisdiction. When served with a notice invoking arbitration under a unilateral clause, the recommended strategy is to reject the nomination and immediately petition the High Court under Section 11(6).
+    `,
+  },
+  {
+    id: "art_ni_postal_presumption",
+    title: "Postal Presumption & Section 142(2) Territorial Rules in S.138 Cheque Dishonour",
+    author: "Adv. Rajesh V. Varma",
+    designation: "Banking Litigation Desk",
+    category: "Banking & Negotiable Instruments",
+    readTime: "9 min read",
+    date: "08 Oct 2024",
+    summary:
+      "Navigating the statutory presumption of notice service under Section 27 General Clauses Act and establishing territorial jurisdiction based on payee bank branch location under the 2015 NI amendment.",
+    keyTakeaways: [
+      "Proof of dispatch to correct address raises presumption of service under Section 27 General Clauses Act.",
+      "Drawer's deliberate non-claiming or postal avoidance does not defeat statutory notice requirement.",
+      "Territorial jurisdiction is anchored to the payee's bank branch under Section 142(2).",
+    ],
+    fullContent: `
+### Section 27 General Clauses Act & Postal Presumption
+Under Section 138(c) of the NI Act, the cause of action arises only after the drawer fails to make payment within 15 days of the 'receipt' of the notice. Accused drawers frequently contend that notice was never served.
+
+In K. Bhaskaran v. Sankaran Vaidhyan Balan [(1999) 7 SCC 510] and C.C. Alavi Haji v. Palapetty Muhammed [(2007) 6 SCC 555], the Supreme Court held that once notice is dispatched by registered post / speed post with correct address prepaid, Section 27 of the General Clauses Act, 1897, and Section 114 of the Evidence Act raise a mandatory presumption of service. If the accused claims non-receipt, he has 15 days from the date of summons service in court to tender the cheque amount.
+
+### Section 142(2) Territorial Jurisdiction
+The Negotiable Instruments (Amendment) Act, 2015, definitively settled the forum shopping issue. Under Section 142(2)(a), if the cheque is delivered for collection through an account, the offence shall be inquired into and tried only by a court within whose local jurisdiction the branch of the bank where the payee or holder in due course maintains the account is situated.
+    `,
+  },
+];
+
+export const DEFAULT_RESEARCH_BRIEFS = [
+  {
+    id: "brief_001",
+    _id: "brief_001",
+    title: "Telegraph Act Section 16 Injunction & Mandatory Magistrate Referral",
+    matterReference: "WP(C) 19482/2024 (Gopakumar v. KSEB)",
+    category: "Constitutional Writs",
+    author: "Adv. Meera Krishnan",
+    createdAt: "18 Oct 2024",
+    summary:
+      "Precedent synthesis establishing that the transmission licensee has no authority to proceed with high-tension line drawing over agricultural holdings upon resistance without obtaining a prior order from the District Magistrate under Section 16(1).",
+    legalPropositions: [
+      "Transmission licensee acquires only right of user under Section 10(b), not proprietary ownership.",
+      "Upon objection by landowner or lawful occupier, work must be paused and referred to District Magistrate.",
+      "Land diminution compensation under Section 10(d) & 16(3) is mandatory for line corridor restriction.",
+    ],
+    citations: [
+      {
+        citation: "Valsamma v. K.S.E.B.",
+        court: "High Court of Kerala (Full Bench)",
+        reporter: "2012 (2) KLT 368",
+        proposition: "Telegraph authority has no power to adjudicate landowner resistance unilaterally.",
+      },
+      {
+        citation: "Executive Engineer, KSEB v. Doddakka",
+        court: "Supreme Court of India",
+        reporter: "(2015) 15 SCC 738",
+        proposition: "Permanent diminution in land market value must be assessed under Section 10(d).",
+      },
+      {
+        citation: "Power Grid Corp of India v. Century Textiles Ltd",
+        court: "Supreme Court of India",
+        reporter: "(2017) 5 SCC 143",
+        proposition: "Section 164 Electricity Act confers Telegraph Act powers subject to Section 10/16 safeguards.",
+      },
+    ],
+  },
+  {
+    id: "brief_002",
+    _id: "brief_002",
+    title: "Invalidity of Unilateral Arbitrator Appointment Clause in Commercial Contracts",
+    matterReference: "ARB/NCLT/KOCHI/2024/041 (Malabar Infotech)",
+    category: "Commercial Arbitration",
+    author: "Adv. Meera Krishnan",
+    createdAt: "15 Oct 2024",
+    summary:
+      "Authority bundle establishing that unilateral appointment of a sole arbitrator by one party or its Managing Director is void ab initio under Section 12(5) read with Seventh Schedule of the 1996 Act.",
+    legalPropositions: [
+      "A party interested in dispute outcome cannot unilaterally nominate a sole arbitrator.",
+      "Ineligible nominee cannot be cured by private contract terms without post-dispute written waiver.",
+      "The competent High Court under Section 11(6) must appoint an independent sole arbitrator.",
+    ],
+    citations: [
+      {
+        citation: "Perkins Eastman Architects DPC v. HSCC (India) Ltd.",
+        court: "Supreme Court of India",
+        reporter: "(2020) 20 SCC 760",
+        proposition: "A person disqualified from acting as arbitrator cannot nominate an arbitrator.",
+      },
+      {
+        citation: "TRF Limited v. Energo Engineering Projects Ltd.",
+        court: "Supreme Court of India",
+        reporter: "(2017) 8 SCC 377",
+        proposition: "Statutory disqualification under Section 12(5) renders nomination authority void.",
+      },
+      {
+        citation: "Bharat Broadband Network Ltd. v. United Telecoms Ltd.",
+        court: "Supreme Court of India",
+        reporter: "(2019) 5 SCC 755",
+        proposition: "Express agreement in writing required for waiver under Section 12(5) proviso.",
+      },
+    ],
+  },
+  {
+    id: "brief_003",
+    _id: "brief_003",
+    title: "Section 482 BNSS Anticipatory Bail for Commercial Dishonour / Cheating Allegations",
+    matterReference: "General Chamber Precedent Pool",
+    category: "Criminal Jurisprudence",
+    author: "Adv. Meera Krishnan",
+    createdAt: "12 Oct 2024",
+    summary:
+      "Synthesis of High Court and Supreme Court authorities guarding against criminalization of civil contractual breaches under IPC 420 / BNS 318 where Section 138 NI Act remedy exists.",
+    legalPropositions: [
+      "Mere failure to repay a loan or dishonour of a cheque does not constitute cheating without fraudulent intent from inception.",
+      "Simultaneous invocation of Section 138 NI Act and criminal cheating requires strict scrutiny to prevent abuse of process.",
+      "Custodial interrogation is unwarranted where transaction is fully evidenced by bank statements and contracts.",
+    ],
+    citations: [
+      {
+        citation: "Dalip Kaur v. Jagnar Singh",
+        court: "Supreme Court of India",
+        reporter: "(2009) 14 SCC 696",
+        proposition: "Breach of contractual promise does not amount to cheating without dishonest inception.",
+      },
+      {
+        citation: "Arnesh Kumar v. State of Bihar",
+        court: "Supreme Court of India",
+        reporter: "(2014) 8 SCC 273",
+        proposition: "Arrest cannot be made mechanically for offences punishable with up to 7 years imprisonment.",
+      },
+      {
+        citation: "Sushila Aggarwal v. State (NCT of Delhi)",
+        court: "Supreme Court of India (Constitution Bench)",
+        reporter: "(2020) 5 SCC 1",
+        proposition: "Anticipatory bail should not ordinarily be restricted to a predetermined time period.",
+      },
+    ],
+  },
+  {
+    id: "brief_004",
+    _id: "brief_004",
+    title: "Specific Performance & Discretionary Injunction under Specific Relief Act 1963",
+    matterReference: "OS 412/2023 (Gopakumar v. Varghese Builders)",
+    category: "Civil Property & Injunctions",
+    author: "Adv. Rajesh V. Varma",
+    createdAt: "09 Oct 2024",
+    summary:
+      "Analysis of Section 10 post-2018 amendment to Specific Relief Act removing judicial discretion in enforcing valid immovable property agreements.",
+    legalPropositions: [
+      "Specific performance of contracts is mandatory post-2018 amendment unless barred by Section 11, 14, or 16.",
+      "Injunction against alienation pendente lite is necessary to preserve property status quo under Section 52 TP Act.",
+    ],
+    citations: [
+      {
+        citation: "B. Santoshamma v. D. Sarala",
+        court: "Supreme Court of India",
+        reporter: "(2020) 19 SCC 80",
+        proposition: "Post-2018 amendment, court is bound to enforce specific performance of contracts.",
+      },
+      {
+        citation: "Maharwal Khewaji Trust v. Baldev Dass",
+        court: "Supreme Court of India",
+        reporter: "(2004) 8 SCC 488",
+        proposition: "Status quo must be maintained unless irreparable loss is demonstrated.",
+      },
+    ],
   },
 ];

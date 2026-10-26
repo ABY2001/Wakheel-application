@@ -15,6 +15,7 @@ import { LegalDraftingStudioView } from "@/components/advocate/LegalDraftingStud
 import { CasePreparationView } from "@/components/advocate/CasePreparationView";
 import { ContractIntelligenceView } from "@/components/advocate/ContractIntelligenceView";
 import { AutonomousAgentsView } from "@/components/advocate/AutonomousAgentsView";
+import ChamberKnowledgeBaseView from "@/components/advocate/ChamberKnowledgeBaseView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ElectronicConsentView } from "@/components/advocate/ElectronicConsentView";
 import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
@@ -2857,48 +2858,14 @@ export function AdvocateWorkspaceView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW 8: Knowledge Base (Play Books, Library, Articles)         */}
+          {/* VIEW 8: Knowledge Base (Play Books, Library, Articles, Research) */}
           {isKnowledgeBase && (
-            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight">
-                  Chamber Knowledge Base &amp; Precedent Library
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-500">
-                  Internal legal playbooks, annotated central and state bare acts, and chamber research archives
-                </p>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500">
-                    CENTRAL &amp; KERALA STATE BARE ACTS
-                  </span>
-                  <button className="px-4 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-                    + Add Research Brief
-                  </button>
-                </div>
-
-                <div className="divide-y divide-zinc-100 dark:divide-zinc-900 text-xs">
-                  {[
-                    { title: "Bharatiya Nyaya Sanhita (BNS), 2023", subtitle: "Full concordance map with Indian Penal Code, 1860" },
-                    { title: "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023", subtitle: "Procedural changes in bail and arrest procedure" },
-                    { title: "Kerala Land Reforms Act, 1963", subtitle: "Land ceiling, tenancy rights, and Section 85 exemptions" },
-                    { title: "Indian Telegraph Act, 1885", subtitle: "Section 10 & 16 power line compensation ratios" },
-                  ].map((act, idx) => (
-                    <div key={idx} className="py-3 flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-black dark:text-white block">{act.title}</span>
-                        <span className="text-zinc-500">{act.subtitle}</span>
-                      </div>
-                      <button className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold cursor-pointer">
-                        Open Act
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ChamberKnowledgeBaseView
+              initialSubTab={activeTab}
+              advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+            />
           )}
 
           {/* ============================================================== */}

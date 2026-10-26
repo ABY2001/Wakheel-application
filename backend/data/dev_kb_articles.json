@@ -1,0 +1,66 @@
+[
+  {
+    "id": "art_valsamma_telegraph",
+    "title": "Valsamma v. KSEB & Beyond: Navigating Section 16 Telegraph Act Injunctions in Kerala",
+    "author": "Adv. Meera Krishnan",
+    "designation": "Senior Chamber Counsel",
+    "category": "Constitutional Writs & Utilities",
+    "readTime": "8 min read",
+    "date": "14 Oct 2024",
+    "summary": "A comprehensive review of the Full Bench doctrine in Valsamma v. KSEB (2012) regarding the mandatory requirement for electricity authorities to obtain an order from the District Magistrate upon landowner objection before drawing high-tension lines or felling yielding trees.",
+    "keyTakeaways": [
+      "Telegraph authorities do not possess unilateral adjudicatory power to override private property resistance.",
+      "Any entry onto land following objection without an order under Section 16(1) is an actionable statutory trespass.",
+      "Landowners are entitled to comprehensive diminution-in-land-value compensation under Section 10(d) and Section 16(3)."
+    ],
+    "fullContent": "\n### Background & The Statutory Scheme\nUnder Section 10 of the Indian Telegraph Act, 1885, read with Section 164 of the Electricity Act, 2003, the transmission licensee is authorized to place electric lines and posts under, over, along, or across any immovable property. However, this power is conditioned by Section 10(b), which explicitly provides that the authority acquires ONLY a right of user, and by Section 10(d), which mandates that the authority shall do as little damage as possible and pay full compensation for all damages sustained.\n\n### The Landmark Full Bench Ruling in Valsamma\nIn Valsamma v. K.S.E.B. [2012 (2) KLT 368], the Full Bench of the High Court of Kerala settled the long-standing controversy regarding what happens when a property owner objects to the entry of KSEB officials. The court held in unequivocal terms:\n\n1. **Mandatory Referral to District Magistrate**: When a landowner or lawful occupier raises an objection or resistance to the proposed line, the transmission authority has NO authority to determine the validity of the objection itself.\n2. **Cessation of Work**: The authority must immediately cease execution work on that parcel of land and approach the District Magistrate under Section 16(1) of the Act.\n3. **Quasi-Judicial Consideration**: The District Magistrate must issue notice to the landowner, consider alternative routes suggested, evaluate technical feasibility, and pass a speaking order.\n4. **Remedy under Article 226**: Any attempt by utility contractors to bypass the District Magistrate and enter with police protection without a Section 16(1) order constitutes an arbitrary exercise of state power, warranting an urgent Writ of Mandamus or Prohibition from the High Court of Kerala.\n\n### Diminution of Land Value: The Doddakka Precedent\nIn Executive Engineer, KSEB v. Doddakka [(2015) 15 SCC 738], the Hon'ble Supreme Court affirmed that compensation under Section 10(d) is not limited to tree value or crop damage. The corridor beneath high-voltage lines (220kV / 110kV / 66kV) suffers severe building restrictions under the Indian Electricity Rules, leading to permanent diminution in land market value. The District Judge under Section 16(3) is bound to award diminution compensation, generally ranging between 30% and 50% of the land value within the corridor strip.\n    "
+  },
+  {
+    "id": "art_bns_concordance",
+    "title": "The Practical Shift: Transitioning from CrPC 438 to BNSS 482 Before the Kerala High Court",
+    "author": "Adv. Meera Krishnan",
+    "designation": "Criminal Practice Desk",
+    "category": "Criminal Law & Procedure",
+    "readTime": "7 min read",
+    "date": "20 Oct 2024",
+    "summary": "A strategic practitioner's guide to the procedural and substantive shifts in anticipatory bail practice following the commencement of the Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023 on 1 July 2024.",
+    "keyTakeaways": [
+      "Section 482 BNSS 2023 replaces legacy Section 438 CrPC for anticipatory bail.",
+      "Section 35 BNSS notice of appearance replaces legacy Section 41A CrPC safeguards against arbitrary arrest.",
+      "Pleadings must explicitly reference concordance between old IPC sections and new BNS provisions."
+    ],
+    "fullContent": "\n### The New Statutory Landscape\nWith the formal enforcement of the new criminal codes on 1 July 2024, criminal chamber practice has undergone significant structural realignment. Section 482 of the Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023, now embodies the provisions governing anticipatory bail, formerly codified under Section 438 of the Code of Criminal Procedure, 1973.\n\n### Concordance & The Principle of Prospective Application\nWhere offences are alleged to have occurred prior to 1 July 2024, the substantive offences remain governed by the Indian Penal Code, 1860, while procedural remedies instituted post-July 1 are governed by BNSS 2023. Our chamber briefs adhere to strict concordance mapping:\n- Legacy IPC 420 (Cheating) corresponds to BNS Section 318(4).\n- Legacy IPC 406 (Criminal Breach of Trust) corresponds to BNS Section 316.\n- Legacy IPC 468/471 (Forgery) corresponds to BNS Section 336/340.\n\n### The Power of Section 35 BNSS (Legacy 41A CrPC)\nIn matters where the alleged punishment is 7 years or less, Section 35 BNSS makes issuance of a notice of appearance mandatory unless reasons for immediate arrest are recorded in writing. High Court of Kerala practice demonstrates that demonstrating compliance with Section 35 BNSS is often the quickest path to obtaining interim protection against coercive steps.\n    "
+  },
+  {
+    "id": "art_perkins_arbitration",
+    "title": "Unilateral Appointment of Arbitrators Post Perkins Eastman & TRF Limited",
+    "author": "Chamber Commercial Desk",
+    "designation": "Arbitration & Insolvency Desk",
+    "category": "Commercial Arbitration",
+    "readTime": "11 min read",
+    "date": "16 Oct 2024",
+    "summary": "An in-depth analysis of Section 12(5) of the Arbitration and Conciliation Act 1996 and the Supreme Court rulings disqualifying unilateral appointment of sole arbitrators in government and commercial contracts.",
+    "keyTakeaways": [
+      "A party interested in the dispute outcome cannot appoint a sole arbitrator.",
+      "Unilateral appointment clauses in standard form contracts are void ab initio.",
+      "Remedy lies in filing Section 11(6) petition before the High Court for independent arbitrator appointment."
+    ],
+    "fullContent": "\n### The Seventh Schedule Revolution\nFollowing the 2015 Amendments to the Arbitration and Conciliation Act, 1996, the legislature introduced Section 12(5) along with the Seventh Schedule, codifying non-derogable grounds of arbitrator ineligibility based on the IBA Guidelines on Conflicts of Interest.\n\n### From TRF Limited to Perkins Eastman\nIn TRF Limited v. Energo Engineering Projects Ltd. [(2017) 8 SCC 377], the Supreme Court held that once a person becomes ineligible by operation of law under Section 12(5) (e.g., Managing Director), that person also loses the legal capacity to nominate someone else as arbitrator.\n\nThis principle was expanded in Perkins Eastman Architects DPC v. HSCC (India) Ltd. [(2020) 20 SCC 760]. The Court ruled that even if the Managing Director is not acting as the arbitrator himself, he cannot have the unilateral power to choose the sole arbitrator, as the nominating authority has an inherent interest in the outcome.\n\n### Practical Implications for Active Contracts\nAny arbitral award rendered by a unilaterally appointed sole arbitrator is vulnerable to challenge under Section 34 on the ground of patent illegality and lack of jurisdiction. When served with a notice invoking arbitration under a unilateral clause, the recommended strategy is to reject the nomination and immediately petition the High Court under Section 11(6).\n    "
+  },
+  {
+    "id": "art_ni_postal_presumption",
+    "title": "Postal Presumption & Section 142(2) Territorial Rules in S.138 Cheque Dishonour",
+    "author": "Adv. Rajesh V. Varma",
+    "designation": "Banking Litigation Desk",
+    "category": "Banking & Negotiable Instruments",
+    "readTime": "9 min read",
+    "date": "08 Oct 2024",
+    "summary": "Navigating the statutory presumption of notice service under Section 27 General Clauses Act and establishing territorial jurisdiction based on payee bank branch location under the 2015 NI amendment.",
+    "keyTakeaways": [
+      "Proof of dispatch to correct address raises presumption of service under Section 27 General Clauses Act.",
+      "Drawer's deliberate non-claiming or postal avoidance does not defeat statutory notice requirement.",
+      "Territorial jurisdiction is anchored to the payee's bank branch under Section 142(2)."
+    ],
+    "fullContent": "\n### Section 27 General Clauses Act & Postal Presumption\nUnder Section 138(c) of the NI Act, the cause of action arises only after the drawer fails to make payment within 15 days of the 'receipt' of the notice. Accused drawers frequently contend that notice was never served.\n\nIn K. Bhaskaran v. Sankaran Vaidhyan Balan [(1999) 7 SCC 510] and C.C. Alavi Haji v. Palapetty Muhammed [(2007) 6 SCC 555], the Supreme Court held that once notice is dispatched by registered post / speed post with correct address prepaid, Section 27 of the General Clauses Act, 1897, and Section 114 of the Evidence Act raise a mandatory presumption of service. If the accused claims non-receipt, he has 15 days from the date of summons service in court to tender the cheque amount.\n\n### Section 142(2) Territorial Jurisdiction\nThe Negotiable Instruments (Amendment) Act, 2015, definitively settled the forum shopping issue. Under Section 142(2)(a), if the cheque is delivered for collection through an account, the offence shall be inquired into and tried only by a court within whose local jurisdiction the branch of the bank where the payee or holder in due course maintains the account is situated.\n    "
+  }
+]

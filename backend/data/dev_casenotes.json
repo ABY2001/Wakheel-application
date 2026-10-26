@@ -1,5 +1,17 @@
 [
   {
+    "_id": "note_1793009041688",
+    "advocateId": "adv_1",
+    "matterId": "mat_wpc_19482",
+    "matterTitle": "General Chamber Memo",
+    "title": "Collaboration Room Notes: WP(C) 19482/2024 — High Court Rejoinder & Precedent Briefing",
+    "content": "Senior counsel instructed to highlight lack of S.16 sanction in oral mentioning.",
+    "category": "hearing_memo",
+    "isConfidential": true,
+    "tags": [],
+    "createdAt": "2026-10-26T10:04:01.689Z"
+  },
+  {
     "_id": "note_1792648193119",
     "advocateId": "default_citizen",
     "matterId": "mat_wpc_19482",

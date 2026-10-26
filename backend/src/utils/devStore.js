@@ -3528,6 +3528,76 @@ export const devStore = {
     writeFile("dev_research_briefs.json", briefs);
     return newBrief;
   },
+
+  // --- Multi-Party Case Collaboration Room (Milestone 2) ---
+  getCollabRooms(advocateId = "adv_1") {
+    return readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
+  },
+
+  getCollabRoomById(roomId) {
+    const rooms = readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
+    return rooms.find((r) => r.id === roomId) || rooms[0];
+  },
+
+  createCollabRoom(data) {
+    const rooms = readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
+    const newRoom = {
+      id: data.id || "room_" + Date.now().toString(),
+      subject: data.subject || "Chamber Case Collaboration Session",
+      matterId: data.matterId || "mat_wpc_19482",
+      matterTitle: data.matterTitle || "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
+      status: "ready",
+      scheduledFor: data.scheduledFor || "Immediate Session",
+      pinnedExhibit: data.pinnedExhibit || {
+        id: "exh_survey_p1",
+        title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
+        pages: 4,
+        currentPage: 1,
+        type: "pdf",
+        matter: data.matterTitle || "WP(C) 19482/2024",
+      },
+      participants: data.participants || [
+        {
+          id: "adv_1",
+          name: "Adv. Meera Krishnan",
+          role: "Lead Advocate (Host)",
+          enrollment: "K/1429/2016",
+          isOnline: true,
+          isMuted: false,
+          isVideoOn: true,
+        },
+      ],
+      notes: "",
+      createdAt: new Date().toISOString(),
+      ...data,
+    };
+    rooms.unshift(newRoom);
+    writeFile("dev_collab_rooms.json", rooms);
+    return newRoom;
+  },
+
+  saveCollabNotes(roomId, notes, advocateId = "adv_1") {
+    const rooms = readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
+    const room = rooms.find((r) => r.id === roomId);
+    if (room) {
+      room.notes = notes;
+      writeFile("dev_collab_rooms.json", rooms);
+
+      // Also automatically create or update a case note for the associated matter
+      if (room.matterId) {
+        devStore.addCaseNote({
+          advocateId,
+          matterId: room.matterId,
+          title: `Collaboration Room Notes: ${room.subject}`,
+          content: notes,
+          category: "hearing_memo",
+          isConfidential: true,
+        });
+      }
+      return room;
+    }
+    return null;
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -4324,5 +4394,155 @@ export const DEFAULT_RESEARCH_BRIEFS = [
         proposition: "Status quo must be maintained unless irreparable loss is demonstrated.",
       },
     ],
+  },
+];
+
+// ============================================================================
+// DEFAULT SEED DATA FOR MULTI-PARTY CASE COLLABORATION ROOM (Milestone 2)
+// ============================================================================
+export const DEFAULT_COLLAB_ROOMS = [
+  {
+    id: "room_wpc_19482",
+    subject: "WP(C) 19482/2024 — High Court Rejoinder & Precedent Briefing",
+    matterId: "mat_wpc_19482",
+    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
+    status: "in_session",
+    scheduledFor: "Today, 10:30 AM",
+    meetingLink: "https://meet.wakheel.law/collab-room-wpc-19482",
+    pinnedExhibit: {
+      id: "exh_survey_p1",
+      title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
+      pages: 4,
+      currentPage: 1,
+      type: "pdf",
+      matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
+      verifiedDate: "18 Oct 2024",
+    },
+    participants: [
+      {
+        id: "adv_1",
+        name: "Adv. Meera Krishnan",
+        role: "Lead Advocate (Host)",
+        enrollment: "K/1429/2016",
+        isOnline: true,
+        isMuted: false,
+        isVideoOn: true,
+        isScreenSharing: false,
+      },
+      {
+        id: "adv_sr_01",
+        name: "Sr. Adv. K. Ramachandran Nair",
+        role: "Senior Counsel",
+        enrollment: "K/0412/1994",
+        isOnline: true,
+        isMuted: true,
+        isVideoOn: true,
+        isScreenSharing: false,
+      },
+      {
+        id: "adv_jr_02",
+        name: "Adv. Ananya Kurian",
+        role: "Chamber Associate",
+        enrollment: "K/2180/2021",
+        isOnline: true,
+        isMuted: true,
+        isVideoOn: false,
+        isScreenSharing: false,
+      },
+      {
+        id: "default_citizen",
+        name: "Gopakumar Nambiar",
+        role: "Citizen Litigant",
+        phone: "+91 94471 28400",
+        isOnline: true,
+        isMuted: false,
+        isVideoOn: true,
+        isScreenSharing: false,
+      },
+    ],
+    availableExhibits: [
+      {
+        id: "exh_survey_p1",
+        title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
+        pages: 4,
+        type: "Survey Sketch / Site Map",
+        verifiedDate: "18 Oct 2024",
+      },
+      {
+        id: "exh_counter_p2",
+        title: "Annexure P-2: KSEB Executive Engineer Counter Affidavit",
+        pages: 8,
+        type: "Pleading Counter",
+        verifiedDate: "22 Oct 2024",
+      },
+      {
+        id: "exh_telegraph_valsamma",
+        title: "Annexure P-3: Valsamma v. KSEB (2012 (2) KLT 368) Full Bench Ratio",
+        pages: 3,
+        type: "Precedent Ratio Copy",
+        verifiedDate: "Precedent",
+      },
+    ],
+    notes:
+      "Client Gopakumar confirmed tree-felling commenced without prior District Magistrate notice under Section 16(1). Senior Counsel recommended moving interim stay application tomorrow morning before Bench 2A.",
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "room_ni_138",
+    subject: "Section 138 NI Act — Statutory Demand Notice & Trial Strategy",
+    matterId: "mat_not_701",
+    matterTitle: "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
+    status: "ready",
+    scheduledFor: "Today, 02:30 PM",
+    meetingLink: "https://meet.wakheel.law/collab-room-ni-138",
+    pinnedExhibit: {
+      id: "exh_speedpost_p2",
+      title: "Annexure P-2: Speed Post Certified Delivery Report (EK948102391IN)",
+      pages: 2,
+      currentPage: 1,
+      type: "pdf",
+      matter: "Sec 138 Notice",
+      verifiedDate: "16 Oct 2024",
+    },
+    participants: [
+      {
+        id: "adv_1",
+        name: "Adv. Meera Krishnan",
+        role: "Lead Advocate (Host)",
+        enrollment: "K/1429/2016",
+        isOnline: true,
+        isMuted: false,
+        isVideoOn: true,
+        isScreenSharing: false,
+      },
+      {
+        id: "default_citizen",
+        name: "Gopakumar Nambiar",
+        role: "Complainant Payee",
+        phone: "+91 94471 28400",
+        isOnline: false,
+        isMuted: true,
+        isVideoOn: false,
+        isScreenSharing: false,
+      },
+    ],
+    availableExhibits: [
+      {
+        id: "exh_speedpost_p2",
+        title: "Annexure P-2: Speed Post Certified Delivery Report (EK948102391IN)",
+        pages: 2,
+        type: "Postal Delivery Proof",
+        verifiedDate: "16 Oct 2024",
+      },
+      {
+        id: "exh_bankmemo_p1",
+        title: "Annexure P-1: Original Bank Dishonour Debit Advice",
+        pages: 1,
+        type: "Bank Memo",
+        verifiedDate: "10 Oct 2024",
+      },
+    ],
+    notes: "15-day statutory cure window expires in 6 days. Complaint draft ready for JFCM Ernakulam.",
+    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
   },
 ];

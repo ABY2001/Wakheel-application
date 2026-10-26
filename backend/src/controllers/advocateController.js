@@ -2098,3 +2098,77 @@ export const createResearchBrief = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 18. MULTI-PARTY CASE COLLABORATION ROOM (Milestone 2)
+// ============================================================================
+export const getCollabRooms = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const rooms = devStore.getCollabRooms(advocateId);
+    res.json({
+      success: true,
+      count: rooms.length,
+      rooms,
+    });
+  } catch (error) {
+    console.error("getCollabRooms error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCollabRoomById = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const room = devStore.getCollabRoomById(roomId);
+    if (!room) {
+      return res.status(404).json({ success: false, message: "Collaboration room not found" });
+    }
+    res.json({
+      success: true,
+      room,
+    });
+  } catch (error) {
+    console.error("getCollabRoomById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCollabRoom = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const room = devStore.createCollabRoom({
+      ...req.body,
+      advocateId,
+      hostName: req.user?.fullName || "Adv. Meera Krishnan",
+    });
+    res.status(201).json({
+      success: true,
+      message: "Collaboration room created successfully.",
+      room,
+    });
+  } catch (error) {
+    console.error("createCollabRoom error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const saveCollabNotes = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { notes } = req.body;
+    const advocateId = getAdvocateId(req);
+    const room = devStore.saveCollabNotes(roomId, notes, advocateId);
+    if (!room) {
+      return res.status(404).json({ success: false, message: "Room not found" });
+    }
+    res.json({
+      success: true,
+      message: "Chamber session notes saved and synced to Matter Case Notes.",
+      room,
+    });
+  } catch (error) {
+    console.error("saveCollabNotes error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

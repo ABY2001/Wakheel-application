@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { FirmProfile } from "@/components/firm/firmTypes";
+import MultiPartyCollaborationRoom from "@/components/advocate/MultiPartyCollaborationRoom";
 
 interface CollabViewProps {
   activeModule?: string;
@@ -34,6 +35,7 @@ export function CollabView({
 }: CollabViewProps) {
   const [currentTab, setCurrentTab] = useState<string>(activeModule);
   const [collaskQuery, setCollaskQuery] = useState("");
+  const [isCollabRoomOpen, setIsCollabRoomOpen] = useState(false);
 
   const tabs = [
     { id: "my-network", label: "My Network", icon: Share2 },
@@ -149,6 +151,49 @@ export function CollabView({
       {/* VIEW: My Hub */}
       {currentTab === "my-hub" && (
         <div className="space-y-6">
+          {/* Milestone 2: Multi-Party Collaboration Room Spotlight */}
+          <div className="p-6 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-4 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
+                    ACTIVE BRIEFING ROOM • SEC. 126 PRIVILEGED
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  WP(C) 19482/2024 — High Court Rejoinder &amp; Precedent Briefing
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Lead Advocate, Senior Counsel K. Ramachandran Nair, Associate Ananya Kurian, and Litigant Gopakumar Nambiar
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsCollabRoomOpen(true)}
+                className="px-5 py-2.5 rounded-2xl bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 cursor-pointer shadow-xs shrink-0 flex items-center gap-2 transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                <span>Launch Multi-Party Briefing Room</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-zinc-400">
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                <span className="text-[10px] font-mono text-zinc-500 block">PINNED EXHIBIT</span>
+                <span className="font-bold text-white">Annexure P-1 Survey Sketch</span>
+              </div>
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                <span className="text-[10px] font-mono text-zinc-500 block">REAL-TIME TOOLS</span>
+                <span className="font-bold text-white">Laser Pointer &amp; Synchronous Annotations</span>
+              </div>
+              <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                <span className="text-[10px] font-mono text-zinc-500 block">ENCRYPTION</span>
+                <span className="font-bold text-white">WebSocket Audio/Video Gateway</span>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Chamber Status</span>
@@ -322,6 +367,19 @@ export function CollabView({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Milestone 2: Multi-Party Case Collaboration Room Modal */}
+      {isCollabRoomOpen && (
+        <MultiPartyCollaborationRoom
+          roomId="room_wpc_19482"
+          matterId="mat_wpc_19482"
+          matterTitle="WP(C) 19482/2024 — Gopakumar v. KSEB & Anr."
+          subject="WP(C) 19482/2024 — High Court Rejoinder & Precedent Briefing"
+          advocateName="Adv. Meera Krishnan"
+          barCouncilNumber="K/1429/2016"
+          onClose={() => setIsCollabRoomOpen(false)}
+        />
       )}
     </div>
   );

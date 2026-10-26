@@ -2936,6 +2936,7 @@ export function AdvocateWorkspaceView() {
             <AdvocateConsultationsView
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
             />
           )}
 

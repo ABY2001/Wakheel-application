@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { advocateApi } from "@/lib/api";
+import MultiPartyCollaborationRoom from "@/components/advocate/MultiPartyCollaborationRoom";
 import {
   PhoneCall,
   Video,
@@ -65,11 +66,13 @@ export interface ConsultationItem {
 interface AdvocateConsultationsViewProps {
   token?: string;
   advocateName?: string;
+  barCouncilNumber?: string;
 }
 
 export const AdvocateConsultationsView: React.FC<AdvocateConsultationsViewProps> = ({
   token,
   advocateName = "Adv. Meera Krishnan",
+  barCouncilNumber = "K/1429/2016",
 }) => {
   const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -590,178 +593,25 @@ export const AdvocateConsultationsView: React.FC<AdvocateConsultationsViewProps>
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 1: Virtual Video Chamber Host Room (WebRTC Simulator)              */}
+      {/* MODAL 1: Real-time Multi-Party Case Collaboration Room (Milestone 2)      */}
       {/* ========================================================================= */}
       {activeVideoRoom && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-          <div className="w-full max-w-5xl h-[88vh] bg-zinc-950 text-white rounded-3xl border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
-            {/* Top Chamber Bar */}
-            <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                    LIVE CHAMBER CONSULTATION
-                  </span>
-                </div>
-                <span className="text-zinc-600">|</span>
-                <span className="text-xs text-zinc-300 font-semibold truncate max-w-xs sm:max-w-md">
-                  {activeVideoRoom.subject}
-                </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white text-black">
-                  HOST COUNSEL
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 rounded-full font-mono text-xs font-bold bg-zinc-800 text-white border border-zinc-700">
-                  {formatTimer(sessionSeconds)}
-                </span>
-                <button
-                  onClick={() => setActiveVideoRoom(null)}
-                  className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Video Canvas & Side In-Call Notes Area */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden">
-              {/* Video Panels (2 Columns on Large) */}
-              <div className="lg:col-span-2 p-4 bg-zinc-950 flex flex-col justify-between space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-                  {/* Host Video Stream (Advocate) */}
-                  <div className="relative rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden min-h-[220px]">
-                    {isVideoMuted ? (
-                      <div className="flex flex-col items-center gap-2 text-zinc-500">
-                        <VideoOff className="w-8 h-8" />
-                        <span className="text-xs font-mono">Advocate Video Muted</span>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex flex-col items-center justify-center relative">
-                        <Scale className="w-16 h-16 text-zinc-700" />
-                        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-md text-[11px] font-bold text-white border border-zinc-700">
-                          {advocateName} (Host • Chamber)
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Remote Client Stream */}
-                  <div className="relative rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden min-h-[220px]">
-                    <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-950 flex flex-col items-center justify-center relative">
-                      <div className="w-16 h-16 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-lg font-bold text-white mb-2">
-                        {activeVideoRoom.citizenName?.charAt(0) || "C"}
-                      </div>
-                      <span className="text-xs text-zinc-400 font-medium">
-                        {activeVideoRoom.citizenName || "Citizen Client"}
-                      </span>
-                      <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-md text-[11px] font-bold text-white border border-zinc-700">
-                        Citizen Client • WebRTC Video Live
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Video Controls Bar */}
-                <div className="flex items-center justify-center gap-3 p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800">
-                  <button
-                    onClick={() => setIsMicMuted(!isMicMuted)}
-                    className={`p-3 rounded-full cursor-pointer transition-all ${
-                      isMicMuted ? "bg-rose-500 text-white" : "bg-zinc-800 hover:bg-zinc-700 text-white"
-                    }`}
-                    title={isMicMuted ? "Unmute Microphone" : "Mute Microphone"}
-                  >
-                    {isMicMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </button>
-
-                  <button
-                    onClick={() => setIsVideoMuted(!isVideoMuted)}
-                    className={`p-3 rounded-full cursor-pointer transition-all ${
-                      isVideoMuted ? "bg-rose-500 text-white" : "bg-zinc-800 hover:bg-zinc-700 text-white"
-                    }`}
-                    title={isVideoMuted ? "Turn On Camera" : "Turn Off Camera"}
-                  >
-                    {isVideoMuted ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (navigator.clipboard) {
-                        navigator.clipboard.writeText(activeVideoRoom.meetingLink || window.location.href);
-                        setFeedback({ type: "success", text: "Secure meeting room link copied to clipboard!" });
-                      }
-                    }}
-                    className="p-3 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white cursor-pointer"
-                    title="Copy Meeting Link"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      const item = activeVideoRoom;
-                      setActiveVideoRoom(null);
-                      setAdviceModalItem(item);
-                      setAdviceContent(inCallQuickNotes);
-                    }}
-                    className="px-5 py-2.5 rounded-full bg-white text-black font-bold text-xs uppercase tracking-wider hover:bg-zinc-200 cursor-pointer flex items-center gap-1.5"
-                  >
-                    <PenTool className="w-3.5 h-3.5" />
-                    <span>Conclude &amp; Record Advice</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveVideoRoom(null)}
-                    className="px-4 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs cursor-pointer"
-                  >
-                    Leave Room
-                  </button>
-                </div>
-              </div>
-
-              {/* Side In-Call Notepad & Client Dossier (1 Column on Large) */}
-              <div className="p-4 bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800 flex flex-col justify-between space-y-4 overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="space-y-1 pb-3 border-b border-zinc-800">
-                    <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 block">CLIENT BRIEF</span>
-                    <h4 className="text-xs font-bold text-white">{activeVideoRoom.subject}</h4>
-                    <p className="text-[11px] text-zinc-400 mt-1">
-                      {activeVideoRoom.clientNotes || "No preliminary briefing notes submitted by client."}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 block">
-                      IN-CALL CHAMBER NOTEPAD:
-                    </span>
-                    <textarea
-                      rows={8}
-                      value={inCallQuickNotes}
-                      onChange={(e) => setInCallQuickNotes(e.target.value)}
-                      placeholder="Jot down client disclosures, disputed facts, statutory provisions to contest, or interim relief notes during the call..."
-                      className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none resize-none leading-relaxed font-mono"
-                    />
-                    <span className="text-[10px] text-zinc-500 block">
-                      Notes will carry over to the Record Written Advice memo upon concluding session.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-zinc-800 text-[11px] text-zinc-400 space-y-1">
-                  <div className="flex items-center gap-1.5 text-white font-bold">
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>256-bit End-to-End Encrypted Chamber</span>
-                  </div>
-                  <p className="text-[10px] text-zinc-500">
-                    Complies with Advocate-Client Privilege (Sec. 126, Indian Evidence Act / BSA 2023).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <MultiPartyCollaborationRoom
+          roomId={activeVideoRoom._id || activeVideoRoom.id || "room_wpc_19482"}
+          matterId={activeVideoRoom.matterId || "mat_wpc_19482"}
+          matterTitle={activeVideoRoom.subject}
+          subject={activeVideoRoom.subject}
+          advocateName={advocateName}
+          barCouncilNumber={barCouncilNumber}
+          token={token}
+          onClose={() => setActiveVideoRoom(null)}
+          onConcludeAndRecordAdvice={(notes) => {
+            const item = activeVideoRoom;
+            setActiveVideoRoom(null);
+            setAdviceModalItem(item);
+            setAdviceContent(notes);
+          }}
+        />
       )}
 
       {/* ========================================================================= */}

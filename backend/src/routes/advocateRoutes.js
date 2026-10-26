@@ -68,6 +68,10 @@ import {
   getKbArticles,
   getResearchBriefs,
   createResearchBrief,
+  getCollabRooms,
+  getCollabRoomById,
+  createCollabRoom,
+  saveCollabNotes,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -173,5 +177,11 @@ router.get("/kb/playbooks", protect, getPlaybooks);
 router.get("/kb/articles", protect, getKbArticles);
 router.get("/kb/briefs", protect, getResearchBriefs);
 router.post("/kb/briefs", protect, createResearchBrief);
+
+// 18. Multi-Party Case Collaboration Room (Milestone 2)
+router.get("/collab/rooms", protect, getCollabRooms);
+router.get("/collab/rooms/:roomId", protect, getCollabRoomById);
+router.post("/collab/rooms", protect, createCollabRoom);
+router.post("/collab/rooms/:roomId/notes", protect, saveCollabNotes);
 
 export default router;

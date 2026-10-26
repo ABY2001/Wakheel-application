@@ -1967,6 +1967,45 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 18. Multi-Party Case Collaboration Room (Milestone 2)
+  async getCollabRooms(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/collab/rooms`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getCollabRoomById(roomId: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/collab/rooms/${encodeURIComponent(roomId)}`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createCollabRoom(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/collab/rooms`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async saveCollabNotes(roomId: string, notes: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/collab/rooms/${encodeURIComponent(roomId)}/notes`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ notes }),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

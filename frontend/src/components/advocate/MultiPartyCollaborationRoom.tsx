@@ -1341,3 +1341,5 @@ export default function MultiPartyCollaborationRoom({
     </div>
   );
 }
+
+export { MultiPartyCollaborationRoom };

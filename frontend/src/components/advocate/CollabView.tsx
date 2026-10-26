@@ -18,7 +18,12 @@ import {
 } from "lucide-react";
 
 import { FirmProfile } from "@/components/firm/firmTypes";
-import MultiPartyCollaborationRoom from "@/components/advocate/MultiPartyCollaborationRoom";
+import dynamic from "next/dynamic";
+
+const MultiPartyCollaborationRoom = dynamic(
+  () => import("@/components/advocate/MultiPartyCollaborationRoom"),
+  { ssr: false }
+);
 
 interface CollabViewProps {
   activeModule?: string;

@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { advocateApi } from "@/lib/api";
-import MultiPartyCollaborationRoom from "@/components/advocate/MultiPartyCollaborationRoom";
+import dynamic from "next/dynamic";
+
+const MultiPartyCollaborationRoom = dynamic(
+  () => import("@/components/advocate/MultiPartyCollaborationRoom"),
+  { ssr: false }
+);
 import {
   PhoneCall,
   Video,

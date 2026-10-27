@@ -83,6 +83,7 @@ import { NewsAndArticlesView } from "@/components/client/NewsAndArticlesView";
 import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
 import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
 import AiAdvocateView from "@/components/client/AiAdvocateView";
+import { MyAdvocatesView } from "@/components/client/MyAdvocatesView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -2258,19 +2259,29 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
+          {/* VIEW: My Advocates (2-Section UI with Assigned Matter Details)  */}
+          {/* ============================================================== */}
+          {activeTab === "my-advocates" && (
+            <MyAdvocatesView
+              onOpenConsultation={handleOpenConsultation}
+              onOpenBooking={handleOpenBooking}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              initialSelectedMatter={selectedMatter}
+            />
+          )}
+
+          {/* ============================================================== */}
           {/* VIEW: Discover Advocates / Lawyer Services                     */}
           {/* ============================================================== */}
-          {(activeTab === "discover-advocates" || activeTab === "discover-advocate" || activeTab === "my-advocates") && (
+          {(activeTab === "discover-advocates" || activeTab === "discover-advocate") && (
             <div className="max-w-6xl mx-auto space-y-6">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
                 <div>
                   <h3 className="text-lg font-bold text-black dark:text-white">
-                    {activeTab === "my-advocates" ? "My Advocates & Assigned Counsel" : "Discover Verified Advocates"}
+                    Discover Verified Advocates
                   </h3>
                   <p className="text-xs text-zinc-500">
-                    {activeTab === "my-advocates"
-                      ? "Verified Bar Council of Kerala and High Court practitioners representing you with active matter assignments."
-                      : "Verified Bar Council of Kerala and High Court practitioner profiles with real-time consultation slots."}
+                    Verified Bar Council of Kerala and High Court practitioner profiles with real-time consultation slots.
                   </p>
                 </div>
               </div>

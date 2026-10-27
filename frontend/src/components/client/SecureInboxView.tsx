@@ -46,7 +46,7 @@ export interface MailAttachment {
   name: string;
   size: string;
   type: string;
-  color: "sky" | "amber" | "rose" | "emerald";
+  color: "sky" | "amber" | "zinc" | "emerald";
 }
 
 export interface LegalEmailItem {
@@ -65,7 +65,7 @@ export interface LegalEmailItem {
   folder: MailFolder;
   category: MailCategory;
   categoryLabel: string;
-  categoryColor: "rose" | "amber" | "sky" | "emerald" | "purple";
+  categoryColor: "zinc" | "amber" | "sky" | "emerald" | "purple";
   isRead: boolean;
   isStarred: boolean;
   attachments?: MailAttachment[];
@@ -120,7 +120,7 @@ const INITIAL_LEGAL_EMAILS: LegalEmailItem[] = [
     folder: "inbox",
     category: "urgent",
     categoryLabel: "High Court Stay Order",
-    categoryColor: "rose",
+    categoryColor: "zinc",
     isRead: false,
     isStarred: true,
     attachments: [
@@ -260,7 +260,7 @@ const INITIAL_LEGAL_EMAILS: LegalEmailItem[] = [
     folder: "inbox",
     category: "urgent",
     categoryLabel: "Statutory Notice",
-    categoryColor: "rose",
+    categoryColor: "zinc",
     isRead: true,
     isStarred: false,
     attachments: [
@@ -641,7 +641,7 @@ export function SecureInboxView({
             >
               <Mail className="w-4 h-4" />
               <span>Legal Mails &amp; Notices</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white font-mono">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black text-white dark:bg-white dark:text-black font-mono">
                 {emails.filter((e) => !e.isRead).length}
               </span>
             </button>
@@ -696,7 +696,7 @@ export function SecureInboxView({
               <button
                 type="button"
                 onClick={() => setComposeModalOpen(true)}
-                className="w-full py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black font-bold text-xs shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>New Message</span>
@@ -705,7 +705,7 @@ export function SecureInboxView({
               {/* Folders List */}
               <div className="space-y-1 text-xs">
                 {[
-                  { id: "inbox" as MailFolder, label: "Inbox", icon: InboxIcon, badge: 8, badgeColor: "bg-rose-500 text-white" },
+                  { id: "inbox" as MailFolder, label: "Inbox", icon: InboxIcon, badge: 8, badgeColor: "bg-black text-white dark:bg-white dark:text-black" },
                   { id: "starred" as MailFolder, label: "Starred", icon: Star },
                   { id: "drafts" as MailFolder, label: "Drafts", icon: FileEdit, badge: 4, badgeColor: "bg-amber-500 text-white" },
                   { id: "sent" as MailFolder, label: "Sent", icon: Send },
@@ -750,7 +750,7 @@ export function SecureInboxView({
                     { id: "work" as MailCategory, label: "High Court", dotColor: "bg-sky-500 ring-2 ring-sky-300 dark:ring-sky-900" },
                     { id: "property" as MailCategory, label: "Civil & Land", dotColor: "bg-amber-500 ring-2 ring-amber-300 dark:ring-amber-900" },
                     { id: "commercial" as MailCategory, label: "Commercial", dotColor: "bg-cyan-500 ring-2 ring-cyan-300 dark:ring-cyan-900" },
-                    { id: "urgent" as MailCategory, label: "Orders / Notices", dotColor: "bg-rose-500 ring-2 ring-rose-300 dark:ring-rose-900" },
+                    { id: "urgent" as MailCategory, label: "Orders / Notices", dotColor: "bg-black dark:bg-white ring-2 ring-zinc-300 dark:ring-zinc-700" },
                   ].map((cat) => (
                     <button
                       key={cat.id}
@@ -802,8 +802,8 @@ export function SecureInboxView({
 
                 // Color accent strip matching Image 2
                 const stripColor =
-                  mail.categoryColor === "rose"
-                    ? "bg-rose-500"
+                  mail.categoryColor === "zinc"
+                    ? "bg-black dark:bg-white"
                     : mail.categoryColor === "amber"
                     ? "bg-amber-500"
                     : mail.categoryColor === "sky"
@@ -1350,7 +1350,7 @@ export function SecureInboxView({
                   title={isRecording ? "Stop voice memo" : "Record voice memo to counsel"}
                   className={`p-2 rounded-xl border transition-colors cursor-pointer shrink-0 ${
                     isRecording
-                      ? "bg-rose-500 text-white border-rose-500 animate-pulse"
+                      ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white animate-pulse"
                       : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   }`}
                 >
@@ -1358,7 +1358,7 @@ export function SecureInboxView({
                 </button>
 
                 {isRecording && (
-                  <span className="text-[11px] font-mono text-rose-500 font-bold animate-pulse">
+                  <span className="text-[11px] font-mono text-black dark:text-white font-bold animate-pulse">
                     Recording audio memo ({recordingSeconds}s)...
                   </span>
                 )}
@@ -1399,7 +1399,7 @@ export function SecureInboxView({
           <div className="w-full max-w-2xl bg-white dark:bg-black rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <FileEdit className="w-4 h-4 text-rose-500" />
+                <FileEdit className="w-4 h-4 text-black dark:text-white" />
                 <h3 className="font-black text-base text-black dark:text-white">
                   Compose Legal Correspondence
                 </h3>
@@ -1467,7 +1467,7 @@ export function SecureInboxView({
                   type="button"
                   onClick={handleSendCompose}
                   disabled={!composeSubject.trim() || !composeBody.trim()}
-                  className="px-5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 disabled:opacity-40 font-bold text-xs text-white cursor-pointer transition-all shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-black hover:bg-zinc-800 disabled:opacity-40 font-bold text-xs text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black cursor-pointer transition-all shadow-xs"
                 >
                   Transmit Mail
                 </button>

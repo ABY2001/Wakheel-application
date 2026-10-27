@@ -322,9 +322,9 @@ export function AdvocateSearchAndMatch({
 
       {/* Advocate Cards List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredAdvocates.map((adv) => (
+        {filteredAdvocates.map((adv, advIdx) => (
           <div
-            key={adv.id}
+            key={`${adv.id || "adv"}_${advIdx}`}
             className={`rounded-2xl border ${
               adv.isCurrentUser
                 ? "border-black dark:border-white ring-1 ring-black dark:ring-white"

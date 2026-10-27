@@ -1270,8 +1270,8 @@ export function ClientPortalView() {
                     }}
                     className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white max-w-[140px] sm:max-w-[210px] md:max-w-none truncate"
                   >
-                    {availableMatters.map((m) => (
-                      <option key={m.id} value={m.title}>
+                    {availableMatters.map((m, mIdx) => (
+                      <option key={`${m.id || m.title}_${mIdx}`} value={m.title}>
                         {m.shortTitle || m.title}
                       </option>
                     ))}

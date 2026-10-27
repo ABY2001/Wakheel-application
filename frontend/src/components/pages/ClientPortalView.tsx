@@ -990,20 +990,22 @@ export function ClientPortalView() {
         </div>
 
         {/* Scrollable Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-1 text-xs font-medium no-scrollbar">
+        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 text-xs font-medium no-scrollbar">
           
-          {/* 1. Dashboard */}
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "dashboard"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4 shrink-0" />
-            <span>Dashboard</span>
-          </button>
+          {/* Main Top Actions */}
+          <div className="space-y-0.5">
+            {/* 1. Dashboard */}
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "dashboard"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 shrink-0" />
+              <span>Dashboard</span>
+            </button>
 
           {/* 2. Case tracking */}
           <button
@@ -1214,18 +1216,196 @@ export function ClientPortalView() {
             <span>News and articles</span>
           </button>
 
-          {/* 14. Inbox */}
-          <button
-            onClick={() => setActiveTab("inbox")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "inbox" || activeTab === "messages"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Mail className="w-4 h-4 shrink-0" />
-            <span>Inbox</span>
-          </button>
+            {/* 14. Inbox */}
+            <button
+              onClick={() => setActiveTab("inbox")}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "inbox" || activeTab === "messages"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <Mail className="w-4 h-4 shrink-0" />
+              <span>Inbox</span>
+            </button>
+          </div>
+
+          {/* Section: PRODUCTIVITY */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              PRODUCTIVITY
+            </span>
+            {[
+              { id: "notes", label: "Notes", icon: StickyNote },
+              { id: "calendar", label: "Calendar", icon: Calendar },
+              { id: "taskmite", label: "Task Mite", icon: CheckCircle2 },
+              { id: "time-sheet", label: "Time sheet", icon: Clock },
+              { id: "case-tracker-prod", label: "Case Tracker", icon: Activity },
+              { id: "ask-ai", label: "Ask AI", icon: Bot },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: MY WAKHEEL */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              MY WAKHEEL
+            </span>
+            {[
+              { id: "my-advocates", label: "My advocates", icon: Users },
+              { id: "appointments", label: "Appointments", icon: Calendar },
+              { id: "messages", label: "Messages", icon: MessageSquare },
+              { id: "task-and-timeline", label: "Tasks & Timeline", icon: History },
+              { id: "payments-and-invoice", label: "Payments and Invoice", icon: Receipt },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                activeTab === item.id ||
+                (item.id === "task-and-timeline" &&
+                  (activeTab === "tasks-and-timeline" || activeTab === "timeline"));
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: BUSINESS + */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              BUSINESS +
+            </span>
+            {[
+              { id: "business-registration", label: "Business registration services", icon: Building2 },
+              { id: "tax-compliance", label: "Tax and Compliances Filing", icon: Calculator },
+              { id: "trademark-ip", label: "Trademark and IP registration", icon: Shield },
+              { id: "corporate-lawyer", label: "Corporate Lawyer services", icon: Briefcase },
+              { id: "company-secretary", label: "Company Secretary services", icon: ClipboardCheck },
+              { id: "auditor-ca", label: "Auditor and CA services", icon: Landmark },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: MY NETWORKS */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              MY NETWORKS
+            </span>
+            {[
+              { id: "my-hub", label: "My Hub", icon: Compass },
+              { id: "my-teams", label: "My teams", icon: Users },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: REPORTS */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              REPORTS
+            </span>
+            {[
+              { id: "ai-analytics", label: "AI Analytics", icon: BarChart3 },
+              { id: "ai-reports", label: "AI Reports", icon: FileSpreadsheet },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: SETTINGS & PRIVACY */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={() => setActiveTab("privacy-data")}
+              className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                activeTab === "privacy-data"
+                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+              }`}
+            >
+              <FolderLock className="w-4 h-4 shrink-0" />
+              <span>Privacy &amp; Data</span>
+            </button>
+
+            <button
+              onClick={() => setSettingsModalOpen(true)}
+              className="w-full flex items-center gap-3 p-2 rounded-xl text-left text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer"
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>Settings</span>
+            </button>
+          </div>
 
         </div>
 

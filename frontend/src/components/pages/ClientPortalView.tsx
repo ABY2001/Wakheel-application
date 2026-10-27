@@ -2312,6 +2312,7 @@ export function ClientPortalView() {
           {(activeTab === "inbox" || activeTab === "messages") && (
             <SecureInboxView
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              initialMode={activeTab === "messages" ? "messages" : "mails"}
               onOpenConsultationModal={() => {
                 setSelectedAdvocate(mockAdvocates[0]);
                 setBookingDefaultTab("booking");

@@ -1,0 +1,67 @@
+{
+  "adv_1": {
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "enrollmentNumber": "K/001429/2012",
+    "barCouncil": "Bar Council of Kerala (Ernakulam)",
+    "standingYears": 14,
+    "calibrationScore": 99.4,
+    "pleadingsTrainedCount": 1420,
+    "activeSyncStatus": "Live Synchronized (Vault, Precedents & Causelists)",
+    "draftingStyle": "constitutional_assertive",
+    "draftingStyleLabel": "Assertive Constitutional & Precedent-First",
+    "primaryJurisdiction": "high_court_kerala",
+    "primaryJurisdictionLabel": "High Court of Kerala (Division & Single Benches)",
+    "preferredCitations": [
+      "KLT (Kerala Law Times)",
+      "SCC (Supreme Court Cases)",
+      "ILR (Kerala)"
+    ],
+    "benchTemperamentPreference": "Rigorous statutory textualism with strong reliance on Whirlpool natural justice exceptions",
+    "autonomousIntakeEnabled": true,
+    "minimumConsultationFee": 3500,
+    "conflictCheckStrictness": "high",
+    "emergencyBailAutoEscalate": true,
+    "twinPersonaSummary": "Specialized in High Court Article 226 Writs, Telegraph Act Section 16 land objections, BNSS 482 anticipatory bail, and commercial contract litigation.",
+    "recentSimulations": [
+      {
+        "id": "sim_1793075484336",
+        "query": "KSEB is drawing 66kV transmission line through client property without DM order under Section 16(1). What is our urgent remedy?",
+        "legalOpinion": "Under Section 10(d) of the Indian Telegraph Act, 1885, the transmission licensee acquires only a user right and is statutorily obligated to cause minimal damage. The moment the property owner offers resistance or files written objections, Section 16(1) mandates that the licensee must approach the District Magistrate for prior permission. Unilateral entry without a District Magistrate order is ultra vires and constitutes actionable trespass amenable to extraordinary writ jurisdiction under Article 226.",
+        "proceduralRoadmap": [
+          "Issue immediate written objection notice under Section 16(1) to Assistant Executive Engineer, KSEB.",
+          "Serve caveat petition or representation before the District Magistrate / District Collector, Ernakulam.",
+          "File Writ Petition (Civil) under Article 226 before High Court of Kerala seeking mandamus directing referral under Section 16(1) and ad-interim injunction restraining line drawing."
+        ],
+        "draftClause": "It is most respectfully submitted that Respondent No. 2 acted wholly without jurisdiction in entering upon the Petitioner's residential plot without petitioning the District Magistrate under Section 16(1) of the Indian Telegraph Act, 1885, contrary to the binding Full Bench dictum in Valsamma v. KSEB 2012 (2) KLT 368.",
+        "bindingCitations": [
+          "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)",
+          "Power Grid Corporation of India v. Century Textiles & Industries Ltd. (2017) 5 SCC 143",
+          "Executive Engineer, KSEB v. Doddakka (2015) 15 SCC 738"
+        ],
+        "confidenceScore": 98.6,
+        "draftingStyle": "constitutional_assertive",
+        "primaryJurisdiction": "high_court_kerala",
+        "timestamp": "10:01 AM"
+      },
+      {
+        "id": "sim_1",
+        "query": "KSEB entry without DM referral under Section 16(1)",
+        "legalOpinion": "Under Section 10(d) and 16(1) of the Indian Telegraph Act, 1885, entry without District Magistrate sanction once resistance is offered is ex-facie void as settled in Valsamma v. KSEB 2012 (2) KLT 368.",
+        "proceduralRoadmap": [
+          "Issue statutory objection notice to AEE KSEB",
+          "Lodge caveat before District Magistrate, Ernakulam",
+          "Move High Court for ad-interim stay under Article 226"
+        ],
+        "draftClause": "The unilateral entry by Respondent No. 2 without referral to the District Magistrate is non-est in the eyes of law.",
+        "bindingCitations": [
+          "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)"
+        ],
+        "confidenceScore": 99.1,
+        "draftingStyle": "constitutional_assertive",
+        "primaryJurisdiction": "high_court_kerala",
+        "timestamp": "Yesterday, 14:20 IST"
+      }
+    ]
+  }
+}

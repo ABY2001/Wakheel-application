@@ -2038,6 +2038,88 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 20. Personal AI Legal Twin & Autonomous Associate Workforce (Milestone 4)
+  async getAdvocateTwin(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/twin`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async updateAdvocateTwin(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/twin`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async simulateTwinReasoning(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/twin/simulate`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getTrainingModules(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/curriculum`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async evaluateAssociateSubmission(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/training/evaluate`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getRecruitmentCandidates(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/candidates`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async addRecruitmentCandidate(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/candidates`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateCandidateStatus(id: string, status: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/workforce/candidates/${encodeURIComponent(id)}/status`, {
+      method: "PATCH",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

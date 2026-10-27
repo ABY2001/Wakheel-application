@@ -75,6 +75,14 @@ import {
   simulateBenchTurn,
   getCourtroomSessions,
   saveCourtroomSession,
+  getAdvocateTwin,
+  updateAdvocateTwin,
+  simulateTwinReasoning,
+  getTrainingModules,
+  evaluateAssociateSubmission,
+  getRecruitmentCandidates,
+  addRecruitmentCandidate,
+  updateCandidateStatus,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -191,5 +199,15 @@ router.post("/collab/rooms/:roomId/notes", protect, saveCollabNotes);
 router.post("/courtroom/simulate", protect, simulateBenchTurn);
 router.get("/courtroom/sessions", protect, getCourtroomSessions);
 router.post("/courtroom/sessions", protect, saveCourtroomSession);
+
+// 20. Personal AI Legal Twin & Autonomous Associate Workforce (Milestone 4)
+router.get("/workforce/twin", protect, getAdvocateTwin);
+router.post("/workforce/twin", protect, updateAdvocateTwin);
+router.post("/workforce/twin/simulate", protect, simulateTwinReasoning);
+router.get("/workforce/curriculum", protect, getTrainingModules);
+router.post("/workforce/training/evaluate", protect, evaluateAssociateSubmission);
+router.get("/workforce/candidates", protect, getRecruitmentCandidates);
+router.post("/workforce/candidates", protect, addRecruitmentCandidate);
+router.patch("/workforce/candidates/:id/status", protect, updateCandidateStatus);
 
 export default router;

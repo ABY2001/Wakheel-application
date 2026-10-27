@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cand_1",
+    "name": "Adv. Rahul Deshmukh",
+    "college": "NLSIU Bengaluru (Batch of 2024)",
+    "role": "Appellate & Writ Associate",
+    "enrollmentNumber": "K/003412/2024",
+    "status": "Interview Round 2",
+    "score": "96%",
+    "experienceYears": "2 Years Appellate",
+    "appliedDate": "20 Oct 2024",
+    "specialization": "Constitutional Law, Writ Petitions & Judicial Review",
+    "barVerified": true,
+    "cvHighlights": "Former Law Clerk at High Court of Kerala; drafted 40+ writ petitions."
+  },
+  {
+    "id": "cand_2",
+    "name": "Adv. Ananya Iyer",
+    "college": "NALSAR Hyderabad (Batch of 2023)",
+    "role": "Commercial Law Clerk",
+    "enrollmentNumber": "K/002189/2023",
+    "status": "Offer Extended",
+    "score": "98%",
+    "experienceYears": "3 Years Corporate/Dispute",
+    "appliedDate": "18 Oct 2024",
+    "specialization": "Arbitration Act, Commercial Division Suits & NI Act 138",
+    "barVerified": true,
+    "cvHighlights": "Handled Section 11 & Section 34 Arbitration petitions before Commercial Court."
+  },
+  {
+    "id": "cand_3",
+    "name": "Adv. Vikramaditya Roy",
+    "college": "Government Law College, Ernakulam (2024)",
+    "role": "Criminal Trial Junior",
+    "enrollmentNumber": "K/004521/2024",
+    "status": "Screening Review",
+    "score": "91%",
+    "experienceYears": "1 Year Criminal Chamber",
+    "appliedDate": "24 Oct 2024",
+    "specialization": "BNSS 2023 Bail Practice, Sessions Trials & Cross-Examination",
+    "barVerified": true,
+    "cvHighlights": "First Class with Distinction in Evidence Law & Criminal Procedure."
+  }
+]

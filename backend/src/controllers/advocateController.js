@@ -2225,3 +2225,117 @@ export const saveCourtroomSession = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 20. PERSONAL AI LEGAL TWIN & AUTONOMOUS ASSOCIATE WORKFORCE (Milestone 4)
+// ============================================================================
+export const getAdvocateTwin = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const twin = devStore.getAdvocateTwin(advocateId);
+    res.json({
+      success: true,
+      twin,
+    });
+  } catch (error) {
+    console.error("getAdvocateTwin error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateAdvocateTwin = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const twin = devStore.updateAdvocateTwin(advocateId, req.body);
+    res.json({
+      success: true,
+      message: "AI Twin parameters and calibration saved successfully.",
+      twin,
+    });
+  } catch (error) {
+    console.error("updateAdvocateTwin error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const simulateTwinReasoning = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const result = devStore.simulateTwinReasoning({
+      ...req.body,
+      advocateId,
+    });
+    res.json(result);
+  } catch (error) {
+    console.error("simulateTwinReasoning error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getTrainingModules = async (req, res) => {
+  try {
+    const modules = devStore.getTrainingModules();
+    res.json({
+      success: true,
+      count: modules.length,
+      modules,
+    });
+  } catch (error) {
+    console.error("getTrainingModules error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const evaluateAssociateSubmission = async (req, res) => {
+  try {
+    const result = devStore.evaluateAssociateSubmission(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("evaluateAssociateSubmission error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getRecruitmentCandidates = async (req, res) => {
+  try {
+    const candidates = devStore.getRecruitmentCandidates();
+    res.json({
+      success: true,
+      count: candidates.length,
+      candidates,
+    });
+  } catch (error) {
+    console.error("getRecruitmentCandidates error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addRecruitmentCandidate = async (req, res) => {
+  try {
+    const candidate = devStore.addRecruitmentCandidate(req.body);
+    res.status(201).json({
+      success: true,
+      message: "Candidate application registered successfully.",
+      candidate,
+    });
+  } catch (error) {
+    console.error("addRecruitmentCandidate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCandidateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const candidate = devStore.updateCandidateStatus(id, status);
+    res.json({
+      success: true,
+      message: `Candidate status updated to ${status}.`,
+      candidate,
+    });
+  } catch (error) {
+    console.error("updateCandidateStatus error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

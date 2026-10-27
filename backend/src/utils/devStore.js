@@ -3752,6 +3752,246 @@ export const devStore = {
     writeFile("dev_courtroom_sessions.json", sessions);
     return newSession;
   },
+
+  // --- Personal AI Legal Twin & Autonomous Associate Workforce Studio (Milestone 4) ---
+  getAdvocateTwin(advocateId = "adv_1") {
+    const twins = readFile("dev_ai_twins.json", { [advocateId]: DEFAULT_AI_TWIN });
+    return twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
+  },
+
+  updateAdvocateTwin(advocateId = "adv_1", updateData = {}) {
+    const twins = readFile("dev_ai_twins.json", { [advocateId]: DEFAULT_AI_TWIN });
+    const current = twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
+    const updated = {
+      ...current,
+      ...updateData,
+      lastCalibratedAt: new Date().toISOString(),
+    };
+    twins[advocateId] = updated;
+    writeFile("dev_ai_twins.json", twins);
+    return updated;
+  },
+
+  simulateTwinReasoning(data = {}) {
+    const {
+      advocateId = "adv_1",
+      query = "",
+      draftingStyle = "constitutional_assertive",
+      primaryJurisdiction = "high_court_kerala",
+    } = data;
+
+    const lower = (query || "").toLowerCase();
+    let legalOpinion = "";
+    let proceduralRoadmap = [];
+    let draftClause = "";
+    let bindingCitations = [];
+    let confidenceScore = 98.6;
+
+    if (
+      lower.includes("telegraph") ||
+      lower.includes("kseb") ||
+      lower.includes("line") ||
+      lower.includes("tree") ||
+      lower.includes("tower") ||
+      lower.includes("16")
+    ) {
+      legalOpinion =
+        "Under Section 10(d) of the Indian Telegraph Act, 1885, the transmission licensee acquires only a user right and is statutorily obligated to cause minimal damage. The moment the property owner offers resistance or files written objections, Section 16(1) mandates that the licensee must approach the District Magistrate for prior permission. Unilateral entry without a District Magistrate order is ultra vires and constitutes actionable trespass amenable to extraordinary writ jurisdiction under Article 226.";
+      proceduralRoadmap = [
+        "Issue immediate written objection notice under Section 16(1) to Assistant Executive Engineer, KSEB.",
+        "Serve caveat petition or representation before the District Magistrate / District Collector, Ernakulam.",
+        "File Writ Petition (Civil) under Article 226 before High Court of Kerala seeking mandamus directing referral under Section 16(1) and ad-interim injunction restraining line drawing.",
+      ];
+      draftClause =
+        "It is most respectfully submitted that Respondent No. 2 acted wholly without jurisdiction in entering upon the Petitioner's residential plot without petitioning the District Magistrate under Section 16(1) of the Indian Telegraph Act, 1885, contrary to the binding Full Bench dictum in Valsamma v. KSEB 2012 (2) KLT 368.";
+      bindingCitations = [
+        "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)",
+        "Power Grid Corporation of India v. Century Textiles & Industries Ltd. (2017) 5 SCC 143",
+        "Executive Engineer, KSEB v. Doddakka (2015) 15 SCC 738",
+      ];
+    } else if (
+      lower.includes("138") ||
+      lower.includes("cheque") ||
+      lower.includes("negotiable") ||
+      lower.includes("notice") ||
+      lower.includes("alavi") ||
+      lower.includes("demand")
+    ) {
+      legalOpinion =
+        "Under Chapter XVII of the Negotiable Instruments Act, 1881, the cause of action is strictly governed by statutory timelines. Statutory demand notice must be dispatched within 30 days of receiving the bank memo. Where notice is returned unserved with endorsement 'Door Locked' or 'Not Claimed', the three-judge bench decision in C.C. Alavi Haji establishes deemed service under Section 27 of the General Clauses Act. The drawer has 15 days from deemed receipt to pay; failure creates a crystalline cause of action to file the complaint within the subsequent 30 days.";
+      proceduralRoadmap = [
+        "Procure official Postal Tracking Delivery / Return Certificate from Department of Posts.",
+        "Compute 15-day statutory cure window starting from the date of postal delivery or return endorsement.",
+        "Draft and institute Criminal Complaint under Section 138 read with Section 142(1)(b) before Judicial First Class Magistrate having territorial jurisdiction over payee bank branch.",
+      ];
+      draftClause =
+        "The Complainant submits that the Statutory Demand Notice was dispatched via Registered Post with Acknowledgment Due to the correct residential address of the Accused. The returned postal envelope with endorsement 'Not Claimed' constitutes deemed service in law under Section 27 of the General Clauses Act as authoritatively settled in C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555.";
+      bindingCitations = [
+        "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555",
+        "K. Bhaskaran v. Sankaran Vaidhyan Balan (1999) 7 SCC 510",
+        "Dashrath Rupsingh Rathod v. State of Maharashtra (2014) 9 SCC 129",
+      ];
+    } else if (
+      lower.includes("bail") ||
+      lower.includes("bnss") ||
+      lower.includes("arrest") ||
+      lower.includes("482") ||
+      lower.includes("fir") ||
+      lower.includes("custodial")
+    ) {
+      legalOpinion =
+        "Under Section 482 of the Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (corresponding to legacy Section 438 CrPC), anticipatory bail is an extraordinary judicial discretion to protect personal liberty against unwarranted incarceration. Since the offence does not mandate life imprisonment and the accused has deep roots in the community, custodial interrogation is unnecessary if the applicant undertakes to cooperate with the investigating officer under Section 35(3) BNSS.";
+      proceduralRoadmap = [
+        "Verify issuance of Section 35(3) BNSS Notice of Appearance by Investigating Officer.",
+        "Compile documentary proof demonstrating clean antecedents, proof of permanent residence, and willingness to join probe.",
+        "File Pre-Arrest Bail Application under Section 482 BNSS before the High Court or Sessions Court with prayer for interim protection against coercive steps.",
+      ];
+      draftClause =
+        "The Applicant respectfully submits that the allegations in the FIR are purely civil in texture and lack the foundational ingredients of criminal breach of trust. The Applicant undertakes to cooperate fully with the investigation, surrender passport, and abide by any condition imposed under Section 482(2) BNSS.";
+      bindingCitations = [
+        "Arnesh Kumar v. State of Bihar (2014) 8 SCC 273",
+        "Sushila Aggarwal v. State (NCT of Delhi) (2020) 5 SCC 1",
+        "Satender Kumar Antil v. CBI (2022) 10 SCC 51",
+      ];
+    } else {
+      legalOpinion =
+        "Reviewing this legal proposition under High Court of Kerala practice standards: Where administrative action is arbitrary, discriminatory, or violative of natural justice (audi alteram partem), the threshold bar of alternate statutory remedies is superseded pursuant to the Whirlpool doctrine. The chamber formulation requires asserting jurisdictional incompetence and procedural non-compliance in the primary synopsis.";
+      proceduralRoadmap = [
+        "Conduct thorough statutory scrutiny of impugned order or administrative communication.",
+        "Formulate core questions of law emphasizing jurisdictional error or violation of Article 14.",
+        "Institute appropriate writ or civil proceedings with prayer for status quo ante.",
+      ];
+      draftClause =
+        "It is respectfully submitted that the impugned action violates the salutary principles of natural justice and is tainted with total non-application of mind, warranting the extraordinary exercise of this Hon'ble Court's plenary powers under Article 226 of the Constitution of India.";
+      bindingCitations = [
+        "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1",
+        "Maneka Gandhi v. Union of India (1978) 1 SCC 248",
+        "State of M.P. v. Bhailal Bhai AIR 1964 SC 1006",
+      ];
+    }
+
+    const simRecord = {
+      id: "sim_" + Date.now().toString(),
+      query,
+      legalOpinion,
+      proceduralRoadmap,
+      draftClause,
+      bindingCitations,
+      confidenceScore,
+      draftingStyle,
+      primaryJurisdiction,
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+    };
+
+    const twins = readFile("dev_ai_twins.json", { [advocateId]: DEFAULT_AI_TWIN });
+    const current = twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
+    current.recentSimulations = [simRecord, ...(current.recentSimulations || []).slice(0, 9)];
+    twins[advocateId] = current;
+    writeFile("dev_ai_twins.json", twins);
+
+    return {
+      success: true,
+      ...simRecord,
+    };
+  },
+
+  getTrainingModules() {
+    return readFile("dev_training_modules.json", DEFAULT_TRAINING_MODULES);
+  },
+
+  evaluateAssociateSubmission(data = {}) {
+    const { moduleId, associateAnswer = "", associateName = "Junior Counsel" } = data;
+    const modules = readFile("dev_training_modules.json", DEFAULT_TRAINING_MODULES);
+    const mod = modules.find((m) => m.id === moduleId) || modules[0];
+
+    const lowerAns = (associateAnswer || "").toLowerCase();
+    let issueSpotting = 70;
+    let statutoryPrecision = 72;
+    let citationAccuracy = 68;
+
+    if (mod.quizScenario && Array.isArray(mod.quizScenario.keyIssues)) {
+      mod.quizScenario.keyIssues.forEach((issue) => {
+        const words = issue.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+        const match = words.some((w) => lowerAns.includes(w));
+        if (match) {
+          issueSpotting += 8;
+          statutoryPrecision += 7;
+        }
+      });
+
+      if (
+        lowerAns.includes("scc") ||
+        lowerAns.includes("klt") ||
+        lowerAns.includes("air") ||
+        lowerAns.includes("2024") ||
+        lowerAns.includes("1998") ||
+        lowerAns.includes("2007")
+      ) {
+        citationAccuracy += 22;
+      }
+    }
+
+    issueSpotting = Math.min(98, issueSpotting);
+    statutoryPrecision = Math.min(99, statutoryPrecision);
+    citationAccuracy = Math.min(96, citationAccuracy);
+
+    const overallScore = Math.round((issueSpotting + statutoryPrecision + citationAccuracy) / 3);
+    const passed = overallScore >= 75;
+
+    let seniorFeedback = passed
+      ? "Commendable legal precision. The analysis properly distinguishes substantive vs procedural statutory application and cites the controlling High Court/Supreme Court ratio."
+      : "The argument needs stronger grounding in exact statutory sections and landmark ratios. Revisit the module curriculum before drafting live pleadings.";
+
+    const result = {
+      success: true,
+      moduleId,
+      associateName,
+      overallScore,
+      passed,
+      issueSpotting,
+      statutoryPrecision,
+      citationAccuracy,
+      seniorFeedback,
+      benchmarkAnswer: mod.quizScenario?.benchmarkAnswer || "",
+      landmarkCitation: mod.quizScenario?.landmarkCitation || "",
+      evaluatedAt: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+    };
+
+    return result;
+  },
+
+  getRecruitmentCandidates() {
+    return readFile("dev_candidates.json", DEFAULT_CANDIDATES);
+  },
+
+  addRecruitmentCandidate(data = {}) {
+    const candidates = readFile("dev_candidates.json", DEFAULT_CANDIDATES);
+    const newCand = {
+      id: "cand_" + Date.now().toString(),
+      name: data.name || "Candidate",
+      college: data.college || "Government Law College, Ernakulam",
+      role: data.role || "Litigation Associate",
+      enrollmentNumber: data.enrollmentNumber || `K/${Math.floor(1000 + Math.random() * 9000)}/2024`,
+      status: "Screening Review",
+      score: "92%",
+      experienceYears: data.experienceYears || "1-2 Years",
+      appliedDate: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      ...data,
+    };
+    candidates.unshift(newCand);
+    writeFile("dev_candidates.json", candidates);
+    return newCand;
+  },
+
+  updateCandidateStatus(id, status) {
+    const candidates = readFile("dev_candidates.json", DEFAULT_CANDIDATES);
+    const cand = candidates.find((c) => c.id === id);
+    if (cand) {
+      cand.status = status;
+      writeFile("dev_candidates.json", candidates);
+    }
+    return cand;
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -3847,6 +4087,169 @@ const DEFAULT_AGENTS = [
       strictConflictCheck: true,
       autoNotifyAdvocate: true,
     },
+  },
+];
+
+// ============================================================================
+// DEFAULT SEED DATA FOR AI DIGITAL TWIN & WORKFORCE ACADEMY (Milestone 4)
+// ============================================================================
+export const DEFAULT_AI_TWIN = {
+  advocateId: "adv_1",
+  advocateName: "Adv. Meera Krishnan",
+  enrollmentNumber: "K/001429/2012",
+  barCouncil: "Bar Council of Kerala (Ernakulam)",
+  standingYears: 14,
+  calibrationScore: 99.4,
+  pleadingsTrainedCount: 1420,
+  activeSyncStatus: "Live Synchronized (Vault, Precedents & Causelists)",
+  draftingStyle: "constitutional_assertive",
+  draftingStyleLabel: "Assertive Constitutional & Precedent-First",
+  primaryJurisdiction: "high_court_kerala",
+  primaryJurisdictionLabel: "High Court of Kerala (Division & Single Benches)",
+  preferredCitations: ["KLT (Kerala Law Times)", "SCC (Supreme Court Cases)", "ILR (Kerala)"],
+  benchTemperamentPreference: "Rigorous statutory textualism with strong reliance on Whirlpool natural justice exceptions",
+  autonomousIntakeEnabled: true,
+  minimumConsultationFee: 3500,
+  conflictCheckStrictness: "high",
+  emergencyBailAutoEscalate: true,
+  twinPersonaSummary: "Specialized in High Court Article 226 Writs, Telegraph Act Section 16 land objections, BNSS 482 anticipatory bail, and commercial contract litigation.",
+  recentSimulations: [
+    {
+      id: "sim_1",
+      query: "KSEB entry without DM referral under Section 16(1)",
+      legalOpinion: "Under Section 10(d) and 16(1) of the Indian Telegraph Act, 1885, entry without District Magistrate sanction once resistance is offered is ex-facie void as settled in Valsamma v. KSEB 2012 (2) KLT 368.",
+      proceduralRoadmap: [
+        "Issue statutory objection notice to AEE KSEB",
+        "Lodge caveat before District Magistrate, Ernakulam",
+        "Move High Court for ad-interim stay under Article 226",
+      ],
+      draftClause: "The unilateral entry by Respondent No. 2 without referral to the District Magistrate is non-est in the eyes of law.",
+      bindingCitations: ["Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)"],
+      confidenceScore: 99.1,
+      draftingStyle: "constitutional_assertive",
+      primaryJurisdiction: "high_court_kerala",
+      timestamp: "Yesterday, 14:20 IST",
+    },
+  ],
+};
+
+export const DEFAULT_TRAINING_MODULES = [
+  {
+    id: "mod_bns_ipc",
+    title: "BNS vs IPC & BNSS vs CrPC Statutory Concordance",
+    category: "Criminal Law & Procedure",
+    instructor: "Adv. Meera Krishnan",
+    level: "Senior Associate Level",
+    estimatedMinutes: 45,
+    progress: 100,
+    status: "Completed",
+    score: "96%",
+    overview: "Mastering cross-statutory concordance, transitioning pending FIRs under IPC to trial under BNSS 2023, and anticipatory bail under BNSS Section 482.",
+    quizScenario: {
+      prompt: "An FIR was registered on 15 June 2024 under Section 420 IPC. The police file a supplementary chargesheet on 10 August 2024 invoking BNS provisions. Accused seeks pre-arrest protection. What procedural provisions govern the bail application?",
+      keyIssues: ["BNSS Section 531(2)(a) repeal and savings clause", "Substantive offences governed by legacy IPC at date of commission", "Procedural bail application governed by BNSS Section 482"],
+      benchmarkAnswer: "Under Section 531(2)(a) of BNSS 2023, pending investigations and offences committed prior to 1 July 2024 are substantively governed by IPC. However, procedural applications for pre-arrest bail instituted subsequent to 1 July 2024 must be filed under Section 482 of BNSS (legacy Section 438 CrPC), as held by Kerala High Court in Abdul Khader v. State of Kerala (2024).",
+      landmarkCitation: "Abdul Khader v. State of Kerala 2024 (4) KLT 112",
+    },
+  },
+  {
+    id: "mod_wpc_maintainability",
+    title: "Article 226 High Court Writ Maintainability & Whirlpool Exceptions",
+    category: "Constitutional & Administrative Law",
+    instructor: "Chamber Senior Roster",
+    level: "Appellate Junior Level",
+    estimatedMinutes: 60,
+    progress: 85,
+    status: "In Progress",
+    score: "92%",
+    overview: "Overcoming alternate statutory remedy objections, pleading ex-facie lack of jurisdiction, and demonstrating grave violation of natural justice (audi alteram partem).",
+    quizScenario: {
+      prompt: "A statutory authority issues an impugned demand notice without serving a prior show-cause notice or affording personal hearing. The relevant statute provides an appeal before an Appellate Tribunal. Can a Writ Petition under Article 226 be maintained directly?",
+      keyIssues: ["Whirlpool Corporation 4 exceptions", "Breach of fundamental natural justice rules", "Alternative remedy is a rule of discretion, not an absolute jurisdictional bar"],
+      benchmarkAnswer: "Yes. While existence of an alternate statutory remedy is generally a bar, the 3-Judge bench of the Supreme Court in Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1 carved four categorical exceptions: (i) violation of fundamental rights, (ii) breach of natural justice, (iii) proceedings wholly without jurisdiction, and (iv) challenge to vires of legislation. Total omission of prior show-cause notice satisfies exception (ii) and allows direct Article 226 invocation.",
+      landmarkCitation: "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1",
+    },
+  },
+  {
+    id: "mod_sec138_ni",
+    title: "Negotiable Instruments Act (Sec 138-142) Notice Defenses & Limitation",
+    category: "Commercial & Banking Litigation",
+    instructor: "Evidence Lab",
+    level: "Litigation Junior Level",
+    estimatedMinutes: 40,
+    progress: 40,
+    status: "Active Session",
+    score: "88%",
+    overview: "Calculating 30-day statutory notice timelines, interpreting postal endorsements (unclaimed/refused), and drafting complaints strictly compliant with Section 142(1)(b).",
+    quizScenario: {
+      prompt: "A demand notice dispatched via registered post is returned with endorsement 'Door Locked / Addressee Absent'. Complainant waits 45 days before filing complaint. Is complaint maintainable or barred by limitation?",
+      keyIssues: ["Deemed service under Section 27 General Clauses Act", "Cause of action crystallization after 15 days of deemed service", "30-day limitation window under Section 142(1)(b)"],
+      benchmarkAnswer: "Under C.C. Alavi Haji (2007) 6 SCC 555, postal endorsement of 'Door Locked' triggers statutory presumption of deemed service under Section 27 General Clauses Act on the date of return. The drawer is granted 15 days from deemed receipt to make payment. On the 16th day, cause of action arises, and the complaint must be instituted within 30 days. Waiting 45 days after the 15-day window bars the complaint unless condonation of delay is sought under proviso to Section 142(1)(b).",
+      landmarkCitation: "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555",
+    },
+  },
+  {
+    id: "mod_bsa_electronic_evidence",
+    title: "Electronic Evidence Certification under BSA Section 63 (Legacy 65B)",
+    category: "Trial Practice & Evidence",
+    instructor: "Appellate Council",
+    level: "Senior Associate Level",
+    estimatedMinutes: 50,
+    progress: 10,
+    status: "Scheduled",
+    score: "—",
+    overview: "Drafting certificates under Section 63 of Bharatiya Sakshya Adhiniyam, 2023 for WhatsApp chats, CDR logs, CCTV footage, and digital ledger hashes.",
+    quizScenario: {
+      prompt: "In a corporate breach of trust trial, complainant tenders printouts of encrypted WhatsApp conversations without an accompanying Section 63 BSA certificate. Defense objects to admissibility. How should the Court rule?",
+      keyIssues: ["Mandatory nature of electronic certificate", "Section 63 BSA 2023 mirrors Section 65B Evidence Act", "Arjun Panditrao Khotkar binding precedent"],
+      benchmarkAnswer: "The Court must sustain the defense objection. As established by the Supreme Court in Arjun Panditrao Khotkar v. Kailash Kushanrao Gorantyal (2020) 7 SCC 1, compliance with the statutory certificate requirement (now codified in Section 63 of Bharatiya Sakshya Adhiniyam 2023) is a mandatory condition precedent for the admissibility of electronic records in secondary evidence form.",
+      landmarkCitation: "Arjun Panditrao Khotkar v. Kailash Kushanrao Gorantyal (2020) 7 SCC 1",
+    },
+  },
+];
+
+export const DEFAULT_CANDIDATES = [
+  {
+    id: "cand_1",
+    name: "Adv. Rahul Deshmukh",
+    college: "NLSIU Bengaluru (Batch of 2024)",
+    role: "Appellate & Writ Associate",
+    enrollmentNumber: "K/003412/2024",
+    status: "Interview Round 2",
+    score: "96%",
+    experienceYears: "2 Years Appellate",
+    appliedDate: "20 Oct 2024",
+    specialization: "Constitutional Law, Writ Petitions & Judicial Review",
+    barVerified: true,
+    cvHighlights: "Former Law Clerk at High Court of Kerala; drafted 40+ writ petitions.",
+  },
+  {
+    id: "cand_2",
+    name: "Adv. Ananya Iyer",
+    college: "NALSAR Hyderabad (Batch of 2023)",
+    role: "Commercial Law Clerk",
+    enrollmentNumber: "K/002189/2023",
+    status: "Offer Extended",
+    score: "98%",
+    experienceYears: "3 Years Corporate/Dispute",
+    appliedDate: "18 Oct 2024",
+    specialization: "Arbitration Act, Commercial Division Suits & NI Act 138",
+    barVerified: true,
+    cvHighlights: "Handled Section 11 & Section 34 Arbitration petitions before Commercial Court.",
+  },
+  {
+    id: "cand_3",
+    name: "Adv. Vikramaditya Roy",
+    college: "Government Law College, Ernakulam (2024)",
+    role: "Criminal Trial Junior",
+    enrollmentNumber: "K/004521/2024",
+    status: "Screening Review",
+    score: "91%",
+    experienceYears: "1 Year Criminal Chamber",
+    appliedDate: "24 Oct 2024",
+    specialization: "BNSS 2023 Bail Practice, Sessions Trials & Cross-Examination",
+    barVerified: true,
+    cvHighlights: "First Class with Distinction in Evidence Law & Criminal Procedure.",
   },
 ];
 

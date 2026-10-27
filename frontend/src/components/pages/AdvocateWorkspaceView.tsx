@@ -2887,7 +2887,13 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW: Work Force (Training, AI Agents, AI Twin, Hiring Suite)  */}
           {isWorkForce && (
-            <WorkForceView activeModule={activeTab} onSelectModule={(m) => setActiveTab(m)} />
+            <WorkForceView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+              advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+            />
           )}
 
           {/* ============================================================== */}

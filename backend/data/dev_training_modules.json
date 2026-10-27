@@ -1,0 +1,90 @@
+[
+  {
+    "id": "mod_bns_ipc",
+    "title": "BNS vs IPC & BNSS vs CrPC Statutory Concordance",
+    "category": "Criminal Law & Procedure",
+    "instructor": "Adv. Meera Krishnan",
+    "level": "Senior Associate Level",
+    "estimatedMinutes": 45,
+    "progress": 100,
+    "status": "Completed",
+    "score": "96%",
+    "overview": "Mastering cross-statutory concordance, transitioning pending FIRs under IPC to trial under BNSS 2023, and anticipatory bail under BNSS Section 482.",
+    "quizScenario": {
+      "prompt": "An FIR was registered on 15 June 2024 under Section 420 IPC. The police file a supplementary chargesheet on 10 August 2024 invoking BNS provisions. Accused seeks pre-arrest protection. What procedural provisions govern the bail application?",
+      "keyIssues": [
+        "BNSS Section 531(2)(a) repeal and savings clause",
+        "Substantive offences governed by legacy IPC at date of commission",
+        "Procedural bail application governed by BNSS Section 482"
+      ],
+      "benchmarkAnswer": "Under Section 531(2)(a) of BNSS 2023, pending investigations and offences committed prior to 1 July 2024 are substantively governed by IPC. However, procedural applications for pre-arrest bail instituted subsequent to 1 July 2024 must be filed under Section 482 of BNSS (legacy Section 438 CrPC), as held by Kerala High Court in Abdul Khader v. State of Kerala (2024).",
+      "landmarkCitation": "Abdul Khader v. State of Kerala 2024 (4) KLT 112"
+    }
+  },
+  {
+    "id": "mod_wpc_maintainability",
+    "title": "Article 226 High Court Writ Maintainability & Whirlpool Exceptions",
+    "category": "Constitutional & Administrative Law",
+    "instructor": "Chamber Senior Roster",
+    "level": "Appellate Junior Level",
+    "estimatedMinutes": 60,
+    "progress": 85,
+    "status": "In Progress",
+    "score": "92%",
+    "overview": "Overcoming alternate statutory remedy objections, pleading ex-facie lack of jurisdiction, and demonstrating grave violation of natural justice (audi alteram partem).",
+    "quizScenario": {
+      "prompt": "A statutory authority issues an impugned demand notice without serving a prior show-cause notice or affording personal hearing. The relevant statute provides an appeal before an Appellate Tribunal. Can a Writ Petition under Article 226 be maintained directly?",
+      "keyIssues": [
+        "Whirlpool Corporation 4 exceptions",
+        "Breach of fundamental natural justice rules",
+        "Alternative remedy is a rule of discretion, not an absolute jurisdictional bar"
+      ],
+      "benchmarkAnswer": "Yes. While existence of an alternate statutory remedy is generally a bar, the 3-Judge bench of the Supreme Court in Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1 carved four categorical exceptions: (i) violation of fundamental rights, (ii) breach of natural justice, (iii) proceedings wholly without jurisdiction, and (iv) challenge to vires of legislation. Total omission of prior show-cause notice satisfies exception (ii) and allows direct Article 226 invocation.",
+      "landmarkCitation": "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1"
+    }
+  },
+  {
+    "id": "mod_sec138_ni",
+    "title": "Negotiable Instruments Act (Sec 138-142) Notice Defenses & Limitation",
+    "category": "Commercial & Banking Litigation",
+    "instructor": "Evidence Lab",
+    "level": "Litigation Junior Level",
+    "estimatedMinutes": 40,
+    "progress": 40,
+    "status": "Active Session",
+    "score": "88%",
+    "overview": "Calculating 30-day statutory notice timelines, interpreting postal endorsements (unclaimed/refused), and drafting complaints strictly compliant with Section 142(1)(b).",
+    "quizScenario": {
+      "prompt": "A demand notice dispatched via registered post is returned with endorsement 'Door Locked / Addressee Absent'. Complainant waits 45 days before filing complaint. Is complaint maintainable or barred by limitation?",
+      "keyIssues": [
+        "Deemed service under Section 27 General Clauses Act",
+        "Cause of action crystallization after 15 days of deemed service",
+        "30-day limitation window under Section 142(1)(b)"
+      ],
+      "benchmarkAnswer": "Under C.C. Alavi Haji (2007) 6 SCC 555, postal endorsement of 'Door Locked' triggers statutory presumption of deemed service under Section 27 General Clauses Act on the date of return. The drawer is granted 15 days from deemed receipt to make payment. On the 16th day, cause of action arises, and the complaint must be instituted within 30 days. Waiting 45 days after the 15-day window bars the complaint unless condonation of delay is sought under proviso to Section 142(1)(b).",
+      "landmarkCitation": "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555"
+    }
+  },
+  {
+    "id": "mod_bsa_electronic_evidence",
+    "title": "Electronic Evidence Certification under BSA Section 63 (Legacy 65B)",
+    "category": "Trial Practice & Evidence",
+    "instructor": "Appellate Council",
+    "level": "Senior Associate Level",
+    "estimatedMinutes": 50,
+    "progress": 10,
+    "status": "Scheduled",
+    "score": "—",
+    "overview": "Drafting certificates under Section 63 of Bharatiya Sakshya Adhiniyam, 2023 for WhatsApp chats, CDR logs, CCTV footage, and digital ledger hashes.",
+    "quizScenario": {
+      "prompt": "In a corporate breach of trust trial, complainant tenders printouts of encrypted WhatsApp conversations without an accompanying Section 63 BSA certificate. Defense objects to admissibility. How should the Court rule?",
+      "keyIssues": [
+        "Mandatory nature of electronic certificate",
+        "Section 63 BSA 2023 mirrors Section 65B Evidence Act",
+        "Arjun Panditrao Khotkar binding precedent"
+      ],
+      "benchmarkAnswer": "The Court must sustain the defense objection. As established by the Supreme Court in Arjun Panditrao Khotkar v. Kailash Kushanrao Gorantyal (2020) 7 SCC 1, compliance with the statutory certificate requirement (now codified in Section 63 of Bharatiya Sakshya Adhiniyam 2023) is a mandatory condition precedent for the admissibility of electronic records in secondary evidence form.",
+      "landmarkCitation": "Arjun Panditrao Khotkar v. Kailash Kushanrao Gorantyal (2020) 7 SCC 1"
+    }
+  }
+]

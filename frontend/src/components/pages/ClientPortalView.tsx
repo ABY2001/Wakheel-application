@@ -1003,6 +1003,84 @@ export function ClientPortalView() {
 
   const assignedAdvocate = getAssignedAdvocate(selectedMatter);
 
+  // Helper to match sidebar search query against menu item label & keywords
+  const matchesSidebarSearch = (label: string, extraKeywords: string[] = []) => {
+    if (!sidebarSearch.trim()) return true;
+    const q = sidebarSearch.toLowerCase().trim();
+    if (label.toLowerCase().includes(q)) return true;
+    return extraKeywords.some((k) => k.toLowerCase().includes(q));
+  };
+
+  const hasMainMatches =
+    matchesSidebarSearch("Dashboard", ["home", "overview"]) ||
+    matchesSidebarSearch("Case tracking", ["case-tracker", "ecourts", "status"]) ||
+    matchesSidebarSearch("My legal matters", ["cases", "matters", "litigation"]) ||
+    matchesSidebarSearch("My Advocates", ["lawyer", "counsel", "assigned"]) ||
+    matchesSidebarSearch("Ai legal copilot", ["copilot", "ask", "ai", "research"]) ||
+    matchesSidebarSearch("Find legal help", ["help", "triage", "problem", "submit"]) ||
+    matchesSidebarSearch("Discover advocate", ["find lawyer", "advocates", "search", "directory"]) ||
+    matchesSidebarSearch("Document filing", ["file", "vault", "submission", "upload"]) ||
+    matchesSidebarSearch("My case diary", ["diary", "hearings", "dates", "schedule"]) ||
+    matchesSidebarSearch("Documents", ["records", "vault", "contracts", "scan", "translate"]) ||
+    matchesSidebarSearch("Scan", ["upload", "ocr", "camera"]) ||
+    matchesSidebarSearch("Translate", ["malayalam", "vernacular", "language"]) ||
+    matchesSidebarSearch("Legal notices", ["notice", "statutory", "demand", "138"]) ||
+    matchesSidebarSearch("Consultations", ["appointments", "video", "chamber", "meeting"]) ||
+    matchesSidebarSearch("News and articles", ["news", "articles", "rulings", "judgements", "updates"]) ||
+    matchesSidebarSearch("Inbox", ["messages", "mail", "chat", "communications"]);
+
+  const productivityNavItems = [
+    { id: "notes", label: "Notes", icon: StickyNote },
+    { id: "calendar", label: "Calendar", icon: Calendar },
+    { id: "taskmite", label: "Task Mite", icon: CheckCircle2 },
+    { id: "time-sheet", label: "Time sheet", icon: Clock },
+    { id: "ask-ai", label: "Ask AI", icon: Bot },
+  ];
+
+  const myWakheelNavItems = [
+    { id: "my-advocates", label: "My advocates", icon: Users },
+    { id: "appointments", label: "Appointments", icon: Calendar },
+    { id: "messages", label: "Messages", icon: MessageSquare },
+    { id: "task-and-timeline", label: "Tasks & Timeline", icon: History },
+    { id: "payments-and-invoice", label: "Payments and Invoice", icon: Receipt },
+  ];
+
+  const wakheelPlusNavItems = [
+    { id: "templates", label: "Templates", icon: FileText },
+    { id: "judgements", label: "Judgements", icon: Scale },
+    { id: "ai-advocate", label: "AI advocate", icon: Bot },
+  ];
+
+  const businessPlusNavItems = [
+    { id: "business-registration", label: "Business registration services", icon: Building2 },
+    { id: "tax-compliance", label: "Tax and Compliances Filing", icon: Calculator },
+    { id: "trademark-ip", label: "Trademark and IP registration", icon: Shield },
+    { id: "corporate-lawyer", label: "Corporate Lawyer services", icon: Briefcase },
+    { id: "company-secretary", label: "Company Secretary services", icon: ClipboardCheck },
+    { id: "auditor-ca", label: "Auditor and CA services", icon: Landmark },
+  ];
+
+  const networksNavItems = [
+    { id: "my-hub", label: "My Hub", icon: Compass },
+    { id: "my-teams", label: "My teams", icon: Users },
+  ];
+
+  const reportsNavItems = [
+    { id: "ai-analytics", label: "AI Analytics", icon: BarChart3 },
+    { id: "ai-reports", label: "AI Reports", icon: FileSpreadsheet },
+  ];
+
+  const hasAnyMatches =
+    hasMainMatches ||
+    productivityNavItems.some((i) => matchesSidebarSearch(i.label, [i.id])) ||
+    myWakheelNavItems.some((i) => matchesSidebarSearch(i.label, [i.id])) ||
+    wakheelPlusNavItems.some((i) => matchesSidebarSearch(i.label, [i.id])) ||
+    businessPlusNavItems.some((i) => matchesSidebarSearch(i.label, [i.id])) ||
+    networksNavItems.some((i) => matchesSidebarSearch(i.label, [i.id])) ||
+    reportsNavItems.some((i) => matchesSidebarSearch(i.label, [i.id])) ||
+    matchesSidebarSearch("Privacy & Data", ["privacy-data"]) ||
+    matchesSidebarSearch("Settings", ["settings"]);
+
   return (
     <div className="h-screen w-screen flex bg-white dark:bg-black text-black dark:text-white font-sans overflow-hidden transition-colors duration-200">
       
@@ -1039,453 +1117,579 @@ export function ClientPortalView() {
               </span>
             </div>
           </div>
+
+          {/* Sidebar Search Bar */}
+          <div className="mt-2.5 relative">
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search icons & modules..."
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setSidebarSearch("");
+              }}
+              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-all font-sans"
+            />
+            {sidebarSearch && (
+              <button
+                type="button"
+                onClick={() => setSidebarSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                title="Clear search filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Scrollable Navigation Items */}
         <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 text-xs font-medium no-scrollbar">
           
+          {/* Active Search Filter Status */}
+          {sidebarSearch.trim() && (
+            <div className="flex items-center justify-between px-1 text-[11px] font-mono text-zinc-500">
+              <span>Filter: &quot;{sidebarSearch}&quot;</span>
+              <button
+                type="button"
+                onClick={() => setSidebarSearch("")}
+                className="underline hover:text-black dark:hover:text-white cursor-pointer font-sans"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
           {/* Main Top Actions */}
-          <div className="space-y-0.5">
-            {/* 1. Dashboard */}
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "dashboard"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span>Dashboard</span>
-            </button>
-
-          {/* 2. Case tracking */}
-          <button
-            onClick={() => setActiveTab("case-tracking")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "case-tracking" || activeTab === "case-tracker" || activeTab === "case-tracker-prod"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Activity className="w-4 h-4 shrink-0" />
-            <span>Case tracking</span>
-          </button>
-
-          {/* 3. My legal matters */}
-          <button
-            onClick={() => setActiveTab("my-matters")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "my-matters"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Briefcase className="w-4 h-4 shrink-0" />
-            <span>My legal matters</span>
-          </button>
-
-          {/* 4. My Advocates */}
-          <button
-            onClick={() => setActiveTab("my-advocates")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "my-advocates"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Users className="w-4 h-4 shrink-0" />
-            <span>My Advocates</span>
-          </button>
-
-          {/* 5. Ai legal copilot */}
-          <button
-            onClick={() => setActiveTab("ai-copilot")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "ai-copilot" || ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab)
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Sparkles className="w-4 h-4 shrink-0" />
-            <span>Ai legal copilot</span>
-          </button>
-
-          {/* 6. Find legal help */}
-          <button
-            onClick={() => setActiveTab("find-legal-help")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "find-legal-help"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <HelpCircle className="w-4 h-4 shrink-0" />
-            <span>Find legal help</span>
-          </button>
-
-          {/* 7. Discover advocate */}
-          <button
-            onClick={() => setActiveTab("discover-advocates")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "discover-advocates" || activeTab === "discover-advocate"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Scale className="w-4 h-4 shrink-0" />
-            <span>Discover advocate</span>
-          </button>
-
-          {/* 8. Document filing */}
-          <button
-            onClick={() => setActiveTab("document-filing")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "document-filing"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <FileSignature className="w-4 h-4 shrink-0" />
-            <span>Document filing</span>
-          </button>
-
-          {/* 9. My case diary */}
-          <button
-            onClick={() => setActiveTab("case-diary")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "case-diary"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <BookOpen className="w-4 h-4 shrink-0" />
-            <span>My case diary</span>
-          </button>
-
-          {/* 10. Documents with Sub-items: i. Scan, ii. Translate */}
-          <div className="space-y-0.5">
-            <button
-              onClick={() => {
-                setActiveTab("documents");
-                setDocumentsOpen(!documentsOpen);
-              }}
-              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "documents" ||
-                activeTab === "certified-true-copies" ||
-                activeTab === "contracts"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <FolderLock className="w-4 h-4 shrink-0" />
-                <span>Documents</span>
-              </div>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  documentsOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Sub-items: i. Scan, ii. Translate */}
-            {documentsOpen && (
-              <div className="pl-6 pr-1 space-y-0.5 border-l-2 border-zinc-200 dark:border-zinc-800 ml-4 py-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                {/* i. Scan */}
+          {hasMainMatches && (
+            <div className="space-y-0.5">
+              {/* 1. Dashboard */}
+              {matchesSidebarSearch("Dashboard", ["home", "overview"]) && (
                 <button
-                  onClick={() => {
-                    setActiveTab("documents");
-                    setUploadModalOpen(true);
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
-                    uploadModalOpen && activeTab === "documents"
-                      ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
+                  onClick={() => setActiveTab("dashboard")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "dashboard"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
                       : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   }`}
                 >
-                  <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">i.</span>
-                  <UploadCloud className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-xs">Scan</span>
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
+                  <span>Dashboard</span>
                 </button>
+              )}
 
-                {/* ii. Translate */}
+              {/* 2. Case tracking */}
+              {matchesSidebarSearch("Case tracking", ["case-tracker", "ecourts", "status"]) && (
                 <button
-                  onClick={() => {
-                    setActiveTab("ai-copilot");
-                    setCopilotMode("Translate");
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
-                    activeTab === "ai-copilot" && copilotMode === "Translate"
-                      ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
+                  onClick={() => setActiveTab("case-tracking")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "case-tracking" || activeTab === "case-tracker" || activeTab === "case-tracker-prod"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
                       : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   }`}
                 >
-                  <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">ii.</span>
-                  <Languages className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-xs">Translate</span>
+                  <Activity className="w-4 h-4 shrink-0" />
+                  <span>Case tracking</span>
                 </button>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* 11. Legal notices */}
-          <button
-            onClick={() => setActiveTab("legal-notices")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "legal-notices"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <FileCheck className="w-4 h-4 shrink-0" />
-            <span>Legal notices</span>
-          </button>
+              {/* 3. My legal matters */}
+              {matchesSidebarSearch("My legal matters", ["cases", "matters", "litigation"]) && (
+                <button
+                  onClick={() => setActiveTab("my-matters")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "my-matters"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4 shrink-0" />
+                  <span>My legal matters</span>
+                </button>
+              )}
 
-          {/* 12. Consultations */}
-          <button
-            onClick={() => setActiveTab("consultations")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "consultations" || activeTab === "appointments"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <PhoneCall className="w-4 h-4 shrink-0" />
-            <span>Consultations</span>
-          </button>
+              {/* 4. My Advocates */}
+              {matchesSidebarSearch("My Advocates", ["lawyer", "counsel", "assigned"]) && (
+                <button
+                  onClick={() => setActiveTab("my-advocates")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "my-advocates"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span>My Advocates</span>
+                </button>
+              )}
 
-          {/* 13. News and articles */}
-          <button
-            onClick={() => setActiveTab("news-articles")}
-            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-              activeTab === "news-articles"
-                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            }`}
-          >
-            <Newspaper className="w-4 h-4 shrink-0" />
-            <span>News and articles</span>
-          </button>
+              {/* 5. Ai legal copilot */}
+              {matchesSidebarSearch("Ai legal copilot", ["copilot", "ask", "ai", "research"]) && (
+                <button
+                  onClick={() => setActiveTab("ai-copilot")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "ai-copilot" || ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab)
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>Ai legal copilot</span>
+                </button>
+              )}
 
-            {/* 14. Inbox */}
-            <button
-              onClick={() => setActiveTab("inbox")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "inbox" || activeTab === "messages"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <Mail className="w-4 h-4 shrink-0" />
-              <span>Inbox</span>
-            </button>
-          </div>
+              {/* 6. Find legal help */}
+              {matchesSidebarSearch("Find legal help", ["help", "triage", "problem", "submit"]) && (
+                <button
+                  onClick={() => setActiveTab("find-legal-help")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "find-legal-help"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <HelpCircle className="w-4 h-4 shrink-0" />
+                  <span>Find legal help</span>
+                </button>
+              )}
+
+              {/* 7. Discover advocate */}
+              {matchesSidebarSearch("Discover advocate", ["find lawyer", "advocates", "search", "directory"]) && (
+                <button
+                  onClick={() => setActiveTab("discover-advocates")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "discover-advocates" || activeTab === "discover-advocate"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Scale className="w-4 h-4 shrink-0" />
+                  <span>Discover advocate</span>
+                </button>
+              )}
+
+              {/* 8. Document filing */}
+              {matchesSidebarSearch("Document filing", ["file", "vault", "submission", "upload"]) && (
+                <button
+                  onClick={() => setActiveTab("document-filing")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "document-filing"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <FileSignature className="w-4 h-4 shrink-0" />
+                  <span>Document filing</span>
+                </button>
+              )}
+
+              {/* 9. My case diary */}
+              {matchesSidebarSearch("My case diary", ["diary", "hearings", "dates", "schedule"]) && (
+                <button
+                  onClick={() => setActiveTab("case-diary")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "case-diary"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  <span>My case diary</span>
+                </button>
+              )}
+
+              {/* 10. Documents with Sub-items: i. Scan, ii. Translate */}
+              {(matchesSidebarSearch("Documents", ["records", "vault", "contracts"]) ||
+                matchesSidebarSearch("Scan", ["upload", "ocr"]) ||
+                matchesSidebarSearch("Translate", ["vernacular", "malayalam"])) && (
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => {
+                      setActiveTab("documents");
+                      setDocumentsOpen(!documentsOpen);
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                      activeTab === "documents" ||
+                      activeTab === "certified-true-copies" ||
+                      activeTab === "contracts"
+                        ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FolderLock className="w-4 h-4 shrink-0" />
+                      <span>Documents</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        documentsOpen || (!!sidebarSearch.trim() && (matchesSidebarSearch("Scan") || matchesSidebarSearch("Translate")))
+                          ? "rotate-180"
+                          : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Sub-items: i. Scan, ii. Translate */}
+                  {(documentsOpen || (!!sidebarSearch.trim() && (matchesSidebarSearch("Scan") || matchesSidebarSearch("Translate")))) && (
+                    <div className="pl-6 pr-1 space-y-0.5 border-l-2 border-zinc-200 dark:border-zinc-800 ml-4 py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                      {/* i. Scan */}
+                      {matchesSidebarSearch("Scan", ["upload", "ocr", "camera", "documents"]) && (
+                        <button
+                          onClick={() => {
+                            setActiveTab("documents");
+                            setUploadModalOpen(true);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                            uploadModalOpen && activeTab === "documents"
+                              ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
+                              : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                          }`}
+                        >
+                          <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">i.</span>
+                          <UploadCloud className="w-3.5 h-3.5 shrink-0" />
+                          <span className="text-xs">Scan</span>
+                        </button>
+                      )}
+
+                      {/* ii. Translate */}
+                      {matchesSidebarSearch("Translate", ["languages", "malayalam", "vernacular", "documents"]) && (
+                        <button
+                          onClick={() => {
+                            setActiveTab("ai-copilot");
+                            setCopilotMode("Translate");
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                            activeTab === "ai-copilot" && copilotMode === "Translate"
+                              ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
+                              : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                          }`}
+                        >
+                          <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">ii.</span>
+                          <Languages className="w-3.5 h-3.5 shrink-0" />
+                          <span className="text-xs">Translate</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 11. Legal notices */}
+              {matchesSidebarSearch("Legal notices", ["notice", "statutory", "demand", "138"]) && (
+                <button
+                  onClick={() => setActiveTab("legal-notices")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "legal-notices"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <FileCheck className="w-4 h-4 shrink-0" />
+                  <span>Legal notices</span>
+                </button>
+              )}
+
+              {/* 12. Consultations */}
+              {matchesSidebarSearch("Consultations", ["appointments", "video", "chamber", "meeting"]) && (
+                <button
+                  onClick={() => setActiveTab("consultations")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "consultations" || activeTab === "appointments"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <PhoneCall className="w-4 h-4 shrink-0" />
+                  <span>Consultations</span>
+                </button>
+              )}
+
+              {/* 13. News and articles */}
+              {matchesSidebarSearch("News and articles", ["news", "articles", "rulings", "judgements", "updates"]) && (
+                <button
+                  onClick={() => setActiveTab("news-articles")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "news-articles"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Newspaper className="w-4 h-4 shrink-0" />
+                  <span>News and articles</span>
+                </button>
+              )}
+
+              {/* 14. Inbox */}
+              {matchesSidebarSearch("Inbox", ["messages", "mail", "chat", "communications"]) && (
+                <button
+                  onClick={() => setActiveTab("inbox")}
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeTab === "inbox" || activeTab === "messages"
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span>Inbox</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Section: PRODUCTIVITY */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              PRODUCTIVITY
-            </span>
-            {[
-              { id: "notes", label: "Notes", icon: StickyNote },
-              { id: "calendar", label: "Calendar", icon: Calendar },
-              { id: "taskmite", label: "Task Mite", icon: CheckCircle2 },
-              { id: "time-sheet", label: "Time sheet", icon: Clock },
-              { id: "ask-ai", label: "Ask AI", icon: Bot },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const items = productivityNavItems.filter((item) =>
+              matchesSidebarSearch(item.label, [item.id, "productivity"])
+            );
+            if (items.length === 0) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  PRODUCTIVITY
+                </span>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Section: MY WAKHEEL */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              MY WAKHEEL
-            </span>
-            {[
-              { id: "my-advocates", label: "My advocates", icon: Users },
-              { id: "appointments", label: "Appointments", icon: Calendar },
-              { id: "messages", label: "Messages", icon: MessageSquare },
-              { id: "task-and-timeline", label: "Tasks & Timeline", icon: History },
-              { id: "payments-and-invoice", label: "Payments and Invoice", icon: Receipt },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                activeTab === item.id ||
-                (item.id === "task-and-timeline" &&
-                  (activeTab === "tasks-and-timeline" || activeTab === "timeline"));
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const items = myWakheelNavItems.filter((item) =>
+              matchesSidebarSearch(item.label, [item.id, "my wakheel", "billing", "fees"])
+            );
+            if (items.length === 0) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  MY WAKHEEL
+                </span>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive =
+                    activeTab === item.id ||
+                    (item.id === "task-and-timeline" &&
+                      (activeTab === "tasks-and-timeline" || activeTab === "timeline"));
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Section: WAKHEEL + */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              WAKHEEL +
-            </span>
-            {[
-              { id: "templates", label: "Templates", icon: FileText },
-              { id: "judgements", label: "Judgements", icon: Scale },
-              { id: "ai-advocate", label: "AI advocate", icon: Bot },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const items = wakheelPlusNavItems.filter((item) =>
+              matchesSidebarSearch(item.label, [item.id, "wakheel plus", "precedents", "drafts"])
+            );
+            if (items.length === 0) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  WAKHEEL +
+                </span>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Section: BUSINESS + */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              BUSINESS +
-            </span>
-            {[
-              { id: "business-registration", label: "Business registration services", icon: Building2 },
-              { id: "tax-compliance", label: "Tax and Compliances Filing", icon: Calculator },
-              { id: "trademark-ip", label: "Trademark and IP registration", icon: Shield },
-              { id: "corporate-lawyer", label: "Corporate Lawyer services", icon: Briefcase },
-              { id: "company-secretary", label: "Company Secretary services", icon: ClipboardCheck },
-              { id: "auditor-ca", label: "Auditor and CA services", icon: Landmark },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const items = businessPlusNavItems.filter((item) =>
+              matchesSidebarSearch(item.label, [item.id, "business", "roc", "gst"])
+            );
+            if (items.length === 0) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  BUSINESS +
+                </span>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Section: MY NETWORKS */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              MY NETWORKS
-            </span>
-            {[
-              { id: "my-hub", label: "My Hub", icon: Compass },
-              { id: "my-teams", label: "My teams", icon: Users },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const items = networksNavItems.filter((item) =>
+              matchesSidebarSearch(item.label, [item.id, "networks", "hub", "teams"])
+            );
+            if (items.length === 0) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  MY NETWORKS
+                </span>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Section: REPORTS */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              REPORTS
-            </span>
-            {[
-              { id: "ai-analytics", label: "AI Analytics", icon: BarChart3 },
-              { id: "ai-reports", label: "AI Reports", icon: FileSpreadsheet },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const items = reportsNavItems.filter((item) =>
+              matchesSidebarSearch(item.label, [item.id, "reports", "analytics"])
+            );
+            if (items.length === 0) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  REPORTS
+                </span>
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Section: SETTINGS & PRIVACY */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <button
-              onClick={() => setActiveTab("privacy-data")}
-              className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "privacy-data"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <FolderLock className="w-4 h-4 shrink-0" />
-              <span>Privacy &amp; Data</span>
-            </button>
+          {(() => {
+            const showPrivacy = matchesSidebarSearch("Privacy & Data", ["privacy-data", "security", "gdpr"]);
+            const showSettings = matchesSidebarSearch("Settings", ["settings", "preferences", "theme"]);
+            if (!showPrivacy && !showSettings) return null;
+            return (
+              <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+                  SETTINGS &amp; PRIVACY
+                </span>
+                {showPrivacy && (
+                  <button
+                    onClick={() => setActiveTab("privacy-data")}
+                    className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                      activeTab === "privacy-data"
+                        ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                    }`}
+                  >
+                    <FolderLock className="w-4 h-4 shrink-0" />
+                    <span>Privacy &amp; Data</span>
+                  </button>
+                )}
+                {showSettings && (
+                  <button
+                    onClick={() => setSettingsModalOpen(true)}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl text-left text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer"
+                  >
+                    <Settings className="w-4 h-4 shrink-0" />
+                    <span>Settings</span>
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
-            <button
-              onClick={() => setSettingsModalOpen(true)}
-              className="w-full flex items-center gap-3 p-2 rounded-xl text-left text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer"
-            >
-              <Settings className="w-4 h-4 shrink-0" />
-              <span>Settings</span>
-            </button>
-          </div>
+          {/* Empty search state when nothing matches */}
+          {sidebarSearch.trim() && !hasAnyMatches && (
+            <div className="py-8 px-3 text-center space-y-2.5">
+              <Search className="w-5 h-5 text-zinc-400 mx-auto" />
+              <p className="text-xs text-zinc-500 font-medium">
+                No icons or modules match &quot;{sidebarSearch}&quot;
+              </p>
+              <button
+                type="button"
+                onClick={() => setSidebarSearch("")}
+                className="px-3 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                Clear Search
+              </button>
+            </div>
+          )}
 
         </div>
 

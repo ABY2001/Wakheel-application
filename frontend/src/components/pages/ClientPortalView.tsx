@@ -1240,7 +1240,6 @@ export function ClientPortalView() {
               { id: "calendar", label: "Calendar", icon: Calendar },
               { id: "taskmite", label: "Task Mite", icon: CheckCircle2 },
               { id: "time-sheet", label: "Time sheet", icon: Clock },
-              { id: "case-tracker-prod", label: "Case Tracker", icon: Activity },
               { id: "ask-ai", label: "Ask AI", icon: Bot },
             ].map((item) => {
               const Icon = item.icon;

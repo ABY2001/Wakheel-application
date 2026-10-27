@@ -190,6 +190,12 @@ export function ClientDocumentsView({
     "all" | "case-diary" | "certified-true-copies" | "contracts" | "document-filing"
   >(initialTab);
 
+  useEffect(() => {
+    if (initialTab) {
+      setActiveNavTab(initialTab);
+    }
+  }, [initialTab]);
+
   // Documents state
   const [docsList, setDocsList] = useState<ClientDocument[]>(INITIAL_DOCUMENTS);
   const [searchQuery, setSearchQuery] = useState("");
@@ -338,7 +344,6 @@ export function ClientDocumentsView({
 
   const navItems = [
     { id: "all", label: "All Documents", icon: FolderLock },
-    { id: "case-diary", label: "Case Diary", icon: BookOpen },
     { id: "certified-true-copies", label: "Certified True Copies (CTC)", icon: Stamp },
     { id: "contracts", label: "Contracts", icon: FileText },
     { id: "document-filing", label: "Document Filing", icon: FileCheck },
@@ -346,58 +351,83 @@ export function ClientDocumentsView({
 
   return (
     <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6 animate-in fade-in duration-200">
-      {/* Top Header: Title, Description & Upload Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
-              CITIZEN DOCUMENT VAULT
-            </span>
-            <span className="text-zinc-400">•</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-              256-Bit Encrypted
-            </span>
+      {activeNavTab === "case-diary" ? (
+        /* Top Header for Case Diary (Brought Outside of Documents) */
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+                COURT PROCEEDINGS &amp; BENCH LOGS
+              </span>
+              <span className="text-zinc-400">•</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+                Daily Order Diary
+              </span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight mt-1">
+              My Case Diary
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500">
+              Daily courtroom proceedings, bench orders, and advocate appearance notes for active matters.
+            </p>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight mt-1">
-            Documents &amp; Case Records
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-500">
-            Encrypted court pleadings, case diary logs, certified true copies, and executed contracts.
-          </p>
         </div>
+      ) : (
+        /* Top Header for Documents Vault */
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+                  CITIZEN DOCUMENT VAULT
+                </span>
+                <span className="text-zinc-400">•</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+                  256-Bit Encrypted
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight mt-1">
+                Documents &amp; Case Records
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-500">
+                Encrypted court pleadings, certified true copies, executed contracts, and filing receipts.
+              </p>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => setUploadModalOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-2 shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Upload Document</span>
-        </button>
-      </div>
-
-      {/* Horizontal Navbar: Replaces the sidebar dropdown matching user request */}
-      <div className="p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-xs sm:text-sm font-semibold">
-        {navItems.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeNavTab === tab.id;
-          return (
             <button
-              key={tab.id}
               type="button"
-              onClick={() => setActiveNavTab(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                isActive
-                  ? "bg-white dark:bg-black text-black dark:text-white shadow-xs font-bold"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-white/50 dark:hover:bg-black/40"
-              }`}
+              onClick={() => setUploadModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-2 shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer self-start sm:self-auto"
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span>{tab.label}</span>
+              <Plus className="w-4 h-4" />
+              <span>Upload Document</span>
             </button>
-          );
-        })}
-      </div>
+          </div>
+
+          {/* Horizontal Navbar: Vault Categories (Case Diary placed outside in sidebar) */}
+          <div className="p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-xs sm:text-sm font-semibold">
+            {navItems.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeNavTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveNavTab(tab.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? "bg-white dark:bg-black text-black dark:text-white shadow-xs font-bold"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-white/50 dark:hover:bg-black/40"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* ===================================================================== */}
       {/* VIEW: CASE DIARY LOGS                                                 */}

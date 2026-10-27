@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { advocateApi, CaseNoteItem, CauseListItem } from "@/lib/api";
 import { AdvocateConsultationsView } from "./AdvocateConsultationsView";
+import { CourtCauselistRadarView } from "./CourtCauselistRadarView";
 import dynamic from "next/dynamic";
 
 const CourtroomVoiceSimulatorView = dynamic(
@@ -352,71 +353,9 @@ export function ProductivityView({
         </div>
       )}
 
-      {/* VIEW: Calendar */}
+      {/* VIEW: Calendar - Milestone 5 Smart Court Causelist Aggregator & Live Conflict Radar */}
       {currentTab === "calendar" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-              <span className="text-xs text-zinc-500">Listed Hearings Today</span>
-              <div className="text-2xl font-bold text-black dark:text-white">
-                {causeList.filter((c) => new Date(c.courtDate).toDateString() === new Date().toDateString()).length} Hearings
-              </div>
-              <span className="text-[10px] text-zinc-500">Court Hall 2A &amp; Court Hall 1</span>
-            </div>
-            <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-              <span className="text-xs text-zinc-500">Total Causelist Items</span>
-              <div className="text-2xl font-bold text-black dark:text-white">
-                {causeList.length} Matters
-              </div>
-              <span className="text-[10px] text-zinc-500">High Court of Kerala &amp; NCLT</span>
-            </div>
-            <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-              <span className="text-xs text-zinc-500">Jurisdictions</span>
-              <div className="text-2xl font-bold text-black dark:text-white">Ernakulam</div>
-              <span className="text-[10px] text-zinc-500">High Court, NCLT, Sub Court</span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs">
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-black dark:text-white">Daily Court Causelist Schedule</h3>
-              <span className="text-xs font-mono text-zinc-500">
-                Live Feed: {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-              </span>
-            </div>
-            <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-              {causeList.map((h) => (
-                <div key={h._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-colors">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-black dark:text-white font-mono">10:30 AM</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                        Item #{h.itemNumber}
-                      </span>
-                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                        {h.courtHall} • {h.courtName}
-                      </span>
-                    </div>
-                    <div className="text-zinc-500 text-[11px] font-mono">
-                      {h.caseNumber} • {h.petitioner} vs {h.respondent}
-                    </div>
-                    <div className="text-[10px] text-zinc-400">
-                      Bench: {h.bench}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-semibold text-black dark:text-white">
-                      {h.stage}
-                    </span>
-                    <button className="px-3 py-1 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-85">
-                      Pass Slip
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <CourtCauselistRadarView advocateName={advocateName} />
       )}
 
       {/* VIEW: Appointments */}

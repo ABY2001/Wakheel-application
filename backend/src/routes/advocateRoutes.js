@@ -83,6 +83,10 @@ import {
   getRecruitmentCandidates,
   addRecruitmentCandidate,
   updateCandidateStatus,
+  getCauselistRadar,
+  generatePassoverSlip,
+  reassignCauselistItem,
+  dispatchClientHearingUpdate,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -209,5 +213,11 @@ router.post("/workforce/training/evaluate", protect, evaluateAssociateSubmission
 router.get("/workforce/candidates", protect, getRecruitmentCandidates);
 router.post("/workforce/candidates", protect, addRecruitmentCandidate);
 router.patch("/workforce/candidates/:id/status", protect, updateCandidateStatus);
+
+// 21. Smart Court Causelist Aggregator, Conflict Radar & Client Dispatcher (Milestone 5)
+router.get("/causelist/radar", protect, getCauselistRadar);
+router.post("/causelist/passover", protect, generatePassoverSlip);
+router.post("/causelist/reassign", protect, reassignCauselistItem);
+router.post("/causelist/notify-client", protect, dispatchClientHearingUpdate);
 
 export default router;

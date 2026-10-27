@@ -2339,3 +2339,47 @@ export const updateCandidateStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// 21. SMART COURT CAUSELIST AGGREGATOR, CONFLICT RADAR & CLIENT DISPATCHER (Milestone 5)
+// ============================================================================
+export const getCauselistRadar = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const radar = devStore.getCauselistRadar(advocateId);
+    res.json(radar);
+  } catch (error) {
+    console.error("getCauselistRadar error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const generatePassoverSlip = async (req, res) => {
+  try {
+    const result = devStore.generatePassoverSlip(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("generatePassoverSlip error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const reassignCauselistItem = async (req, res) => {
+  try {
+    const result = devStore.reassignCauselistItem(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("reassignCauselistItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const dispatchClientHearingUpdate = async (req, res) => {
+  try {
+    const result = devStore.dispatchClientHearingUpdate(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("dispatchClientHearingUpdate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

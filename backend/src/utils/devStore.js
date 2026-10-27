@@ -607,69 +607,106 @@ const DEFAULT_CAUSE_LIST = [
     _id: "cl_101",
     advocateId: "adv_1",
     courtDate: new Date().toISOString(),
+    approxTime: "10:45 AM",
     courtName: "High Court of Kerala (Ernakulam)",
+    courtComplex: "High Court Complex, Marine Drive, Kochi",
     courtHall: "Court Hall 2A",
-    bench: "Division Bench (Chief Justice & Justice K. Babu)",
+    bench: "Division Bench 2A (Coram: Mustaque & Eapen, JJ.)",
     itemNumber: 14,
     caseNumber: "WP(C) 19482/2024",
     cnrNumber: "KLHC01-019482-2024",
     petitioner: "Gopakumar Nambiar",
+    clientPhone: "+91 94471 28930",
     respondent: "Kerala State Electricity Board & Anr.",
     appearanceFor: "Petitioner",
-    stage: "Notice Before Admission / Interim Relief",
+    stage: "Notice Before Admission / Ad-Interim Stay",
     status: "listed",
-    boardRemarks: "Listed as Item #14 in daily causelist for urgent interim stay hearing",
+    callingStatus: "Calling (Item #11 on dais)",
+    boardRemarks: "Listed for urgent interim stay against 66kV transmission route without Section 16(1) Telegraph Act referral",
   },
   {
     _id: "cl_102",
     advocateId: "adv_1",
     courtDate: new Date().toISOString(),
+    approxTime: "11:00 AM",
     courtName: "National Company Law Tribunal (NCLT Kochi Bench)",
+    courtComplex: "NCLT Complex, Kakkanad, Kochi (14 km from High Court)",
     courtHall: "Court Hall 1",
     bench: "Judicial Member & Technical Member",
     itemNumber: 8,
     caseNumber: "ARB/NCLT/KOCHI/2024/041",
     cnrNumber: "KLNC01-000041-2024",
     petitioner: "Apex Logistics Ltd",
+    clientPhone: "+91 98460 44120",
     respondent: "Marine Exports Pvt Ltd",
     appearanceFor: "Petitioner",
-    stage: "Section 9 Arbitration Ad-Interim Application",
+    stage: "Section 9 Commercial Injunction Application",
     status: "listed",
-    boardRemarks: "Final arguments on preservation of maritime assets",
+    callingStatus: "Listed for 11:00 AM Call",
+    boardRemarks: "Final arguments on preservation of maritime assets & appointment of receiver",
   },
   {
     _id: "cl_103",
     advocateId: "adv_1",
-    courtDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    courtName: "Sub Court, Ernakulam",
-    courtHall: "Court Hall 4B",
-    bench: "Sub Judge I, Ernakulam",
-    itemNumber: 22,
-    caseNumber: "OS 412/2023",
+    courtDate: new Date().toISOString(),
+    approxTime: "11:30 AM",
+    courtName: "Judicial First Class Magistrate Court-II, Kochi",
+    courtComplex: "Kochi District Court Complex, Ernakulam",
+    courtHall: "Court Hall 1",
+    bench: "Judicial First Class Magistrate-II",
+    itemNumber: 19,
+    caseNumber: "CC 412/2023",
     cnrNumber: "KLER02-000412-2023",
-    petitioner: "Gopakumar Nambiar",
-    respondent: "Varghese Builders & Developers",
-    appearanceFor: "Petitioner",
-    stage: "Advocate Commissioner Report Filing & Scrutiny",
-    status: "adjourned",
-    boardRemarks: "Respondent sought one week to file counter-affidavit to commission report",
+    petitioner: "Apex Logistics Ltd",
+    clientPhone: "+91 98460 44120",
+    respondent: "Royal Traders",
+    appearanceFor: "Complainant",
+    stage: "Section 138 NI Act Accused Appearance & Deemed Service Verification",
+    status: "listed",
+    callingStatus: "Pending in 1st Call",
+    boardRemarks: "Returned notice with postal endorsement 'Door Locked' under scrutiny",
   },
   {
     _id: "cl_104",
     advocateId: "adv_1",
-    courtDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    courtDate: new Date().toISOString(),
+    approxTime: "12:15 PM",
     courtName: "High Court of Kerala (Ernakulam)",
-    courtHall: "Court Hall 3C",
+    courtComplex: "High Court Complex, Marine Drive, Kochi",
+    courtHall: "Court Hall 4C",
     bench: "Single Bench (Justice V.G. Arun)",
-    itemNumber: 5,
-    caseNumber: "CRL.MC 8921/2024",
-    cnrNumber: "KLHC01-008921-2024",
+    itemNumber: 31,
+    caseNumber: "WP(C) 28104/2024",
+    cnrNumber: "KLHC01-028104-2024",
     petitioner: "Dr. Sajan Roy",
-    respondent: "State of Kerala & Anr.",
+    clientPhone: "+91 94470 55182",
+    respondent: "State of Kerala & Medical Council",
     appearanceFor: "Petitioner",
-    stage: "Quash Petition under Section 528 BNSS",
-    status: "heard",
-    boardRemarks: "Arguments concluded; orders reserved for pronouncement on Friday",
+    stage: "Writ Petition Ad-Interim Directions",
+    status: "listed",
+    callingStatus: "Scheduled for 12:15 PM",
+    boardRemarks: "Quashing of arbitrary administrative rejection order without personal hearing",
+  },
+  {
+    _id: "cl_105",
+    advocateId: "adv_1",
+    courtDate: new Date().toISOString(),
+    approxTime: "02:30 PM",
+    courtName: "Principal Sessions Court, Ernakulam",
+    courtComplex: "Sessions Court Complex, Ernakulam",
+    courtHall: "Sessions Hall 2",
+    bench: "Principal Sessions Judge",
+    itemNumber: 6,
+    caseNumber: "BA 8821/2024",
+    cnrNumber: "KLER01-008821-2024",
+    petitioner: "Dr. Radhakrishnan Menon",
+    clientPhone: "+91 94462 11902",
+    respondent: "State of Kerala (SHO Infopark PS)",
+    appearanceFor: "Petitioner",
+    stage: "Anticipatory Bail under BNSS Section 482",
+    status: "listed",
+    callingStatus: "Post-Lunch Session",
+    boardRemarks: "Pre-arrest protection in corporate breach of trust FIR; notice u/s 35(3) BNSS complied",
   },
 ];
 
@@ -3991,6 +4028,199 @@ export const devStore = {
       writeFile("dev_candidates.json", candidates);
     }
     return cand;
+  },
+
+  // --- Smart Court Causelist Aggregator, Conflict Radar & Client Dispatcher (Milestone 5) ---
+  getCauselistRadar(advocateId = "adv_1") {
+    let causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
+    if (!causelist || causelist.length === 0) {
+      causelist = DEFAULT_CAUSE_LIST;
+      writeFile("dev_causelists.json", causelist);
+    }
+
+    const todayItems = causelist.filter(
+      (item) => item.advocateId === advocateId || !item.advocateId
+    );
+
+    // Detect Conflicts
+    const conflicts = [];
+    for (let i = 0; i < todayItems.length; i++) {
+      for (let j = i + 1; j < todayItems.length; j++) {
+        const a = todayItems[i];
+        const b = todayItems[j];
+
+        const differentHall = a.courtHall !== b.courtHall;
+        const differentComplex = a.courtName !== b.courtName;
+
+        if (differentHall || differentComplex) {
+          conflicts.push({
+            id: `conf_${a._id}_${b._id}`,
+            severity: differentComplex ? "critical" : "warning",
+            severityLabel: differentComplex ? "Critical Multi-Venue Conflict" : "High Court Bench Hall Conflict",
+            distanceWarning: differentComplex
+              ? "Different Court Complexes (~14 km transit required between Marine Drive & Kakkanad)"
+              : "Different Court Halls within High Court",
+            timeA: a.approxTime || "10:45 AM",
+            timeB: b.approxTime || "11:00 AM",
+            itemA: {
+              id: a._id,
+              caseNumber: a.caseNumber,
+              courtHall: a.courtHall,
+              courtName: a.courtName,
+              itemNumber: a.itemNumber,
+              bench: a.bench,
+            },
+            itemB: {
+              id: b._id,
+              caseNumber: b.caseNumber,
+              courtHall: b.courtHall,
+              courtName: b.courtName,
+              itemNumber: b.itemNumber,
+              bench: b.bench,
+            },
+            recommendation: differentComplex
+              ? `Senior Counsel Adv. Meera Krishnan cannot physically appear in both Court Hall 2A (High Court) and NCLT Court Hall 1 (Kakkanad) at 10:45–11:00 AM. Recommend delegating ${b.caseNumber} to chamber associate Adv. Rahul Deshmukh or submitting an urgent High Court passover memo.`
+              : `Concurrent listing across Court Halls. Submit passover slip in ${b.courtHall} to hold matter for 2nd Call.`,
+          });
+        }
+      }
+    }
+
+    return {
+      success: true,
+      todayDate: new Date().toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
+      advocateRoll: "K/001429/2012",
+      advocateName: "Adv. Meera Krishnan",
+      totalHearings: todayItems.length,
+      conflictsCount: conflicts.length,
+      items: todayItems,
+      conflicts,
+    };
+  },
+
+  generatePassoverSlip(data) {
+    const {
+      itemId,
+      caseNumber,
+      courtHall,
+      itemNumber,
+      bench,
+      reason,
+      passoverUntil = "12:00 PM / 2nd Call",
+      seniorCounselName = "Adv. Meera Krishnan",
+    } = data;
+    const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
+    const item = causelist.find((c) => c._id === itemId || c.caseNumber === caseNumber);
+
+    const passoverSlip = {
+      slipNumber: `PS-${Date.now().toString().slice(-6)}`,
+      courtHall: courtHall || item?.courtHall || "Court Hall 1",
+      bench: bench || item?.bench || "Division Bench",
+      itemNumber: itemNumber || item?.itemNumber || 14,
+      caseNumber: caseNumber || item?.caseNumber || "WP(C) 19482/2024",
+      parties: `${item?.petitioner || "Petitioner"} vs ${item?.respondent || "Respondents"}`,
+      seniorCounselName,
+      enrollmentNumber: "K/001429/2012",
+      reason:
+        reason ||
+        "Senior Counsel is currently on legs before Hon'ble Division Bench 2A in WP(C) 19482/2024.",
+      requestedTime: passoverUntil,
+      dispatchedTo: "Court Master & Bench Scrutiny Officer",
+      generatedAt: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    if (item) {
+      item.status = "passover_requested";
+      item.passoverSlip = passoverSlip;
+      writeFile("dev_causelists.json", causelist);
+    }
+
+    return {
+      success: true,
+      message: "Passover memo drafted and registered for bench presentation.",
+      passoverSlip,
+      item,
+    };
+  },
+
+  reassignCauselistItem(data) {
+    const { itemId, associateId, associateName = "Adv. Rahul Deshmukh", briefNotes = "" } = data;
+    const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
+    const item = causelist.find((c) => c._id === itemId);
+
+    if (item) {
+      item.status = "associate_assigned";
+      item.assignedAssociate = {
+        id: associateId || "cand_1",
+        name: associateName,
+        enrollmentNumber: "K/003412/2024",
+        assignedAt: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        briefNotes:
+          briefNotes ||
+          "Instructed to seek 3-week adjournment for rejoinder; maintain ad-interim status quo.",
+      };
+      writeFile("dev_causelists.json", causelist);
+    }
+
+    return {
+      success: true,
+      message: `Representation successfully delegated to ${associateName}.`,
+      item,
+    };
+  },
+
+  dispatchClientHearingUpdate(data) {
+    const {
+      itemId,
+      matterId,
+      caseNumber = "WP(C) 19482/2024",
+      clientName = "Gopakumar Nambiar",
+      clientPhone = "+91 94471 28930",
+      courtOutcome = "Ad-Interim Stay Granted (4 Weeks)",
+      nextHearingDate = "18.11.2024",
+      benchRemarks = "Interim stay granted restraining line drawing under Section 10(d) Telegraph Act. Status quo ordered.",
+      seniorCounselName = "Adv. Meera Krishnan",
+    } = data;
+
+    const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
+    const item = causelist.find((c) => c._id === itemId || c.caseNumber === caseNumber);
+
+    if (item) {
+      item.status = courtOutcome.includes("Stay") ? "stay_granted" : "adjourned";
+      item.lastOutcome = courtOutcome;
+      item.nextHearingDate = nextHearingDate;
+      item.benchRemarks = benchRemarks;
+      writeFile("dev_causelists.json", causelist);
+    }
+
+    const englishMessage = `Namaskaram ${clientName}, your matter ${caseNumber} was heard before the Hon'ble Court today. Outcome: ${courtOutcome}. ${benchRemarks} Next listing date: ${nextHearingDate}. Warm regards, ${seniorCounselName}.`;
+    const malayalamMessage = `നമസ്കാരം ${clientName}, താങ്കളുടെ കേസ് ${caseNumber} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു. വിധി/ഉത്തരവ്: ${courtOutcome}. ${benchRemarks} അടുത്ത വാദം കേൾക്കുന്ന തീയതി: ${nextHearingDate}. സ്നേഹാദരങ്ങളോടെ, ${seniorCounselName}.`;
+
+    const dispatchRecord = {
+      dispatchId: `DISP-${Date.now().toString().slice(-6)}`,
+      caseNumber,
+      clientName,
+      clientPhone,
+      courtOutcome,
+      nextHearingDate,
+      englishMessage,
+      malayalamMessage,
+      channels: ["WhatsApp Business API (Verified)", "SMS Gateway (CP-WAKHEEL)"],
+      deliveredAt: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      status: "Delivered",
+    };
+
+    return {
+      success: true,
+      message: `Hearing outcome dispatched to ${clientName} via WhatsApp & SMS.`,
+      dispatchRecord,
+      item,
+    };
   },
 };
 

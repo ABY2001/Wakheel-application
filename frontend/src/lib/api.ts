@@ -2138,6 +2138,50 @@ export const advocateApi = {
     });
     return await res.json();
   },
+
+  // 21. Smart Court Causelist Aggregator, Conflict Radar & Client Dispatcher (Milestone 5)
+  async getCauselistRadar(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/causelist/radar`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async generatePassoverSlip(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/causelist/passover`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async reassignCauselistItem(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/causelist/reassign`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async dispatchClientHearingUpdate(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/causelist/notify-client`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================

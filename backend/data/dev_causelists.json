@@ -39,8 +39,25 @@
     "respondent": "Kerala State Electricity Board & Anr.",
     "appearanceFor": "Petitioner",
     "stage": "Notice Before Admission / Interim Relief",
-    "status": "listed",
-    "boardRemarks": "Listed as Item #14 in daily causelist for urgent interim stay hearing"
+    "status": "stay_granted",
+    "boardRemarks": "Listed as Item #14 in daily causelist for urgent interim stay hearing",
+    "passoverSlip": {
+      "slipNumber": "PS-948944",
+      "courtHall": "Court Hall 2A",
+      "bench": "Division Bench (Chief Justice & Justice K. Babu)",
+      "itemNumber": 14,
+      "caseNumber": "WP(C) 19482/2024",
+      "parties": "Gopakumar Nambiar vs Kerala State Electricity Board & Anr.",
+      "seniorCounselName": "Adv. Meera Krishnan",
+      "enrollmentNumber": "K/001429/2012",
+      "reason": "Senior Counsel Adv. Meera Krishnan engaged before Division Bench 2A in WP(C) 19482/2024",
+      "requestedTime": "12:00 PM / 2nd Call",
+      "dispatchedTo": "Court Master & Bench Scrutiny Officer",
+      "generatedAt": "10:42 am"
+    },
+    "lastOutcome": "Ad-Interim Stay Granted (4 Weeks)",
+    "nextHearingDate": "18.11.2024",
+    "benchRemarks": "Stay granted against KSEB line drawing under Section 10(d) Telegraph Act."
   },
   {
     "_id": "cl_102",

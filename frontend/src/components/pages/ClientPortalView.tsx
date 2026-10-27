@@ -80,6 +80,9 @@ import { ConsultationsManagementView } from "@/components/client/ConsultationsMa
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
 import { NewsAndArticlesView } from "@/components/client/NewsAndArticlesView";
+import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
+import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
+import AiAdvocateView from "@/components/client/AiAdvocateView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -678,6 +681,32 @@ export function ClientPortalView() {
       ],
     },
     {
+      category: "WAKHEEL +",
+      items: [
+        {
+          id: "templates",
+          label: "Templates",
+          subtitle: "Verified legal petitions & notices",
+          whatItDoes: "Access standard high court writ templates, statutory demand notices, and property deeds.",
+          icon: FileText,
+        },
+        {
+          id: "judgements",
+          label: "Judgements",
+          subtitle: "Binding precedents & citizen explainers",
+          whatItDoes: "Search Kerala High Court & Supreme Court landmark rulings with ratio decidendi.",
+          icon: Scale,
+        },
+        {
+          id: "ai-advocate",
+          label: "AI advocate",
+          subtitle: "Digital courtroom strategy counsel",
+          whatItDoes: "Autonomous courtroom simulation, bench query practice, and legal strategy consultation.",
+          icon: Bot,
+        },
+      ],
+    },
+    {
       category: "BUSINESS +",
       items: [
         {
@@ -780,6 +809,29 @@ export function ClientPortalView() {
           label: "Discover Advocates",
           whatItDoes: "Browse verified advocates and law firms.",
           icon: Scale,
+        },
+      ],
+    },
+    {
+      category: "WAKHEEL +",
+      items: [
+        {
+          id: "templates",
+          label: "Templates",
+          whatItDoes: "Court writs, demand notices & property deeds library.",
+          icon: FileText,
+        },
+        {
+          id: "judgements",
+          label: "Judgements",
+          whatItDoes: "Landmark Kerala High Court & Supreme Court rulings.",
+          icon: Scale,
+        },
+        {
+          id: "ai-advocate",
+          label: "AI Advocate",
+          whatItDoes: "Autonomous digital courtroom counsel simulation.",
+          icon: Bot,
         },
       ],
     },
@@ -1278,6 +1330,35 @@ export function ClientPortalView() {
                 activeTab === item.id ||
                 (item.id === "task-and-timeline" &&
                   (activeTab === "tasks-and-timeline" || activeTab === "timeline"));
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: WAKHEEL + */}
+          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
+              WAKHEEL +
+            </span>
+            {[
+              { id: "templates", label: "Templates", icon: FileText },
+              { id: "judgements", label: "Judgements", icon: Scale },
+              { id: "ai-advocate", label: "AI advocate", icon: Bot },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
@@ -2088,6 +2169,31 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {activeTab === "news-articles" && (
             <NewsAndArticlesView />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: WAKHEEL + : Templates Library                            */}
+          {/* ============================================================== */}
+          {activeTab === "templates" && (
+            <TemplatesLibraryView
+              onSelectTemplateForFiling={() => {
+                setActiveTab("document-filing");
+              }}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: WAKHEEL + : Judgements & Precedents Library               */}
+          {/* ============================================================== */}
+          {activeTab === "judgements" && (
+            <JudgementsLibraryView />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: WAKHEEL + : AI Advocate Digital Counsel                   */}
+          {/* ============================================================== */}
+          {activeTab === "ai-advocate" && (
+            <AiAdvocateView />
           )}
 
           {/* ============================================================== */}

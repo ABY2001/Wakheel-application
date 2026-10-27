@@ -47,6 +47,7 @@ interface CauselistItem {
   bench: string;
   petitioner: string;
   respondent: string;
+  appearanceFor?: string;
   clientPhone?: string;
   stage: string;
   status: string;

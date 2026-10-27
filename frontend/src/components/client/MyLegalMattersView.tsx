@@ -132,22 +132,30 @@ interface MyLegalMattersViewProps {
   onSelectMatter?: (matterTitle: string) => void;
   onOpenConsultation?: () => void;
   onNavigateTab?: (tab: string) => void;
+  initialShowCnrTracker?: boolean;
 }
 
 export function MyLegalMattersView({
   onSelectMatter,
   onOpenConsultation,
   onNavigateTab,
+  initialShowCnrTracker = false,
 }: MyLegalMattersViewProps = {}) {
   const [matters, setMatters] = useState<LegalMatter[]>(DEFAULT_MATTERS);
   const [selectedMatterDetail, setSelectedMatterDetail] = useState<LegalMatter | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [showCnrTracker, setShowCnrTracker] = useState(false);
+  const [showCnrTracker, setShowCnrTracker] = useState(initialShowCnrTracker);
   const [customCnr, setCustomCnr] = useState("");
   const [isSearchingCnr, setIsSearchingCnr] = useState(false);
   const [liveTrackedResult, setLiveTrackedResult] = useState<any | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+
+  useEffect(() => {
+    if (initialShowCnrTracker) {
+      setShowCnrTracker(true);
+    }
+  }, [initialShowCnrTracker]);
 
   // Sync matters from backend API on mount
   useEffect(() => {

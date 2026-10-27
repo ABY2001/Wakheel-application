@@ -65,6 +65,8 @@ import {
   Copy,
   AlertCircle,
   RefreshCw,
+  Newspaper,
+  UploadCloud,
 } from "lucide-react";
 import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmission";
 import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
@@ -77,6 +79,7 @@ import { SecureInboxView } from "@/components/client/SecureInboxView";
 import { ConsultationsManagementView } from "@/components/client/ConsultationsManagementView";
 import { AdvocateSearchAndMatch, Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
 import { ConsultationAndBookingModal } from "@/components/client/ConsultationAndBookingModal";
+import { NewsAndArticlesView } from "@/components/client/NewsAndArticlesView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -987,329 +990,260 @@ export function ClientPortalView() {
         </div>
 
         {/* Scrollable Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 text-xs font-medium no-scrollbar">
+        <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-1 text-xs font-medium no-scrollbar">
           
-          {/* Main Top Actions */}
+          {/* 1. Dashboard */}
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "dashboard"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4 shrink-0" />
+            <span>Dashboard</span>
+          </button>
+
+          {/* 2. Case tracking */}
+          <button
+            onClick={() => setActiveTab("case-tracking")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "case-tracking" || activeTab === "case-tracker" || activeTab === "case-tracker-prod"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Activity className="w-4 h-4 shrink-0" />
+            <span>Case tracking</span>
+          </button>
+
+          {/* 3. My legal matters */}
+          <button
+            onClick={() => setActiveTab("my-matters")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "my-matters"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Briefcase className="w-4 h-4 shrink-0" />
+            <span>My legal matters</span>
+          </button>
+
+          {/* 4. My Advocates */}
+          <button
+            onClick={() => setActiveTab("my-advocates")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "my-advocates"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Users className="w-4 h-4 shrink-0" />
+            <span>My Advocates</span>
+          </button>
+
+          {/* 5. Ai legal copilot */}
+          <button
+            onClick={() => setActiveTab("ai-copilot")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "ai-copilot" || ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab)
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span>Ai legal copilot</span>
+          </button>
+
+          {/* 6. Find legal help */}
+          <button
+            onClick={() => setActiveTab("find-legal-help")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "find-legal-help"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <HelpCircle className="w-4 h-4 shrink-0" />
+            <span>Find legal help</span>
+          </button>
+
+          {/* 7. Discover advocate */}
+          <button
+            onClick={() => setActiveTab("discover-advocates")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "discover-advocates" || activeTab === "discover-advocate"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Scale className="w-4 h-4 shrink-0" />
+            <span>Discover advocate</span>
+          </button>
+
+          {/* 8. Document filing */}
+          <button
+            onClick={() => setActiveTab("document-filing")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "document-filing"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <FileSignature className="w-4 h-4 shrink-0" />
+            <span>Document filing</span>
+          </button>
+
+          {/* 9. My case diary */}
+          <button
+            onClick={() => setActiveTab("case-diary")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "case-diary"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span>My case diary</span>
+          </button>
+
+          {/* 10. Documents with Sub-items: i. Scan, ii. Translate */}
           <div className="space-y-0.5">
-            {/* Dashboard */}
             <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "dashboard"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span>Dashboard</span>
-            </button>
-
-            {/* AI Legal Copilot */}
-            <button
-              onClick={() => setActiveTab("ai-copilot")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "ai-copilot" || ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab)
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span>AI Legal Copilot</span>
-            </button>
-
-            {/* Find legal Help */}
-            <button
-              onClick={() => setActiveTab("find-legal-help")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "find-legal-help"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <HelpCircle className="w-4 h-4 shrink-0" />
-              <span>Find legal Help</span>
-            </button>
-
-            {/* Discover advocates */}
-            <button
-              onClick={() => setActiveTab("discover-advocates")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "discover-advocates"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <Scale className="w-4 h-4 shrink-0" />
-              <span>Discover advocates</span>
-            </button>
-
-            {/* My Matters */}
-            <button
-              onClick={() => setActiveTab("my-matters")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "my-matters" || activeTab === "case-tracker"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <Briefcase className="w-4 h-4 shrink-0" />
-              <span>My Matters</span>
-            </button>
-
-            {/* Documents */}
-            <button
-              onClick={() => setActiveTab("documents")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              onClick={() => {
+                setActiveTab("documents");
+                setDocumentsOpen(!documentsOpen);
+              }}
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer ${
                 activeTab === "documents" ||
-                activeTab === "case-diary" ||
                 activeTab === "certified-true-copies" ||
                 activeTab === "contracts"
                   ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
                   : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
               }`}
             >
-              <FolderLock className="w-4 h-4 shrink-0" />
-              <span>Documents</span>
+              <div className="flex items-center gap-3">
+                <FolderLock className="w-4 h-4 shrink-0" />
+                <span>Documents</span>
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  documentsOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
-            {/* Document filing */}
-            <button
-              onClick={() => setActiveTab("document-filing")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "document-filing"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <FileSignature className="w-4 h-4 shrink-0" />
-              <span>Document filing</span>
-            </button>
-
-            {/* Legal Notices */}
-            <button
-              onClick={() => setActiveTab("legal-notices")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "legal-notices"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <FileCheck className="w-4 h-4 shrink-0" />
-              <span>Legal Notices</span>
-            </button>
-
-            {/* Consultations */}
-            <button
-              onClick={() => setActiveTab("consultations")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "consultations"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <PhoneCall className="w-4 h-4 shrink-0" />
-              <span>Consultations</span>
-            </button>
-
-            {/* Inbox */}
-            <button
-              onClick={() => setActiveTab("inbox")}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "inbox"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <Mail className="w-4 h-4 shrink-0" />
-              <span>Inbox</span>
-            </button>
-          </div>
-
-          {/* Section: PRODUCTIVITY */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              PRODUCTIVITY
-            </span>
-            {[
-              { id: "notes", label: "Notes", icon: StickyNote },
-              { id: "calendar", label: "Calendar", icon: Calendar },
-              { id: "taskmite", label: "Task Mite", icon: CheckCircle2 },
-              { id: "time-sheet", label: "Time sheet", icon: Clock },
-              { id: "case-tracker-prod", label: "Case Tracker", icon: Activity },
-              { id: "ask-ai", label: "Ask AI", icon: Bot },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
+            {/* Sub-items: i. Scan, ii. Translate */}
+            {documentsOpen && (
+              <div className="pl-6 pr-1 space-y-0.5 border-l-2 border-zinc-200 dark:border-zinc-800 ml-4 py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                {/* i. Scan */}
                 <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  onClick={() => {
+                    setActiveTab("documents");
+                    setUploadModalOpen(true);
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                    uploadModalOpen && activeTab === "documents"
+                      ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
                       : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
+                  <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">i.</span>
+                  <UploadCloud className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-xs">Scan</span>
                 </button>
-              );
-            })}
-          </div>
 
-          {/* Section: MY WAKHEEL */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              MY WAKHEEL
-            </span>
-            {[
-              { id: "my-advocates", label: "My advocates", icon: Users },
-              { id: "appointments", label: "Appointments", icon: Calendar },
-              { id: "messages", label: "Messages", icon: MessageSquare },
-              { id: "task-and-timeline", label: "Tasks & Timeline", icon: History },
-              { id: "payments-and-invoice", label: "Payments and Invoice", icon: Receipt },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                activeTab === item.id ||
-                (item.id === "task-and-timeline" &&
-                  (activeTab === "tasks-and-timeline" || activeTab === "timeline"));
-              return (
+                {/* ii. Translate */}
                 <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                  onClick={() => {
+                    setActiveTab("ai-copilot");
+                    setCopilotMode("Translate");
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                    activeTab === "ai-copilot" && copilotMode === "Translate"
+                      ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
                       : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
+                  <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">ii.</span>
+                  <Languages className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-xs">Translate</span>
                 </button>
-              );
-            })}
+              </div>
+            )}
           </div>
 
-          {/* Section: BUSINESS + */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              BUSINESS +
-            </span>
-            {[
-              { id: "business-registration", label: "Business registration services", icon: Building2 },
-              { id: "tax-compliance", label: "Tax and Compliances Filing", icon: Calculator },
-              { id: "trademark-ip", label: "Trademark and IP registration", icon: Shield },
-              { id: "corporate-lawyer", label: "Corporate Lawyer services", icon: Briefcase },
-              { id: "company-secretary", label: "Company Secretary services", icon: ClipboardCheck },
-              { id: "auditor-ca", label: "Auditor and CA services", icon: Landmark },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* 11. Legal notices */}
+          <button
+            onClick={() => setActiveTab("legal-notices")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "legal-notices"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <FileCheck className="w-4 h-4 shrink-0" />
+            <span>Legal notices</span>
+          </button>
 
-          {/* Section: MY NETWORKS */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              MY NETWORKS
-            </span>
-            {[
-              { id: "my-hub", label: "My Hub", icon: Compass },
-              { id: "my-teams", label: "My teams", icon: Users },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* 12. Consultations */}
+          <button
+            onClick={() => setActiveTab("consultations")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "consultations" || activeTab === "appointments"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <PhoneCall className="w-4 h-4 shrink-0" />
+            <span>Consultations</span>
+          </button>
 
-          {/* Section: REPORTS */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <span className="px-2.5 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 block mb-1">
-              REPORTS
-            </span>
-            {[
-              { id: "ai-analytics", label: "AI Analytics", icon: BarChart3 },
-              { id: "ai-reports", label: "AI Reports", icon: FileSpreadsheet },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* 13. News and articles */}
+          <button
+            onClick={() => setActiveTab("news-articles")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "news-articles"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Newspaper className="w-4 h-4 shrink-0" />
+            <span>News and articles</span>
+          </button>
 
-          {/* Section: SETTINGS & PRIVACY */}
-          <div className="space-y-0.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <button
-              onClick={() => setActiveTab("privacy-data")}
-              className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                activeTab === "privacy-data"
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <FolderLock className="w-4 h-4 shrink-0" />
-              <span>Privacy &amp; Data</span>
-            </button>
-
-            <button
-              onClick={() => setSettingsModalOpen(true)}
-              className="w-full flex items-center gap-3 p-2 rounded-xl text-left text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all cursor-pointer"
-            >
-              <Settings className="w-4 h-4 shrink-0" />
-              <span>Settings</span>
-            </button>
-          </div>
+          {/* 14. Inbox */}
+          <button
+            onClick={() => setActiveTab("inbox")}
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all cursor-pointer ${
+              activeTab === "inbox" || activeTab === "messages"
+                ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <Mail className="w-4 h-4 shrink-0" />
+            <span>Inbox</span>
+          </button>
 
         </div>
 
-        {/* Sidebar Footer: Kerala / India Legal OS v1.0-fe */}
+        {/* Sidebar Footer: Kerala / India Legal OS v1.0-fe with Quick Settings */}
         <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
-          <span>Kerala / India Legal OS</span>
-          <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold">
-            v1.0-fe
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span>Kerala / India Legal OS</span>
+            <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-bold">
+              v1.0-fe
+            </span>
+          </div>
+          <button
+            onClick={() => setSettingsModalOpen(true)}
+            className="p-1 rounded-md text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+            title="Portal Settings"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
         </div>
 
       </aside>
@@ -1573,7 +1507,7 @@ export function ClientPortalView() {
                 
                 {/* Active Matters */}
                 <div
-                  onClick={() => setActiveTab("case-tracker")}
+                  onClick={() => setActiveTab("case-tracking")}
                   className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between cursor-pointer hover:border-black dark:hover:border-white transition-colors"
                 >
                   <div className="space-y-1">
@@ -1672,7 +1606,7 @@ export function ClientPortalView() {
                       </p>
                     </div>
                     <button
-                      onClick={() => setActiveTab("case-tracker")}
+                      onClick={() => setActiveTab("case-tracking")}
                       className="text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white inline-flex items-center gap-1 cursor-pointer"
                     >
                       <span>View All</span>
@@ -1713,7 +1647,7 @@ export function ClientPortalView() {
                             onClick={() => {
                               setTrackerCnr(matter.cnrNumber || matter.caseNumber);
                               setTrackedMatter(matter);
-                              setActiveTab("case-tracker");
+                              setActiveTab("case-tracking");
                             }}
                             className="px-4 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold text-xs text-black dark:text-white cursor-pointer"
                           >
@@ -1862,14 +1796,18 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {/* VIEW: Discover Advocates / Lawyer Services                     */}
           {/* ============================================================== */}
-          {(activeTab === "discover-advocates" || activeTab === "my-advocates") && (
+          {(activeTab === "discover-advocates" || activeTab === "discover-advocate" || activeTab === "my-advocates") && (
             <div className="max-w-6xl mx-auto space-y-6">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
                 <div>
                   <h3 className="text-lg font-bold text-black dark:text-white">
-                    {activeTab === "my-advocates" ? "Your Assigned Advocates" : "Discover Verified Advocates"}
+                    {activeTab === "my-advocates" ? "My Advocates & Assigned Counsel" : "Discover Verified Advocates"}
                   </h3>
-                  <p className="text-xs text-zinc-500">Verified Bar Council of Kerala and High Court practitioner profiles with real-time consultation slots.</p>
+                  <p className="text-xs text-zinc-500">
+                    {activeTab === "my-advocates"
+                      ? "Verified Bar Council of Kerala and High Court practitioners representing you with active matter assignments."
+                      : "Verified Bar Council of Kerala and High Court practitioner profiles with real-time consultation slots."}
+                  </p>
                 </div>
               </div>
               <AdvocateSearchAndMatch
@@ -1917,10 +1855,18 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: My Legal Matters (Docket Cards View)                     */}
+          {/* VIEW: My Legal Matters & Live Case Tracking (eCourts CNR)      */}
           {/* ============================================================== */}
-          {(activeTab === "my-matters" || activeTab === "case-tracker" || activeTab === "case-tracker-prod") && (
+          {(activeTab === "my-matters" ||
+            activeTab === "case-tracking" ||
+            activeTab === "case-tracker" ||
+            activeTab === "case-tracker-prod") && (
             <MyLegalMattersView
+              initialShowCnrTracker={
+                activeTab === "case-tracking" ||
+                activeTab === "case-tracker" ||
+                activeTab === "case-tracker-prod"
+              }
               onSelectMatter={(matterTitle) => setSelectedMatter(matterTitle)}
               onNavigateTab={(tab) => setActiveTab(tab)}
               onOpenConsultation={() => {
@@ -1930,8 +1876,6 @@ export function ClientPortalView() {
               }}
             />
           )}
-
-
 
           {/* ============================================================== */}
           {/* VIEW: Document Submission for Advocate Review                   */}
@@ -1958,6 +1902,13 @@ export function ClientPortalView() {
                   : "all"
               }
             />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: News and Articles (Landmark Rulings & Legal Guides)      */}
+          {/* ============================================================== */}
+          {activeTab === "news-articles" && (
+            <NewsAndArticlesView />
           )}
 
           {/* ============================================================== */}

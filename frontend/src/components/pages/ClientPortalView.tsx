@@ -2309,10 +2309,10 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {/* VIEW: Privileged Chamber Inbox & Direct Advocate Messages     */}
           {/* ============================================================== */}
-          {(activeTab === "inbox" || activeTab === "messages") && (
+          {(activeTab === "inbox" || activeTab === "messages" || activeTab === "notifications") && (
             <SecureInboxView
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
-              initialMode={activeTab === "messages" ? "messages" : "mails"}
+              initialMode={activeTab === "messages" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultationModal={() => {
                 setSelectedAdvocate(mockAdvocates[0]);
                 setBookingDefaultTab("booking");

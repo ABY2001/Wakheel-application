@@ -36,9 +36,17 @@ import {
   Mic,
   MicOff,
   Calendar,
+  Bell,
+  Home,
+  Users,
+  Settings,
+  Lightbulb,
+  Smile,
+  Edit2,
+  UserPlus,
 } from "lucide-react";
 
-export type InboxMode = "mails" | "messages";
+export type InboxMode = "mails" | "messages" | "notifications";
 export type MailFolder = "inbox" | "starred" | "drafts" | "sent" | "archive" | "trash";
 export type MailCategory = "all" | "work" | "property" | "commercial" | "urgent";
 
@@ -82,17 +90,33 @@ export interface ChatMessage {
 
 export interface ChatAdvocateThread {
   id: string;
+  type: "direct" | "group";
   name: string;
   chamber: string;
   court: string;
   specialization: string;
   matter: string;
   avatarText: string;
+  avatarBgColor?: string;
   online: boolean;
   lastMessage: string;
   lastTime: string;
   unreadCount: number;
   messages: ChatMessage[];
+  participants?: string[];
+}
+
+export interface LegalNotificationItem {
+  id: string;
+  title: string;
+  category: "all" | "orders" | "hearings" | "notices" | "filings" | "system";
+  categoryLabel: string;
+  summary: string;
+  timestamp: string;
+  caseRef?: string;
+  isRead: boolean;
+  priority: "high" | "normal";
+  actionLabel?: string;
 }
 
 const INITIAL_LEGAL_EMAILS: LegalEmailItem[] = [
@@ -277,129 +301,305 @@ const INITIAL_LEGAL_EMAILS: LegalEmailItem[] = [
 const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
   {
     id: "adv-meera",
-    name: "Adv. Meera Krishnan",
-    chamber: "Chamber 402, High Court Road, Kochi",
-    court: "High Court of Kerala",
+    type: "direct",
+    name: "John Doe",
+    chamber: "Chamber 402, High Court Road • Manhattan Division",
+    court: "Manhattan",
     specialization: "Senior Counsel • Constitutional & Writs",
     matter: "WP(C) 19482/2024",
-    avatarText: "MK",
+    avatarText: "JD",
+    avatarBgColor: "bg-blue-600 text-white",
     online: true,
-    lastMessage: "Interim stay safely extended until 12 Nov. Stay calm.",
-    lastTime: "10:32 AM",
+    lastMessage: "The quick brown fox jumps over the lazy dog.",
+    lastTime: "Today",
     unreadCount: 1,
     messages: [
       {
         id: "m-1",
-        sender: "citizen",
-        text: "Namaskaram Adv. Meera, is our writ petition listed on the motion board today?",
-        timestamp: "09:45 AM",
+        sender: "advocate",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Sunday",
         status: "read",
       },
       {
         id: "m-2",
-        sender: "advocate",
-        text: "Yes Gopakumar, Item No. 18 before Division Bench 2A. I am in Court Hall 2A right now.",
-        timestamp: "09:52 AM",
+        sender: "citizen",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Sunday",
         status: "read",
       },
       {
         id: "m-3",
-        sender: "citizen",
-        text: "Did the KSEB engineers submit their counter-affidavit?",
-        timestamp: "10:10 AM",
+        sender: "advocate",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Today",
         status: "read",
       },
       {
         id: "m-4",
-        sender: "advocate",
-        text: "They attempted to tender an affidavit, but the Bench sternly rebuked them for violating Section 16 notice norms. Interim stay is safely extended until 12 Nov 2026. Certified copy sent to your mail.",
-        timestamp: "10:32 AM",
+        sender: "citizen",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Today",
         status: "read",
-        attachments: [
-          { name: "Daily_Order_Interim_Stay_Bench_2A.pdf", size: "1.5 MB" },
-        ],
       },
     ],
   },
   {
     id: "adv-sarah",
+    type: "direct",
     name: "Adv. Sarah Jenkins",
     chamber: "Chamber 304, District Court Complex, Ernakulam",
     court: "Principal Munsiff Court",
     specialization: "Senior Property & Tenancy Advocate",
     matter: "OS 412/2023",
-    avatarText: "SJ",
-    online: false,
-    lastMessage: "The survey report is completely in our favor.",
-    lastTime: "Yesterday",
+    avatarText: "JD",
+    avatarBgColor: "bg-emerald-600 text-white",
+    online: true,
+    lastMessage: "The quick brown fox jumps over the lazy dog.",
+    lastTime: "Sunday",
     unreadCount: 0,
     messages: [
       {
         id: "s-1",
         sender: "citizen",
         text: "Hello Adv. Sarah, did the Advocate Commissioner inspect the western boundary wall?",
-        timestamp: "Yesterday, 03:20 PM",
+        timestamp: "Sunday",
         status: "read",
       },
       {
         id: "s-2",
         sender: "advocate",
         text: "Yes, the survey report confirms an encroachment of 1.8 meters into your plot. The report is completely in our favor for the trial hearing on 04 Nov.",
-        timestamp: "Yesterday, 04:15 PM",
+        timestamp: "Sunday",
         status: "read",
       },
     ],
   },
   {
     id: "adv-rajesh",
+    type: "direct",
     name: "Adv. Rajesh V. Varma",
     chamber: "NCLT Bar Association Chambers, Marine Drive",
     court: "NCLT Kochi & Arbitral Tribunal",
     specialization: "Commercial & Corporate Litigator",
     matter: "ARB/NCLT/KOCHI/2024/041",
-    avatarText: "RV",
-    online: true,
-    lastMessage: "Arbitral hearing confirmed for 18 Nov at 2:30 PM.",
-    lastTime: "24 Oct",
+    avatarText: "JD",
+    avatarBgColor: "bg-cyan-500 text-white",
+    online: false,
+    lastMessage: "The quick brown fox jumps over the lazy dog.",
+    lastTime: "Saturday",
     unreadCount: 0,
     messages: [
       {
         id: "r-1",
         sender: "citizen",
         text: "Adv. Rajesh, is the NCLT arbitral hearing confirmed for next month?",
-        timestamp: "24 Oct, 11:15 AM",
+        timestamp: "Saturday",
         status: "read",
       },
       {
         id: "r-2",
         sender: "advocate",
         text: "Yes, Arbitral hearing confirmed for 18 Nov at 2:30 PM. Please have the original ledger statements ready.",
-        timestamp: "24 Oct, 02:15 PM",
+        timestamp: "Saturday",
         status: "read",
       },
     ],
   },
   {
     id: "adv-priya",
+    type: "direct",
     name: "Adv. Priya Nair",
     chamber: "Chamber 12, District Bar Council, Kollam",
     court: "Judicial First Class Magistrate Court",
     specialization: "Civil Rights & Statutory Notices",
     matter: "Section 138 NI Act Notice",
-    avatarText: "PN",
-    online: false,
-    lastMessage: "Notice delivered. 15-day statutory clock is running.",
-    lastTime: "22 Oct",
+    avatarText: "JD",
+    avatarBgColor: "bg-amber-500 text-white",
+    online: true,
+    lastMessage: "The quick brown fox jumps over the lazy dog.",
+    lastTime: "Friday",
     unreadCount: 0,
     messages: [
       {
         id: "p-1",
         sender: "advocate",
         text: "Statutory demand notice under Section 138 has been dispatched via Speed Post. Notice delivered. 15-day statutory clock is running.",
-        timestamp: "22 Oct, 04:50 PM",
+        timestamp: "Friday",
         status: "read",
       },
     ],
+  },
+  {
+    id: "group-hc",
+    type: "group",
+    name: "High Court Bench 2A Counsel Team",
+    chamber: "WP(C) 19482/2024 Legal Defense",
+    court: "High Court of Kerala",
+    specialization: "Writ Litigation Panel",
+    matter: "WP(C) 19482/2024",
+    avatarText: "HC",
+    avatarBgColor: "bg-black text-white dark:bg-white dark:text-black",
+    online: true,
+    lastMessage: "Adv. Anand: Registry motion slip submitted for tomorrow.",
+    lastTime: "Today",
+    unreadCount: 2,
+    participants: ["Adv. Meera Krishnan", "Adv. Anand (Junior)", "You"],
+    messages: [
+      {
+        id: "g-1",
+        sender: "advocate",
+        text: "Division Bench 2A has listed our motion item for first hour call.",
+        timestamp: "Today",
+        status: "read",
+      },
+      {
+        id: "g-2",
+        sender: "citizen",
+        text: "Thank you counsel, will the certified order copy be presented?",
+        timestamp: "Today",
+        status: "read",
+      },
+      {
+        id: "g-3",
+        sender: "advocate",
+        text: "Adv. Anand: Registry motion slip submitted for tomorrow.",
+        timestamp: "Today",
+        status: "read",
+      },
+    ],
+  },
+  {
+    id: "group-property",
+    type: "group",
+    name: "Property Boundary & Title Panel",
+    chamber: "OS 412/2023 Survey Execution",
+    court: "Principal Munsiff Court",
+    specialization: "Civil Commission Panel",
+    matter: "OS 412/2023",
+    avatarText: "PB",
+    avatarBgColor: "bg-[#6B1728] text-white",
+    online: true,
+    lastMessage: "Surveyor Raman: Final sketch uploaded to vault.",
+    lastTime: "Sunday",
+    unreadCount: 0,
+    participants: ["Adv. Sarah Jenkins", "Surveyor Raman", "You"],
+    messages: [
+      {
+        id: "gp-1",
+        sender: "advocate",
+        text: "Survey report uploaded to the shared documents vault.",
+        timestamp: "Sunday",
+        status: "read",
+      },
+      {
+        id: "gp-2",
+        sender: "citizen",
+        text: "Received and reviewed. The encroachment measurements are clear.",
+        timestamp: "Sunday",
+        status: "read",
+      },
+    ],
+  },
+  {
+    id: "group-corporate",
+    type: "group",
+    name: "Commercial Arbitral Taskforce",
+    chamber: "ARB/NCLT/KOCHI/2024/041",
+    court: "NCLT Kochi Bench",
+    specialization: "Corporate Insolvency Taskforce",
+    matter: "ARB/NCLT/KOCHI/2024/041",
+    avatarText: "AT",
+    avatarBgColor: "bg-zinc-800 text-white",
+    online: false,
+    lastMessage: "Statement of claim accepted by sole arbitrator.",
+    lastTime: "Friday",
+    unreadCount: 0,
+    participants: ["Adv. Rajesh V. Varma", "Chartered Accountant Vinod", "You"],
+    messages: [
+      {
+        id: "gc-1",
+        sender: "advocate",
+        text: "Arbitral Tribunal has admitted our rejoinder submissions.",
+        timestamp: "Friday",
+        status: "read",
+      },
+    ],
+  },
+];
+
+const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
+  {
+    id: "notif-1",
+    title: "Interim Stay Order Certified Copy Issued",
+    category: "orders",
+    categoryLabel: "High Court Order",
+    summary: "Hon'ble Division Bench 2A has issued the certified true copy of today's Daily Order in WP(C) 19482/2024. Stay extended until 12 Nov 2026.",
+    timestamp: "12 min ago",
+    caseRef: "WP(C) 19482/2024",
+    isRead: false,
+    priority: "high",
+    actionLabel: "View Order PDF",
+  },
+  {
+    id: "notif-2",
+    title: "Urgent Causelist Listing for Tomorrow",
+    category: "hearings",
+    categoryLabel: "Court Hearing",
+    summary: "Item No. 42 scheduled before Hon'ble Justice P. V. Kunhikrishnan at 10:30 AM. Lead appearance confirmed.",
+    timestamp: "45 min ago",
+    caseRef: "WP(C) 19482/2024",
+    isRead: false,
+    priority: "high",
+    actionLabel: "View Causelist Item",
+  },
+  {
+    id: "notif-3",
+    title: "Speed Post Statutory Notice Delivered",
+    category: "notices",
+    categoryLabel: "India Post Delivery",
+    summary: "Speed Post consignment EK984712041IN successfully served on respondent. 15-day statutory cure clock commenced under Section 138 NI Act.",
+    timestamp: "2 hours ago",
+    caseRef: "Sec. 138 NI Act Notice",
+    isRead: false,
+    priority: "normal",
+    actionLabel: "Track Speed Post",
+  },
+  {
+    id: "notif-4",
+    title: "Advocate Commissioner Survey Report Uploaded",
+    category: "filings",
+    categoryLabel: "Survey Filing",
+    summary: "Court Advocate Commissioner filed the physical boundary measurement report confirming 1.8m encroachment into west plot boundary.",
+    timestamp: "Yesterday",
+    caseRef: "OS 412/2023",
+    isRead: true,
+    priority: "normal",
+    actionLabel: "Examine Report",
+  },
+  {
+    id: "notif-5",
+    title: "Pre-Motion Virtual Chamber Consultation Confirmed",
+    category: "hearings",
+    categoryLabel: "Chamber Meet",
+    summary: "Virtual Chamber session booked with Adv. Sarah Jenkins for 29 Oct at 03:00 PM. Video link secured under Section 126 privilege.",
+    timestamp: "2 days ago",
+    caseRef: "OS 412/2023",
+    isRead: true,
+    priority: "normal",
+    actionLabel: "Join Chamber Room",
+  },
+  {
+    id: "notif-6",
+    title: "Arbitral Tribunal Statement of Claim Received",
+    category: "filings",
+    categoryLabel: "Tribunal Registry",
+    summary: "Claimant submitted 3 volumes of audited ledgers in ARB/NCLT/KOCHI/2024/041. Rejoinder defense preparation underway.",
+    timestamp: "3 days ago",
+    caseRef: "ARB/NCLT/KOCHI/2024/041",
+    isRead: true,
+    priority: "normal",
+    actionLabel: "Review Documents",
   },
 ];
 
@@ -432,6 +632,7 @@ export function SecureInboxView({
 
   // Instant Messages State
   const [chatThreads, setChatThreads] = useState<ChatAdvocateThread[]>(INITIAL_CHAT_THREADS);
+  const [chatSegment, setChatSegment] = useState<"direct" | "group">("direct");
   const [selectedChatId, setSelectedChatId] = useState<string>("adv-meera");
   const [chatInputText, setChatInputText] = useState<string>("");
   const [chatSearchQuery, setChatSearchQuery] = useState<string>("");
@@ -439,6 +640,10 @@ export function SecureInboxView({
   const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const chatMessagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Notifications State
+  const [notifications, setNotifications] = useState<LegalNotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [selectedNotifFilter, setSelectedNotifFilter] = useState<string>("all");
 
   // Auto-scroll chat
   useEffect(() => {
@@ -493,20 +698,25 @@ export function SecureInboxView({
   const activeEmail =
     emails.find((e) => e.id === selectedEmailId) || filteredEmails[0] || emails[0];
 
-  const activeChatThread =
-    chatThreads.find((c) => c.id === selectedChatId) || chatThreads[0];
-
   const filteredChatThreads = useMemo(() => {
+    const segmentFiltered = chatThreads.filter(
+      (c) => (c.type || "direct") === chatSegment
+    );
     const q = chatSearchQuery.toLowerCase().trim();
-    if (!q) return chatThreads;
-    return chatThreads.filter(
+    if (!q) return segmentFiltered;
+    return segmentFiltered.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.matter.toLowerCase().includes(q) ||
         c.specialization.toLowerCase().includes(q) ||
         c.lastMessage.toLowerCase().includes(q)
     );
-  }, [chatThreads, chatSearchQuery]);
+  }, [chatThreads, chatSegment, chatSearchQuery]);
+
+  const activeChatThread =
+    chatThreads.find((c) => c.id === selectedChatId) ||
+    filteredChatThreads[0] ||
+    chatThreads[0];
 
   // Toggle star
   const handleToggleStar = (emailId: string, e?: React.MouseEvent) => {
@@ -628,7 +838,7 @@ export function SecureInboxView({
       ========================================================================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-3">
-          {/* Dual Mode Switcher Pill */}
+          {/* 3 Header Tabs: Mail box | Instant Message | Notifications */}
           <div className="p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1 text-xs font-bold">
             <button
               type="button"
@@ -640,8 +850,12 @@ export function SecureInboxView({
               }`}
             >
               <Mail className="w-4 h-4" />
-              <span>Legal Mails &amp; Notices</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black text-white dark:bg-white dark:text-black font-mono">
+              <span>Mail box</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                inboxMode === "mails"
+                  ? "bg-white text-black dark:bg-black dark:text-white"
+                  : "bg-black text-white dark:bg-white dark:text-black"
+              }`}>
                 {emails.filter((e) => !e.isRead).length}
               </span>
             </button>
@@ -656,8 +870,26 @@ export function SecureInboxView({
               }`}
             >
               <MessageSquare className="w-4 h-4" />
-              <span>Instant Messages</span>
+              <span>Instant Message</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setInboxMode("notifications")}
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                inboxMode === "notifications"
+                  ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-black"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+              }`}
+            >
+              <Bell className="w-4 h-4" />
+              <span>Notifications</span>
+              {notifications.filter((n) => !n.isRead).length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#6B1728] text-white">
+                  {notifications.filter((n) => !n.isRead).length}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -1132,263 +1364,559 @@ export function SecureInboxView({
       {/* =========================================================================
           MODE 2: INSTANT MESSAGES (Exact Match to Image 1 Right Side Sketch)
       ========================================================================= */}
+      {/* =========================================================================
+          MODE 2: INSTANT MESSAGES (Exact Match to User Uploaded Image)
+      ========================================================================= */}
       {inboxMode === "messages" && (
-        <div className="grid grid-cols-1 md:grid-cols-12 min-h-[700px] rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-xs overflow-hidden">
+        <div className="flex flex-col md:flex-row min-h-[720px] rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-xs overflow-hidden">
           {/* -------------------------------------------------------------
-              LEFT SUB-COLUMN: Advocates Thread List (~4 Cols in Sketch)
+              RAIL 1: Far Left Mini Icon Rail (Matching Leftmost Bar in Image)
           ------------------------------------------------------------- */}
-          <div className="md:col-span-4 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-zinc-50/50 dark:bg-zinc-950/50">
-            {/* Search Advocate in chat */}
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-black text-sm text-black dark:text-white flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Instant Conversations
-                </h3>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                  Live
-                </span>
-              </div>
+          <div className="hidden sm:flex w-16 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex-col justify-between items-center py-5 shrink-0">
+            {/* Top Chat Logo Icon */}
+            <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-black dark:text-white shadow-2xs">
+              <MessageSquare className="w-5 h-5 text-black dark:text-white" />
+            </div>
 
+            {/* Navigation Icons matching screenshot */}
+            <div className="flex flex-col items-center space-y-6">
+              <button
+                type="button"
+                onClick={() => setChatSegment("direct")}
+                className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+                  chatSegment === "direct"
+                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                    : "text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+                title="Direct Messages"
+              >
+                <Home className="w-5 h-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setChatSegment("group")}
+                className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+                  chatSegment === "group"
+                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                    : "text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+                title="Group Discussions"
+              >
+                <Users className="w-5 h-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInboxMode("notifications")}
+                className="p-2.5 rounded-xl text-zinc-400 hover:text-black dark:hover:text-white transition-all cursor-pointer relative"
+                title="Notifications"
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.some((n) => !n.isRead) && (
+                  <span className="w-2 h-2 rounded-full bg-[#6B1728] absolute top-1.5 right-1.5 ring-2 ring-white dark:ring-black" />
+                )}
+              </button>
+            </div>
+
+            {/* Bottom Utilities matching screenshot */}
+            <div className="flex flex-col items-center space-y-5">
+              <button
+                type="button"
+                className="p-2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                title="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+
+              <button
+                type="button"
+                className="p-2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                title="AI Legal Tips"
+              >
+                <Lightbulb className="w-5 h-5" />
+              </button>
+
+              {/* User Profile Avatar circle matching screenshot */}
+              <div
+                className="w-9 h-9 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs cursor-pointer"
+                title="John Doe (Client Profile)"
+              >
+                JD
+              </div>
+            </div>
+          </div>
+
+          {/* -------------------------------------------------------------
+              RAIL 2: Discussions / Contacts Column (Matching Image Center-Left)
+          ------------------------------------------------------------- */}
+          <div className="w-full md:w-80 lg:w-84 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex flex-col shrink-0">
+            <div className="p-4 space-y-3.5 border-b border-zinc-100 dark:border-zinc-900">
+              {/* Search Bar matching screenshot */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Search counsel or matter..."
+                  placeholder="Search"
                   value={chatSearchQuery}
                   onChange={(e) => setChatSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
                 />
+              </div>
+
+              {/* Segmented Pill: Direct | Group */}
+              <div className="p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 flex items-center text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setChatSegment("direct")}
+                  className={`flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer ${
+                    chatSegment === "direct"
+                      ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
+                      : "text-zinc-500 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  Direct
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChatSegment("group")}
+                  className={`flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer ${
+                    chatSegment === "group"
+                      ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
+                      : "text-zinc-500 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  Group
+                </button>
+              </div>
+
+              {/* Discussions Header with Edit/Pen icon matching screenshot */}
+              <div className="flex items-center justify-between pt-1">
+                <h3 className="font-bold text-base text-black dark:text-white">Discussions</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert(chatSegment === "direct" ? "Select contact to begin instant conversation" : "Create new legal panel group discussion");
+                  }}
+                  className="p-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                  title="New Discussion"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
 
-            {/* Advocate List matching "Adv Meera", "Adv Sarah" in Sketch */}
-            <div className="flex-1 overflow-y-auto divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+            {/* Discussions List matching screenshot */}
+            <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900 p-2 space-y-1">
               {filteredChatThreads.map((thread) => {
-                const isSelected = selectedChatId === thread.id;
+                const isSelected = activeChatThread.id === thread.id;
                 return (
                   <div
                     key={thread.id}
                     onClick={() => setSelectedChatId(thread.id)}
-                    className={`p-4 transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-3 rounded-2xl transition-all cursor-pointer flex items-center gap-3 ${
                       isSelected
-                        ? "bg-white dark:bg-black border-l-4 border-black dark:border-white"
-                        : "hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60"
+                        ? "bg-zinc-100 dark:bg-zinc-900/80"
+                        : "hover:bg-zinc-50 dark:hover:bg-zinc-900/40"
                     }`}
                   >
+                    {/* Circle Avatar with online status dot at corner */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shadow-2xs">
+                      <div
+                        className={`w-10 h-10 rounded-full ${
+                          thread.avatarBgColor || "bg-black text-white dark:bg-white dark:text-black"
+                        } font-bold text-xs flex items-center justify-center shadow-2xs`}
+                      >
                         {thread.avatarText}
                       </div>
                       {thread.online && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-2 ring-white dark:ring-black" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-white dark:ring-black" />
                       )}
                     </div>
 
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center justify-between">
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
                         <span className="font-bold text-xs text-black dark:text-white truncate">
                           {thread.name}
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">
+                        <span className="text-[11px] text-zinc-400 font-normal shrink-0">
                           {thread.lastTime}
                         </span>
                       </div>
-
-                      <span className="text-[10px] font-mono text-zinc-400 block truncate">
-                        {thread.matter}
-                      </span>
-
-                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                         {thread.lastMessage}
                       </p>
                     </div>
                   </div>
                 );
               })}
+
+              {filteredChatThreads.length === 0 && (
+                <div className="p-8 text-center text-xs text-zinc-400">
+                  No discussions found matching &quot;{chatSearchQuery}&quot;.
+                </div>
+              )}
             </div>
           </div>
 
           {/* -------------------------------------------------------------
-              RIGHT CONVERSATION PANE (~8 Cols in Sketch)
-              Showing Chat stream and Input Box matching handwritten sketch
+              RAIL 3: Right Main Chat Conversation Pane (Matching Image Right)
           ------------------------------------------------------------- */}
-          <div className="md:col-span-8 flex flex-col justify-between bg-white dark:bg-black">
-            {/* Header of Active Chat */}
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shadow-2xs">
+          <div className="flex-1 flex flex-col justify-between bg-white dark:bg-black min-w-0">
+            {/* Header matching screenshot: Avatar, Name, Location/Chamber, Camera, Phone, User icons */}
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-black">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`w-10 h-10 rounded-full ${
+                    activeChatThread.avatarBgColor || "bg-blue-600 text-white"
+                  } font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs`}
+                >
                   {activeChatThread.avatarText}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-sm text-black dark:text-white">
-                      {activeChatThread.name}
-                    </h4>
-                    {activeChatThread.online && (
-                      <span className="text-[10px] font-mono text-emerald-500 font-semibold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Online
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-mono text-zinc-400">
-                    {activeChatThread.chamber} &bull; {activeChatThread.matter}
+                <div className="min-w-0">
+                  <h4 className="font-bold text-sm text-black dark:text-white truncate">
+                    {activeChatThread.name}
+                  </h4>
+                  <span className="text-[11px] text-zinc-400 truncate block">
+                    {activeChatThread.court || activeChatThread.chamber || "Manhattan"}
                   </span>
                 </div>
               </div>
 
+              {/* Action Icons matching screenshot */}
               <div className="flex items-center gap-2">
                 {onOpenConsultationModal && (
                   <button
                     type="button"
                     onClick={onOpenConsultationModal}
-                    className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-                    title="Launch video consultation"
+                    className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                    title="Video Call"
                   >
-                    <Video className="w-4 h-4 text-black dark:text-white" />
+                    <Video className="w-4 h-4" />
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => alert(`Placing encrypted audio call to ${activeChatThread.name}`)}
+                  className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                  title="Voice Call"
+                >
+                  <Phone className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => alert(`Participant Info: ${activeChatThread.name} • ${activeChatThread.matter}`)}
+                  className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                  title="View Profile / Members"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            {/* Chat Messages Stream */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+            {/* Message Stream matching screenshot layout */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
               {activeChatThread.messages.map((msg) => {
                 const isCitizen = msg.sender === "citizen";
                 return (
-                  <div
-                    key={msg.id}
-                    className={`flex gap-2.5 ${isCitizen ? "justify-end" : "justify-start"}`}
-                  >
-                    {!isCitizen && (
-                      <div className="w-7 h-7 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs mt-1">
-                        {activeChatThread.avatarText}
-                      </div>
-                    )}
-
+                  <div key={msg.id} className="space-y-1">
+                    {/* Date / Day Indicator matching screenshot */}
                     <div
-                      className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3.5 space-y-2 text-xs shadow-2xs ${
-                        isCitizen
-                          ? "bg-black text-white dark:bg-white dark:text-black font-medium"
-                          : "bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      className={`flex items-center gap-2 text-[11px] text-zinc-400 font-normal px-2 ${
+                        isCitizen ? "justify-end" : "justify-start"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                      <span>{msg.timestamp}</span>
+                    </div>
 
-                      {/* Attachments inside chat */}
-                      {msg.attachments && msg.attachments.length > 0 && (
-                        <div className="pt-1 space-y-1">
-                          {msg.attachments.map((att, i) => (
-                            <div
-                              key={i}
-                              className={`p-2 rounded-xl flex items-center justify-between text-[11px] font-mono ${
-                                isCitizen
-                                  ? "bg-white/10 text-white dark:bg-black/10 dark:text-black"
-                                  : "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 truncate">
-                                <FileText className="w-3.5 h-3.5 shrink-0" />
-                                <span className="truncate">{att.name}</span>
-                              </div>
-                              <span className="opacity-70 ml-2">{att.size}</span>
-                            </div>
-                          ))}
+                    <div
+                      className={`flex gap-3 items-end ${
+                        isCitizen ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {/* Left incoming avatar matching screenshot */}
+                      {!isCitizen && (
+                        <div
+                          className={`w-8 h-8 rounded-full ${
+                            activeChatThread.avatarBgColor || "bg-blue-600 text-white"
+                          } font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs mb-1`}
+                        >
+                          {activeChatThread.avatarText}
                         </div>
                       )}
 
+                      {/* Chat bubble: Soft gray for incoming, Burgundy (#6B1728) for outgoing */}
                       <div
-                        className={`flex items-center justify-end gap-1 text-[9px] font-mono opacity-70 pt-0.5`}
+                        className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-4 text-xs shadow-2xs leading-relaxed ${
+                          isCitizen
+                            ? "bg-[#6B1728] text-white font-medium"
+                            : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-transparent dark:border-zinc-800/80"
+                        }`}
                       >
-                        <span>{msg.timestamp}</span>
-                        {isCitizen && (
-                          <CheckCheck className="w-3 h-3 text-sky-400 dark:text-sky-600" />
+                        <p className="whitespace-pre-wrap">{msg.text}</p>
+
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="pt-2 space-y-1.5">
+                            {msg.attachments.map((att, i) => (
+                              <div
+                                key={i}
+                                className={`p-2 rounded-xl flex items-center justify-between text-[11px] font-mono ${
+                                  isCitizen
+                                    ? "bg-white/15 text-white"
+                                    : "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  <FileText className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate">{att.name}</span>
+                                </div>
+                                <span className="opacity-75 ml-2 text-[10px]">{att.size}</span>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    {isCitizen && (
-                      <div className="w-7 h-7 rounded-xl bg-zinc-200 dark:bg-zinc-800 font-bold text-[10px] flex items-center justify-center shrink-0 mt-1 text-black dark:text-white">
-                        GO
-                      </div>
-                    )}
+                      {/* Right outgoing avatar matching screenshot */}
+                      {isCitizen && (
+                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mb-1 shadow-2xs">
+                          JD
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
               <div ref={chatMessagesEndRef} />
             </div>
 
-            {/* Quick Prompt Chips */}
-            <div className="px-4 py-2 border-t border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-950 flex flex-wrap gap-1.5 text-xs">
-              <span className="text-[10px] font-mono text-zinc-400 self-center">
-                Quick responses:
-              </span>
-              {[
-                "Understood, thank you Adv.",
-                "Should I arrange physical true copies?",
-                "When is the next motion sitting?",
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setChatInputText(chip)}
-                  className="px-2.5 py-1 rounded-full bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white cursor-pointer"
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-
-            {/* Bottom Instant Message Input Box matching Sketch */}
-            <div className="p-3 sm:p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black space-y-2">
+            {/* Bottom Input Container matching screenshot */}
+            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black">
               <div className="flex items-center gap-2">
-                {/* Voice Note Button */}
-                <button
-                  type="button"
-                  onClick={toggleRecording}
-                  title={isRecording ? "Stop voice memo" : "Record voice memo to counsel"}
-                  className={`p-2 rounded-xl border transition-colors cursor-pointer shrink-0 ${
-                    isRecording
-                      ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white animate-pulse"
-                      : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                </button>
+                {/* Rounded full pill container matching screenshot */}
+                <div className="flex-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-4 py-2 flex items-center gap-2.5 transition-all focus-within:ring-1 focus-within:ring-black dark:focus-within:ring-white">
+                  <button
+                    type="button"
+                    onClick={() => setChatInputText((prev) => prev + " ⚖️")}
+                    className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                    title="Add emoji"
+                  >
+                    <Smile className="w-5 h-5" />
+                  </button>
 
-                {isRecording && (
-                  <span className="text-[11px] font-mono text-black dark:text-white font-bold animate-pulse">
-                    Recording audio memo ({recordingSeconds}s)...
+                  <input
+                    type="text"
+                    placeholder="Type message..."
+                    value={chatInputText}
+                    onChange={(e) => setChatInputText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSendChatMessage();
+                    }}
+                    className="flex-1 bg-transparent text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
+                  />
+
+                  {/* Voice Memo toggle micro-button */}
+                  <button
+                    type="button"
+                    onClick={toggleRecording}
+                    className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                      isRecording
+                        ? "bg-[#6B1728] text-white animate-pulse"
+                        : "text-zinc-400 hover:text-black dark:hover:text-white"
+                    }`}
+                    title={isRecording ? "Stop voice recording" : "Record voice note"}
+                  >
+                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+
+                  {/* Send button matching screenshot */}
+                  <button
+                    type="button"
+                    onClick={handleSendChatMessage}
+                    disabled={!chatInputText.trim()}
+                    className="p-1.5 rounded-full text-zinc-400 hover:text-[#6B1728] dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
+                    title="Send message"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {isRecording && (
+                <div className="pt-2 flex items-center gap-2 text-[11px] font-mono text-[#6B1728] dark:text-[#F3A5B5] font-bold animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-[#6B1728] animate-ping" />
+                  <span>Recording privileged voice memo ({recordingSeconds}s)... Click mic again to attach.</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODE 3: NOTIFICATIONS CENTER (Dedicated High-Priority Legal Alerts)
+      ========================================================================= */}
+      {inboxMode === "notifications" && (
+        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-xs p-6 space-y-6">
+          {/* Header with Title and Filter pills */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <div>
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-[#6B1728] dark:text-[#F3A5B5]" />
+                <h2 className="text-lg font-black text-black dark:text-white">
+                  Court &amp; Legal Notifications
+                </h2>
+                {notifications.filter((n) => !n.isRead).length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-[#6B1728] text-white">
+                    {notifications.filter((n) => !n.isRead).length} Unread
                   </span>
                 )}
-
-                {/* Input Field */}
-                <input
-                  type="text"
-                  placeholder={`Instant message to ${activeChatThread.name}...`}
-                  value={chatInputText}
-                  onChange={(e) => setChatInputText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSendChatMessage();
-                    }
-                  }}
-                  className="flex-1 bg-zinc-50 dark:bg-zinc-900 px-3.5 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
-                />
-
-                {/* Send Button */}
-                <button
-                  type="button"
-                  onClick={handleSendChatMessage}
-                  disabled={!chatInputText.trim()}
-                  className="px-4 py-2 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 disabled:opacity-40 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Send</span>
-                </button>
               </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                Real-time alerts from High Court registries, causelists, Speed Post tracking, and chamber schedules.
+              </p>
             </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+                }}
+                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-black dark:text-white cursor-pointer transition-colors"
+              >
+                Mark all as read
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotifications([])}
+                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer transition-colors"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: "all", label: "All Alerts", count: notifications.length },
+              { id: "orders", label: "Court Orders", count: notifications.filter((n) => n.category === "orders").length },
+              { id: "hearings", label: "Hearing Dates", count: notifications.filter((n) => n.category === "hearings").length },
+              { id: "notices", label: "Statutory Notices", count: notifications.filter((n) => n.category === "notices").length },
+              { id: "filings", label: "Registry Filings", count: notifications.filter((n) => n.category === "filings").length },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedNotifFilter(tab.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  selectedNotifFilter === tab.id
+                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className="text-[10px] opacity-70 font-mono">({tab.count})</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-3">
+            {notifications
+              .filter((n) => selectedNotifFilter === "all" || n.category === selectedNotifFilter)
+              .map((notif) => (
+                <div
+                  key={notif.id}
+                  className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                    !notif.isRead
+                      ? "bg-zinc-50/80 dark:bg-zinc-900/60 border-l-4 border-l-[#6B1728] border-zinc-200 dark:border-zinc-800"
+                      : "bg-white dark:bg-black border-zinc-200 dark:border-zinc-800 opacity-80"
+                  }`}
+                >
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                          notif.priority === "high"
+                            ? "bg-[#6B1728] text-white"
+                            : "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white"
+                        }`}
+                      >
+                        {notif.categoryLabel}
+                      </span>
+
+                      {notif.caseRef && (
+                        <span className="text-[11px] font-mono font-bold text-zinc-500">
+                          {notif.caseRef}
+                        </span>
+                      )}
+
+                      <span className="text-[10px] text-zinc-400 font-mono">
+                        &bull; {notif.timestamp}
+                      </span>
+
+                      {!notif.isRead && (
+                        <span className="w-2 h-2 rounded-full bg-[#6B1728]" />
+                      )}
+                    </div>
+
+                    <h4 className="font-bold text-sm text-black dark:text-white">
+                      {notif.title}
+                    </h4>
+
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                      {notif.summary}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                    {notif.actionLabel && (
+                      <button
+                        type="button"
+                        onClick={() => alert(`Action launched: ${notif.actionLabel}`)}
+                        className="px-3.5 py-1.5 rounded-xl bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs cursor-pointer transition-colors shadow-2xs"
+                      >
+                        {notif.actionLabel}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotifications((prev) =>
+                          prev.map((n) => (n.id === notif.id ? { ...n, isRead: !n.isRead } : n))
+                        );
+                      }}
+                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                      title={notif.isRead ? "Mark unread" : "Mark read"}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+                      }}
+                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                      title="Dismiss"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+            {notifications.filter((n) => selectedNotifFilter === "all" || n.category === selectedNotifFilter).length === 0 && (
+              <div className="p-12 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                No notifications found in this category.
+              </div>
+            )}
           </div>
         </div>
       )}

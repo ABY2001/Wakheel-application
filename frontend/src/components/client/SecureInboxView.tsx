@@ -303,12 +303,12 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
     id: "adv-meera",
     type: "direct",
     name: "John Doe",
-    chamber: "Chamber 402, High Court Road • Manhattan Division",
+    chamber: "Chamber 402 • High Court of Kerala",
     court: "Manhattan",
     specialization: "Senior Counsel • Constitutional & Writs",
     matter: "WP(C) 19482/2024",
     avatarText: "JD",
-    avatarBgColor: "bg-blue-600 text-white",
+    avatarBgColor: "bg-[#0066FF] text-white",
     online: true,
     lastMessage: "The quick brown fox jumps over the lazy dog.",
     lastTime: "Today",
@@ -325,14 +325,14 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
         id: "m-2",
         sender: "citizen",
         text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Sunday",
+        timestamp: "Today",
         status: "read",
       },
       {
         id: "m-3",
         sender: "advocate",
         text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Today",
+        timestamp: "Sunday",
         status: "read",
       },
       {
@@ -347,13 +347,13 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
   {
     id: "adv-sarah",
     type: "direct",
-    name: "Adv. Sarah Jenkins",
-    chamber: "Chamber 304, District Court Complex, Ernakulam",
-    court: "Principal Munsiff Court",
+    name: "John Doe",
+    chamber: "Chamber 304 • District Court Complex",
+    court: "Manhattan",
     specialization: "Senior Property & Tenancy Advocate",
     matter: "OS 412/2023",
     avatarText: "JD",
-    avatarBgColor: "bg-emerald-600 text-white",
+    avatarBgColor: "bg-[#00875A] text-white",
     online: true,
     lastMessage: "The quick brown fox jumps over the lazy dog.",
     lastTime: "Sunday",
@@ -361,16 +361,16 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
     messages: [
       {
         id: "s-1",
-        sender: "citizen",
-        text: "Hello Adv. Sarah, did the Advocate Commissioner inspect the western boundary wall?",
+        sender: "advocate",
+        text: "The quick brown fox jumps over the lazy dog.",
         timestamp: "Sunday",
         status: "read",
       },
       {
         id: "s-2",
-        sender: "advocate",
-        text: "Yes, the survey report confirms an encroachment of 1.8 meters into your plot. The report is completely in our favor for the trial hearing on 04 Nov.",
-        timestamp: "Sunday",
+        sender: "citizen",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Today",
         status: "read",
       },
     ],
@@ -378,30 +378,30 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
   {
     id: "adv-rajesh",
     type: "direct",
-    name: "Adv. Rajesh V. Varma",
-    chamber: "NCLT Bar Association Chambers, Marine Drive",
-    court: "NCLT Kochi & Arbitral Tribunal",
+    name: "John Doe",
+    chamber: "NCLT Bar Chambers • Commercial Tribunal",
+    court: "Manhattan",
     specialization: "Commercial & Corporate Litigator",
     matter: "ARB/NCLT/KOCHI/2024/041",
     avatarText: "JD",
-    avatarBgColor: "bg-cyan-500 text-white",
-    online: false,
+    avatarBgColor: "bg-[#00B8D9] text-white",
+    online: true,
     lastMessage: "The quick brown fox jumps over the lazy dog.",
     lastTime: "Saturday",
     unreadCount: 0,
     messages: [
       {
         id: "r-1",
-        sender: "citizen",
-        text: "Adv. Rajesh, is the NCLT arbitral hearing confirmed for next month?",
-        timestamp: "Saturday",
+        sender: "advocate",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Sunday",
         status: "read",
       },
       {
         id: "r-2",
-        sender: "advocate",
-        text: "Yes, Arbitral hearing confirmed for 18 Nov at 2:30 PM. Please have the original ledger statements ready.",
-        timestamp: "Saturday",
+        sender: "citizen",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Today",
         status: "read",
       },
     ],
@@ -409,13 +409,13 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
   {
     id: "adv-priya",
     type: "direct",
-    name: "Adv. Priya Nair",
-    chamber: "Chamber 12, District Bar Council, Kollam",
-    court: "Judicial First Class Magistrate Court",
+    name: "John Doe",
+    chamber: "Chamber 12 • Judicial First Class Court",
+    court: "Manhattan",
     specialization: "Civil Rights & Statutory Notices",
     matter: "Section 138 NI Act Notice",
     avatarText: "JD",
-    avatarBgColor: "bg-amber-500 text-white",
+    avatarBgColor: "bg-[#FFAB00] text-white",
     online: true,
     lastMessage: "The quick brown fox jumps over the lazy dog.",
     lastTime: "Friday",
@@ -424,8 +424,15 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
       {
         id: "p-1",
         sender: "advocate",
-        text: "Statutory demand notice under Section 138 has been dispatched via Speed Post. Notice delivered. 15-day statutory clock is running.",
-        timestamp: "Friday",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Sunday",
+        status: "read",
+      },
+      {
+        id: "p-2",
+        sender: "citizen",
+        text: "The quick brown fox jumps over the lazy dog.",
+        timestamp: "Today",
         status: "read",
       },
     ],
@@ -1368,87 +1375,9 @@ export function SecureInboxView({
           MODE 2: INSTANT MESSAGES (Exact Match to User Uploaded Image)
       ========================================================================= */}
       {inboxMode === "messages" && (
-        <div className="flex flex-col md:flex-row min-h-[720px] rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-xs overflow-hidden">
+        <div className="flex flex-col md:flex-row min-h-[700px] rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black shadow-xs overflow-hidden">
           {/* -------------------------------------------------------------
-              RAIL 1: Far Left Mini Icon Rail (Matching Leftmost Bar in Image)
-          ------------------------------------------------------------- */}
-          <div className="hidden sm:flex w-16 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex-col justify-between items-center py-5 shrink-0">
-            {/* Top Chat Logo Icon */}
-            <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-black dark:text-white shadow-2xs">
-              <MessageSquare className="w-5 h-5 text-black dark:text-white" />
-            </div>
-
-            {/* Navigation Icons matching screenshot */}
-            <div className="flex flex-col items-center space-y-6">
-              <button
-                type="button"
-                onClick={() => setChatSegment("direct")}
-                className={`p-2.5 rounded-xl transition-all cursor-pointer ${
-                  chatSegment === "direct"
-                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                    : "text-zinc-400 hover:text-black dark:hover:text-white"
-                }`}
-                title="Direct Messages"
-              >
-                <Home className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setChatSegment("group")}
-                className={`p-2.5 rounded-xl transition-all cursor-pointer ${
-                  chatSegment === "group"
-                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                    : "text-zinc-400 hover:text-black dark:hover:text-white"
-                }`}
-                title="Group Discussions"
-              >
-                <Users className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setInboxMode("notifications")}
-                className="p-2.5 rounded-xl text-zinc-400 hover:text-black dark:hover:text-white transition-all cursor-pointer relative"
-                title="Notifications"
-              >
-                <Bell className="w-5 h-5" />
-                {notifications.some((n) => !n.isRead) && (
-                  <span className="w-2 h-2 rounded-full bg-[#6B1728] absolute top-1.5 right-1.5 ring-2 ring-white dark:ring-black" />
-                )}
-              </button>
-            </div>
-
-            {/* Bottom Utilities matching screenshot */}
-            <div className="flex flex-col items-center space-y-5">
-              <button
-                type="button"
-                className="p-2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                title="Settings"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                className="p-2 text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                title="AI Legal Tips"
-              >
-                <Lightbulb className="w-5 h-5" />
-              </button>
-
-              {/* User Profile Avatar circle matching screenshot */}
-              <div
-                className="w-9 h-9 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs cursor-pointer"
-                title="John Doe (Client Profile)"
-              >
-                JD
-              </div>
-            </div>
-          </div>
-
-          {/* -------------------------------------------------------------
-              RAIL 2: Discussions / Contacts Column (Matching Image Center-Left)
+              COLUMN 1: Discussions / Contacts Column (Matching User Image)
           ------------------------------------------------------------- */}
           <div className="w-full md:w-80 lg:w-84 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex flex-col shrink-0">
             <div className="p-4 space-y-3.5 border-b border-zinc-100 dark:border-zinc-900">
@@ -1460,7 +1389,7 @@ export function SecureInboxView({
                   placeholder="Search"
                   value={chatSearchQuery}
                   onChange={(e) => setChatSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none"
                 />
               </div>
 
@@ -1471,7 +1400,7 @@ export function SecureInboxView({
                   onClick={() => setChatSegment("direct")}
                   className={`flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer ${
                     chatSegment === "direct"
-                      ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
+                      ? "bg-white dark:bg-black text-[#0066FF] dark:text-white font-bold shadow-xs"
                       : "text-zinc-500 hover:text-black dark:hover:text-white"
                   }`}
                 >
@@ -1482,7 +1411,7 @@ export function SecureInboxView({
                   onClick={() => setChatSegment("group")}
                   className={`flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer ${
                     chatSegment === "group"
-                      ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
+                      ? "bg-white dark:bg-black text-[#0066FF] dark:text-white font-bold shadow-xs"
                       : "text-zinc-500 hover:text-black dark:hover:text-white"
                   }`}
                 >
@@ -1490,15 +1419,13 @@ export function SecureInboxView({
                 </button>
               </div>
 
-              {/* Discussions Header with Edit/Pen icon matching screenshot */}
+              {/* Discussions Header with circular edit/pen icon */}
               <div className="flex items-center justify-between pt-1">
                 <h3 className="font-bold text-base text-black dark:text-white">Discussions</h3>
                 <button
                   type="button"
-                  onClick={() => {
-                    alert(chatSegment === "direct" ? "Select contact to begin instant conversation" : "Create new legal panel group discussion");
-                  }}
-                  className="p-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                  onClick={() => alert("New Discussion")}
+                  className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                   title="New Discussion"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
@@ -1507,31 +1434,29 @@ export function SecureInboxView({
             </div>
 
             {/* Discussions List matching screenshot */}
-            <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900 p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900 px-3 py-2">
               {filteredChatThreads.map((thread) => {
                 const isSelected = activeChatThread.id === thread.id;
                 return (
                   <div
                     key={thread.id}
                     onClick={() => setSelectedChatId(thread.id)}
-                    className={`p-3 rounded-2xl transition-all cursor-pointer flex items-center gap-3 ${
+                    className={`py-3 px-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-3 ${
                       isSelected
-                        ? "bg-zinc-100 dark:bg-zinc-900/80"
-                        : "hover:bg-zinc-50 dark:hover:bg-zinc-900/40"
+                        ? "bg-zinc-50 dark:bg-zinc-900/60"
+                        : "hover:bg-zinc-50/70 dark:hover:bg-zinc-900/30"
                     }`}
                   >
                     {/* Circle Avatar with online status dot at corner */}
                     <div className="relative shrink-0">
                       <div
                         className={`w-10 h-10 rounded-full ${
-                          thread.avatarBgColor || "bg-black text-white dark:bg-white dark:text-black"
+                          thread.avatarBgColor || "bg-[#0066FF] text-white"
                         } font-bold text-xs flex items-center justify-center shadow-2xs`}
                       >
                         {thread.avatarText}
                       </div>
-                      {thread.online && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-white dark:ring-black" />
-                      )}
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-2 ring-white dark:ring-black" />
                     </div>
 
                     {/* Content */}
@@ -1561,58 +1486,54 @@ export function SecureInboxView({
           </div>
 
           {/* -------------------------------------------------------------
-              RAIL 3: Right Main Chat Conversation Pane (Matching Image Right)
+              COLUMN 2: Right Main Chat Conversation Pane (Matching User Image)
           ------------------------------------------------------------- */}
           <div className="flex-1 flex flex-col justify-between bg-white dark:bg-black min-w-0">
-            {/* Header matching screenshot: Avatar, Name, Location/Chamber, Camera, Phone, User icons */}
+            {/* Header: Avatar, Name, Manhattan, Video, Phone, Users */}
             <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-black">
               <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`w-10 h-10 rounded-full ${
-                    activeChatThread.avatarBgColor || "bg-blue-600 text-white"
-                  } font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs`}
-                >
-                  {activeChatThread.avatarText}
+                <div className="w-10 h-10 rounded-full bg-[#0066FF] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                  JD
                 </div>
                 <div className="min-w-0">
                   <h4 className="font-bold text-sm text-black dark:text-white truncate">
                     {activeChatThread.name}
                   </h4>
-                  <span className="text-[11px] text-zinc-400 truncate block">
-                    {activeChatThread.court || activeChatThread.chamber || "Manhattan"}
+                  <span className="text-xs text-zinc-400 truncate block">
+                    {activeChatThread.court || "Manhattan"}
                   </span>
                 </div>
               </div>
 
-              {/* Action Icons matching screenshot */}
-              <div className="flex items-center gap-2">
+              {/* Action Icons matching screenshot: Video, Phone, Users */}
+              <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
                 {onOpenConsultationModal && (
                   <button
                     type="button"
                     onClick={onOpenConsultationModal}
-                    className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                    className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                     title="Video Call"
                   >
-                    <Video className="w-4 h-4" />
+                    <Video className="w-5 h-5" />
                   </button>
                 )}
 
                 <button
                   type="button"
-                  onClick={() => alert(`Placing encrypted audio call to ${activeChatThread.name}`)}
-                  className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                  onClick={() => alert(`Placing encrypted call to ${activeChatThread.name}`)}
+                  className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                   title="Voice Call"
                 >
-                  <Phone className="w-4 h-4" />
+                  <Phone className="w-5 h-5" />
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => alert(`Participant Info: ${activeChatThread.name} • ${activeChatThread.matter}`)}
-                  className="p-2 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-                  title="View Profile / Members"
+                  onClick={() => alert(`Participant Info: ${activeChatThread.name}`)}
+                  className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                  title="Members"
                 >
-                  <UserPlus className="w-4 h-4" />
+                  <Users className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -1639,12 +1560,8 @@ export function SecureInboxView({
                     >
                       {/* Left incoming avatar matching screenshot */}
                       {!isCitizen && (
-                        <div
-                          className={`w-8 h-8 rounded-full ${
-                            activeChatThread.avatarBgColor || "bg-blue-600 text-white"
-                          } font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs mb-1`}
-                        >
-                          {activeChatThread.avatarText}
+                        <div className="w-8 h-8 rounded-full bg-[#0066FF] text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs mb-1">
+                          JD
                         </div>
                       )}
 
@@ -1657,32 +1574,11 @@ export function SecureInboxView({
                         }`}
                       >
                         <p className="whitespace-pre-wrap">{msg.text}</p>
-
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <div className="pt-2 space-y-1.5">
-                            {msg.attachments.map((att, i) => (
-                              <div
-                                key={i}
-                                className={`p-2 rounded-xl flex items-center justify-between text-[11px] font-mono ${
-                                  isCitizen
-                                    ? "bg-white/15 text-white"
-                                    : "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2 truncate">
-                                  <FileText className="w-3.5 h-3.5 shrink-0" />
-                                  <span className="truncate">{att.name}</span>
-                                </div>
-                                <span className="opacity-75 ml-2 text-[10px]">{att.size}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </div>
 
                       {/* Right outgoing avatar matching screenshot */}
                       {isCitizen && (
-                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mb-1 shadow-2xs">
+                        <div className="w-8 h-8 rounded-full bg-[#00B8D9] text-white font-bold text-[11px] flex items-center justify-center shrink-0 mb-1 shadow-2xs">
                           JD
                         </div>
                       )}
@@ -1695,62 +1591,37 @@ export function SecureInboxView({
 
             {/* Bottom Input Container matching screenshot */}
             <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black">
-              <div className="flex items-center gap-2">
-                {/* Rounded full pill container matching screenshot */}
-                <div className="flex-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-4 py-2 flex items-center gap-2.5 transition-all focus-within:ring-1 focus-within:ring-black dark:focus-within:ring-white">
-                  <button
-                    type="button"
-                    onClick={() => setChatInputText((prev) => prev + " ⚖️")}
-                    className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                    title="Add emoji"
-                  >
-                    <Smile className="w-5 h-5" />
-                  </button>
+              <div className="rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setChatInputText((prev) => prev + " ⚖️")}
+                  className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                  title="Emoji"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
 
-                  <input
-                    type="text"
-                    placeholder="Type message..."
-                    value={chatInputText}
-                    onChange={(e) => setChatInputText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSendChatMessage();
-                    }}
-                    className="flex-1 bg-transparent text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
-                  />
+                <input
+                  type="text"
+                  placeholder="Type message..."
+                  value={chatInputText}
+                  onChange={(e) => setChatInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSendChatMessage();
+                  }}
+                  className="flex-1 bg-transparent text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
+                />
 
-                  {/* Voice Memo toggle micro-button */}
-                  <button
-                    type="button"
-                    onClick={toggleRecording}
-                    className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                      isRecording
-                        ? "bg-[#6B1728] text-white animate-pulse"
-                        : "text-zinc-400 hover:text-black dark:hover:text-white"
-                    }`}
-                    title={isRecording ? "Stop voice recording" : "Record voice note"}
-                  >
-                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </button>
-
-                  {/* Send button matching screenshot */}
-                  <button
-                    type="button"
-                    onClick={handleSendChatMessage}
-                    disabled={!chatInputText.trim()}
-                    className="p-1.5 rounded-full text-zinc-400 hover:text-[#6B1728] dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
-                    title="Send message"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleSendChatMessage}
+                  disabled={!chatInputText.trim()}
+                  className="text-zinc-400 hover:text-black dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
+                  title="Send message"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
               </div>
-
-              {isRecording && (
-                <div className="pt-2 flex items-center gap-2 text-[11px] font-mono text-[#6B1728] dark:text-[#F3A5B5] font-bold animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-[#6B1728] animate-ping" />
-                  <span>Recording privileged voice memo ({recordingSeconds}s)... Click mic again to attach.</span>
-                </div>
-              )}
             </div>
           </div>
         </div>

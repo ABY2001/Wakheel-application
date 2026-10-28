@@ -30,6 +30,8 @@ import { AdvocateClientsView } from "@/components/advocate/AdvocateClientsView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { PromoView } from "@/components/advocate/PromoView";
 import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
+import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
+import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -533,11 +535,11 @@ export function AdvocateWorkspaceView() {
           icon: FolderLock,
         },
         {
-          id: "office-suite",
-          label: "Office suit",
-          subtitle: "Chamber stationery & formatting",
-          whatItDoes: "High Court pleading margins, watermarked chamber stationery, and standard templates.",
-          icon: Layers,
+          id: "templates",
+          label: "Templates Library",
+          subtitle: "132 court pleadings & commercial deeds",
+          whatItDoes: "High Court pleading margins, general affidavits, MoUs, and certified legal templates.",
+          icon: FileText,
         },
         {
           id: "compliance",
@@ -1601,115 +1603,10 @@ export function AdvocateWorkspaceView() {
                 </button>
               </div>
 
-              {/* SEGMENT 1: Indian Legal Research Precedent Engine */}
+              {/* SEGMENT 1: Indian Court Judgments & Case Law Library */}
               {researchSegment === "indian-legal-research" && (
-                <div className="space-y-4">
-                  {/* Search Bar matching Screenshot 2 */}
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={researchQuery}
-                        onChange={(e) => setResearchQuery(e.target.value)}
-                        placeholder="Search keywords, Acts (e.g. Telegraph Act 1885, Arbitration Act 1996, BNS 2023), judge, or citations..."
-                        className="w-full pl-10 pr-4 py-3 text-xs rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white shadow-xs"
-                      />
-                    </div>
-                    <button
-                      onClick={() => {}}
-                      className="px-6 py-3 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
-                    >
-                      Search Law
-                    </button>
-                  </div>
-
-                  {/* Quick Citation Jump Pills */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <span className="font-bold text-zinc-500 mr-1">Quick Jump:</span>
-                    {["2024 INSC", "2024 KER", "Arbitration Act Sec 11", "Telegraph Act Sec 16", "BNS Sec 103", "BNSS Sec 187"].map((pill) => (
-                      <button
-                        key={pill}
-                        onClick={() => setResearchQuery(pill)}
-                        className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black font-mono font-medium cursor-pointer transition-all"
-                      >
-                        {pill}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Court / Source Filter Pills */}
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="font-bold text-zinc-500 mr-1">Court / Source:</span>
-                    {(["ALL", "Supreme Court", "High Court of Kerala", "Parliament"] as const).map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setResearchCourtFilter(filter)}
-                        className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                          researchCourtFilter === filter
-                            ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold"
-                            : "bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                        }`}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Results & Precedent Cards */}
-                  <div className="space-y-4 pt-2">
-                    {[
-                      {
-                        citation: "2011 (2) KLT 234",
-                        caseName: "Valsamma & Ors. v. Kerala State Electricity Board",
-                        court: "High Court of Kerala (Division Bench)",
-                        headnote: "Indian Telegraph Act, 1885, Section 10 & 16 — Power lines passing over private agricultural land — Requirement of adequate notice and determination of compensation by District Judge.",
-                        treatment: "Binding Precedent • Followed in WP(C) 19482/2024",
-                      },
-                      {
-                        citation: "(2023) 4 SCC 1",
-                        caseName: "NN Global Mercantile Pvt. Ltd. v. Indo Unique Flame Ltd.",
-                        court: "Supreme Court of India (Constitution Bench)",
-                        headnote: "Arbitration and Conciliation Act, 1996, Section 11(6) — Unstamped arbitration agreements — Enforceability at the referral stage.",
-                        treatment: "Constitutional Ratio • Relevant for ARB/NCLT/KOCHI/2024/041",
-                      },
-                      {
-                        citation: "2024 (1) KHC 892",
-                        caseName: "Malabar Trading Corporation v. Union of India",
-                        court: "High Court of Kerala",
-                        headnote: "GST Act, Section 73 — Summary orders passed without affording effective personal hearing constitute violation of natural justice.",
-                        treatment: "Recent Bench Ruling",
-                      },
-                    ].map((item, idx) => (
-                      <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-2.5 hover:border-black dark:hover:border-white transition-all">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-bold text-black dark:text-white">
-                            {item.citation}
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                            {item.court}
-                          </span>
-                        </div>
-
-                        <h4 className="text-base font-bold text-black dark:text-white">
-                          {item.caseName}
-                        </h4>
-
-                        <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                          {item.headnote}
-                        </p>
-
-                        <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-900 text-xs">
-                          <span className="text-[11px] font-mono text-zinc-500 font-semibold">
-                            {item.treatment}
-                          </span>
-                          <button className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold text-black dark:text-white cursor-pointer">
-                            Link to Matter
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="pt-2">
+                  <JudgementsLibraryView />
                 </div>
               )}
 
@@ -3190,20 +3087,34 @@ export function AdvocateWorkspaceView() {
             />
           )}
 
-          {["office-suite", "compliance"].includes(activeTab) && (
+          {/* ============================================================== */}
+          {/* VIEW: Templates Library (Office Suite / 132 Pleadings)         */}
+          {["office-suite", "templates"].includes(activeTab) && (
+            <TemplatesLibraryView />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Judgments Library                                         */}
+          {activeTab === "judgements" && (
+            <JudgementsLibraryView />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Compliance Verification                                   */}
+          {activeTab === "compliance" && (
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-5">
                 <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
                   <div>
                     <h3 className="text-lg font-bold text-black dark:text-white capitalize">
-                      {activeTab.replace("-", " ")}
+                      Compliance Inspection &amp; Ethics Check
                     </h3>
                     <p className="text-xs text-zinc-500">
-                      Standardized High Court chamber pleadings and 256-bit encrypted document vault.
+                      Bar Council of India Rule 24 conflict checking and statutory verification.
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                    {activeTab}
+                    Compliance
                   </span>
                 </div>
                 <DocIntelligenceCard />

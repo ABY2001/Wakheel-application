@@ -655,20 +655,23 @@ export default function JudgementsLibraryView() {
         </div>
 
         {/* Right Badge: 17,26,756 judgments */}
-        <div className="px-4 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono font-bold text-xs">
+        <div className="px-4 py-1.5 rounded-full bg-[#6B1728]/10 text-[#6B1728] dark:bg-[#6B1728]/25 dark:text-[#F3B8C2] font-mono font-bold text-xs border border-[#6B1728]/20">
           17,26,756 judgments
         </div>
       </div>
 
-      {/* Topic Sections with 4-Column Cards matching screenshot */}
-      <div className="space-y-10 pt-4">
+      {/* Topic Sections with Container-Boxed 4-Column Cards matching screenshot */}
+      <div className="space-y-8 pt-4">
         {filteredSections.map((sec) => (
-          <div key={sec.id} className="space-y-3">
+          <div
+            key={sec.id}
+            className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 sm:p-7 space-y-6 shadow-2xs"
+          >
             <div>
-              <h2 className="text-xl font-bold text-black dark:text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-black dark:text-white tracking-tight">
                 {sec.heading}
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                 {sec.subtitle}
               </p>
             </div>
@@ -681,18 +684,18 @@ export default function JudgementsLibraryView() {
                     const match = JUDGEMENTS_DATA.find((j) => j.id === topic.linkedJudgementId);
                     if (match) setReadingJudgement(match);
                   }}
-                  className="group rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 hover:shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer flex flex-col justify-between"
+                  className="group rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 flex flex-col justify-between hover:border-zinc-400 dark:hover:border-zinc-600 transition-all cursor-pointer"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-bold text-sm text-black dark:text-white group-hover:underline">
+                    <h3 className="font-bold text-sm sm:text-base text-black dark:text-white group-hover:underline">
                       {topic.title}
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 shrink-0">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#6B1728]/10 text-[#6B1728] dark:bg-[#6B1728]/25 dark:text-[#F3B8C2] shrink-0">
                       {topic.count}
                     </span>
                   </div>
 
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2.5 leading-relaxed">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 leading-snug">
                     {topic.statutes}
                   </p>
                 </div>

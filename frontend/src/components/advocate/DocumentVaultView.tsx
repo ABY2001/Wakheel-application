@@ -23,6 +23,7 @@ import {
   AlertCircle,
   CheckCheck,
   RefreshCw,
+  Scale,
   Send,
   FileCode,
 } from "lucide-react";
@@ -65,6 +66,7 @@ interface DocumentVaultViewProps {
   token?: string;
   advocateName?: string;
   barCouncilNumber?: string;
+  onNavigateTab?: (tab: string) => void;
 }
 
 const DEFAULT_VAULT_FILES: VaultDocument[] = [
@@ -227,6 +229,7 @@ export function DocumentVaultView({
   token,
   advocateName = "Adv. Meera Krishnan",
   barCouncilNumber = "K/1429/2016",
+  onNavigateTab,
 }: DocumentVaultViewProps) {
   // State for files
   const [files, setFiles] = useState<VaultDocument[]>(DEFAULT_VAULT_FILES);
@@ -705,6 +708,17 @@ export function DocumentVaultView({
             <Share2 className="w-4 h-4" />
             <span>Share Certified Order</span>
           </button>
+
+          {onNavigateTab && (
+            <button
+              type="button"
+              onClick={() => onNavigateTab("scrutiny-efiling")}
+              className="px-3.5 py-2 rounded-xl border border-[#6B1728]/30 bg-[#6B1728]/10 text-[#6B1728] dark:bg-[#6B1728]/25 dark:text-[#F3B8C2] font-bold text-xs flex items-center gap-1.5 transition-all hover:bg-[#6B1728]/20 cursor-pointer"
+            >
+              <Scale className="w-4 h-4 text-[#6B1728]" />
+              <span>High Court Scrutiny &amp; Motions</span>
+            </button>
+          )}
 
           <button
             type="button"

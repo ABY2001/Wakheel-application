@@ -32,6 +32,7 @@ import { PromoView } from "@/components/advocate/PromoView";
 import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
 import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
 import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
+import ScrutinyDefectClearingView from "@/components/advocate/ScrutinyDefectClearingView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -533,6 +534,13 @@ export function AdvocateWorkspaceView() {
           subtitle: "256-bit encrypted file vault",
           whatItDoes: "Stores certified true copies, scanned case bundles, and privileged work product.",
           icon: FolderLock,
+        },
+        {
+          id: "scrutiny-efiling",
+          label: "Scrutiny & E-Filing",
+          subtitle: "Defect clearing & motion slips",
+          whatItDoes: "Clears High Court scrutiny objections, tracks cure deadlines, and generates urgent motion slips.",
+          icon: Scale,
         },
         {
           id: "templates",
@@ -3048,6 +3056,7 @@ export function AdvocateWorkspaceView() {
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               advocateName={displayFullName}
               barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              onNavigateTab={(tab) => setActiveTab(tab)}
             />
           )}
 
@@ -3084,6 +3093,16 @@ export function AdvocateWorkspaceView() {
               barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               onNavigateTab={(tab) => setActiveTab(tab)}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: High Court Scrutiny Defect Clearing & E-Filing Docket    */}
+          {["scrutiny-efiling", "scrutiny", "efiling"].includes(activeTab) && (
+            <ScrutinyDefectClearingView
+              advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
             />
           )}
 

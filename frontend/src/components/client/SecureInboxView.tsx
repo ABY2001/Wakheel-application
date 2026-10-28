@@ -44,6 +44,9 @@ import {
   Smile,
   Edit2,
   UserPlus,
+  Info,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 
 export type InboxMode = "mails" | "messages" | "notifications";
@@ -108,6 +111,7 @@ export interface ChatAdvocateThread {
 
 export interface LegalNotificationItem {
   id: string;
+  type?: "info" | "success" | "warning" | "danger";
   title: string;
   category: "all" | "orders" | "hearings" | "notices" | "filings" | "system";
   categoryLabel: string;
@@ -537,7 +541,56 @@ const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
 
 const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
   {
+    id: "notif-info-1",
+    type: "info",
+    title: "This is informative message",
+    category: "system",
+    categoryLabel: "Info Alert",
+    summary: "Lorem ipsum dolor sit amet, consectetur.",
+    timestamp: "Just now",
+    isRead: false,
+    priority: "normal",
+    actionLabel: "Action",
+  },
+  {
+    id: "notif-success-1",
+    type: "success",
+    title: "This is success message",
+    category: "orders",
+    categoryLabel: "Success Alert",
+    summary: "Lorem ipsum dolor sit amet, consectetur.",
+    timestamp: "5 min ago",
+    isRead: false,
+    priority: "normal",
+    actionLabel: "Action",
+  },
+  {
+    id: "notif-warning-1",
+    type: "warning",
+    title: "This is warning message",
+    category: "hearings",
+    categoryLabel: "Warning Alert",
+    summary: "Lorem ipsum dolor sit amet, consectetur.",
+    timestamp: "20 min ago",
+    isRead: false,
+    priority: "high",
+    actionLabel: "Action",
+  },
+  {
+    id: "notif-danger-1",
+    type: "danger",
+    title: "This is danger message",
+    category: "notices",
+    categoryLabel: "Danger Alert",
+    summary: "Lorem ipsum dolor sit amet, consectetur.",
+    timestamp: "1 hour ago",
+    isRead: false,
+    priority: "high",
+    actionLabel: "Action",
+  },
+  {
     id: "notif-1",
+    type: "success",
     title: "Interim Stay Order Certified Copy Issued",
     category: "orders",
     categoryLabel: "High Court Order",
@@ -546,10 +599,11 @@ const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
     caseRef: "WP(C) 19482/2024",
     isRead: false,
     priority: "high",
-    actionLabel: "View Order PDF",
+    actionLabel: "Action",
   },
   {
     id: "notif-2",
+    type: "warning",
     title: "Urgent Causelist Listing for Tomorrow",
     category: "hearings",
     categoryLabel: "Court Hearing",
@@ -558,10 +612,11 @@ const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
     caseRef: "WP(C) 19482/2024",
     isRead: false,
     priority: "high",
-    actionLabel: "View Causelist Item",
+    actionLabel: "Action",
   },
   {
     id: "notif-3",
+    type: "info",
     title: "Speed Post Statutory Notice Delivered",
     category: "notices",
     categoryLabel: "India Post Delivery",
@@ -570,10 +625,11 @@ const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
     caseRef: "Sec. 138 NI Act Notice",
     isRead: false,
     priority: "normal",
-    actionLabel: "Track Speed Post",
+    actionLabel: "Action",
   },
   {
     id: "notif-4",
+    type: "danger",
     title: "Advocate Commissioner Survey Report Uploaded",
     category: "filings",
     categoryLabel: "Survey Filing",
@@ -582,10 +638,11 @@ const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
     caseRef: "OS 412/2023",
     isRead: true,
     priority: "normal",
-    actionLabel: "Examine Report",
+    actionLabel: "Action",
   },
   {
     id: "notif-5",
+    type: "info",
     title: "Pre-Motion Virtual Chamber Consultation Confirmed",
     category: "hearings",
     categoryLabel: "Chamber Meet",
@@ -594,10 +651,11 @@ const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
     caseRef: "OS 412/2023",
     isRead: true,
     priority: "normal",
-    actionLabel: "Join Chamber Room",
+    actionLabel: "Action",
   },
   {
     id: "notif-6",
+    type: "warning",
     title: "Arbitral Tribunal Statement of Claim Received",
     category: "filings",
     categoryLabel: "Tribunal Registry",
@@ -606,7 +664,7 @@ const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
     caseRef: "ARB/NCLT/KOCHI/2024/041",
     isRead: true,
     priority: "normal",
-    actionLabel: "Review Documents",
+    actionLabel: "Action",
   },
 ];
 
@@ -1697,91 +1755,94 @@ export function SecureInboxView({
           </div>
 
           {/* Notifications List */}
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {notifications
               .filter((n) => selectedNotifFilter === "all" || n.category === selectedNotifFilter)
-              .map((notif) => (
-                <div
-                  key={notif.id}
-                  className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                    !notif.isRead
-                      ? "bg-zinc-50/80 dark:bg-zinc-900/60 border-l-4 border-l-[#6B1728] border-zinc-200 dark:border-zinc-800"
-                      : "bg-white dark:bg-black border-zinc-200 dark:border-zinc-800 opacity-80"
-                  }`}
-                >
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                          notif.priority === "high"
-                            ? "bg-[#6B1728] text-white"
-                            : "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white"
-                        }`}
-                      >
-                        {notif.categoryLabel}
-                      </span>
+              .map((notif) => {
+                const itemType = notif.type || "info";
+                const typeConfig = {
+                  info: {
+                    stripe: "bg-[#6B1728]",
+                    textAccent: "text-[#6B1728] dark:text-[#E07A8B]",
+                    gradient: "from-[#6B1728]/[0.08] via-[#6B1728]/[0.02] dark:from-[#6B1728]/20 dark:via-[#6B1728]/5",
+                    icon: <Info className="w-4 h-4 shrink-0 text-[#6B1728] dark:text-[#E07A8B]" />,
+                  },
+                  success: {
+                    stripe: "bg-[#7A1B2E]",
+                    textAccent: "text-[#7A1B2E] dark:text-[#E07A8B]",
+                    gradient: "from-[#7A1B2E]/[0.08] via-[#7A1B2E]/[0.02] dark:from-[#7A1B2E]/20 dark:via-[#7A1B2E]/5",
+                    icon: <CheckCircle2 className="w-4 h-4 shrink-0 text-[#7A1B2E] dark:text-[#E07A8B]" />,
+                  },
+                  warning: {
+                    stripe: "bg-[#8B1E32]",
+                    textAccent: "text-[#8B1E32] dark:text-[#E07A8B]",
+                    gradient: "from-[#8B1E32]/[0.08] via-[#8B1E32]/[0.02] dark:from-[#8B1E32]/20 dark:via-[#8B1E32]/5",
+                    icon: <AlertTriangle className="w-4 h-4 shrink-0 text-[#8B1E32] dark:text-[#E07A8B]" />,
+                  },
+                  danger: {
+                    stripe: "bg-[#54121E]",
+                    textAccent: "text-[#54121E] dark:text-[#E07A8B]",
+                    gradient: "from-[#54121E]/[0.08] via-[#54121E]/[0.02] dark:from-[#54121E]/20 dark:via-[#54121E]/5",
+                    icon: <AlertCircle className="w-4 h-4 shrink-0 text-[#54121E] dark:text-[#E07A8B]" />,
+                  },
+                }[itemType];
 
-                      {notif.caseRef && (
-                        <span className="text-[11px] font-mono font-bold text-zinc-500">
-                          {notif.caseRef}
+                return (
+                  <div
+                    key={notif.id}
+                    className={`relative overflow-hidden flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs transition-all hover:shadow-xs ${
+                      notif.isRead ? "opacity-75" : ""
+                    }`}
+                  >
+                    {/* Left vertical color stripe matching reference */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 sm:w-1.5 ${typeConfig.stripe}`} />
+
+                    {/* Soft gradient wash from left matching reference */}
+                    <div className={`absolute inset-0 pointer-events-none bg-gradient-to-r ${typeConfig.gradient} to-transparent`} />
+
+                    {/* Content: Icon + Title + Description */}
+                    <div className="relative flex items-center gap-3 min-w-0 flex-1 pl-1">
+                      {typeConfig.icon}
+
+                      <div className="flex flex-wrap sm:flex-nowrap items-baseline sm:items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
+                        <span className="font-bold text-xs sm:text-sm text-black dark:text-white shrink-0">
+                          {notif.title}
                         </span>
-                      )}
-
-                      <span className="text-[10px] text-zinc-400 font-mono">
-                        &bull; {notif.timestamp}
-                      </span>
-
-                      {!notif.isRead && (
-                        <span className="w-2 h-2 rounded-full bg-[#6B1728]" />
-                      )}
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate font-normal">
+                          {notif.summary}
+                        </span>
+                        {notif.caseRef && (
+                          <span className="hidden md:inline-block text-[10px] font-mono font-semibold text-zinc-400 ml-1">
+                            ({notif.caseRef})
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <h4 className="font-bold text-sm text-black dark:text-white">
-                      {notif.title}
-                    </h4>
-
-                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                      {notif.summary}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    {notif.actionLabel && (
+                    {/* Right side: Action link + Dismiss button */}
+                    <div className="relative flex items-center gap-3.5 shrink-0 ml-2">
                       <button
                         type="button"
-                        onClick={() => alert(`Action launched: ${notif.actionLabel}`)}
-                        className="px-3.5 py-1.5 rounded-xl bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs cursor-pointer transition-colors shadow-2xs"
+                        onClick={() => alert(`Action launched for: ${notif.title}`)}
+                        className={`text-xs font-semibold ${typeConfig.textAccent} hover:underline cursor-pointer transition-colors`}
                       >
-                        {notif.actionLabel}
+                        {notif.actionLabel || "Action"}
                       </button>
-                    )}
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNotifications((prev) =>
-                          prev.map((n) => (n.id === notif.id ? { ...n, isRead: !n.isRead } : n))
-                        );
-                      }}
-                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                      title={notif.isRead ? "Mark unread" : "Mark read"}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
-                      }}
-                      className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                      title="Dismiss"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+                        }}
+                        className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer transition-colors rounded"
+                        title="Dismiss"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
             {notifications.filter((n) => selectedNotifFilter === "all" || n.category === selectedNotifFilter).length === 0 && (
               <div className="p-12 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">

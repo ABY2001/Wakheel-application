@@ -64,6 +64,8 @@ import {
   Paperclip,
   Copy,
   AlertCircle,
+  Info,
+  AlertTriangle,
   RefreshCw,
   Newspaper,
   UploadCloud,
@@ -3309,17 +3311,112 @@ export function ClientPortalView() {
 
       {/* Notifications Modal */}
       {notificationsOpen && (
-        <div className="fixed top-16 right-6 z-50 w-80 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-4 shadow-2xl space-y-3">
+        <div className="fixed top-16 right-6 z-50 w-84 sm:w-96 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-4 shadow-2xl space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-            <span className="text-xs font-bold text-black dark:text-white">Portal Alerts</span>
-            <button onClick={() => setNotificationsOpen(false)}>
-              <X className="w-3.5 h-3.5 text-zinc-400" />
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#6B1728]" />
+              <span className="text-xs font-bold text-black dark:text-white">Portal Notifications</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen(false)}
+              className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer transition-colors"
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="space-y-2 text-xs">
-            <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-              <span className="font-bold block">WP(C) 19482/2024 Listed</span>
-              <p className="text-[11px] text-zinc-500">Court Hall 2A item listed for 15 Nov 2026.</p>
+            {/* Informative message */}
+            <div className="relative overflow-hidden flex items-center justify-between gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#6B1728]" />
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#6B1728]/[0.08] via-[#6B1728]/[0.02] dark:from-[#6B1728]/20 to-transparent" />
+              <div className="relative flex items-center gap-2 min-w-0 flex-1 pl-1">
+                <Info className="w-3.5 h-3.5 shrink-0 text-[#6B1728] dark:text-[#E07A8B]" />
+                <div className="flex items-center gap-1.5 min-w-0 truncate">
+                  <span className="font-bold text-black dark:text-white shrink-0">Informative message</span>
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Interim stay order copy verified</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("inbox");
+                  setNotificationsOpen(false);
+                }}
+                className="relative text-[11px] font-semibold text-[#6B1728] dark:text-[#E07A8B] hover:underline cursor-pointer shrink-0"
+              >
+                Action
+              </button>
+            </div>
+
+            {/* Success message */}
+            <div className="relative overflow-hidden flex items-center justify-between gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#7A1B2E]" />
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#7A1B2E]/[0.08] via-[#7A1B2E]/[0.02] dark:from-[#7A1B2E]/20 to-transparent" />
+              <div className="relative flex items-center gap-2 min-w-0 flex-1 pl-1">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#7A1B2E] dark:text-[#E07A8B]" />
+                <div className="flex items-center gap-1.5 min-w-0 truncate">
+                  <span className="font-bold text-black dark:text-white shrink-0">Success message</span>
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Vakalatnama recorded by Registry</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("inbox");
+                  setNotificationsOpen(false);
+                }}
+                className="relative text-[11px] font-semibold text-[#7A1B2E] dark:text-[#E07A8B] hover:underline cursor-pointer shrink-0"
+              >
+                Action
+              </button>
+            </div>
+
+            {/* Warning message */}
+            <div className="relative overflow-hidden flex items-center justify-between gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#8B1E32]" />
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#8B1E32]/[0.08] via-[#8B1E32]/[0.02] dark:from-[#8B1E32]/20 to-transparent" />
+              <div className="relative flex items-center gap-2 min-w-0 flex-1 pl-1">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-[#8B1E32] dark:text-[#E07A8B]" />
+                <div className="flex items-center gap-1.5 min-w-0 truncate">
+                  <span className="font-bold text-black dark:text-white shrink-0">Warning message</span>
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">WP(C) 19482/2024 listed tomorrow</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("inbox");
+                  setNotificationsOpen(false);
+                }}
+                className="relative text-[11px] font-semibold text-[#8B1E32] dark:text-[#E07A8B] hover:underline cursor-pointer shrink-0"
+              >
+                Action
+              </button>
+            </div>
+
+            {/* Danger message */}
+            <div className="relative overflow-hidden flex items-center justify-between gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#54121E]" />
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#54121E]/[0.08] via-[#54121E]/[0.02] dark:from-[#54121E]/20 to-transparent" />
+              <div className="relative flex items-center gap-2 min-w-0 flex-1 pl-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[#54121E] dark:text-[#E07A8B]" />
+                <div className="flex items-center gap-1.5 min-w-0 truncate">
+                  <span className="font-bold text-black dark:text-white shrink-0">Danger message</span>
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">Section 138 15-day cure notice expiring</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("inbox");
+                  setNotificationsOpen(false);
+                }}
+                className="relative text-[11px] font-semibold text-[#54121E] dark:text-[#E07A8B] hover:underline cursor-pointer shrink-0"
+              >
+                Action
+              </button>
             </div>
           </div>
         </div>

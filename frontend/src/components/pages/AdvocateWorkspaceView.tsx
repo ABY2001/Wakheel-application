@@ -996,7 +996,7 @@ export function AdvocateWorkspaceView() {
   const isCopilot = ["ai-copilot", "ask", "copilot"].includes(activeTab);
   const isAgents = ["workflows", "chamber-skills"].includes(activeTab);
   const isRecordings = ["recordings", "voice-dictation", "audio-memos"].includes(activeTab);
-  const isCommunications = ["inbox", "messages", "chats", "video-meet"].includes(activeTab);
+  const isCommunications = ["inbox", "messages", "chats", "video-meet", "notifications"].includes(activeTab);
   const isKnowledgeBase = ["playbooks", "kb-articles", "library", "kb-research"].includes(activeTab);
 
   const displayFullName = advocateProfile
@@ -2842,6 +2842,7 @@ export function AdvocateWorkspaceView() {
             <AdvocateInboxView
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               advocateName={displayFullName}
+              initialMode={activeTab === "messages" || activeTab === "chats" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultation={() => setActiveTab("appointments")}
             />
           )}

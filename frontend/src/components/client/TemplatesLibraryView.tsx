@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  FileText,
   Search,
   Download,
   Copy,
@@ -10,18 +9,26 @@ import {
   Eye,
   X,
   FileCheck2,
-  FolderOpen,
   ArrowRight,
-  Shield,
-  Scale,
-  Sparkles,
+  ChevronDown,
 } from "lucide-react";
 
 export interface LegalTemplate {
   id: string;
   title: string;
-  category: "all" | "writs" | "notices" | "deeds" | "consumer";
+  category:
+    | "all"
+    | "notices"
+    | "deeds"
+    | "civil"
+    | "criminal"
+    | "arbitration"
+    | "writs"
+    | "family"
+    | "commercial"
+    | "affidavits";
   categoryLabel: string;
+  particularsCount: number;
   courtOrForum: string;
   actReferred: string;
   format: "DOCX" | "PDF" | "TXT";
@@ -29,78 +36,273 @@ export interface LegalTemplate {
   fillableVariables: string[];
   instructions: string[];
   sampleDraft: string;
+  isMyTemplate?: boolean;
 }
 
 const TEMPLATES_DATA: LegalTemplate[] = [
   {
-    id: "tmpl-01",
-    title: "Writ Petition (Civil) under Article 226 — High Court of Kerala",
-    category: "writs",
-    categoryLabel: "Court Writs & Pleadings",
-    courtOrForum: "High Court of Kerala at Ernakulam",
-    actReferred: "Constitution of India, Article 226 • Kerala High Court Rules",
+    id: "tmpl-affidavit-01",
+    title: "Affidavit (General / Supporting Affidavit)",
+    category: "affidavits",
+    categoryLabel: "AFFIDAVITS",
+    particularsCount: 30,
+    courtOrForum: "Civil & High Court Practice (General Oath)",
+    actReferred: "Oaths Act, 1969 • Code of Civil Procedure, Order XIX",
     format: "DOCX",
     description:
-      "Standard formal writ petition format for challenging arbitrary administrative orders, illegal overhead line realignment, or violation of natural justice by statutory authorities.",
+      "Use when a person needs to place facts on oath in support of an application, petition, undertaking, or court proceeding before judicial registries.",
     fillableVariables: [
-      "[PETITIONER_NAME_AND_ADDRESS]",
-      "[RESPONDENT_1_AUTHORITY]",
-      "[RESPONDENT_2_EXECUTIVE_ENGINEER]",
-      "[DISTRICT_MAGISTRATE]",
-      "[PROPERTY_SURVEY_NUMBER_AND_VILLAGE]",
-      "[IMPUGNED_ORDER_NUMBER_AND_DATE]",
-      "[SPECIFIC_PRAYERS]",
+      "[DEPONENT_NAME_AGE_ADDRESS]",
+      "[FATHER_SPOUSE_NAME]",
+      "[COURT_NAME_OR_PROCEEDING]",
+      "[CASE_NUMBER_AND_YEAR]",
+      "[VERIFIED_PARAGRAPHS_OF_FACT]",
+      "[NOTARY_PUBLIC_ATTESTATION]",
     ],
     instructions: [
-      "Verify that all statutory alternative remedies (e.g. Sec. 16 representation to District Magistrate) have been exhausted or prove urgency.",
-      "Ensure an Index, Synopsis, List of Dates & Events, and true copies of all marked Exhibits (P-1 to P-n) are serially paginated.",
-      "Affidavit must be attested by an Advocate or Notary Public with appropriate court fee stamp affixed.",
+      "Must be affirmed before a Notary Public, Oath Commissioner, or Gazetted Attesting Officer.",
+      "Ensure court fee or notary adhesive stamp is affixed as per State Stamp Act.",
+      "Deponent must declare knowledge as to which paragraphs are true to personal knowledge and which to belief.",
+    ],
+    sampleDraft: `BEFORE THE HON'BLE COURT / AUTHORITY AT ________________
+
+IN THE MATTER OF:
+Case / Application No. ________ OF 2026
+
+BETWEEN:
+[DEPONENT_NAME_AGE_ADDRESS], Aged ___ Years, S/o [FATHER_SPOUSE_NAME], Residing at ____________________________________________________.
+                                                       ... DEPONENT
+
+AFFIDAVIT
+
+I, the deponent above-named, do hereby solemnly affirm and state on oath as follows:
+
+1. That I am the applicant/petitioner in the above-titled proceeding, fully conversant with the facts of the case, and competent to depose to this affidavit.
+
+2. [VERIFIED_PARAGRAPHS_OF_FACT]
+
+3. That the contents of the accompanying petition/application have been read over and explained to me in my mother tongue, and I state that the averments made therein are true and correct to the best of my personal knowledge.
+
+4. That no part of this affidavit is false, and nothing material has been concealed therefrom.
+
+DEPONENT
+
+VERIFICATION
+Verified at ________ on this the _____ day of __________, 2026 that the contents of paragraphs 1 to 3 of this affidavit are true to my personal knowledge and belief.
+
+DEPONENT`,
+  },
+  {
+    id: "tmpl-affidavit-02",
+    title: "Counter Affidavit",
+    category: "affidavits",
+    categoryLabel: "AFFIDAVITS",
+    particularsCount: 17,
+    courtOrForum: "High Court & Appellate Tribunals",
+    actReferred: "High Court Rules • Civil Rules of Practice",
+    format: "DOCX",
+    description:
+      "Use when a respondent needs to answer a petition or application on affidavit, particularly in writ, civil, or statutory tribunal hearings.",
+    fillableVariables: [
+      "[RESPONDENT_NAME_AND_CAPACITY]",
+      "[ORIGINAL_PETITIONER_NAME]",
+      "[WRIT_PETITION_NUMBER]",
+      "[PARA_WISE_REBUTTAL_POINTS]",
+      "[STATUTORY_JUSTIFICATION]",
+    ],
+    instructions: [
+      "Address every paragraph of the original petition specifically; traverse all allegations.",
+      "Attach documentary exhibits supporting respondent's statutory compliance marked as Exhibit R-1 to R-n.",
+      "File within 4 weeks from date of appearance or court notice service.",
     ],
     sampleDraft: `IN THE HIGH COURT OF KERALA AT ERNAKULAM
 (Special Original Jurisdiction)
 
-W.P.(C) No. ________ OF 2026
+W.P.(C) No. [WRIT_PETITION_NUMBER] OF 2026
 
 BETWEEN:
-[PETITIONER_NAME_AND_ADDRESS], Aged ___ Years, Residing at ________________________________.
-                                                     ... PETITIONER
-
+[ORIGINAL_PETITIONER_NAME]
+                                                       ... PETITIONER
 AND
+[RESPONDENT_NAME_AND_CAPACITY]
+                                                       ... RESPONDENT
 
-1. STATE OF KERALA, represented by its Principal Secretary, Department of Power, Government Secretariat, Thiruvananthapuram - 695 001.
-2. [RESPONDENT_AUTHORITY], represented by its Secretary/Chief Engineer, _____________________.
-3. THE DISTRICT MAGISTRATE / DISTRICT COLLECTOR, Collectorate, ____________ District.
-                                                     ... RESPONDENTS
+COUNTER AFFIDAVIT FILED BY THE RESPONDENT
 
-MEMORANDUM OF WRIT PETITION UNDER ARTICLE 226 OF THE CONSTITUTION OF INDIA
+I, [RESPONDENT_NAME_AND_CAPACITY], do hereby solemnly affirm and state as follows:
 
-1. PARTICULARS OF THE PETITIONER:
-The petitioner is an Indian citizen, absolute owner in lawful possession and enjoyment of property comprising ___ Ares in Survey No. [PROPERTY_SURVEY_NUMBER_AND_VILLAGE].
+1. I am the respondent in the writ petition and am authorized to swear to this counter affidavit.
+2. At the outset, I deny each and every allegation, contention, and insinuation raised in the writ petition except those specifically admitted herein.
+3. [PARA_WISE_REBUTTAL_POINTS]
+4. The petitioner has suppressed material facts and is not entitled to any equitable relief under Article 226 of the Constitution of India.
 
-2. PARTICULARS OF THE IMPUGNED ACTION:
-The petitioner is aggrieved by the arbitrary, unilateral decision of the 2nd respondent to erect transmission structures across the petitioner's residential holding vide Order No. [IMPUGNED_ORDER_NUMBER_AND_DATE] without serving mandatory statutory notice under Section 10/16 of the Indian Telegraph Act, 1885.
+Wherefore it is prayed that this Hon'ble Court may be pleased to dismiss the writ petition with costs.
 
-3. GROUNDS:
-A. Because the action of the 2nd respondent is violative of Article 14, 19(1)(e) and Article 300A of the Constitution of India.
-B. Because it is settled law by this Hon'ble Court in 2024 (2) KHC 401 that prior notice and hearing is a mandatory condition precedent before entering private land.
-C. Because feasible alternative alignment through adjoining government puramboke land is available and ignored without recording reasons.
-
-4. PRAYER:
-For the reasons stated in the accompanying affidavit, it is respectfully prayed that this Hon'ble Court may be pleased to:
-i) Issue a writ of certiorari or other appropriate writ, order or direction quashing [IMPUGNED_ORDER_NUMBER_AND_DATE];
-ii) Issue a writ of mandamus commanding the 3rd respondent to hear the petitioner's Section 16(1) objection within a timeframe fixed by this Hon'ble Court;
-iii) Grant such other reliefs as this Hon'ble Court deems fit in the interest of justice.
-
-DATED THIS THE _____ DAY OF ___________, 2026.
-
-COUNSEL FOR THE PETITIONER`,
+DEPONENT / RESPONDENT`,
   },
   {
-    id: "tmpl-02",
-    title: "Statutory Demand Notice under Section 138 of Negotiable Instruments Act",
+    id: "tmpl-consultancy",
+    title: "Consultancy Agreement",
+    category: "commercial",
+    categoryLabel: "AGREEMENTS & DEEDS · COMMERCIAL",
+    particularsCount: 21,
+    courtOrForum: "Commercial Contract Jurisdiction",
+    actReferred: "Indian Contract Act, 1872 • Specific Relief Act",
+    format: "DOCX",
+    description:
+      "Use when an independent consultant is engaged to provide defined professional or business services with clear deliverables, milestone fees, and IP retention.",
+    fillableVariables: [
+      "[CLIENT_COMPANY_NAME]",
+      "[CONSULTANT_NAME_AND_PAN]",
+      "[SCOPE_OF_SERVICES]",
+      "[MONTHLY_RETAINER_FEE_INR]",
+      "[TERMINATION_NOTICE_DAYS]",
+      "[CONFIDENTIALITY_PERIOD]",
+    ],
+    instructions: [
+      "Clearly delineate consultant as an independent contractor, not an employee or agent.",
+      "Specify payment terms, TDS deduction compliance under Section 194J of the Income Tax Act.",
+      "Execute on appropriate value stamp paper based on governing state jurisdiction.",
+    ],
+    sampleDraft: `CONSULTANCY SERVICES AGREEMENT
+
+This CONSULTANCY AGREEMENT is made on this _____ day of __________, 2026 between:
+
+[CLIENT_COMPANY_NAME], having its registered office at ________________________________ (the "Client");
+AND
+[CONSULTANT_NAME_AND_PAN], residing at / having office at ________________________________ (the "Consultant").
+
+1. SCOPE OF ENGAGEMENT: The Client engages the Consultant to provide [SCOPE_OF_SERVICES].
+2. REMUNERATION: The Client agrees to pay the Consultant a monthly retainer of Rs. [MONTHLY_RETAINER_FEE_INR]/- subject to statutory tax deductions.
+3. INTELLECTUAL PROPERTY: All work product created specifically for the Client shall vest with the Client upon receipt of full payment.
+4. CONFIDENTIALITY: The Consultant shall maintain strict confidentiality during the term and for [CONFIDENTIALITY_PERIOD] years thereafter.
+5. TERMINATION: Either party may terminate by giving [TERMINATION_NOTICE_DAYS] days prior written notice.
+
+CLIENT: ________________________
+CONSULTANT: ____________________`,
+  },
+  {
+    id: "tmpl-mou",
+    title: "Memorandum of Understanding (MoU)",
+    category: "commercial",
+    categoryLabel: "AGREEMENTS & DEEDS · COMMERCIAL",
+    particularsCount: 25,
+    courtOrForum: "Corporate Collaboration Framework",
+    actReferred: "Indian Contract Act, 1872",
+    format: "DOCX",
+    description:
+      "Use when parties want to record the framework of a proposed collaboration, joint venture, or business transaction prior to formal definitive contracts.",
+    fillableVariables: [
+      "[PARTY_ONE_NAME_DETAILS]",
+      "[PARTY_TWO_NAME_DETAILS]",
+      "[PURPOSE_OF_COLLABORATION]",
+      "[MUTUAL_OBLIGATIONS]",
+      "[VALIDITY_PERIOD_MONTHS]",
+      "[EXCLUSIVITY_WINDOW]",
+    ],
+    instructions: [
+      "Specify which clauses are legally binding (e.g., confidentiality, exclusivity, dispute resolution) and which are non-binding expressions of intent.",
+      "Detail timeline for due diligence and execution of definitive commercial agreements.",
+    ],
+    sampleDraft: `MEMORANDUM OF UNDERSTANDING (MoU)
+
+This Memorandum of Understanding is entered into on this _____ day of ________, 2026 by and between:
+[PARTY_ONE_NAME_DETAILS] (First Party);
+AND
+[PARTY_TWO_NAME_DETAILS] (Second Party).
+
+WHEREAS the Parties desire to collaborate for [PURPOSE_OF_COLLABORATION];
+
+NOW THEREFORE the Parties agree as follows:
+1. OBJECTIVE & SCOPE: The parties intend to jointly explore [PURPOSE_OF_COLLABORATION].
+2. ROLES & RESPONSIBILITIES: [MUTUAL_OBLIGATIONS]
+3. DURATION: This MoU shall remain valid for [VALIDITY_PERIOD_MONTHS] months from the date of execution.
+4. LEGAL EFFECT: Except for Clauses relating to Confidentiality, Governing Law, and Exclusivity, this MoU represents an expression of mutual intent and is non-binding.
+
+FIRST PARTY: ____________________
+SECOND PARTY: ___________________`,
+  },
+  {
+    id: "tmpl-nda",
+    title: "Mutual Non-Disclosure Agreement (NDA)",
+    category: "commercial",
+    categoryLabel: "AGREEMENTS & DEEDS · COMMERCIAL",
+    particularsCount: 19,
+    courtOrForum: "Commercial & Corporate Jurisdiction",
+    actReferred: "Indian Contract Act, 1872 • Information Technology Act, 2000",
+    format: "DOCX",
+    description:
+      "Use when two parties will exchange confidential trade secrets, technical data, or financial information for a defined business or transaction.",
+    fillableVariables: [
+      "[PARTY_A_NAME_AND_ADDRESS]",
+      "[PARTY_B_NAME_AND_ADDRESS]",
+      "[PURPOSE_OF_DISCLOSURE]",
+      "[CONFIDENTIALITY_TERM_YEARS]",
+      "[GOVERNING_LAW_AND_COURT]",
+    ],
+    instructions: [
+      "Ensure standard exclusions are included (publicly available information, already known, independently developed).",
+      "Include injunctive relief clause to permit approaching court for ex-parte stay against data leakage.",
+    ],
+    sampleDraft: `MUTUAL NON-DISCLOSURE AGREEMENT
+
+Between: [PARTY_A_NAME_AND_ADDRESS]
+And: [PARTY_B_NAME_AND_ADDRESS]
+
+1. PURPOSE: The parties wish to explore [PURPOSE_OF_DISCLOSURE] ("Purpose").
+2. CONFIDENTIAL INFORMATION: Includes all non-public technical, proprietary, financial, and operational information disclosed by either party.
+3. NON-DISCLOSURE OBLIGATIONS: Each party agrees to protect the Confidential Information of the other with the same degree of care it uses for its own confidential data, and shall not disclose it to third parties without prior written consent.
+4. TERM: This Agreement shall remain in effect for [CONFIDENTIALITY_TERM_YEARS] years from the date of disclosure.
+5. GOVERNING LAW: Subject to the exclusive jurisdiction of the courts at [GOVERNING_LAW_AND_COURT].
+
+PARTY A: ________________________
+PARTY B: ________________________`,
+  },
+  {
+    id: "tmpl-services",
+    title: "Services Agreement / Master Services Agreement",
+    category: "commercial",
+    categoryLabel: "AGREEMENTS & DEEDS · COMMERCIAL",
+    particularsCount: 34,
+    courtOrForum: "Commercial Court Jurisdiction",
+    actReferred: "Indian Contract Act, 1872 • Specific Relief Act, 1963",
+    format: "DOCX",
+    description:
+      "Use when one business engages another to provide recurring or project-based services under defined SLAs, milestones, and indemnity provisions.",
+    fillableVariables: [
+      "[SERVICE_PROVIDER_NAME]",
+      "[RECIPIENT_CLIENT_NAME]",
+      "[DETAILED_STATEMENTS_OF_WORK]",
+      "[PAYMENT_TERMS_AND_MILESTONES]",
+      "[LIMITATION_OF_LIABILITY_CAP]",
+      "[ARBITRATION_SEAT_AND_VENUE]",
+    ],
+    instructions: [
+      "Structure Statements of Work (SOWs) as separate schedules governed by the terms of this Master Agreement.",
+      "Incorporate robust indemnity, limitation of liability, and arbitration dispute resolution clauses.",
+    ],
+    sampleDraft: `MASTER SERVICES AGREEMENT (MSA)
+
+This Master Services Agreement is entered into as of _____ day of __________, 2026:
+BETWEEN: [SERVICE_PROVIDER_NAME] ("Service Provider")
+AND: [RECIPIENT_CLIENT_NAME] ("Client")
+
+1. SERVICES & STATEMENTS OF WORK: Service Provider shall deliver services described in SOWs executed hereunder.
+2. WARRANTIES & SLA: Service Provider warrants that services will be performed with professional diligence in compliance with agreed SLA benchmarks.
+3. FEES: Client shall pay fees according to [PAYMENT_TERMS_AND_MILESTONES].
+4. LIMITATION OF LIABILITY: Neither party shall be liable for indirect damages, and aggregate liability shall not exceed [LIMITATION_OF_LIABILITY_CAP].
+5. DISPUTE RESOLUTION: Disputes shall be settled through arbitration under the Arbitration and Conciliation Act, 1996 with seat at [ARBITRATION_SEAT_AND_VENUE].
+
+SERVICE PROVIDER: _______________
+CLIENT: _________________________`,
+  },
+  {
+    id: "tmpl-notice-138",
+    title: "Statutory Demand Notice under Section 138 NI Act",
     category: "notices",
-    categoryLabel: "Statutory Notices",
-    courtOrForum: "Pre-Litigation Statutory Demand (JFCM Jurisdiction)",
+    categoryLabel: "NOTICES · STATUTORY",
+    particularsCount: 18,
+    courtOrForum: "Judicial First Class Magistrate (JFCM)",
     actReferred: "Negotiable Instruments Act, 1881, Section 138 & 142",
     format: "DOCX",
     description:
@@ -114,8 +316,8 @@ COUNSEL FOR THE PETITIONER`,
       "[RETURN_MEMO_DATE_AND_REASON]",
     ],
     instructions: [
-      "Must be dispatched within 30 days from the date of receipt of the bank return memo.",
-      "Send via Registered Post with Acknowledgment Due (RPAD) or Speed Post; retain receipt & track delivery.",
+      "Must be dispatched within 30 days from receipt of the bank return memo.",
+      "Send via Speed Post with Acknowledgment Due; preserve delivery tracking slip.",
       "A 15-day payment window must be given from date of delivery before filing criminal complaint.",
     ],
     sampleDraft: `REGISTERED POST WITH ACKNOWLEDGMENT DUE / SPEED POST
@@ -126,85 +328,91 @@ To,
 LEGAL NOTICE UNDER SECTION 138(b) OF THE NEGOTIABLE INSTRUMENTS ACT, 1881
 
 Sir/Madam,
-
-Under instructions from and on behalf of my client [PAYEE_NAME_AND_ADDRESS], I do hereby serve upon you the following Statutory Notice:
-
-1. That you, the Noticee, for discharging your lawful debt/liability towards my client, issued Cheque Bearing No. [CHEQUE_NUMBER_AND_DATE] for an amount of Rs. [CHEQUE_AMOUNT_IN_INR]/- drawn on [DRAWEE_BANK_AND_BRANCH].
-
-2. That my client presented the said cheque for encashment through their banker. However, the said cheque was returned dishonoured and unpaid on [RETURN_MEMO_DATE_AND_REASON] with the official bank return memo endorsed "FUNDS INSUFFICIENT".
-
-3. My client received the said return memo from their banker on ______________, and this notice is strictly issued within the prescribed statutory period of 30 days.
-
-4. I therefore call upon you, the Noticee, to remit and pay the said amount of Rs. [CHEQUE_AMOUNT_IN_INR]/- to my client within 15 (fifteen) clear days from the date of receipt of this notice, failing which my client will institute criminal proceedings against you under Section 138 of the Negotiable Instruments Act, 1881 read with Section 420 of BNS before the competent Judicial First Class Magistrate Court at your sole risk, cost, and consequences.
-
-Place: ________________
-Date:  ________________
+Under instructions from my client [PAYEE_NAME_AND_ADDRESS], I serve upon you this Statutory Notice:
+1. You issued Cheque No. [CHEQUE_NUMBER_AND_DATE] for Rs. [CHEQUE_AMOUNT_IN_INR]/- drawn on [DRAWEE_BANK_AND_BRANCH] towards discharge of lawful debt.
+2. The said cheque was returned dishonoured on [RETURN_MEMO_DATE_AND_REASON] for "FUNDS INSUFFICIENT".
+3. You are hereby called upon to pay the cheque sum within 15 clear days of receipt of this notice, failing which criminal complaint under Section 138 NI Act will be lodged.
 
 ADVOCATE FOR THE PAYEE`,
   },
   {
-    id: "tmpl-03",
-    title: "Application for Regular / Anticipatory Bail under Section 482 / 483 BNSS, 2023",
+    id: "tmpl-writ-226",
+    title: "Writ Petition (Civil) under Article 226 — High Court of Kerala",
     category: "writs",
-    categoryLabel: "Court Writs & Pleadings",
+    categoryLabel: "WRITS · CONSTITUTIONAL",
+    particularsCount: 35,
+    courtOrForum: "High Court of Kerala at Ernakulam",
+    actReferred: "Constitution of India, Article 226 • Kerala High Court Rules",
+    format: "DOCX",
+    description:
+      "Standard formal writ petition format for challenging arbitrary administrative orders, illegal overhead line realignment, or violation of natural justice.",
+    fillableVariables: [
+      "[PETITIONER_NAME_AND_ADDRESS]",
+      "[RESPONDENT_1_AUTHORITY]",
+      "[PROPERTY_SURVEY_NUMBER_AND_VILLAGE]",
+      "[IMPUGNED_ORDER_NUMBER_AND_DATE]",
+      "[SPECIFIC_PRAYERS]",
+    ],
+    instructions: [
+      "Verify that all statutory alternative remedies have been exhausted or state urgency grounds.",
+      "Ensure an Index, Synopsis, List of Dates & Events, and true copies of marked Exhibits are paginated.",
+    ],
+    sampleDraft: `IN THE HIGH COURT OF KERALA AT ERNAKULAM
+(Special Original Jurisdiction)
+
+W.P.(C) No. ________ OF 2026
+
+BETWEEN: [PETITIONER_NAME_AND_ADDRESS]
+AND: [RESPONDENT_1_AUTHORITY] & Others
+
+MEMORANDUM OF WRIT PETITION UNDER ARTICLE 226 OF THE CONSTITUTION OF INDIA
+1. The petitioner challenges the arbitrary order [IMPUGNED_ORDER_NUMBER_AND_DATE] passed without hearing under Section 16 of Telegraph Act.
+2. GROUNDS: Violative of Article 14, 19(1)(e) and Article 300A of Constitution.
+3. PRAYER: Issue a writ of certiorari quashing impugned order and mandamus directing fair hearing.
+
+COUNSEL FOR THE PETITIONER`,
+  },
+  {
+    id: "tmpl-bail-bnss",
+    title: "Application for Regular / Anticipatory Bail under S.482/483 BNSS",
+    category: "criminal",
+    categoryLabel: "CRIMINAL · PLEADINGS",
+    particularsCount: 22,
     courtOrForum: "Sessions Court / High Court of Kerala",
     actReferred: "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023, Section 482/483",
     format: "DOCX",
     description:
-      "Pleading template for pre-arrest or post-arrest bail petitions under the newly enacted BNSS criminal procedural framework with verified medical & deep roots grounds.",
+      "Pleading template for pre-arrest or post-arrest bail petitions under the newly enacted BNSS criminal procedural framework with verified medical grounds.",
     fillableVariables: [
       "[ACCUSED_NAME_AND_AGE]",
       "[POLICE_STATION_AND_CRIME_NUMBER]",
       "[OFFENCES_UNDER_BNS]",
-      "[DATE_OF_ALLEGED_OCCURRENCE]",
       "[GROUNDS_OF_INSUFFICIENT_EVIDENCE]",
-      "[SURETIES_OFFERED]",
     ],
     instructions: [
-      "In anticipatory bail, state clearly that applicant is willing to surrender their passport and join investigation.",
-      "Reference landmark Supreme Court ruling in Satender Kumar Antil v. CBI regarding arrest safeguards.",
-      "Attach verified identity documents, tax filings, and local domicile proof demonstrating applicant is not a flight risk.",
+      "Attach verified identity documents, tax filings, and local domicile proof.",
+      "Reference Supreme Court safeguards in Satender Kumar Antil v. CBI.",
     ],
-    sampleDraft: `IN THE COURT OF THE SESSIONS JUDGE, ________________ DISTRICT
-AT ________________
+    sampleDraft: `IN THE COURT OF THE SESSIONS JUDGE, ________________
 Bail Application No. ________ of 2026
 
-IN THE MATTER OF:
 Crime No. [POLICE_STATION_AND_CRIME_NUMBER] of ________________ Police Station
-Offences Alleged: Sections [OFFENCES_UNDER_BNS] of Bharatiya Nyaya Sanhita, 2023.
+Offences: Sections [OFFENCES_UNDER_BNS] of Bharatiya Nyaya Sanhita, 2023.
 
-[ACCUSED_NAME_AND_AGE], Residing at _____________________________________.
-                                                     ... APPLICANT / ACCUSED
+APPLICATION UNDER SECTION 482 OF BNSS, 2023
+1. Applicant has deep roots in society and has been falsely implicated.
+2. Applicant undertakes to cooperate fully with investigation and abide by all conditions.
+PRAYER: Grant anticipatory bail to applicant in the event of arrest.
 
-VERSUS
-
-STATE OF KERALA, represented by Public Prosecutor, Sessions Court.
-                                                     ... RESPONDENT
-
-APPLICATION UNDER SECTION 482 OF THE BHARATIYA NAGARIK SURAKSHA SANHITA, 2023
-
-The applicant respectfully submits as follows:
-
-1. The applicant is an innocent person falsely implicated in Crime No. [POLICE_STATION_AND_CRIME_NUMBER] registered at ________________ Police Station on the basis of a concocted complaint.
-
-2. The offences alleged against the applicant are non-bailable, but no recovery is pending from the applicant. The primary ingredients of the alleged offence under BNS are completely lacking.
-
-3. The applicant is a permanent resident of the locality with deep roots in society, possessing immovable property and family dependents. There is zero likelihood of the applicant absconding or tampering with evidence.
-
-4. The applicant is willing to abide by any stringent condition that may be imposed by this Hon'ble Court and undertakes to report before the Investigating Officer as and when directed.
-
-PRAYER:
-It is therefore respectfully prayed that this Hon'ble Court may be pleased to enlarge the applicant on bail in the event of arrest in Crime No. [POLICE_STATION_AND_CRIME_NUMBER] on such conditions as this Hon'ble Court deems fit.
-
-Date: ___________
-Applicant / Counsel for Applicant`,
+COUNSEL FOR APPLICANT`,
   },
   {
-    id: "tmpl-04",
+    id: "tmpl-sale-deed",
     title: "Agreement for Sale of Immovable Property (Kerala SRO Format)",
     category: "deeds",
-    categoryLabel: "Civil & Property Deeds",
-    courtOrForum: "Sub-Registrar Office / Pre-Conveyance Deed",
+    categoryLabel: "AGREEMENTS & DEEDS · PROPERTY",
+    particularsCount: 28,
+    courtOrForum: "Sub-Registrar Office / Pre-Conveyance",
     actReferred: "Transfer of Property Act, 1882 • Indian Contract Act, 1872",
     format: "DOCX",
     description:
@@ -214,52 +422,32 @@ Applicant / Counsel for Applicant`,
       "[PURCHASER_NAME_AND_ADDRESS]",
       "[TOTAL_SALE_CONSIDERATION_INR]",
       "[ADVANCE_EARNEST_MONEY_INR]",
-      "[BALANCE_PAYMENT_TIMEFRAME_MONTHS]",
       "[SCHEDULE_PROPERTY_DETAILS_SY_NO]",
     ],
     instructions: [
       "Print on required non-judicial stamp paper as prescribed under Kerala Stamp Act, 1959.",
-      "Ensure two independent witnesses sign along with their Aadhaar / Voter ID details.",
-      "Check that encumbrance certificate for the prior 30 years is annexed before executing.",
+      "Attach 30-year non-encumbrance certificate.",
     ],
     sampleDraft: `AGREEMENT FOR SALE OF IMMOVABLE PROPERTY
 
-This AGREEMENT FOR SALE is executed on this the _____ day of __________, 2026 at _______________;
+BETWEEN: [VENDOR_NAME_AND_ADDRESS] ("Vendor")
+AND: [PURCHASER_NAME_AND_ADDRESS] ("Purchaser")
 
-BY AND BETWEEN:
-[VENDOR_NAME_AND_ADDRESS], (hereinafter called the "VENDOR" which expression shall mean and include his legal heirs, executors, and assigns) of the ONE PART;
-
-AND
-
-[PURCHASER_NAME_AND_ADDRESS], (hereinafter called the "PURCHASER" which expression shall mean and include his legal heirs, administrators, and assigns) of the OTHER PART.
-
-WHEREAS the Vendor is the absolute owner and in continuous possession of immovable property more particularly described in the SCHEDULE hereunder, having acquired title vide Registered Title Deed No. ________ of SRO _____________;
-
-NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:
-1. TOTAL CONSIDERATION: The total sale consideration mutually agreed upon between both parties is Rs. [TOTAL_SALE_CONSIDERATION_INR]/- (Rupees _______________________________________ only).
-2. ADVANCE PAYMENT: The Purchaser has paid to the Vendor a sum of Rs. [ADVANCE_EARNEST_MONEY_INR]/- as earnest advance via RTGS/Cheque No. ____________ dated __________, receipt of which the Vendor hereby acknowledges.
-3. COMPLETION PERIOD: Both parties agree that the sale deed shall be registered within a period of [BALANCE_PAYMENT_TIMEFRAME_MONTHS] months from the date of this agreement upon payment of balance consideration.
-4. TITLE & CLEARANCE: The Vendor covenants that the schedule property is free from all mortgages, charges, court attachments, revenue dues, and lis pendens.
-
-SCHEDULE OF PROPERTY
-All that piece and parcel of land having an extent of ___ Ares in Re-Survey No. [SCHEDULE_PROPERTY_DETAILS_SY_NO], Village: _________, Taluk: __________, District: ____________.
-
-IN WITNESS WHEREOF the parties have set their hands on the day and year first above written.
+1. CONSIDERATION: Total agreed sale price Rs. [TOTAL_SALE_CONSIDERATION_INR]/-.
+2. ADVANCE: Advance payment of Rs. [ADVANCE_EARNEST_MONEY_INR]/- received.
+3. SCHEDULE: Land measuring ___ Ares in Sy No. [SCHEDULE_PROPERTY_DETAILS_SY_NO].
 
 VENDOR: ________________________
-PURCHASER: ______________________
-
-WITNESSES:
-1. ______________________
-2. ______________________`,
+PURCHASER: ______________________`,
   },
   {
-    id: "tmpl-05",
-    title: "Statutory Tenancy Eviction & Termination Notice under S.106 T.P. Act",
+    id: "tmpl-tenancy-106",
+    title: "Statutory Tenancy Termination Notice under S.106 T.P. Act",
     category: "notices",
-    categoryLabel: "Statutory Notices",
-    courtOrForum: "Rent Control Court / Munsiff Court Jurisdiction",
-    actReferred: "Transfer of Property Act, 1882, Section 106 • Kerala Buildings Act",
+    categoryLabel: "NOTICES · TENANCY",
+    particularsCount: 15,
+    courtOrForum: "Rent Control / Munsiff Court",
+    actReferred: "Transfer of Property Act, 1882, Section 106",
     format: "TXT",
     description:
       "Formal legal notice to tenant terminating monthly lease on grounds of rental default, expiry of tenure, or bona fide personal occupation.",
@@ -268,40 +456,100 @@ WITNESSES:
       "[LANDLORD_NAME_AND_ADDRESS]",
       "[MONTHLY_RENTAL_RATE_INR]",
       "[ARREARS_AMOUNT_AND_MONTHS]",
-      "[VACATION_DEADLINE_DAYS]",
     ],
     instructions: [
-      "Section 106 requires a minimum 15-day notice expiring with the end of a month of the tenancy.",
-      "Specify exact rental arrears and demand surrender of vacant peaceful possession.",
+      "Give minimum 15 clear days notice expiring with the end of a tenancy month.",
       "Send via Speed Post with Acknowledgment Due.",
     ],
-    sampleDraft: `LEGAL NOTICE OF TERMINATION OF TENANCY
-(Under Section 106 of the Transfer of Property Act, 1882)
+    sampleDraft: `LEGAL NOTICE OF TERMINATION OF TENANCY (Section 106 T.P. Act)
 
-To,
-[TENANT_NAME_AND_DEMISED_PREMISES]
+To: [TENANT_NAME_AND_DEMISED_PREMISES]
+Under instructions from my client [LANDLORD_NAME_AND_ADDRESS]:
+1. You are a monthly tenant at Rs. [MONTHLY_RENTAL_RATE_INR]/- per month.
+2. You are in arrears of Rs. [ARREARS_AMOUNT_AND_MONTHS]/-.
+3. My client hereby terminates your tenancy. Deliver vacant possession within 15 days.
 
-Sir/Madam,
-
-Under instructions from my client, [LANDLORD_NAME_AND_ADDRESS], I hereby give you this statutory notice of termination of tenancy:
-
-1. That you were inducted as a monthly tenant in respect of the premises bearing Door No. ________ situated at ____________________ at an agreed monthly rent of Rs. [MONTHLY_RENTAL_RATE_INR]/-.
-
-2. That you have fallen into willful default and neglected to pay rent for the past ____ months amounting to an outstanding arrear of Rs. [ARREARS_AMOUNT_AND_MONTHS]/- despite oral reminders.
-
-3. My client furthermore requires the demised premises bona fide for his own personal commercial use and occupation.
-
-4. My client hereby terminates your monthly tenancy with effect from the expiry of [VACATION_DEADLINE_DAYS] days from receipt of this notice.
-
-5. You are hereby called upon to quit, vacate, and deliver vacant and peaceful possession of the premises to my client on or before ____________, and clear all arrears, failing which an eviction suit will be instituted against you with mesne profits.
-
-ADVOCATE FOR THE LANDLORD`,
+ADVOCATE FOR LANDLORD`,
   },
   {
-    id: "tmpl-06",
-    title: "Consumer Complaint under Section 35 of Consumer Protection Act, 2019",
-    category: "consumer",
-    categoryLabel: "Consumer & Applications",
+    id: "tmpl-arbitration-23",
+    title: "Statement of Claim under Section 23 of Arbitration Act",
+    category: "arbitration",
+    categoryLabel: "ARBITRATION · COMMERCIAL",
+    particularsCount: 31,
+    courtOrForum: "Arbitral Tribunal / Sole Arbitrator",
+    actReferred: "Arbitration and Conciliation Act, 1996, Section 23",
+    format: "DOCX",
+    description:
+      "Arbitration pleadings template for commercial debt recovery, liquidated damages, and Section 17 interim security claims before sole arbitrator.",
+    fillableVariables: [
+      "[CLAIMANT_NAME_AND_COUNSEL]",
+      "[RESPONDENT_NAME_AND_ADDRESS]",
+      "[ARBITRATION_CLAUSE_NUMBER]",
+      "[STATEMENT_OF_FACTS_AND_DEFAULT]",
+      "[TOTAL_CLAIMED_SUM_INR]",
+    ],
+    instructions: [
+      "Detail contract execution date and quote verbatim arbitration dispute resolution clause.",
+      "Quantify principal damages, interest claim @ 18% p.a., and tribunal costs.",
+    ],
+    sampleDraft: `BEFORE THE SOLE ARBITRATOR, ARBITRAL TRIBUNAL AT ERNAKULAM
+In the Arbitration between:
+[CLAIMANT_NAME_AND_COUNSEL] ... Claimant
+VS
+[RESPONDENT_NAME_AND_ADDRESS] ... Respondent
+
+STATEMENT OF CLAIM UNDER SECTION 23 OF THE ARBITRATION ACT, 1996
+1. The Claimant claims Rs. [TOTAL_CLAIMED_SUM_INR]/- towards unpaid commercial invoices.
+2. Facts: [STATEMENT_OF_FACTS_AND_DEFAULT]
+PRAYER: Pass arbitral award directing Respondent to pay principal with interest.
+
+COUNSEL FOR THE CLAIMANT`,
+  },
+  {
+    id: "tmpl-family-13b",
+    title: "Mutual Consent Divorce Petition under Section 13B HMA",
+    category: "family",
+    categoryLabel: "FAMILY · MATRIMONIAL",
+    particularsCount: 26,
+    courtOrForum: "Family Court",
+    actReferred: "Hindu Marriage Act, 1955, Section 13B",
+    format: "DOCX",
+    description:
+      "Joint petition under Section 13B of Hindu Marriage Act, 1955 with mutual settlement deed, permanent alimony settlement, and custody terms.",
+    fillableVariables: [
+      "[PETITIONER_1_HUSBAND_DETAILS]",
+      "[PETITIONER_2_WIFE_DETAILS]",
+      "[DATE_AND_PLACE_OF_MARRIAGE]",
+      "[SEPARATION_PERIOD_YEARS]",
+      "[PERMANENT_ALIMONY_SETTLEMENT]",
+    ],
+    instructions: [
+      "Parties must have lived separately for a period of one year or more.",
+      "Ensure all matrimonial jewellery and streedhan return receipts are recorded in settlement.",
+    ],
+    sampleDraft: `IN THE FAMILY COURT AT ________________
+O.P. No. ________ OF 2026
+
+IN THE MATTER OF:
+[PETITIONER_1_HUSBAND_DETAILS] ... 1st Petitioner
+AND
+[PETITIONER_2_WIFE_DETAILS] ... 2nd Petitioner
+
+JOINT PETITION UNDER SECTION 13B OF THE HINDU MARRIAGE ACT, 1955
+1. Marriage was solemnized on [DATE_AND_PLACE_OF_MARRIAGE].
+2. Parties have lived separately for more than [SEPARATION_PERIOD_YEARS] years.
+3. Settlement: [PERMANENT_ALIMONY_SETTLEMENT]
+PRAYER: Dissolve marriage by a decree of divorce by mutual consent.
+
+1ST PETITIONER | 2ND PETITIONER`,
+  },
+  {
+    id: "tmpl-consumer-35",
+    title: "Consumer Complaint under Section 35 of CPA 2019",
+    category: "civil",
+    categoryLabel: "CIVIL · CONSUMER",
+    particularsCount: 24,
     courtOrForum: "District Consumer Disputes Redressal Commission (DCDRC)",
     actReferred: "Consumer Protection Act, 2019, Section 35",
     format: "DOCX",
@@ -315,47 +563,40 @@ ADVOCATE FOR THE LANDLORD`,
       "[COMPENSATION_CLAIMED_INR]",
     ],
     instructions: [
-      "Check pecuniary jurisdiction: District Commission handles claims up to Rs. 50 Lakhs.",
-      "Affix prescribed nominal consumer court fee via demand draft or Bharatkosh challan.",
-      "Include all purchase receipts, email correspondence, and warranty cards as Annexures C-1 to C-n.",
+      "District Commission handles pecuniary claims up to Rs. 50 Lakhs.",
+      "Attach purchase invoice, payment receipt, and proof of legal notice delivery.",
     ],
-    sampleDraft: `BEFORE THE DISTRICT CONSUMER DISPUTES REDRESSAL COMMISSION AT ________________
-
+    sampleDraft: `BEFORE THE DISTRICT CONSUMER DISPUTES REDRESSAL COMMISSION
 Consumer Case (CC) No. ________ OF 2026
 
-[COMPLAINANT_NAME_AND_ADDRESS]
-                                                      ... COMPLAINANT
-VERSUS
-
-[OPPOSITE_PARTY_COMPANY_NAME], through its Managing Director/Branch Manager.
-                                                      ... OPPOSITE PARTY
+[COMPLAINANT_NAME_AND_ADDRESS] ... Complainant
+VS
+[OPPOSITE_PARTY_COMPANY_NAME] ... Opposite Party
 
 COMPLAINT UNDER SECTION 35 OF THE CONSUMER PROTECTION ACT, 2019
-
-The Complainant above-named respectfully states:
-
-1. The Complainant is a 'Consumer' within the meaning of Section 2(7) of the Consumer Protection Act, 2019, having purchased [DEFICIENCY_DESCRIPTION] vide Invoice No. [TRANSACTION_VALUE_AND_INVOICE_NO] on payment of valuable consideration.
-
-2. That the Opposite Party committed severe deficiency of service and unfair trade practice by supplying defective product/failing to honor guaranteed service deliverables despite receipt of consideration.
-
-3. The Complainant caused legal notice dated ________ to be served upon the Opposite Party, but the Opposite Party neither rectified the defect nor refunded the amount.
-
-PRAYER:
-The Complainant prays that this Hon'ble Commission may be pleased to direct the Opposite Party to:
-a) Refund the full invoice value of Rs. [TRANSACTION_VALUE_AND_INVOICE_NO] with 12% interest p.a.;
-b) Pay a sum of Rs. [COMPENSATION_CLAIMED_INR]/- as compensation towards mental agony and harassment;
-c) Award Rs. 25,000/- towards litigation costs.
+1. Complainant purchased product vide Invoice [TRANSACTION_VALUE_AND_INVOICE_NO].
+2. Deficiency: [DEFICIENCY_DESCRIPTION]
+PRAYER: Refund invoice value and grant compensation of Rs. [COMPENSATION_CLAIMED_INR]/-.
 
 COMPLAINANT`,
   },
 ];
 
 const CATEGORIES = [
-  { id: "all", label: "All Templates" },
-  { id: "writs", label: "Court Writs & Pleadings" },
-  { id: "notices", label: "Statutory Notices" },
-  { id: "deeds", label: "Civil & Property Deeds" },
-  { id: "consumer", label: "Consumer & Applications" },
+  { id: "all", label: "All" },
+  { id: "notices", label: "Notices" },
+  { id: "deeds", label: "Agreements & Deeds" },
+  { id: "civil", label: "Civil" },
+  { id: "criminal", label: "Criminal" },
+  { id: "arbitration", label: "Arbitration" },
+  { id: "writs", label: "Writs" },
+  { id: "family", label: "Family" },
+  { id: "more", label: "More", isDropdown: true },
+];
+
+const MORE_CATEGORIES = [
+  { id: "affidavits", label: "Affidavits" },
+  { id: "commercial", label: "Commercial" },
 ];
 
 export default function TemplatesLibraryView({
@@ -363,24 +604,39 @@ export default function TemplatesLibraryView({
 }: {
   onSelectTemplateForFiling?: (tmpl: LegalTemplate) => void;
 }) {
+  const [activeMainTab, setActiveMainTab] = useState<"lawgichub" | "my">("lawgichub");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState<boolean>(false);
   const [previewTemplate, setPreviewTemplate] = useState<LegalTemplate | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
   const filteredTemplates = useMemo(() => {
     return TEMPLATES_DATA.filter((tmpl) => {
+      // Filter by LawgicHub vs My Templates
+      if (activeMainTab === "my" && !tmpl.isMyTemplate) {
+        return false;
+      }
+
+      // Filter by Category
       const matchCat =
-        selectedCategory === "all" || tmpl.category === selectedCategory;
+        selectedCategory === "all" ||
+        tmpl.category === selectedCategory ||
+        (selectedCategory === "deeds" && tmpl.category === "commercial");
+
+      // Filter by Search Query
+      const q = searchQuery.trim().toLowerCase();
       const matchQuery =
-        !searchQuery.trim() ||
-        tmpl.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tmpl.courtOrForum.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tmpl.actReferred.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tmpl.description.toLowerCase().includes(searchQuery.toLowerCase());
+        !q ||
+        tmpl.title.toLowerCase().includes(q) ||
+        tmpl.categoryLabel.toLowerCase().includes(q) ||
+        tmpl.description.toLowerCase().includes(q) ||
+        tmpl.courtOrForum.toLowerCase().includes(q) ||
+        tmpl.actReferred.toLowerCase().includes(q);
+
       return matchCat && matchQuery;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [activeMainTab, selectedCategory, searchQuery]);
 
   const handleCopyText = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -400,122 +656,166 @@ export default function TemplatesLibraryView({
 
   return (
     <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-      {/* Top Banner */}
-      <div className="p-4 rounded-3xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shrink-0">
-            <FileText className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
-              Legal Templates Vault
-            </h1>
-            <p className="text-xs text-zinc-500 font-medium">
-              Verified court petitions, statutory demand notices, and registry deeds ready for customization
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-            {TEMPLATES_DATA.length} Standard Drafts
-          </span>
-        </div>
+      {/* Page Title */}
+      <div>
+        <h1 className="text-3xl sm:text-4xl font-black text-black dark:text-white tracking-tight">
+          Templates
+        </h1>
       </div>
 
-      {/* Search & Category Filter Toolbar */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search templates by act, court, notice type (e.g., Section 138, Writ, Bail, Tenancy)..."
-            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
-          />
-        </div>
+      {/* Switcher Pill Tabs: LawgicHub Templates (132) | My Templates */}
+      <div className="inline-flex items-center p-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+        <button
+          type="button"
+          onClick={() => setActiveMainTab("lawgichub")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            activeMainTab === "lawgichub"
+              ? "bg-white dark:bg-zinc-800 text-black dark:text-white shadow-2xs"
+              : "text-zinc-500 hover:text-black dark:hover:text-white"
+          }`}
+        >
+          <span>LawgicHub Templates</span>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
+            132
+          </span>
+        </button>
 
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((cat) => (
+        <button
+          type="button"
+          onClick={() => setActiveMainTab("my")}
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            activeMainTab === "my"
+              ? "bg-white dark:bg-zinc-800 text-black dark:text-white shadow-2xs"
+              : "text-zinc-500 hover:text-black dark:hover:text-white"
+          }`}
+        >
+          My Templates
+        </button>
+      </div>
+
+      {/* Full-width Search Bar matching reference */}
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search templates by document, proceeding or purpose..."
+          className="w-full pl-11 pr-4 py-3 text-xs sm:text-sm rounded-full bg-zinc-100/80 dark:bg-zinc-900/90 border border-transparent focus:border-zinc-300 dark:focus:border-zinc-700 text-black dark:text-white placeholder-zinc-400 focus:outline-none transition-colors"
+        />
+      </div>
+
+      {/* Category Filter Pills Toolbar */}
+      <div className="relative flex flex-wrap items-center gap-2">
+        {CATEGORIES.map((cat) => {
+          if (cat.isDropdown) {
+            return (
+              <div key={cat.id} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMoreDropdownOpen((prev) => !prev)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    MORE_CATEGORIES.some((m) => m.id === selectedCategory)
+                      ? "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold"
+                      : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <span>
+                    {MORE_CATEGORIES.find((m) => m.id === selectedCategory)?.label || "More"}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {moreDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1.5 z-20 w-44 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl p-1.5 space-y-1">
+                    {MORE_CATEGORIES.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory(m.id);
+                          setMoreDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer transition-colors ${
+                          selectedCategory === m.id
+                            ? "bg-black text-white dark:bg-white dark:text-black font-bold"
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              type="button"
+              onClick={() => {
+                setSelectedCategory(cat.id);
+                setMoreDropdownOpen(false);
+              }}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 selectedCategory === cat.id
-                  ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                  : "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-zinc-400"
+                  ? "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold shadow-2xs"
+                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
               }`}
             >
               {cat.label}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Grid of Templates */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Clean Divider */}
+      <div className="border-b border-zinc-100 dark:border-zinc-800/80 my-2" />
+
+      {/* Grid of Template Cards (3 Columns matching reference) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredTemplates.map((tmpl) => (
           <div
             key={tmpl.id}
-            className="p-5 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all flex flex-col justify-between group shadow-2xs"
+            onClick={() => setPreviewTemplate(tmpl)}
+            className="group rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 flex flex-col justify-between hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
           >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                  {tmpl.categoryLabel}
-                </span>
-                <span className="text-[10px] font-mono text-zinc-400">
-                  {tmpl.format}
-                </span>
-              </div>
+            <div>
+              {/* Category Subtitle in uppercase */}
+              <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase block">
+                {tmpl.categoryLabel}
+              </span>
 
-              <div>
-                <h3 className="font-bold text-sm text-black dark:text-white group-hover:underline line-clamp-2 leading-snug">
-                  {tmpl.title}
-                </h3>
-                <p className="text-[11px] text-zinc-500 line-clamp-2 mt-1">
-                  {tmpl.description}
-                </p>
-              </div>
+              {/* Title */}
+              <h3 className="font-bold text-base text-black dark:text-white group-hover:underline mt-2.5 leading-snug">
+                {tmpl.title}
+              </h3>
 
-              <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-900 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
-                <div className="flex items-start gap-1.5">
-                  <Scale className="w-3.5 h-3.5 shrink-0 mt-0.5 text-zinc-400" />
-                  <span className="truncate">{tmpl.courtOrForum}</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <Shield className="w-3.5 h-3.5 shrink-0 mt-0.5 text-zinc-400" />
-                  <span className="truncate">{tmpl.actReferred}</span>
-                </div>
-              </div>
+              {/* Description Snippet */}
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 line-clamp-3 leading-relaxed">
+                {tmpl.description}
+              </p>
             </div>
 
-            <div className="pt-4 mt-3 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setPreviewTemplate(tmpl)}
-                className="flex-1 py-2 px-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Preview &amp; Draft</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDownloadDraft(tmpl)}
-                title="Download draft file"
-                className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-              </button>
+            {/* Bottom Row: Particulars pill & Arrow */}
+            <div className="pt-6 mt-4 flex items-center justify-between">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                {tmpl.particularsCount} particulars
+              </span>
+
+              <div className="p-1.5 rounded-full text-zinc-400 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-1 transition-all">
+                <ArrowRight className="w-4 h-4" />
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {filteredTemplates.length === 0 && (
-        <div className="p-12 text-center rounded-3xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500">
-          No templates match your search criteria. Try searching for &quot;Writ&quot;, &quot;Section 138&quot;, or &quot;Bail&quot;.
+        <div className="p-12 text-center rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500">
+          No templates match your search or category filter. Try clearing the search or choosing &quot;All&quot;.
         </div>
       )}
 

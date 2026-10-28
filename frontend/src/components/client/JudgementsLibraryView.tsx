@@ -11,12 +11,23 @@ import {
   Eye,
   X,
   BookOpen,
-  ArrowUpRight,
-  Shield,
-  FileText,
   Calendar,
-  Award,
+  ChevronDown,
+  Building2,
+  FileText,
+  Shield,
+  ArrowRight,
 } from "lucide-react";
+
+export interface LegalTopicCard {
+  id: string;
+  category: "criminal" | "constitutional" | "commercial" | "property";
+  title: string;
+  count: string;
+  statutes: string;
+  description?: string;
+  linkedJudgementId?: string;
+}
 
 export interface CourtJudgement {
   id: string;
@@ -25,7 +36,7 @@ export interface CourtJudgement {
   court: string;
   bench: string;
   date: string;
-  category: "all" | "khc" | "sc" | "property" | "criminal" | "constitutional";
+  category: "all" | "khc" | "sc" | "property" | "criminal" | "constitutional" | "commercial";
   categoryLabel: string;
   statutes: string[];
   ratioDecidendi: string;
@@ -34,6 +45,181 @@ export interface CourtJudgement {
   keyParagraphs: { paraNo: number; quote: string }[];
   practicalChecklist: string[];
 }
+
+const TOPIC_SECTIONS = [
+  {
+    id: "criminal",
+    heading: "Criminal law",
+    subtitle: "Bail, quashing and the offences most often litigated.",
+    topics: [
+      {
+        id: "top-ant-bail",
+        category: "criminal" as const,
+        title: "Anticipatory bail",
+        count: "5,760",
+        statutes: "Section 438 CrPC · Section 482 BNSS",
+        linkedJudgementId: "jdg-03",
+      },
+      {
+        id: "top-reg-bail",
+        category: "criminal" as const,
+        title: "Regular bail",
+        count: "13,115",
+        statutes: "Sections 437 and 439 CrPC · Sections 480 and 483 BNSS",
+        linkedJudgementId: "jdg-03",
+      },
+      {
+        id: "top-def-bail",
+        category: "criminal" as const,
+        title: "Default bail",
+        count: "843",
+        statutes: "Section 167(2) CrPC · Section 187 BNSS",
+        linkedJudgementId: "jdg-03",
+      },
+      {
+        id: "top-fir-quash",
+        category: "criminal" as const,
+        title: "FIR quashing",
+        count: "92,960",
+        statutes: "Section 482 CrPC · Section 528 BNSS",
+        linkedJudgementId: "jdg-02",
+      },
+      {
+        id: "top-cheque",
+        category: "criminal" as const,
+        title: "Cheque bounce",
+        count: "29,808",
+        statutes: "Sections 138 to 148 Negotiable Instruments Act",
+        linkedJudgementId: "jdg-02",
+      },
+      {
+        id: "top-498a",
+        category: "criminal" as const,
+        title: "498A cruelty",
+        count: "21,761",
+        statutes: "Section 498A IPC · Sections 85 and 86 BNS",
+        linkedJudgementId: "jdg-03",
+      },
+    ],
+  },
+  {
+    id: "constitutional",
+    heading: "Constitutional & Writ law",
+    subtitle: "Fundamental rights, Article 226/32, mandamus, certiorari and state accountability.",
+    topics: [
+      {
+        id: "top-writ-cert",
+        category: "constitutional" as const,
+        title: "Writ of Certiorari / Mandamus",
+        count: "44,120",
+        statutes: "Article 226 & 32 Constitution · Telegraph Act Sec. 16",
+        linkedJudgementId: "jdg-01",
+      },
+      {
+        id: "top-prop-serv",
+        category: "constitutional" as const,
+        title: "Right to Property & Servitude",
+        count: "18,340",
+        statutes: "Article 300A · Electricity Act Sec. 67/68",
+        linkedJudgementId: "jdg-01",
+      },
+      {
+        id: "top-liberty",
+        category: "constitutional" as const,
+        title: "Personal Liberty & Detention",
+        count: "31,890",
+        statutes: "Article 21 & 22 · Preventive Detention Acts",
+        linkedJudgementId: "jdg-03",
+      },
+      {
+        id: "top-service-writs",
+        category: "constitutional" as const,
+        title: "Service & Seniority Writs",
+        count: "52,410",
+        statutes: "Article 311 · Kerala State & Subordinate Services Rules",
+        linkedJudgementId: "jdg-01",
+      },
+    ],
+  },
+  {
+    id: "commercial",
+    heading: "Commercial & Arbitration law",
+    subtitle: "Section 9/17 interim relief, contract enforcement, and insolvency proceedings.",
+    topics: [
+      {
+        id: "top-sec-9",
+        category: "commercial" as const,
+        title: "Section 9 Interim Measures",
+        count: "14,200",
+        statutes: "Arbitration & Conciliation Act 1996, Sec. 9",
+        linkedJudgementId: "jdg-05",
+      },
+      {
+        id: "top-sec-11",
+        category: "commercial" as const,
+        title: "Section 11 Arbitrator Appointment",
+        count: "22,850",
+        statutes: "Arbitration & Conciliation Act 1996, Sec. 11",
+        linkedJudgementId: "jdg-05",
+      },
+      {
+        id: "top-sec-34",
+        category: "commercial" as const,
+        title: "Section 34 Award Challenge",
+        count: "38,910",
+        statutes: "Public policy & patent illegality grounds",
+        linkedJudgementId: "jdg-05",
+      },
+      {
+        id: "top-ibc",
+        category: "commercial" as const,
+        title: "Corporate Insolvency & IBC",
+        count: "67,420",
+        statutes: "IBC 2016 Sec. 7 & Sec. 9 · NCLT/NCLAT",
+        linkedJudgementId: "jdg-05",
+      },
+    ],
+  },
+  {
+    id: "property",
+    heading: "Property, Tenancy & Civil law",
+    subtitle: "Title declarations, boundary commissions, easement rights, and tenant evictions.",
+    topics: [
+      {
+        id: "top-survey",
+        category: "property" as const,
+        title: "Advocate Commissioner Survey",
+        count: "12,890",
+        statutes: "Order XXVI Rule 9 CPC · Boundary fixation",
+        linkedJudgementId: "jdg-04",
+      },
+      {
+        id: "top-tenancy-106",
+        category: "property" as const,
+        title: "Section 106 Tenancy Notice",
+        count: "19,450",
+        statutes: "Transfer of Property Act Sec. 106 · Kerala Buildings Act",
+        linkedJudgementId: "jdg-04",
+      },
+      {
+        id: "top-specific-perf",
+        category: "property" as const,
+        title: "Specific Performance of Contract",
+        count: "41,200",
+        statutes: "Specific Relief Act 1963 Sec. 16(c)",
+        linkedJudgementId: "jdg-04",
+      },
+      {
+        id: "top-injunction",
+        category: "property" as const,
+        title: "Injunction & Encroachment",
+        count: "58,340",
+        statutes: "Order XXXIX CPC · Specific Relief Act Sec. 38",
+        linkedJudgementId: "jdg-04",
+      },
+    ],
+  },
+];
 
 const JUDGEMENTS_DATA: CourtJudgement[] = [
   {
@@ -149,130 +335,77 @@ const JUDGEMENTS_DATA: CourtJudgement[] = [
     title: "Kunhambu v. Mohanan & Ors.",
     citation: "2023 (4) KLT 112 • RCRev No. 89 of 2023",
     court: "High Court of Kerala (Ernakulam Bench)",
-    bench: "Hon'ble Mr. Justice A. Muhamed Mustque & Hon'ble Mrs. Justice Shoba Annamma Eapen",
-    date: "18 Aug 2023",
+    bench: "Hon'ble Mr. Justice A. Muhamed Mustaque & Hon'ble Mrs. Justice Sophie Thomas",
+    date: "18 Sep 2023",
     category: "property",
-    categoryLabel: "Property & Land",
+    categoryLabel: "Property & Tenancy",
     statutes: [
       "Kerala Buildings (Lease and Rent Control) Act, 1965 (Section 11(3))",
       "Transfer of Property Act, 1882 (Section 106)",
     ],
     ratioDecidendi:
-      "The bona fide need of a landlord to occupy their own premises under Section 11(3) is presumed to be genuine unless the tenant establishes mala fides with positive proof. The landlord is the sole arbiter of their residential and commercial requirements; the tenant cannot dictate how the landlord should adjust.",
+      "A landlord's bona fide need for own commercial occupation cannot be doubted merely because alternative unsuited properties exist. Once the landlord establishes the genuine intention to start a business, the burden shifts to the tenant to prove the statutory provisos regarding dependency on commercial income and non-availability of other rooms in the locality.",
     citizenExplainer:
-      "If a property owner genuinely needs their rented shop or house for their own family or business, the court will favor the landlord's eviction petition unless the tenant proves the owner has another vacant building readily available in the same locality.",
+      "If you own a building and genuinely require it for your own business or your child's profession, the court will support eviction of the tenant unless the tenant can convincingly prove there is nowhere else in the area for them to operate.",
     factsSummary:
-      "Landlord filed rent control petition seeking vacant possession of ground floor commercial shop to establish a pharmacy for his dependent son. Tenant resisted claiming other rooms were owned by the landlord. The High Court upheld the eviction order.",
+      "Landlord sought eviction of ground floor shop in Kannur town for his son's chartered accountancy chamber. The Rent Control Court allowed eviction. The Appellate Authority reversed. The High Court restored the eviction order.",
     keyParagraphs: [
       {
         paraNo: 8,
         quote:
-          "It is not the province of the tenant to direct the landlord in what manner he should manage his properties or satisfy his reasonable requirements.",
+          "The landlord is the best judge of their residential or commercial requirement. It is neither for the tenant nor for the court to prescribe what space is adequate.",
       },
     ],
     practicalChecklist: [
-      "Establish bona fide personal requirement with supporting business or family dependency records.",
-      "Verify absence of other vacant buildings within the local panchayat/municipality.",
-      "Issue Section 106 T.P. Act notice prior to instituting Rent Control Petition.",
+      "Issue 15-day Section 106 statutory notice specifying bona fide requirement.",
+      "File Rent Control Petition (RCP) before Munsiff Court / Rent Controller.",
+      "Produce proof of dependent child's qualification (e.g. CA / Law / Medical degree).",
     ],
   },
   {
     id: "jdg-05",
-    title: "Sawarni (Smt.) v. Smt. Inder Kaur & Ors.",
-    citation: "AIR 1996 SC 2823 • Followed in 2024 (1) KHC 550",
+    title: "Perkins Eastman Architects DPC v. HSCC (India) Ltd.",
+    citation: "2020 (20) SCC 760 • Arbitration Petition No. 32 of 2019",
     court: "Supreme Court of India (New Delhi)",
-    bench: "Hon'ble Mr. Justice K. Ramaswamy & Hon'ble Mr. Justice G.B. Pattanaik",
-    date: "16 Sep 1996",
-    category: "property",
-    categoryLabel: "Property & Land",
+    bench: "Hon'ble Mr. Justice U.U. Lalit & Hon'ble Mrs. Justice Indu Malhotra",
+    date: "26 Nov 2019",
+    category: "commercial",
+    categoryLabel: "Commercial Arbitration",
     statutes: [
-      "Kerala Land Tax Act, 1961",
-      "Transfer of Property Act, 1882 (Section 54)",
-      "Specific Relief Act, 1963",
+      "Arbitration and Conciliation Act, 1996 (Section 11(6), Section 12(5))",
+      "Seventh Schedule of the Arbitration Act",
     ],
     ratioDecidendi:
-      "Mutation of a property in revenue records neither creates nor extinguishes title, nor has it any presumptive value on title. It is solely an administrative entry for the fiscal purpose of collecting land revenue and does not prejudice the rights of true owners under registered title deeds.",
+      "A person who is disqualified under Section 12(5) read with the Seventh Schedule from acting as an arbitrator is equally ineligible to nominate a sole arbitrator. Unilateral appointment of arbitrators by one contracting party without mutual consensus is invalid in law and strikes at the core of independent arbitral adjudication.",
     citizenExplainer:
-      "Having your name in the village revenue thandaper or paying land tax does not make you the legal owner if another person holds a valid registered sale deed. Similarly, someone cannot steal your land simply by fraudulently getting their name on the village tax receipt.",
+      "In commercial or construction agreements, a company cannot unilaterally appoint their own employee or handpicked lawyer as the sole arbitrator. The appointment must be mutually agreed or decided by the High Court / Supreme Court.",
     factsSummary:
-      "Dispute between legal heirs where revenue mutation was obtained by respondent in revenue registers. The appellant challenged on the strength of a registered sale deed. The Supreme Court firmly ruled revenue mutation is not evidence of title.",
+      "Contract clause permitted Chief Managing Director of HSCC to unilaterally appoint sole arbitrator. The Supreme Court held that since the CMD is an interested party, he cannot appoint the arbitrator, and the Court appointed an independent retired High Court judge.",
     keyParagraphs: [
       {
-        paraNo: 7,
+        paraNo: 21,
         quote:
-          "Mutation of name in the revenue records does not create any title nor does it have the effect of extinguishing the title of the true owner. Such entries are relevant only for fiscal purposes of collecting land revenue.",
+          "In a case where one party has the exclusive right to appoint an arbitrator, its choice will always have an element of bias, which is why Section 12(5) renders such unilateral appointment invalid.",
       },
     ],
     practicalChecklist: [
-      "Never rely exclusively on land tax receipts when purchasing immovable property.",
-      "Conduct title tracing of prior title deeds for 30 years and inspect Nil Encumbrance Certificate.",
-      "Challenge fraudulent mutations before Tahsildar / Revenue Divisional Officer (RDO).",
+      "Issue notice invoking arbitration under Section 21 proposing neutral panel of names.",
+      "Wait 30 days for respondent's concurrence.",
+      "If respondent insists on unilateral appointee, approach High Court under Section 11(6).",
     ],
   },
-  {
-    id: "jdg-06",
-    title: "Shreya Singhal v. Union of India",
-    citation: "(2015) 5 SCC 1 • 2015 AIR SCW 2432",
-    court: "Supreme Court of India (New Delhi)",
-    bench: "Hon'ble Mr. Justice J. Chelameswar & Hon'ble Mr. Justice R.F. Nariman",
-    date: "24 Mar 2015",
-    category: "constitutional",
-    categoryLabel: "Constitutional & Civil Rights",
-    statutes: [
-      "Information Technology Act, 2000 (Section 66A, Section 79)",
-      "Article 19(1)(a) & Article 19(2) of Constitution of India",
-    ],
-    ratioDecidendi:
-      "Section 66A of the Information Technology Act was declared unconstitutional in its entirety as it cast an overbroad, vague chill upon the fundamental right to freedom of speech and expression. Intermediate internet platforms are only required to take down content upon a court order or government notification.",
-    citizenExplainer:
-      "Police cannot arrest citizens under the struck-down Section 66A for social media posts, comments, or critical online speech. Any FIR registered under Section 66A is void ab initio and liable to immediate quashing.",
-    factsSummary:
-      "Petitioners challenged Section 66A following widespread wrongful arrests across India for peaceful online commentary. The Supreme Court struck down the provision in a landmark defence of democratic discourse.",
-    keyParagraphs: [
-      {
-        paraNo: 82,
-        quote:
-          "The clear and present danger test and the incitement to violence test must be met before speech can be criminalized. Discussion and advocacy are protected; mere incitement alone can be restrained.",
-      },
-    ],
-    practicalChecklist: [
-      "Check if any police notice mentions Section 66A of IT Act; if so, cite Shreya Singhal to have it withdrawn.",
-      "File WP(C) before High Court under Article 226 for quashing any FIR continuing under Section 66A.",
-    ],
-  },
-];
-
-const CATEGORIES = [
-  { id: "all", label: "All Judgements" },
-  { id: "khc", label: "Kerala High Court" },
-  { id: "sc", label: "Supreme Court" },
-  { id: "property", label: "Property & Land" },
-  { id: "criminal", label: "Criminal & BNSS/BNS" },
-  { id: "constitutional", label: "Constitutional & Rights" },
 ];
 
 export default function JudgementsLibraryView() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCourt, setSelectedCourt] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [actSearchQuery, setActSearchQuery] = useState<string>("");
   const [readingJudgement, setReadingJudgement] = useState<CourtJudgement | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const filteredJudgements = useMemo(() => {
-    return JUDGEMENTS_DATA.filter((jdg) => {
-      const matchCat =
-        selectedCategory === "all" || jdg.category === selectedCategory;
-      const matchQuery =
-        !searchQuery.trim() ||
-        jdg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        jdg.citation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        jdg.bench.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        jdg.ratioDecidendi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        jdg.citizenExplainer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        jdg.statutes.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchCat && matchQuery;
-    });
-  }, [selectedCategory, searchQuery]);
+  const [courtDropdownOpen, setCourtDropdownOpen] = useState(false);
+  const [yearsDropdownOpen, setYearsDropdownOpen] = useState(false);
+  const [issueDropdownOpen, setIssueDropdownOpen] = useState(false);
 
   const toggleBookmark = (id: string) => {
     setBookmarkedIds((prev) =>
@@ -286,182 +419,400 @@ export default function JudgementsLibraryView() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Filter sections by search query
+  const filteredSections = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const actQ = actSearchQuery.trim().toLowerCase();
+
+    return TOPIC_SECTIONS.map((sec) => {
+      const filteredTopics = sec.topics.filter((t) => {
+        const matchesCourt =
+          selectedCourt === "all" ||
+          (selectedCourt === "sc" && (t.category === "constitutional" || t.category === "criminal")) ||
+          (selectedCourt === "hc" && (t.category === "property" || t.category === "constitutional"));
+
+        const matchesSearch =
+          !q ||
+          t.title.toLowerCase().includes(q) ||
+          t.statutes.toLowerCase().includes(q) ||
+          sec.heading.toLowerCase().includes(q);
+
+        const matchesActSearch =
+          !actQ || t.statutes.toLowerCase().includes(actQ);
+
+        return matchesCourt && matchesSearch && matchesActSearch;
+      });
+
+      return {
+        ...sec,
+        topics: filteredTopics,
+      };
+    }).filter((sec) => sec.topics.length > 0);
+  }, [searchQuery, actSearchQuery, selectedCourt]);
+
+  // Filter full landmark judgments
+  const filteredJudgements = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const actQ = actSearchQuery.trim().toLowerCase();
+
+    return JUDGEMENTS_DATA.filter((jdg) => {
+      const matchCourt =
+        selectedCourt === "all" ||
+        (selectedCourt === "sc" && jdg.category === "sc") ||
+        (selectedCourt === "hc" && jdg.category === "khc");
+
+      const matchQ =
+        !q ||
+        jdg.title.toLowerCase().includes(q) ||
+        jdg.citation.toLowerCase().includes(q) ||
+        jdg.bench.toLowerCase().includes(q) ||
+        jdg.ratioDecidendi.toLowerCase().includes(q) ||
+        jdg.citizenExplainer.toLowerCase().includes(q);
+
+      const matchAct =
+        !actQ || jdg.statutes.some((s) => s.toLowerCase().includes(actQ));
+
+      return matchCourt && matchQ && matchAct;
+    });
+  }, [selectedCourt, searchQuery, actSearchQuery]);
+
   return (
     <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-      {/* Top Banner */}
-      <div className="p-4 rounded-3xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shrink-0">
-            <Scale className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
-              Landmark Judgements &amp; Precedents
-            </h1>
-            <p className="text-xs text-zinc-500 font-medium">
-              Binding ratios, full citations, and plain-language citizen legal explainers
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-            {JUDGEMENTS_DATA.length} Landmark Precedents
-          </span>
-        </div>
+      {/* Header matching reference */}
+      <div>
+        <h1 className="text-3xl sm:text-4xl font-black text-black dark:text-white tracking-tight">
+          Indian Court Judgments &amp; Case Law
+        </h1>
+        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-3xl leading-relaxed">
+          Search Supreme Court and High Court judgments by legal issue, court or statutory provision. Explore case law for Indian legal research.
+        </p>
       </div>
 
-      {/* Search & Category Filter Toolbar */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search judgements by citation, case name, judge, statute (e.g., KHC, Telegraph Act, Section 138, Bail)..."
-            className="w-full pl-10 pr-4 py-2.5 text-xs rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
-          />
-        </div>
+      {/* Full-width Search Bar matching reference */}
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by case name, court, bench, or keyword..."
+          className="w-full pl-11 pr-4 py-3 text-xs sm:text-sm rounded-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 shadow-2xs transition-colors"
+        />
+      </div>
 
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((cat) => (
+      {/* Filter and Judgments Count Toolbar matching reference */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Left Pills & Selectors */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* All Judgments Pill */}
+          <button
+            type="button"
+            onClick={() => setSelectedCourt("all")}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              selectedCourt === "all"
+                ? "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold shadow-2xs"
+                : "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+            }`}
+          >
+            All Judgments
+          </button>
+
+          {/* Supreme Court Pill */}
+          <button
+            type="button"
+            onClick={() => setSelectedCourt("sc")}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              selectedCourt === "sc"
+                ? "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold shadow-2xs"
+                : "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+            }`}
+          >
+            Supreme Court
+          </button>
+
+          {/* High Courts Dropdown */}
+          <div className="relative">
             <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                selectedCategory === cat.id
-                  ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                  : "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:border-zinc-400"
+              type="button"
+              onClick={() => {
+                setCourtDropdownOpen((prev) => !prev);
+                setYearsDropdownOpen(false);
+                setIssueDropdownOpen(false);
+              }}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                selectedCourt === "hc"
+                  ? "bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold"
+                  : "bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
               }`}
             >
-              {cat.label}
+              <span>High Courts</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
             </button>
-          ))}
+
+            {courtDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 z-20 w-48 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl p-1.5 space-y-1">
+                {[
+                  { id: "hc", label: "High Court of Kerala" },
+                  { id: "hc-delhi", label: "Delhi High Court" },
+                  { id: "hc-bombay", label: "Bombay High Court" },
+                  { id: "hc-madras", label: "Madras High Court" },
+                ].map((hc) => (
+                  <button
+                    key={hc.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCourt("hc");
+                      setCourtDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                  >
+                    {hc.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* All Years Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setYearsDropdownOpen((prev) => !prev);
+                setCourtDropdownOpen(false);
+                setIssueDropdownOpen(false);
+              }}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <span>All years</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+            </button>
+
+            {yearsDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 z-20 w-36 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl p-1.5 space-y-1">
+                {["All Years", "2026", "2025", "2024", "2023", "2022", "2020-2021"].map((yr) => (
+                  <button
+                    key={yr}
+                    type="button"
+                    onClick={() => setYearsDropdownOpen(false)}
+                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                  >
+                    {yr}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Legal Issue Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIssueDropdownOpen((prev) => !prev);
+                setCourtDropdownOpen(false);
+                setYearsDropdownOpen(false);
+              }}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <span>Legal issue</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+            </button>
+
+            {issueDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 z-20 w-52 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl p-1.5 space-y-1">
+                {[
+                  "Bail Jurisprudence",
+                  "Section 138 Dishonour",
+                  "Telegraph Act Section 16",
+                  "Section 9 Interim Relief",
+                  "Tenancy & Eviction",
+                ].map((iss) => (
+                  <button
+                    key={iss}
+                    type="button"
+                    onClick={() => setIssueDropdownOpen(false)}
+                    className="w-full text-left px-3 py-1.5 rounded-xl text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                  >
+                    {iss}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Search sections and acts input pill */}
+          <div className="relative inline-flex items-center">
+            <Search className="w-3.5 h-3.5 absolute left-3.5 text-zinc-400" />
+            <input
+              type="text"
+              value={actSearchQuery}
+              onChange={(e) => setActSearchQuery(e.target.value)}
+              placeholder="Search sections and acts..."
+              className="pl-9 pr-3 py-1.5 rounded-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 w-44 sm:w-56 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Right Badge: 17,26,756 judgments */}
+        <div className="px-4 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono font-bold text-xs">
+          17,26,756 judgments
         </div>
       </div>
 
-      {/* Grid of Judgements */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredJudgements.map((jdg) => (
-          <div
-            key={jdg.id}
-            className="p-5 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all flex flex-col justify-between group shadow-2xs space-y-4"
-          >
-            <div className="space-y-3">
-              {/* Top metadata */}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                  {jdg.categoryLabel}
-                </span>
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>{jdg.date}</span>
-                </div>
-              </div>
-
-              {/* Title & Citation */}
-              <div>
-                <h3 className="font-bold text-sm text-black dark:text-white group-hover:underline leading-snug">
-                  {jdg.title}
-                </h3>
-                <span className="font-mono text-[11px] text-zinc-500 block mt-1">
-                  {jdg.citation}
-                </span>
-              </div>
-
-              {/* Citizen Explainer Highlight Card */}
-              <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-black dark:text-white block">
-                  Citizen Legal Takeaway:
-                </span>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed line-clamp-2">
-                  {jdg.citizenExplainer}
-                </p>
-              </div>
-
-              {/* Ratio Decidendi */}
-              <div className="space-y-1 text-xs">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block">
-                  Binding Ratio Decidendi:
-                </span>
-                <p className="text-zinc-700 dark:text-zinc-300 line-clamp-3 leading-relaxed">
-                  {jdg.ratioDecidendi}
-                </p>
-              </div>
+      {/* Topic Sections with 4-Column Cards matching screenshot */}
+      <div className="space-y-10 pt-4">
+        {filteredSections.map((sec) => (
+          <div key={sec.id} className="space-y-3">
+            <div>
+              <h2 className="text-xl font-bold text-black dark:text-white tracking-tight">
+                {sec.heading}
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                {sec.subtitle}
+              </p>
             </div>
 
-            {/* Bottom Actions */}
-            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setReadingJudgement(jdg)}
-                className="py-2 px-3.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>Read Full Precedent</span>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {sec.topics.map((topic) => (
+                <div
+                  key={topic.id}
+                  onClick={() => {
+                    const match = JUDGEMENTS_DATA.find((j) => j.id === topic.linkedJudgementId);
+                    if (match) setReadingJudgement(match);
+                  }}
+                  className="group rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 hover:shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer flex flex-col justify-between"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-sm text-black dark:text-white group-hover:underline">
+                      {topic.title}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 shrink-0">
+                      {topic.count}
+                    </span>
+                  </div>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleCopyCitation(jdg.citation, jdg.id)}
-                  title="Copy Citation"
-                  className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-                >
-                  {copiedId === jdg.id ? (
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleBookmark(jdg.id)}
-                  title="Bookmark"
-                  className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-                    bookmarkedIds.includes(jdg.id)
-                      ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
-                      : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                  }`}
-                >
-                  <Bookmark className="w-4 h-4" />
-                </button>
-              </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2.5 leading-relaxed">
+                    {topic.statutes}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         ))}
       </div>
 
-      {filteredJudgements.length === 0 && (
-        <div className="p-12 text-center rounded-3xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500">
-          No judgements match your search query. Try searching for &quot;High Court&quot;, &quot;Telegraph&quot;, or &quot;Cheque&quot;.
+      {/* Landmark Certified Judgments Section */}
+      <div className="pt-8 space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-3">
+          <div>
+            <h2 className="text-xl font-bold text-black dark:text-white">
+              Landmark Judicial Precedents &amp; Binding Ratios
+            </h2>
+            <p className="text-xs text-zinc-500">
+              Plain-language citizen takeaways with full legal citations and practical checklists
+            </p>
+          </div>
+          <span className="text-xs font-mono text-zinc-400">
+            {filteredJudgements.length} Precedents
+          </span>
         </div>
-      )}
 
-      {/* Reading Modal */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredJudgements.map((jdg) => (
+            <div
+              key={jdg.id}
+              className="p-5 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all flex flex-col justify-between group shadow-2xs space-y-3"
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white">
+                    {jdg.categoryLabel}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{jdg.date}</span>
+                  </div>
+                </div>
+
+                <h3 className="font-bold text-sm text-black dark:text-white group-hover:underline leading-snug">
+                  {jdg.title}
+                </h3>
+                <span className="font-mono text-[11px] text-zinc-500 block">
+                  {jdg.citation}
+                </span>
+
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800/80 space-y-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-black dark:text-white block">
+                    Citizen Legal Takeaway:
+                  </span>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed line-clamp-2">
+                    {jdg.citizenExplainer}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReadingJudgement(jdg)}
+                  className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-1.5 hover:opacity-90 cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Read Full Ratio</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCitation(jdg.citation, jdg.id)}
+                    title="Copy citation"
+                    className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  >
+                    {copiedId === jdg.id ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleBookmark(jdg.id)}
+                    title={bookmarkedIds.includes(jdg.id) ? "Bookmarked" : "Bookmark"}
+                    className={`p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 cursor-pointer ${
+                      bookmarkedIds.includes(jdg.id)
+                        ? "text-[#6B1728] border-[#6B1728]"
+                        : "text-zinc-400 hover:text-black dark:hover:text-white"
+                    }`}
+                  >
+                    <Bookmark
+                      className={`w-3.5 h-3.5 ${
+                        bookmarkedIds.includes(jdg.id) ? "fill-[#6B1728]" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Judgment Reading Modal */}
       {readingJudgement && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-black rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
+            {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-start justify-between gap-3 bg-zinc-50 dark:bg-zinc-950 shrink-0">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white">
-                    {readingJudgement.categoryLabel}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400">
-                    {readingJudgement.date}
-                  </span>
-                </div>
-                <h2 className="text-base sm:text-lg font-black text-black dark:text-white">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white">
+                  {readingJudgement.categoryLabel}
+                </span>
+                <h2 className="text-base sm:text-lg font-black text-black dark:text-white mt-1">
                   {readingJudgement.title}
                 </h2>
-                <p className="text-xs text-zinc-500 font-mono">
+                <p className="text-xs text-zinc-500 font-mono mt-0.5">
                   {readingJudgement.citation} • {readingJudgement.court}
-                </p>
-                <p className="text-[11px] text-zinc-400">
-                  Bench: {readingJudgement.bench}
                 </p>
               </div>
 
@@ -474,115 +825,92 @@ export default function JudgementsLibraryView() {
               </button>
             </div>
 
-            {/* Content Body */}
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
-              {/* Statutes Referred */}
-              <div className="space-y-1.5">
-                <span className="font-bold text-black dark:text-white text-xs block">
-                  Statutes &amp; Constitutional Provisions:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {readingJudgement.statutes.map((st, i) => (
-                    <span
-                      key={i}
-                      className="px-2.5 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-[10px] text-black dark:text-white"
-                    >
-                      {st}
-                    </span>
-                  ))}
+            {/* Modal Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1 text-xs">
+              {/* Bench and Date */}
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span className="text-[10px] font-mono text-zinc-400 block uppercase">Bench</span>
+                  <span className="font-bold text-black dark:text-white text-xs">
+                    {readingJudgement.bench}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono text-zinc-400 block uppercase">Decided On</span>
+                  <span className="font-mono text-zinc-600 dark:text-zinc-300">
+                    {readingJudgement.date}
+                  </span>
                 </div>
               </div>
 
-              {/* Citizen Plain Language Explainer */}
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-black dark:text-white" />
-                  <span className="font-black text-black dark:text-white text-xs uppercase tracking-wider">
-                    What This Ruling Means for Citizens:
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              {/* Citizen Explainer */}
+              <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                <span className="text-xs font-bold text-black dark:text-white flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-[#6B1728]" />
+                  What This Means For You (Plain Language):
+                </span>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
                   {readingJudgement.citizenExplainer}
                 </p>
               </div>
 
-              {/* Core Ratio Decidendi */}
-              <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-black dark:text-white block">
-                  Authoritative Ratio Decidendi (Binding Principle of Law):
+              {/* Binding Ratio Decidendi */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-bold text-black dark:text-white block uppercase tracking-wider font-mono">
+                  Binding Legal Ratio (Ratio Decidendi):
                 </span>
-                <p className="text-xs font-serif text-black dark:text-zinc-100 leading-relaxed italic">
-                  &ldquo;{readingJudgement.ratioDecidendi}&rdquo;
-                </p>
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-zinc-200 leading-relaxed border-l-4 border-l-[#6B1728]">
+                  {readingJudgement.ratioDecidendi}
+                </div>
               </div>
 
-              {/* Facts Summary */}
+              {/* Key Paragraphs from Judgment */}
               <div className="space-y-2">
-                <span className="font-bold text-black dark:text-white text-xs block">
-                  Case Background &amp; Material Facts:
+                <span className="text-xs font-bold text-black dark:text-white block uppercase tracking-wider font-mono">
+                  Authoritative Quotes from Judgment:
                 </span>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  {readingJudgement.factsSummary}
-                </p>
-              </div>
-
-              {/* Key Judgement Quotes */}
-              <div className="space-y-3">
-                <span className="font-bold text-black dark:text-white text-xs block">
-                  Extracted Judicial Paragraphs:
-                </span>
-                {readingJudgement.keyParagraphs.map((kp, idx) => (
+                {readingJudgement.keyParagraphs.map((kp) => (
                   <div
-                    key={idx}
-                    className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black space-y-1.5"
+                    key={kp.paraNo}
+                    className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-1"
                   >
-                    <span className="text-[10px] font-mono font-bold text-zinc-400 block">
-                      Paragraph [{kp.paraNo}]
+                    <span className="text-[10px] font-mono text-zinc-400 font-bold block">
+                      Paragraph {kp.paraNo}:
                     </span>
-                    <p className="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed italic">
+                    <p className="italic text-zinc-600 dark:text-zinc-300 text-xs leading-relaxed">
                       &ldquo;{kp.quote}&rdquo;
                     </p>
                   </div>
                 ))}
               </div>
 
-              {/* Practical Action Checklist */}
-              <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-2 bg-zinc-50 dark:bg-zinc-950">
+              {/* Practical Checklist */}
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
                 <span className="font-bold text-black dark:text-white text-xs block">
-                  Procedural Action Checklist for Litigants:
+                  Actionable Legal Checklist:
                 </span>
-                <ul className="space-y-1.5 text-zinc-600 dark:text-zinc-400">
-                  {readingJudgement.practicalChecklist.map((act, i) => (
-                    <li key={i} className="flex items-start gap-2">
+                <ul className="space-y-1 text-zinc-600 dark:text-zinc-400">
+                  {readingJudgement.practicalChecklist.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
                       <span className="font-bold text-black dark:text-white shrink-0">•</span>
-                      <span>{act}</span>
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Modal Footer */}
             <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleCopyCitation(readingJudgement.citation, readingJudgement.id)}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black font-bold text-xs text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                {copiedId === readingJudgement.id ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-                <span>{copiedId === readingJudgement.id ? "Citation Copied" : "Copy Official Citation"}</span>
-              </button>
-
+              <span className="text-[11px] text-zinc-500 font-mono">
+                Official Supreme Court &amp; Kerala High Court Law Reports Certified
+              </span>
               <button
                 type="button"
                 onClick={() => setReadingJudgement(null)}
                 className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90"
               >
-                Close Precedent
+                Done Reading
               </button>
             </div>
           </div>

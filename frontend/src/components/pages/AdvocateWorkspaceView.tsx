@@ -35,6 +35,7 @@ import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
 import ScrutinyDefectClearingView from "@/components/advocate/ScrutinyDefectClearingView";
 import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRadarView";
 import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBillingView";
+import { AdvocateConflictScannerView } from "@/components/advocate/AdvocateConflictScannerView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -567,9 +568,9 @@ export function AdvocateWorkspaceView() {
         },
         {
           id: "compliance",
-          label: "Compliance",
-          subtitle: "Bar Council ethics check",
-          whatItDoes: "Runs conflict-of-interest checks, Bar Council code audits, and filing compliance inspections.",
+          label: "Ethics & Conflict Scanner",
+          subtitle: "BCI Rule 8 adverse party scan",
+          whatItDoes: "Scans prospective parties against chamber databases, corporate subsidiaries, and BCI Rule 8 conflict bars.",
           icon: CheckSquare,
         },
         {
@@ -3131,25 +3132,14 @@ export function AdvocateWorkspaceView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: Compliance Verification                                   */}
-          {activeTab === "compliance" && (
-            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
-              <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-5">
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
-                  <div>
-                    <h3 className="text-lg font-bold text-black dark:text-white capitalize">
-                      Compliance Inspection &amp; Ethics Check
-                    </h3>
-                    <p className="text-xs text-zinc-500">
-                      Bar Council of India Rule 24 conflict checking and statutory verification.
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                    Compliance
-                  </span>
-                </div>
-                <DocIntelligenceCard />
-              </div>
+          {/* VIEW: Bar Council Ethics & Adverse Party Conflict Scanner      */}
+          {["compliance", "conflict-scanner", "ethics"].includes(activeTab) && (
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
+              <AdvocateConflictScannerView
+                advocateName={displayFullName}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              />
             </div>
           )}
 

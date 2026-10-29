@@ -34,6 +34,7 @@ import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
 import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
 import ScrutinyDefectClearingView from "@/components/advocate/ScrutinyDefectClearingView";
 import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRadarView";
+import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBillingView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -431,6 +432,13 @@ export function AdvocateWorkspaceView() {
           subtitle: "Citizen directory & consultation roster",
           whatItDoes: "Manages verified citizen profiles, consultation appointments, and retainer contracts.",
           icon: Users,
+        },
+        {
+          id: "trust-escrow",
+          label: "Trust Escrow & Billing",
+          subtitle: "BCI Rule 24 escrow & billable hours",
+          whatItDoes: "Statutory client money accounting, non-commingled trust escrow, and live appearance timekeeping.",
+          icon: CreditCard,
         },
       ],
     },
@@ -981,6 +989,7 @@ export function AdvocateWorkspaceView() {
       category: "PRACTICE",
       items: [
         { id: "causelist", label: "Live Daily Board", icon: Calendar, whatItDoes: "Monitors live court hall display boards and proximity radar." },
+        { id: "trust-escrow", label: "Trust Escrow", icon: CreditCard, whatItDoes: "Audits segregated client escrow and billable hours." },
         { id: "case-tracker", label: "Case Tracker", icon: Activity, whatItDoes: "Tracks live dockets via 16-digit CNR." },
         { id: "calendar", label: "Deadlines Calendar", icon: Calendar, whatItDoes: "Tracks causelists and court limitation dates." },
         { id: "vault", label: "Document Vault", icon: FolderLock, whatItDoes: "Stores certified true copies and court files." },
@@ -1005,7 +1014,7 @@ export function AdvocateWorkspaceView() {
   // Check which module category activeTab belongs to
   const isWorkForce = ["training", "my-ai-agents", "my-ai-twin", "hiring-suite"].includes(activeTab);
   const isCollab = ["my-network", "my-hub", "my-team", "collask"].includes(activeTab);
-  const isERP = ["huremaso", "curemaso", "acmaso", "app-store", "billings-earnings"].includes(activeTab);
+  const isERP = ["huremaso", "curemaso", "acmaso", "app-store"].includes(activeTab);
   const isAnalytics = ["ai-analytics", "reports"].includes(activeTab);
   const isProductivity = ["notes", "issues-authorities", "calendar", "time-sheet", "case-tracker", "practice-ai", "taskmite"].includes(activeTab);
   const isBusiness = ["business-registration", "tax-compliance", "trademark-ip", "corporate-lawyer", "company-secretary", "auditor-ca"].includes(activeTab);
@@ -3080,6 +3089,18 @@ export function AdvocateWorkspaceView() {
           {["causelist", "daily-board", "court-radar"].includes(activeTab) && (
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
               <CourtCauselistRadarView
+                advocateName={displayFullName}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              />
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: BCI Rule 24 Client Trust Escrow & Billable Hours Ledger  */}
+          {["trust-escrow", "billing-ledger", "billings-earnings"].includes(activeTab) && (
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
+              <AdvocateTrustBillingView
                 advocateName={displayFullName}
                 barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
                 token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}

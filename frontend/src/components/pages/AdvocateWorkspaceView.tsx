@@ -33,6 +33,7 @@ import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
 import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
 import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
 import ScrutinyDefectClearingView from "@/components/advocate/ScrutinyDefectClearingView";
+import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRadarView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -409,6 +410,13 @@ export function AdvocateWorkspaceView() {
           subtitle: "Chamber ERP overview & KPI tiles",
           whatItDoes: "Displays active matters KPI cards, court registry docket feeds, and chamber operations summary.",
           icon: LayoutDashboard,
+        },
+        {
+          id: "causelist",
+          label: "Live Daily Board",
+          subtitle: "Court hall tracker & proximity radar",
+          whatItDoes: "Monitors live bench proceedings, item counters, pass-overs, and daily causelists.",
+          icon: Calendar,
         },
         {
           id: "matters",
@@ -972,6 +980,7 @@ export function AdvocateWorkspaceView() {
     {
       category: "PRACTICE",
       items: [
+        { id: "causelist", label: "Live Daily Board", icon: Calendar, whatItDoes: "Monitors live court hall display boards and proximity radar." },
         { id: "case-tracker", label: "Case Tracker", icon: Activity, whatItDoes: "Tracks live dockets via 16-digit CNR." },
         { id: "calendar", label: "Deadlines Calendar", icon: Calendar, whatItDoes: "Tracks causelists and court limitation dates." },
         { id: "vault", label: "Document Vault", icon: FolderLock, whatItDoes: "Stores certified true copies and court files." },
@@ -1380,6 +1389,19 @@ export function AdvocateWorkspaceView() {
               onOpenJoinFirm={() => setJoinFirmModalOpen(true)}
               variant="header"
             />
+
+            {/* Live Causelist Ticker Pill */}
+            <button
+              onClick={() => setActiveTab("causelist")}
+              className="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#6B1728]/10 dark:bg-[#6B1728]/25 border border-[#6B1728]/30 hover:border-[#6B1728] text-xs font-semibold text-black dark:text-white transition cursor-pointer"
+              title="Click to view live Court Hall causelist & daily board"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#6B1728] animate-pulse" />
+              <span className="font-mono font-bold text-[#6B1728] dark:text-[#ff94a8]">Live Daily Board:</span>
+              <span>Hall 2A: #14</span>
+              <span className="text-zinc-400">•</span>
+              <span className="text-zinc-600 dark:text-zinc-300 font-medium">Your Item #18 (4 Away)</span>
+            </button>
           </div>
 
           {/* Right Controls */}
@@ -1689,57 +1711,14 @@ export function AdvocateWorkspaceView() {
                 </div>
               )}
 
-              {/* SEGMENT 3: News Updates */}
+              {/* SEGMENT 3: News Updates & Live Causelist Radar */}
               {researchSegment === "news-updates" && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500">
-                      REAL-TIME COURT CAUSELISTS &amp; REGISTRY FEEDS
-                    </span>
-                    <span className="text-xs font-mono text-zinc-400">
-                      Live Registry Sync
-                    </span>
-                  </div>
-
-                  <div className="divide-y divide-zinc-100 dark:divide-zinc-900 bg-white dark:bg-black rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 text-xs">
-                    {[
-                      {
-                        time: "Today 10:15 IST",
-                        type: "High Court of Kerala",
-                        headline: "Court Hall 1A Daily Causelist: Writ Petitions (Civil) Listed for Admission",
-                        detail: "Division Bench comprising Chief Justice and Justice Basant Balaji will commence regular hearing of public interest matters and infrastructure challenge dockets.",
-                      },
-                      {
-                        time: "Today 09:30 IST",
-                        type: "eCourts Services CNR",
-                        headline: "CNR Sync: WP(C) 19482/2024 listed at Item #14 in Court Hall 2B",
-                        detail: "Matter titled 'Gopakumar v. KSEB' listed before Justice Murali Purushothaman. Counter-affidavit filed by respondent standing counsel.",
-                      },
-                      {
-                        time: "Yesterday 18:40 IST",
-                        type: "Registry Notification",
-                        headline: "High Court of Kerala Notice: Mandatory E-TrueCopy System from Nov 1",
-                        detail: "All applications for certified copy of orders and judgments to be routed exclusively via the unified online advocate e-Filing portal.",
-                      },
-                      {
-                        time: "Yesterday 16:15 IST",
-                        type: "Bar Council Gazette",
-                        headline: "Bar Council of India issues guidelines on Digital Court Practice and AI Ethics",
-                        detail: "Advocates cautioned against verbatim reliance on unverified generative AI outputs without cross-checking official Supreme Court Law Reports (SCR).",
-                      },
-                    ].map((item, idx) => (
-                      <div key={idx} className="pt-3 first:pt-0 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                            {item.type}
-                          </span>
-                          <span className="font-mono text-zinc-400 text-[10px]">{item.time}</span>
-                        </div>
-                        <h4 className="font-bold text-black dark:text-white text-sm">{item.headline}</h4>
-                        <p className="text-zinc-600 dark:text-zinc-400 text-xs leading-relaxed">{item.detail}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <CourtCauselistRadarView
+                    advocateName={displayFullName}
+                    barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                    token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+                  />
                 </div>
               )}
 
@@ -3094,6 +3073,18 @@ export function AdvocateWorkspaceView() {
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: High Court Daily Display Board & Smart Causelist Radar   */}
+          {["causelist", "daily-board", "court-radar"].includes(activeTab) && (
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
+              <CourtCauselistRadarView
+                advocateName={displayFullName}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              />
+            </div>
           )}
 
           {/* ============================================================== */}

@@ -36,6 +36,7 @@ import ScrutinyDefectClearingView from "@/components/advocate/ScrutinyDefectClea
 import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRadarView";
 import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBillingView";
 import { AdvocateConflictScannerView } from "@/components/advocate/AdvocateConflictScannerView";
+import { AdvocateVakalathnamaView } from "@/components/advocate/AdvocateVakalathnamaView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -575,9 +576,9 @@ export function AdvocateWorkspaceView() {
         },
         {
           id: "esign",
-          label: "E-signature",
-          subtitle: "5-clause electronic consent suite",
-          whatItDoes: "Verifies digital candidate certificates and gathers tamper-evident e-signatures.",
+          label: "Vakalathnama E-Sign",
+          subtitle: "Welfare stamp & OTP signature",
+          whatItDoes: "Executes client digital authorization, affixes ₹25 Kerala Welfare Stamp, and clears High Court registry defects.",
           icon: PenTool,
         },
       ],
@@ -2774,9 +2775,15 @@ export function AdvocateWorkspaceView() {
           )}
 
           {/* ============================================================== */}
-          {/* VIEW: E-Sign Suite                                             */}
-          {activeTab === "esign" && (
-            <ElectronicConsentView />
+          {/* VIEW: High Court Vakalathnama E-Signing & Welfare Stamp Suite   */}
+          {["esign", "vakalath", "vakalathnama"].includes(activeTab) && (
+            <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
+              <AdvocateVakalathnamaView
+                advocateName={displayFullName}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              />
+            </div>
           )}
 
           {/* ============================================================== */}

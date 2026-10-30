@@ -26,6 +26,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Advocate, mockAdvocates } from "@/components/client/AdvocateSearchAndMatch";
+import { CitizenNetworkView } from "@/components/client/CitizenNetworkView";
+import { Layers } from "lucide-react";
 
 export interface AssignedMatterInfo {
   id: string;
@@ -277,6 +279,7 @@ export function MyAdvocatesView({
   onOpenBooking,
   onNavigateTab,
 }: MyAdvocatesViewProps) {
+  const [viewMode, setViewMode] = useState<"kanban" | "assigned-matters">("kanban");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPracticeArea, setSelectedPracticeArea] = useState("all");
   const [selectedAdvocateId, setSelectedAdvocateId] = useState<string>("adv-meera");
@@ -315,6 +318,45 @@ export function MyAdvocatesView({
 
   return (
     <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
+      {/* Top View Mode Switcher */}
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="inline-flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+          <button
+            onClick={() => setViewMode("kanban")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              viewMode === "kanban"
+                ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Kanban Pipeline</span>
+          </button>
+          <button
+            onClick={() => setViewMode("assigned-matters")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              viewMode === "assigned-matters"
+                ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+            }`}
+          >
+            <Scale className="w-3.5 h-3.5" />
+            <span>Assigned Case Matters</span>
+          </button>
+        </div>
+
+        <span className="text-xs text-zinc-500 font-mono hidden sm:inline-block">
+          {viewMode === "kanban" ? "LetGetIn Representation Pipeline" : "Chamber Briefs & Active Hearings"}
+        </span>
+      </div>
+
+      {viewMode === "kanban" ? (
+        <CitizenNetworkView
+          onOpenConsultation={onOpenConsultation}
+          onOpenBooking={onOpenBooking}
+        />
+      ) : (
+        <>
       {/* =========================================================================
           HEADER: Matches Image 2 Screenshot Exactly
           Verified Advocate Directory / Search Verified Advocates
@@ -762,6 +804,8 @@ export function MyAdvocatesView({
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

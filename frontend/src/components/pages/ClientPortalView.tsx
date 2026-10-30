@@ -86,6 +86,7 @@ import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
 import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
 import AiAdvocateView from "@/components/client/AiAdvocateView";
 import { MyAdvocatesView } from "@/components/client/MyAdvocatesView";
+import { CitizenNetworkView } from "@/components/client/CitizenNetworkView";
 import { BrandLogo } from "@/components/BrandLogo";
 import { DocIntelligenceCard } from "@/components/DocIntelligenceCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -783,6 +784,13 @@ export function ClientPortalView() {
       category: "MY NETWORKS",
       items: [
         {
+          id: "my-network",
+          label: "My Network",
+          subtitle: "Professional legal pipeline & counsels",
+          whatItDoes: "Manage and track your legal relationships from discovery to active court representation across pipeline stages.",
+          icon: Layers,
+        },
+        {
           id: "my-hub",
           label: "My Hub",
           subtitle: "Citizen command center & updates",
@@ -1086,6 +1094,7 @@ export function ClientPortalView() {
   ];
 
   const networksNavItems = [
+    { id: "my-network", label: "My Network", icon: Layers },
     { id: "my-hub", label: "My Hub", icon: Compass },
     { id: "my-teams", label: "My teams", icon: Users },
   ];
@@ -3205,6 +3214,13 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {/* VIEW: ERP & Networks Modules (My Hub / My Teams)               */}
           {/* ============================================================== */}
+          {activeTab === "my-network" && (
+            <CitizenNetworkView
+              onOpenConsultation={handleOpenConsultation}
+              onOpenBooking={handleOpenBooking}
+            />
+          )}
+
           {(activeTab === "my-hub" || activeTab === "my-teams") && (
             <ERPDashboardView
               onNavigateTab={(t) => setActiveTab(t)}

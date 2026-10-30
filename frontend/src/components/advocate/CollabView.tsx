@@ -19,6 +19,7 @@ import {
 
 import { FirmProfile } from "@/components/firm/firmTypes";
 import dynamic from "next/dynamic";
+import { AdvocateNetworkView } from "@/components/advocate/AdvocateNetworkView";
 
 const MultiPartyCollaborationRoom = dynamic(
   () => import("@/components/advocate/MultiPartyCollaborationRoom"),
@@ -55,7 +56,7 @@ export function CollabView({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 font-sans">
+    <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6 font-sans">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-4">
         <div>
@@ -101,56 +102,7 @@ export function CollabView({
 
       {/* VIEW: My Network */}
       {currentTab === "my-network" && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search verified advocates, designated seniors, and barristers..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-              />
-            </div>
-            <button className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-              Invite Counsel
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { name: "Senior Adv. K. Parasaran", bar: "Supreme Court Bar Association", exp: "38+ Years", specialty: "Constitutional & Civil Law", location: "New Delhi" },
-              { name: "Adv. Meenakshi Lekhi", bar: "Delhi High Court Bar Association", exp: "22+ Years", specialty: "Criminal Appeals & Writs", location: "New Delhi" },
-              { name: "Adv. Harish Salve KC", bar: "Bar Council of Maharashtra & Goa", exp: "35+ Years", specialty: "Cross-Border Commercial Arbitration", location: "Mumbai / London" },
-              { name: "Adv. Fali S. Nariman Chambers", bar: "Supreme Court of India", exp: "40+ Years", specialty: "Public Law & Judicial Review", location: "New Delhi" },
-              { name: "Adv. Rohinton Nariman", bar: "Supreme Court Bar Association", exp: "30+ Years", specialty: "Insolvency (IBC) & Arbitration", location: "New Delhi" },
-              { name: "Adv. Vrinda Grover", bar: "Delhi High Court Bar Association", exp: "24+ Years", specialty: "Human Rights & Constitutional Tort", location: "New Delhi" },
-            ].map((adv, idx) => (
-              <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs hover:border-black dark:hover:border-white transition-all">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-black dark:text-white">{adv.name}</h4>
-                    <p className="text-[11px] text-zinc-500 flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3" /> {adv.location}
-                    </p>
-                  </div>
-                  <ShieldCheck className="w-4 h-4 text-black dark:text-white shrink-0" />
-                </div>
-                <div className="space-y-1 text-xs">
-                  <p className="text-zinc-600 dark:text-zinc-400 font-medium">{adv.specialty}</p>
-                  <p className="text-zinc-500 text-[11px] font-mono">{adv.bar} • {adv.exp}</p>
-                </div>
-                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
-                  <button className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white text-xs font-semibold cursor-pointer">
-                    View Chamber
-                  </button>
-                  <button className="px-3 py-1 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-                    Connect
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AdvocateNetworkView />
       )}
 
       {/* VIEW: My Hub */}

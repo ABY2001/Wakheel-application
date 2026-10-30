@@ -27,6 +27,7 @@ import {
 import { advocateApi, CaseNoteItem, CauseListItem } from "@/lib/api";
 import { AdvocateConsultationsView } from "./AdvocateConsultationsView";
 import { CourtCauselistRadarView } from "./CourtCauselistRadarView";
+import ChamberCalendarView from "./ChamberCalendarView";
 import dynamic from "next/dynamic";
 
 const CourtroomVoiceSimulatorView = dynamic(
@@ -353,9 +354,11 @@ export function ProductivityView({
         </div>
       )}
 
-      {/* VIEW: Calendar - Milestone 5 Smart Court Causelist Aggregator & Live Conflict Radar */}
+      {/* VIEW: Calendar - Chamber Deadlines Calendar (LetGetIn Structure) */}
       {currentTab === "calendar" && (
-        <CourtCauselistRadarView advocateName={advocateName} />
+        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[700px]">
+          <ChamberCalendarView advocateName={advocateName} />
+        </div>
       )}
 
       {/* VIEW: Appointments */}

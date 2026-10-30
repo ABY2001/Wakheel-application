@@ -37,6 +37,7 @@ import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRad
 import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBillingView";
 import { AdvocateConflictScannerView } from "@/components/advocate/AdvocateConflictScannerView";
 import { AdvocateVakalathnamaView } from "@/components/advocate/AdvocateVakalathnamaView";
+import ChamberCalendarView from "@/components/advocate/ChamberCalendarView";
 import AdvocateProfileModal, {
   AdvocateProfileData,
   DEFAULT_ADVOCATE_PROFILE,
@@ -1058,7 +1059,7 @@ export function AdvocateWorkspaceView() {
   const isCollab = ["my-network", "my-hub", "my-team", "collask"].includes(activeTab);
   const isERP = ["huremaso", "curemaso", "acmaso", "app-store"].includes(activeTab);
   const isAnalytics = ["ai-analytics", "reports"].includes(activeTab);
-  const isProductivity = ["notes", "issues-authorities", "calendar", "time-sheet", "case-tracker", "practice-ai", "taskmite"].includes(activeTab);
+  const isProductivity = ["notes", "issues-authorities", "time-sheet", "case-tracker", "practice-ai", "taskmite"].includes(activeTab);
   const isBusiness = ["business-registration", "tax-compliance", "trademark-ip", "corporate-lawyer", "company-secretary", "auditor-ca"].includes(activeTab);
   const isPromo = ["marketing", "rd", "promotions"].includes(activeTab);
   const isCorporate = ["corp-ip-manager", "corp-compliances", "corp-contracts", "corp-documents", "corp-due-diligence"].includes(activeTab);
@@ -2893,6 +2894,15 @@ export function AdvocateWorkspaceView() {
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               advocateName={displayFullName}
             />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Deadlines & Hearings Calendar (LetGetIn Structure)       */}
+          {/* ============================================================== */}
+          {activeTab === "calendar" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
+              <ChamberCalendarView advocateName={displayFullName} />
+            </div>
           )}
 
           {/* ============================================================== */}

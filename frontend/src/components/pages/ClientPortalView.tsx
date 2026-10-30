@@ -92,6 +92,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ElectronicConsentView } from "@/components/advocate/ElectronicConsentView";
 import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
 import { ProductivityView } from "@/components/advocate/ProductivityView";
+import ChamberCalendarView from "@/components/advocate/ChamberCalendarView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { AnalyticsView } from "@/components/advocate/AnalyticsView";
 import CitizenProfileModal, {
@@ -902,7 +903,6 @@ export function ClientPortalView() {
 
   const isProductivity = [
     "notes",
-    "calendar",
     "taskmite",
     "time-sheet",
   ].includes(activeTab);
@@ -3172,6 +3172,18 @@ export function ClientPortalView() {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Citizen Hearings & Consultations Calendar                */}
+          {/* ============================================================== */}
+          {activeTab === "calendar" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
+              <ChamberCalendarView
+                isClientView={true}
+                advocateName={citizenProfile.fullName || "Gopakumar Nambiar"}
+              />
             </div>
           )}
 

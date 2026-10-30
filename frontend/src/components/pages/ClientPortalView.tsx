@@ -94,6 +94,10 @@ import { ERPDashboardView } from "@/components/advocate/ERPDashboardView";
 import { ProductivityView } from "@/components/advocate/ProductivityView";
 import { BusinessView } from "@/components/advocate/BusinessView";
 import { AnalyticsView } from "@/components/advocate/AnalyticsView";
+import CitizenProfileModal, {
+  CitizenProfileData,
+  DEFAULT_CITIZEN_PROFILE,
+} from "@/components/client/CitizenProfileModal";
 import { citizenApi, copilotApi } from "@/lib/api";
 
 interface FloatingTooltipData {
@@ -110,6 +114,24 @@ export function ClientPortalView() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [newMatterModalOpen, setNewMatterModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [citizenProfileModalOpen, setCitizenProfileModalOpen] = useState(false);
+  const [citizenProfile, setCitizenProfile] = useState<CitizenProfileData>(DEFAULT_CITIZEN_PROFILE);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("wakheel_citizen_profile");
+      if (saved) {
+        setCitizenProfile({ ...DEFAULT_CITIZEN_PROFILE, ...JSON.parse(saved) });
+      }
+    } catch {}
+  }, []);
+
+  const handleSaveCitizenProfile = (updated: CitizenProfileData) => {
+    setCitizenProfile(updated);
+    try {
+      localStorage.setItem("wakheel_citizen_profile", JSON.stringify(updated));
+    } catch {}
+  };
 
   // Language toggle (EN | മലയാളം)
   const [lang, setLang] = useState<"en" | "ml">("en");
@@ -1107,19 +1129,34 @@ export function ClientPortalView() {
           </div>
 
           {/* User Profile Card: (GO) Gopakumar Nambiar, Kochi, Kerala */}
-          <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
-              GO
+          <button
+            type="button"
+            onClick={() => setCitizenProfileModalOpen(true)}
+            className="w-full text-left p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 transition-colors cursor-pointer group"
+            title="Click to view & edit Citizen Identity & DigiLocker KYC"
+          >
+            <div className="w-9 h-9 rounded-full bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+              {citizenProfile.fullName
+                ? citizenProfile.fullName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                    .toUpperCase()
+                : "GN"}
             </div>
-            <div className="flex flex-col truncate">
-              <span className="text-xs font-bold text-black dark:text-white truncate">
-                Gopakumar Nambiar
-              </span>
+            <div className="flex flex-col truncate flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-black dark:text-white truncate group-hover:underline">
+                  {citizenProfile.fullName}
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="DigiLocker Verified" />
+              </div>
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
-                Kochi, Kerala
+                {citizenProfile.district}, {citizenProfile.state}
               </span>
             </div>
-          </div>
+          </button>
 
           {/* Sidebar Search Bar */}
           <div className="mt-2.5 relative">
@@ -1897,17 +1934,32 @@ export function ClientPortalView() {
             </button>
 
             {/* User Profile Pill */}
-            <div className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-              <div className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center">
-                GO
+            <button
+              type="button"
+              onClick={() => setCitizenProfileModalOpen(true)}
+              className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800 hover:opacity-85 transition-all cursor-pointer group text-left"
+              title="View & Edit Citizen Profile & DigiLocker KYC"
+            >
+              <div className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                {citizenProfile.fullName
+                  ? citizenProfile.fullName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .substring(0, 2)
+                      .toUpperCase()
+                  : "GN"}
               </div>
               <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-bold text-black dark:text-white leading-tight">
-                  Gopakumar Nambiar
+                <span className="text-xs font-bold text-black dark:text-white leading-tight group-hover:underline">
+                  {citizenProfile.fullName}
                 </span>
-                <span className="text-[10px] text-zinc-500">Citizen</span>
+                <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                  <span>Citizen</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                </span>
               </div>
-            </div>
+            </button>
           </div>
 
         </header>
@@ -3264,49 +3316,17 @@ export function ClientPortalView() {
       )}
 
       {/* Modals */}
-      {/* Settings Modal */}
-      {settingsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-              <h3 className="text-sm font-bold text-black dark:text-white">Citizen Portal Settings</h3>
-              <button onClick={() => setSettingsModalOpen(false)} className="cursor-pointer">
-                <X className="w-4 h-4 text-zinc-400" />
-              </button>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold block mb-1">Notification Channel</label>
-                <select className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <option>WhatsApp + SMS + In-App (Recommended)</option>
-                  <option>Email &amp; In-App Only</option>
-                </select>
-              </div>
-              <div>
-                <label className="font-bold block mb-1">Primary State Jurisdiction</label>
-                <select className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <option>Kerala (High Court of Kerala)</option>
-                  <option>Delhi (Delhi High Court)</option>
-                  <option>Maharashtra (Bombay High Court)</option>
-                </select>
-              </div>
-            </div>
-            <div className="pt-2 flex justify-end gap-2">
-              <button
-                onClick={() => setSettingsModalOpen(false)}
-                className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setSettingsModalOpen(false)}
-                className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Citizen Profile & DigiLocker KYC Modal */}
+      {(settingsModalOpen || citizenProfileModalOpen) && (
+        <CitizenProfileModal
+          isOpen={settingsModalOpen || citizenProfileModalOpen}
+          onClose={() => {
+            setSettingsModalOpen(false);
+            setCitizenProfileModalOpen(false);
+          }}
+          profile={citizenProfile}
+          onSave={handleSaveCitizenProfile}
+        />
       )}
 
       {/* Notifications Modal */}

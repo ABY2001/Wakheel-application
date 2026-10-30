@@ -1,0 +1,53 @@
+[
+  {
+    "id": "evt-1",
+    "title": "WP(C) 19482/2024 — Hearing on Stay Extension",
+    "category": "hearing",
+    "date": "2026-10-30",
+    "time": "10:15 AM",
+    "duration": "45m",
+    "caseNumber": "WP(C) 19482/2024",
+    "forum": "High Court of Kerala (Court Hall 2A)",
+    "clientName": "Gopakumar Nambiar",
+    "notes": "Division bench hearing on transmission line alignment stay.",
+    "status": "confirmed"
+  },
+  {
+    "id": "evt-2",
+    "title": "OS 412/2023 — Plaintiff Witness Cross-Examination",
+    "category": "hearing",
+    "date": "2026-11-04",
+    "time": "11:00 AM",
+    "duration": "1h",
+    "caseNumber": "OS 412/2023",
+    "forum": "Principal Munsiff Court, Ernakulam",
+    "clientName": "Gopakumar Nambiar",
+    "notes": "Cross-examination on boundary encroachment and survey sketch.",
+    "status": "confirmed"
+  },
+  {
+    "id": "evt-3",
+    "title": "ARB/NCLT/041/2024 — Section 17 Interim Relief Hearing",
+    "category": "hearing",
+    "date": "2026-11-18",
+    "time": "02:30 PM",
+    "duration": "1h 30m",
+    "caseNumber": "ARB/NCLT/041/2024",
+    "forum": "NCLT Kochi Bench & Arbitral Tribunal",
+    "clientName": "Malabar Infotech Solutions",
+    "notes": "Arguments on escrow deposit preservation.",
+    "status": "confirmed"
+  },
+  {
+    "id": "evt-4",
+    "title": "Chamber Conference: Supreme Court SLP Strategy with Adv. Parasaran",
+    "category": "consultation",
+    "date": "2026-10-30",
+    "time": "04:30 PM",
+    "duration": "1h",
+    "forum": "Chamber Virtual Gateway",
+    "clientName": "Gopakumar Nambiar",
+    "notes": "Constitution Bench reference strategy discussion.",
+    "status": "urgent"
+  }
+]

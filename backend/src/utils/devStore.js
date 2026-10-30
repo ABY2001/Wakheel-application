@@ -4222,6 +4222,308 @@ export const devStore = {
       item,
     };
   },
+
+  // ==========================================================================
+  // --- Calendar Fixtures & Backlog Suite ---
+  // ==========================================================================
+  getCalendarEvents(userId) {
+    return readFile("dev_calendar_fixtures.json", DEFAULT_CALENDAR_FIXTURES);
+  },
+
+  addCalendarEvent(userId, data = {}) {
+    const events = this.getCalendarEvents(userId);
+    const newEvent = {
+      id: `evt-${Date.now()}`,
+      userId,
+      title: data.title || "Scheduled Court Event",
+      category: data.category || "hearing",
+      date: data.date || new Date().toISOString().split("T")[0],
+      time: data.time || "10:30 AM",
+      duration: data.duration || "45m",
+      caseNumber: data.caseNumber || "WP(C) 19482/2024",
+      forum: data.forum || "High Court of Kerala",
+      clientName: data.clientName || "Gopakumar Nambiar",
+      notes: data.notes || "",
+      status: data.status || "confirmed",
+      createdAt: new Date().toISOString(),
+    };
+    events.push(newEvent);
+    writeFile("dev_calendar_fixtures.json", events);
+    return newEvent;
+  },
+
+  updateCalendarEvent(id, updates = {}) {
+    const events = readFile("dev_calendar_fixtures.json", DEFAULT_CALENDAR_FIXTURES);
+    const index = events.findIndex((e) => e.id === id);
+    if (index !== -1) {
+      events[index] = { ...events[index], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_calendar_fixtures.json", events);
+      return events[index];
+    }
+    return null;
+  },
+
+  deleteCalendarEvent(id) {
+    let events = readFile("dev_calendar_fixtures.json", DEFAULT_CALENDAR_FIXTURES);
+    events = events.filter((e) => e.id !== id);
+    writeFile("dev_calendar_fixtures.json", events);
+    return true;
+  },
+
+  getCalendarBacklog(userId) {
+    return readFile("dev_calendar_backlog.json", DEFAULT_CALENDAR_BACKLOG);
+  },
+
+  addCalendarBacklogItem(userId, data = {}) {
+    const backlog = this.getCalendarBacklog(userId);
+    const newItem = {
+      id: `task-bk-${Date.now()}`,
+      userId,
+      title: data.title || "Backlog Task",
+      category: data.category || "drafting",
+      priority: data.priority || "normal",
+      estimatedTime: data.estimatedTime || "1h",
+      caseRef: data.caseRef || "General Chamber",
+      createdAt: new Date().toISOString(),
+    };
+    backlog.unshift(newItem);
+    writeFile("dev_calendar_backlog.json", backlog);
+    return newItem;
+  },
+
+  updateCalendarBacklogItem(id, updates = {}) {
+    const backlog = readFile("dev_calendar_backlog.json", DEFAULT_CALENDAR_BACKLOG);
+    const index = backlog.findIndex((b) => b.id === id);
+    if (index !== -1) {
+      backlog[index] = { ...backlog[index], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_calendar_backlog.json", backlog);
+      return backlog[index];
+    }
+    return null;
+  },
+
+  deleteCalendarBacklogItem(id) {
+    let backlog = readFile("dev_calendar_backlog.json", DEFAULT_CALENDAR_BACKLOG);
+    backlog = backlog.filter((b) => b.id !== id);
+    writeFile("dev_calendar_backlog.json", backlog);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- Professional Network & Legal Pipeline Suite ---
+  // ==========================================================================
+  getNetworkContacts(userId) {
+    return readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
+  },
+
+  addNetworkContact(userId, data = {}) {
+    const contacts = this.getNetworkContacts(userId);
+    const newContact = {
+      id: `c-${Date.now()}`,
+      userId,
+      name: data.name || "Adv. New Counsel",
+      degree: data.degree || "1st",
+      role: data.role || "Legal Counsel",
+      chamber: data.chamber || "Chambers of Law",
+      bench: data.bench || "High Court of Kerala",
+      location: data.location || "Kochi, Kerala",
+      stage: data.stage || "discover",
+      practiceArea: data.practiceArea || "Constitutional Law",
+      source: data.source || "Network Recommendation",
+      mutualsCount: data.mutualsCount || Math.floor(Math.random() * 20) + 3,
+      statusQuote: data.statusQuote || "Relationship initiated via Bar Council portal",
+      lastActive: "Just now",
+      isOnline: true,
+      barEnrollment: data.barEnrollment || `BCI/${Math.floor(Math.random() * 8000) + 1000}/2023`,
+      phone: data.phone || "+91 98000 00000",
+      email: data.email || "counsel@barcouncil.org",
+      briefsCount: data.briefsCount || 0,
+      createdAt: new Date().toISOString(),
+    };
+    contacts.unshift(newContact);
+    writeFile("dev_network_contacts.json", contacts);
+    return newContact;
+  },
+
+  updateNetworkContactStage(id, stage) {
+    const contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
+    const index = contacts.findIndex((c) => c.id === id);
+    if (index !== -1) {
+      contacts[index].stage = stage;
+      contacts[index].updatedAt = new Date().toISOString();
+      writeFile("dev_network_contacts.json", contacts);
+      return contacts[index];
+    }
+    return null;
+  },
+
+  deleteNetworkContact(id) {
+    let contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
+    contacts = contacts.filter((c) => c.id !== id);
+    writeFile("dev_network_contacts.json", contacts);
+    return true;
+  },
+
+  getNetworkActivities(userId) {
+    return readFile("dev_network_activities.json", DEFAULT_NETWORK_ACTIVITIES);
+  },
+
+  addNetworkActivity(userId, data = {}) {
+    const activities = this.getNetworkActivities(userId);
+    const newAct = {
+      id: `act-${Date.now()}`,
+      userId,
+      type: data.type || "connected",
+      advocateName: data.advocateName || "Advocate Colleague",
+      description: data.description || "updated collaboration status.",
+      timestamp: "Just now",
+      createdAt: new Date().toISOString(),
+    };
+    activities.unshift(newAct);
+    writeFile("dev_network_activities.json", activities);
+    return newAct;
+  },
+
+  getNetworkFollowups(userId) {
+    return readFile("dev_network_followups.json", DEFAULT_NETWORK_FOLLOWUPS);
+  },
+
+  addNetworkFollowup(userId, data = {}) {
+    const followups = this.getNetworkFollowups(userId);
+    const newFu = {
+      id: `fu-${Date.now()}`,
+      userId,
+      advocateName: data.advocateName || "Advocate Colleague",
+      task: data.task || "Follow up on matter",
+      dueText: data.dueText || "Due Tomorrow",
+      dueUrgent: Boolean(data.dueUrgent),
+      createdAt: new Date().toISOString(),
+    };
+    followups.unshift(newFu);
+    writeFile("dev_network_followups.json", followups);
+    return newFu;
+  },
+
+  getNetworkRecommendations(userId) {
+    return readFile("dev_network_recommendations.json", DEFAULT_NETWORK_RECOMMENDATIONS);
+  },
+
+  toggleNetworkRecommendation(id) {
+    const recs = readFile("dev_network_recommendations.json", DEFAULT_NETWORK_RECOMMENDATIONS);
+    const index = recs.findIndex((r) => r.id === id);
+    if (index !== -1) {
+      recs[index].status = recs[index].status === "connect" ? "pending" : "connect";
+      writeFile("dev_network_recommendations.json", recs);
+      return recs[index];
+    }
+    return null;
+  },
+
+  // ==========================================================================
+  // --- Task Mite Tasks & Chamber Notes Suite ---
+  // ==========================================================================
+  getTaskMiteTasks(userId) {
+    return readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
+  },
+
+  addTaskMiteTask(userId, data = {}) {
+    const tasks = this.getTaskMiteTasks(userId);
+    const newTask = {
+      id: `task-${Date.now()}`,
+      userId,
+      title: data.title || "New Chamber Task",
+      caseMatter: data.caseMatter || undefined,
+      status: data.status || "not_started",
+      type: data.type || "Court Filing",
+      dueDate: data.dueDate || "Today",
+      dueTime: data.dueTime,
+      isDueUrgent: Boolean(data.isDueUrgent),
+      priority: data.priority || "urgent",
+      assignee: data.assignee || {
+        name: "Adv. Rajiv Malhotra",
+        role: "Associate",
+        avatarInitials: "RM",
+      },
+      notes: data.notes || undefined,
+      createdAt: new Date().toISOString(),
+    };
+    tasks.unshift(newTask);
+    writeFile("dev_taskmite_tasks.json", tasks);
+    return newTask;
+  },
+
+  updateTaskMiteTask(id, updates = {}) {
+    const tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
+    const index = tasks.findIndex((t) => t.id === id);
+    if (index !== -1) {
+      tasks[index] = { ...tasks[index], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_taskmite_tasks.json", tasks);
+      return tasks[index];
+    }
+    return null;
+  },
+
+  deleteTaskMiteTask(id) {
+    let tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
+    tasks = tasks.filter((t) => t.id !== id);
+    writeFile("dev_taskmite_tasks.json", tasks);
+    return true;
+  },
+
+  getTaskMiteNotes(userId) {
+    return readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+  },
+
+  addTaskMiteNote(userId, data = {}) {
+    const notes = this.getTaskMiteNotes(userId);
+    const newNote = {
+      id: `note-${Date.now()}`,
+      userId,
+      title: data.title || "Untitled Chamber Memo",
+      category: data.category || "hearing_memo",
+      categoryLabel: data.categoryLabel || "Hearing Memo",
+      content: data.content || "",
+      tags: Array.isArray(data.tags) ? data.tags : ["Chamber"],
+      updatedAt: "Just now",
+      isPinned: Boolean(data.isPinned),
+      createdAt: new Date().toISOString(),
+    };
+    notes.unshift(newNote);
+    writeFile("dev_taskmite_notes.json", notes);
+    return newNote;
+  },
+
+  deleteTaskMiteNote(id) {
+    let notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+    notes = notes.filter((n) => n.id !== id);
+    writeFile("dev_taskmite_notes.json", notes);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- Profiles (BCI Credentials & DigiLocker KYC) ---
+  // ==========================================================================
+  getBciCredentials(userId) {
+    return readFile("dev_bci_credentials.json", DEFAULT_BCI_CREDENTIALS);
+  },
+
+  updateBciCredentials(userId, data = {}) {
+    let current = this.getBciCredentials(userId);
+    current = { ...current, ...data, updatedAt: new Date().toISOString() };
+    writeFile("dev_bci_credentials.json", current);
+    return current;
+  },
+
+  getDigiLockerKyc(userId) {
+    return readFile("dev_digilocker_kyc.json", DEFAULT_DIGILOCKER_KYC);
+  },
+
+  updateDigiLockerKyc(userId, data = {}) {
+    let current = this.getDigiLockerKyc(userId);
+    current = { ...current, ...data, updatedAt: new Date().toISOString() };
+    writeFile("dev_digilocker_kyc.json", current);
+    return current;
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -5406,3 +5708,549 @@ export const DEFAULT_COURTROOM_SESSIONS = [
     ],
   },
 ];
+
+// ============================================================================
+// DEFAULT CALENDAR CONSTANTS
+// ============================================================================
+const DEFAULT_CALENDAR_BACKLOG = [
+  {
+    id: "task-bk-1",
+    title: "Draft Section 14 Eviction Notice",
+    category: "drafting",
+    priority: "high",
+    estimatedTime: "1h 30m",
+    caseRef: "Tenancy 108/2026",
+  },
+  {
+    id: "task-bk-2",
+    title: "Research Article 226 telegraph deviation locus",
+    category: "research",
+    priority: "urgent",
+    estimatedTime: "2h",
+    caseRef: "WP(C) 19482/2024",
+  },
+  {
+    id: "task-bk-3",
+    title: "Prepare compilation of Supreme Court citations for Bench 4",
+    category: "evidence",
+    priority: "normal",
+    estimatedTime: "45m",
+    caseRef: "ARB/NCLT/041/2024",
+  },
+];
+
+const DEFAULT_CALENDAR_FIXTURES = [
+  {
+    id: "evt-1",
+    title: "WP(C) 19482/2024 — Hearing on Stay Extension",
+    category: "hearing",
+    date: "2026-10-30",
+    time: "10:15 AM",
+    duration: "45m",
+    caseNumber: "WP(C) 19482/2024",
+    forum: "High Court of Kerala (Court Hall 2A)",
+    clientName: "Gopakumar Nambiar",
+    notes: "Division bench hearing on transmission line alignment stay.",
+    status: "confirmed",
+  },
+  {
+    id: "evt-2",
+    title: "OS 412/2023 — Plaintiff Witness Cross-Examination",
+    category: "hearing",
+    date: "2026-11-04",
+    time: "11:00 AM",
+    duration: "1h",
+    caseNumber: "OS 412/2023",
+    forum: "Principal Munsiff Court, Ernakulam",
+    clientName: "Gopakumar Nambiar",
+    notes: "Cross-examination on boundary encroachment and survey sketch.",
+    status: "confirmed",
+  },
+  {
+    id: "evt-3",
+    title: "ARB/NCLT/041/2024 — Section 17 Interim Relief Hearing",
+    category: "hearing",
+    date: "2026-11-18",
+    time: "02:30 PM",
+    duration: "1h 30m",
+    caseNumber: "ARB/NCLT/041/2024",
+    forum: "NCLT Kochi Bench & Arbitral Tribunal",
+    clientName: "Malabar Infotech Solutions",
+    notes: "Arguments on escrow deposit preservation.",
+    status: "confirmed",
+  },
+  {
+    id: "evt-4",
+    title: "Chamber Conference: Supreme Court SLP Strategy with Adv. Parasaran",
+    category: "consultation",
+    date: "2026-10-30",
+    time: "04:30 PM",
+    duration: "1h",
+    forum: "Chamber Virtual Gateway",
+    clientName: "Gopakumar Nambiar",
+    notes: "Constitution Bench reference strategy discussion.",
+    status: "urgent",
+  },
+];
+
+// ============================================================================
+// DEFAULT PROFESSIONAL NETWORK CONSTANTS
+// ============================================================================
+const DEFAULT_NETWORK_CONTACTS = [
+  {
+    id: "c-1",
+    name: "Senior Adv. Sneha Kulkarni",
+    degree: "2nd",
+    role: "Senior Counsel • Constitutional & Civil Writs",
+    chamber: "Kulkarni Law Chambers",
+    bench: "High Court of Kerala",
+    location: "Kochi, Kerala",
+    stage: "discover",
+    practiceArea: "Constitutional Law",
+    source: "Network Recommendation",
+    mutualsCount: 11,
+    statusQuote: "Connection invitation dispatched via Bar Council Directory",
+    lastActive: "1mo ago",
+    isOnline: true,
+    barEnrollment: "K/001429/2012",
+    phone: "+91 94471 28910",
+    email: "sneha.kulkarni@hcbar.in",
+    briefsCount: 0,
+  },
+  {
+    id: "c-2",
+    name: "Adv. Tariq Mansoor",
+    degree: "2nd",
+    role: "Appellate Counsel • Commercial Disputes",
+    chamber: "Mansoor & Associates",
+    bench: "Delhi High Court",
+    location: "New Delhi",
+    stage: "discover",
+    practiceArea: "Commercial Arbitration",
+    source: "Network Recommendation",
+    mutualsCount: 7,
+    statusQuote: "Profile vetted for co-counseling in cross-border tech licensing",
+    lastActive: "3w ago",
+    isOnline: false,
+    barEnrollment: "D/1092/2015",
+    phone: "+91 98110 43921",
+    email: "tariq@mansoorlaw.com",
+    briefsCount: 0,
+  },
+  {
+    id: "c-3",
+    name: "Adv. Rahul Sharma",
+    degree: "1st",
+    role: "Chamber Head • Corporate Insolvency & IBC",
+    chamber: "Sharma & Partners Law Offices",
+    bench: "NCLAT / High Court of Karnataka",
+    location: "Bengaluru, India",
+    stage: "connected",
+    practiceArea: "Corporate & Insolvency",
+    source: "Network Recommendation",
+    mutualsCount: 18,
+    statusQuote: "Connection established; reciprocal briefing agreement shared",
+    lastActive: "1mo ago",
+    isOnline: true,
+    barEnrollment: "KAR/2381/2014",
+    phone: "+91 98450 19283",
+    email: "rahul@sharmapartners.in",
+    briefsCount: 1,
+  },
+  {
+    id: "c-4",
+    name: "Adv. Nandita Sengupta",
+    degree: "1st",
+    role: "Managing Associate • Banking & SARFAESI",
+    chamber: "Calcutta Jurists Collective",
+    bench: "Calcutta High Court",
+    location: "Kolkata, West Bengal",
+    stage: "connected",
+    practiceArea: "Corporate & Insolvency",
+    source: "Bar Council Directory",
+    mutualsCount: 14,
+    statusQuote: "Mutual referral protocol confirmed for DRT appeals",
+    lastActive: "2w ago",
+    isOnline: true,
+    barEnrollment: "WB/892/2017",
+    phone: "+91 98301 77291",
+    email: "nandita@caljurists.com",
+    briefsCount: 1,
+  },
+  {
+    id: "c-5",
+    name: "Adv. Karan Patel",
+    degree: "1st",
+    role: "Director of Practice & Ops • Dispute Resolution",
+    chamber: "Patel & Lex Associates",
+    bench: "Bombay High Court",
+    location: "Mumbai, India",
+    stage: "contacted",
+    practiceArea: "Commercial Arbitration",
+    source: "LinkedIn Import",
+    mutualsCount: 19,
+    statusQuote: "Initial partnership message sent with joint case synopsis",
+    lastActive: "1mo ago",
+    isOnline: false,
+    barEnrollment: "MAH/4102/2013",
+    phone: "+91 98200 48190",
+    email: "karan@patellex.in",
+    briefsCount: 1,
+  },
+  {
+    id: "c-6",
+    name: "Adv. Vikramaditya Mehta",
+    degree: "1st",
+    role: "Senior Partner • IP, Trademarks & Media Rights",
+    chamber: "Mehta Legal Chambers",
+    bench: "High Court of Telangana",
+    location: "Hyderabad, India",
+    stage: "contacted",
+    practiceArea: "Intellectual Property",
+    source: "Direct Reachout",
+    mutualsCount: 14,
+    statusQuote: "Personalized intro message sent with prior judgment citations",
+    lastActive: "1mo ago",
+    isOnline: true,
+    barEnrollment: "TS/1984/2011",
+    phone: "+91 98490 33419",
+    email: "vikram@mehtalegal.com",
+    briefsCount: 1,
+  },
+  {
+    id: "c-7",
+    name: "Adv. Priya Sundaram",
+    degree: "1st",
+    role: "Principal Arbitration Counsel • Infra & Energy",
+    chamber: "Sundaram Arbitration Chambers",
+    bench: "Bombay High Court",
+    location: "Mumbai, India",
+    stage: "engaged",
+    practiceArea: "Commercial Arbitration",
+    source: "HC Bar Conference",
+    mutualsCount: 31,
+    statusQuote: "Positive response received: 'Would love to review rejoinder brief.'",
+    lastActive: "1mo ago",
+    isOnline: true,
+    barEnrollment: "MAH/1820/2010",
+    phone: "+91 98205 99401",
+    email: "priya@sundaramchambers.in",
+    briefsCount: 2,
+  },
+  {
+    id: "c-8",
+    name: "Adv. Arjun Nambiar",
+    degree: "1st",
+    role: "Senior Chamber Counsel • Public Law & Writs",
+    chamber: "Nambiar & Kurian Advocates",
+    bench: "Supreme Court of India / High Court of Kerala",
+    location: "Bengaluru / Ernakulam",
+    stage: "meeting",
+    practiceArea: "Constitutional Law",
+    source: "Direct Reachout",
+    mutualsCount: 22,
+    statusQuote: "Chamber pre-trial strategy conference scheduled for Monday 10:30 AM",
+    lastActive: "1mo ago",
+    isOnline: true,
+    barEnrollment: "K/001844/2007",
+    phone: "+91 94473 11820",
+    email: "arjun@nambiaradvocates.com",
+    briefsCount: 3,
+  },
+  {
+    id: "c-9",
+    name: "Senior Adv. K. Parasaran",
+    degree: "1st",
+    role: "Senior Counsel • Supreme Court Constitution Bench",
+    chamber: "Parasaran Law Chambers",
+    bench: "Supreme Court of India",
+    location: "New Delhi",
+    stage: "active",
+    practiceArea: "Constitutional Law",
+    source: "High Court Bar Assn",
+    mutualsCount: 68,
+    statusQuote: "Active Co-Counsel on WP(C) 19482/2024 Constitution Bench reference",
+    lastActive: "1d ago",
+    isOnline: true,
+    barEnrollment: "SC/00012/1980",
+    phone: "+91 98100 11200",
+    email: "chambers@parasaran.legal",
+    briefsCount: 5,
+  },
+  {
+    id: "c-10",
+    name: "Adv. Harish Salve KC",
+    degree: "1st",
+    role: "King's Counsel & Senior Advocate • Cross-Border Arbitrations",
+    chamber: "Blackstone / Salve Chambers",
+    bench: "Supreme Court / London Commercial Court",
+    location: "Mumbai / London",
+    stage: "active",
+    practiceArea: "Commercial Arbitration",
+    source: "Referral Network",
+    mutualsCount: 82,
+    statusQuote: "Designated Lead Senior on international enforcement arbitration matter",
+    lastActive: "2d ago",
+    isOnline: false,
+    barEnrollment: "MAH/00055/1982",
+    phone: "+44 20 7404 0000",
+    email: "salve.clerk@blackstonechambers.com",
+    briefsCount: 4,
+  },
+];
+
+const DEFAULT_NETWORK_ACTIVITIES = [
+  {
+    id: "act-1",
+    type: "connected",
+    advocateName: "Adv. Rahul Sharma",
+    description: "accepted your connection request and reciprocal referral protocol.",
+    timestamp: "2h ago",
+  },
+  {
+    id: "act-2",
+    type: "connected",
+    advocateName: "Adv. Nandita Sengupta",
+    description: "accepted your DRT appeal co-counsel invitation.",
+    timestamp: "1d ago",
+  },
+  {
+    id: "act-3",
+    type: "transitioned",
+    advocateName: "Senior Adv. K. Parasaran",
+    description: "transitioned to Active Relationship partner for WP(C) 19482/2024.",
+    timestamp: "2d ago",
+  },
+  {
+    id: "act-4",
+    type: "brief",
+    advocateName: "Adv. Vikramaditya Mehta",
+    description: "reviewed your counter-affidavit draft and shared 3 precedent annotations.",
+    timestamp: "3d ago",
+  },
+  {
+    id: "act-5",
+    type: "meeting",
+    advocateName: "Adv. Arjun Nambiar",
+    description: "confirmed chamber briefing session for Monday 10:30 AM in Court Hall 4.",
+    timestamp: "4d ago",
+  },
+];
+
+const DEFAULT_NETWORK_FOLLOWUPS = [
+  {
+    id: "fu-1",
+    advocateName: "Adv. Vikramaditya Mehta",
+    task: "Send follow-up on rejoinder draft & annexure list",
+    dueText: "Due Tomorrow",
+    dueUrgent: true,
+  },
+  {
+    id: "fu-2",
+    advocateName: "Adv. Arjun Nambiar",
+    task: "Prepare compilation of Supreme Court citations for Bench 4",
+    dueText: "In 2 days",
+    dueUrgent: false,
+  },
+  {
+    id: "fu-3",
+    advocateName: "Senior Adv. Harish Salve KC",
+    task: "Confirm arbitral hearing timeline & procedural order 2",
+    dueText: "In 4 days",
+    dueUrgent: false,
+  },
+];
+
+const DEFAULT_NETWORK_RECOMMENDATIONS = [
+  {
+    id: "rec-1",
+    name: "Adv. Sneha Kulkarni",
+    specialty: "Constitutional & Tax • High Court of Kerala",
+    bar: "Kerala High Court Bar Association",
+    mutuals: 11,
+    status: "pending",
+  },
+  {
+    id: "rec-2",
+    name: "Adv. Rohan Deshmukh",
+    specialty: "Commercial Arbitration & IBC • NCLAT",
+    bar: "Bombay High Court Bar Association",
+    mutuals: 19,
+    status: "connect",
+  },
+  {
+    id: "rec-3",
+    name: "Adv. Vrinda Grover",
+    specialty: "Criminal Appeals & Writs • Delhi High Court",
+    bar: "Delhi High Court Bar Association",
+    mutuals: 34,
+    status: "pending",
+  },
+];
+
+// ============================================================================
+// DEFAULT TASK MITE CONSTANTS
+// ============================================================================
+const DEFAULT_TASKMITE_TASKS = [
+  {
+    id: "task-1",
+    title: "File Rejoinder Affidavit in WP(C) 19482/2024 before 04:00 PM",
+    caseMatter: "WP(C) 19482/2024",
+    status: "in_progress",
+    type: "Court Filing",
+    dueDate: "Today",
+    dueTime: "04:00 PM",
+    isDueUrgent: true,
+    priority: "urgent",
+    assignee: {
+      name: "Adv. Rajiv Malhotra",
+      role: "Senior Associate",
+      avatarInitials: "RM",
+    },
+    notes: "Ensure Section 16 Indian Telegraph Act objection annexures are sworn before Commissioner of Oaths.",
+  },
+  {
+    id: "task-2",
+    title: "Serve advance copy of Bail Application on Public Prosecutor",
+    caseMatter: "BA 4192/2026",
+    status: "not_started",
+    type: "Court Filing",
+    dueDate: "Tomorrow",
+    dueTime: "11:00 AM",
+    isDueUrgent: true,
+    priority: "high",
+    assignee: {
+      name: "Suresh Rawat",
+      role: "Chamber Clerk",
+      avatarInitials: "SR",
+    },
+    notes: "Obtain seal acknowledgement from High Court Prosecution Desk.",
+  },
+  {
+    id: "task-3",
+    title: "Prepare cross-examination questionnaire for Plaintiff Witness in OS 412/2023",
+    caseMatter: "OS 412/2023",
+    status: "in_review",
+    type: "Hearing Prep",
+    dueDate: "04 Nov 2026",
+    priority: "high",
+    assignee: {
+      name: "Adv. Sarah Jenkins",
+      role: "Senior Counsel",
+      avatarInitials: "SJ",
+    },
+    notes: "Focus on Advocate Commissioner re-survey revenue marks and western boundary easement.",
+  },
+  {
+    id: "task-4",
+    title: "Research Supreme Court citations on retrospective Section 479 BNSS application",
+    caseMatter: "Chamber Research",
+    status: "in_progress",
+    type: "Research",
+    dueDate: "06 Nov 2026",
+    priority: "medium",
+    assignee: {
+      name: "Kunal Verma",
+      role: "Paralegal",
+      avatarInitials: "KV",
+    },
+    notes: "Cross-reference recent 2024 Division Bench judgments from Bombay and Delhi High Courts.",
+  },
+  {
+    id: "task-5",
+    title: "Finalize Section 17 Interim Relief memo for NCLT Arbitral Tribunal",
+    caseMatter: "ARB/NCLT/041/2024",
+    status: "not_started",
+    type: "Drafting",
+    dueDate: "14 Nov 2026",
+    priority: "high",
+    assignee: {
+      name: "Adv. Rajesh V. Varma",
+      role: "Commercial Counsel",
+      avatarInitials: "RV",
+    },
+    notes: "Attach audited escrow ledger statements and software maintenance logs.",
+  },
+  {
+    id: "task-6",
+    title: "Draft Section 14 Eviction Notice for Alex Morgan tenancy matter",
+    caseMatter: "Tenancy 108/2026",
+    status: "completed",
+    type: "Client Notice",
+    dueDate: "14 Oct 2026",
+    priority: "medium",
+    assignee: {
+      name: "Adv. Preeti Sharma",
+      role: "Litigation Specialist",
+      avatarInitials: "PS",
+    },
+    completedAt: "14 Oct 2026",
+  },
+];
+
+const DEFAULT_TASKMITE_NOTES = [
+  {
+    id: "note-1",
+    title: "BNSS Section 479 Retrospective Bail Application Precedents",
+    category: "precedent_notes",
+    categoryLabel: "Precedent Research",
+    content:
+      "Supreme Court in In Re Policy Strategy for Grant of Bail observed that benevolent criminal procedure amendments apply retrospectively to pending under-trials. Check Article 20(1) protections.",
+    tags: ["BNSS", "Bail", "Article 20"],
+    updatedAt: "2 hours ago",
+    isPinned: true,
+  },
+  {
+    id: "note-2",
+    title: "WP(C) 19482/2024 — Division Bench Rejoinder Strategy Notes",
+    category: "hearing_memo",
+    categoryLabel: "Hearing Memo",
+    content:
+      "Section 16(1) of Indian Telegraph Act requires prior written notice to occupier before felling yielding trees. KSEB line survey was conducted ex-parte without revenue demarcation.",
+    tags: ["High Court", "Telegraph Act", "Stay"],
+    updatedAt: "Yesterday",
+    isPinned: true,
+  },
+  {
+    id: "note-3",
+    title: "Section 34 Arbitration Limitation — 120-Day Inflexible Ceiling",
+    category: "precedent_notes",
+    categoryLabel: "Arbitration Law",
+    content:
+      "Supreme Court in Simplex Infrastructure reiterated Section 5 of Limitation Act cannot condone delay beyond 30 days statutory extension. Outer limit is strictly 120 days.",
+    tags: ["Arbitration", "Limitation", "Commercial"],
+    updatedAt: "3 days ago",
+  },
+];
+
+// ============================================================================
+// DEFAULT PROFILES CONSTANTS (BCI & DIGILOCKER)
+// ============================================================================
+const DEFAULT_BCI_CREDENTIALS = {
+  advocateName: "Adv. Meera Krishnan",
+  enrollmentNumber: "K/001429/2012",
+  stateBarCouncil: "Bar Council of Kerala",
+  enrollmentYear: 2012,
+  verificationStatus: "Verified",
+  verifiedBy: "Bar Council of India Verification Portal",
+  verifiedOn: "2024-01-15T10:00:00.000Z",
+  certificateHash: "SHA256:4a8b92c1092e41fa89bc0192e482910fae",
+  practiceBenches: ["High Court of Kerala", "Supreme Court of India", "NCLT Kochi Bench"],
+  chamberName: "Meera Krishnan & Associates Chambers of Law",
+  chamberAddress: "Chamber #402, High Court Lawyers Chambers Complex, Ernakulam, Kochi 682031",
+  chamberEmail: "meera.krishnan@keralahc.gov.in",
+  chamberPhone: "+91 94470 12849",
+};
+
+const DEFAULT_DIGILOCKER_KYC = {
+  citizenName: "Gopakumar Nambiar",
+  kycStatus: "Verified",
+  verificationSource: "DigiLocker / UIDAI Aadhaar e-KYC Gateway",
+  digiLockerDocId: "DL-AADHAAR-8921-4412-2024",
+  verifiedAt: "2024-02-10T14:30:00.000Z",
+  documentType: "Aadhaar e-KYC XML & Verification Hash",
+  maskedId: "XXXX-XXXX-4412",
+  address: "Sree Krishna Vilas, Near High Court Junction, Ernakulam, Kerala 682018",
+  phone: "+91 94471 28930",
+  email: "gopakumar.nambiar@inworth.gov.in",
+};

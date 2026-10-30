@@ -2517,3 +2517,255 @@ export const getUnreadMessageCount = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// CITIZEN CALENDAR FIXTURES & BACKLOG CONTROLLERS
+// ============================================================================
+export const getCitizenCalendarEvents = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const events = devStore.getCalendarEvents(userId);
+    res.json({ success: true, events });
+  } catch (error) {
+    console.error("getCitizenCalendarEvents error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCitizenCalendarEvent = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const event = devStore.addCalendarEvent(userId, req.body);
+    res.status(201).json({ success: true, event });
+  } catch (error) {
+    console.error("createCitizenCalendarEvent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCitizenCalendarBacklog = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const backlog = devStore.getCalendarBacklog(userId);
+    res.json({ success: true, backlog });
+  } catch (error) {
+    console.error("getCitizenCalendarBacklog error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// CITIZEN LEGAL NETWORK & ADVOCATE PIPELINE CONTROLLERS
+// ============================================================================
+export const getCitizenNetworkContacts = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const contacts = devStore.getNetworkContacts(userId);
+    const activities = devStore.getNetworkActivities(userId);
+    const followups = devStore.getNetworkFollowups(userId);
+    const recommendations = devStore.getNetworkRecommendations(userId);
+    res.json({
+      success: true,
+      contacts,
+      activities,
+      followups,
+      recommendations,
+    });
+  } catch (error) {
+    console.error("getCitizenNetworkContacts error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCitizenNetworkContact = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const contact = devStore.addNetworkContact(userId, req.body);
+    devStore.addNetworkActivity(userId, {
+      type: "connected",
+      advocateName: contact.name,
+      description: `retained/shortlisted in legal pipeline stage ${contact.stage.toUpperCase()}.`,
+    });
+    res.status(201).json({ success: true, contact });
+  } catch (error) {
+    console.error("createCitizenNetworkContact error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCitizenNetworkContactStage = async (req, res) => {
+  try {
+    const { stage } = req.body;
+    const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+    if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
+    res.json({ success: true, contact });
+  } catch (error) {
+    console.error("updateCitizenNetworkContactStage error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCitizenNetworkContact = async (req, res) => {
+  try {
+    devStore.deleteNetworkContact(req.params.id);
+    res.json({ success: true, message: "Contact deleted from network" });
+  } catch (error) {
+    console.error("deleteCitizenNetworkContact error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCitizenNetworkActivities = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const activities = devStore.getNetworkActivities(userId);
+    res.json({ success: true, activities });
+  } catch (error) {
+    console.error("getCitizenNetworkActivities error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCitizenNetworkFollowups = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const followups = devStore.getNetworkFollowups(userId);
+    res.json({ success: true, followups });
+  } catch (error) {
+    console.error("getCitizenNetworkFollowups error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCitizenNetworkRecommendations = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const recommendations = devStore.getNetworkRecommendations(userId);
+    res.json({ success: true, recommendations });
+  } catch (error) {
+    console.error("getCitizenNetworkRecommendations error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// CITIZEN TASK MITE TASKS & NOTES CONTROLLERS
+// ============================================================================
+export const getCitizenTaskMiteTasks = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const tasks = devStore.getTaskMiteTasks(userId);
+    const notes = devStore.getTaskMiteNotes(userId);
+    res.json({ success: true, tasks, notes });
+  } catch (error) {
+    console.error("getCitizenTaskMiteTasks error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCitizenTaskMiteTask = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const task = devStore.addTaskMiteTask(userId, req.body);
+    res.status(201).json({ success: true, task });
+  } catch (error) {
+    console.error("createCitizenTaskMiteTask error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCitizenTaskMiteTask = async (req, res) => {
+  try {
+    const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.json({ success: true, task });
+  } catch (error) {
+    console.error("updateCitizenTaskMiteTask error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCitizenTaskMiteTask = async (req, res) => {
+  try {
+    devStore.deleteTaskMiteTask(req.params.id);
+    res.json({ success: true, message: "Task deleted" });
+  } catch (error) {
+    console.error("deleteCitizenTaskMiteTask error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCitizenTaskMiteNotes = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const notes = devStore.getTaskMiteNotes(userId);
+    res.json({ success: true, notes });
+  } catch (error) {
+    console.error("getCitizenTaskMiteNotes error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCitizenTaskMiteNote = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const note = devStore.addTaskMiteNote(userId, req.body);
+    res.status(201).json({ success: true, note });
+  } catch (error) {
+    console.error("createCitizenTaskMiteNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCitizenTaskMiteNote = async (req, res) => {
+  try {
+    devStore.deleteTaskMiteNote(req.params.id);
+    res.json({ success: true, message: "Note deleted" });
+  } catch (error) {
+    console.error("deleteCitizenTaskMiteNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// CITIZEN DIGILOCKER KYC CONTROLLERS
+// ============================================================================
+export const getDigiLockerKyc = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const kyc = devStore.getDigiLockerKyc(userId);
+    res.json({ success: true, kyc });
+  } catch (error) {
+    console.error("getDigiLockerKyc error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateDigiLockerKyc = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const kyc = devStore.updateDigiLockerKyc(userId, req.body);
+    res.json({ success: true, kyc });
+  } catch (error) {
+    console.error("updateDigiLockerKyc error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const verifyDigiLockerKyc = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const verifiedData = {
+      kycStatus: "Verified",
+      verificationSource: "DigiLocker / UIDAI Aadhaar e-KYC Gateway",
+      digiLockerDocId: `DL-AADHAAR-${Date.now().toString().slice(-8)}`,
+      verifiedAt: new Date().toISOString(),
+      documentType: "Aadhaar e-KYC XML & Verification Hash",
+    };
+    const kyc = devStore.updateDigiLockerKyc(userId, verifiedData);
+    res.json({ success: true, message: "DigiLocker Aadhaar KYC verified successfully.", kyc });
+  } catch (error) {
+    console.error("verifyDigiLockerKyc error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

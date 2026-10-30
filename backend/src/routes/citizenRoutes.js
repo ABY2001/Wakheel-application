@@ -42,6 +42,26 @@ import {
   sendCitizenMessage,
   markMessageRead,
   getUnreadMessageCount,
+  getCitizenCalendarEvents,
+  createCitizenCalendarEvent,
+  getCitizenCalendarBacklog,
+  getCitizenNetworkContacts,
+  createCitizenNetworkContact,
+  updateCitizenNetworkContactStage,
+  deleteCitizenNetworkContact,
+  getCitizenNetworkActivities,
+  getCitizenNetworkFollowups,
+  getCitizenNetworkRecommendations,
+  getCitizenTaskMiteTasks,
+  createCitizenTaskMiteTask,
+  updateCitizenTaskMiteTask,
+  deleteCitizenTaskMiteTask,
+  getCitizenTaskMiteNotes,
+  createCitizenTaskMiteNote,
+  deleteCitizenTaskMiteNote,
+  getDigiLockerKyc,
+  updateDigiLockerKyc,
+  verifyDigiLockerKyc,
 } from "../controllers/citizenController.js";
 
 const router = express.Router();
@@ -98,5 +118,27 @@ router.route("/invoices/:id/pay").post(protect, payCitizenInvoice);
 router.route("/messages").get(protect, getCitizenMessages).post(protect, sendCitizenMessage);
 router.route("/messages/unread-count").get(protect, getUnreadMessageCount);
 router.route("/messages/:id/read").put(protect, markMessageRead);
+
+// 11. Citizen Calendar Fixtures & Hearing Backlog
+router.route("/calendar/events").get(protect, getCitizenCalendarEvents).post(protect, createCitizenCalendarEvent);
+router.route("/calendar/backlog").get(protect, getCitizenCalendarBacklog);
+
+// 12. Citizen Legal Network & Counsel Pipeline
+router.route("/network/contacts").get(protect, getCitizenNetworkContacts).post(protect, createCitizenNetworkContact);
+router.route("/network/contacts/:id/stage").put(protect, updateCitizenNetworkContactStage);
+router.route("/network/contacts/:id").delete(protect, deleteCitizenNetworkContact);
+router.route("/network/activities").get(protect, getCitizenNetworkActivities);
+router.route("/network/followups").get(protect, getCitizenNetworkFollowups);
+router.route("/network/recommendations").get(protect, getCitizenNetworkRecommendations);
+
+// 13. Citizen Task Mite & Action Checklist
+router.route("/taskmite/tasks").get(protect, getCitizenTaskMiteTasks).post(protect, createCitizenTaskMiteTask);
+router.route("/taskmite/tasks/:id").put(protect, updateCitizenTaskMiteTask).delete(protect, deleteCitizenTaskMiteTask);
+router.route("/taskmite/notes").get(protect, getCitizenTaskMiteNotes).post(protect, createCitizenTaskMiteNote);
+router.route("/taskmite/notes/:id").delete(protect, deleteCitizenTaskMiteNote);
+
+// 14. DigiLocker & Aadhaar e-KYC Verification Suite
+router.route("/profile/kyc").get(protect, getDigiLockerKyc).put(protect, updateDigiLockerKyc);
+router.route("/profile/kyc/verify").post(protect, verifyDigiLockerKyc);
 
 export default router;

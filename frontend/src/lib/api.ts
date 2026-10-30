@@ -765,6 +765,209 @@ export const citizenApi = {
     });
     return await res.json();
   },
+
+  // --- Citizen Calendar Suite ---
+  async getCitizenCalendarEvents(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/calendar/events`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createCitizenCalendarEvent(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/calendar/events`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async getCitizenCalendarBacklog(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/calendar/backlog`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  // --- Citizen Legal Network Suite ---
+  async getCitizenNetworkContacts(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/contacts`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createCitizenNetworkContact(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/contacts`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateCitizenNetworkContactStage(id: string, stage: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/contacts/${id}/stage`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stage }),
+    });
+    return await res.json();
+  },
+
+  async deleteCitizenNetworkContact(id: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/contacts/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getCitizenNetworkActivities(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/activities`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getCitizenNetworkFollowups(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/followups`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getCitizenNetworkRecommendations(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/network/recommendations`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  // --- Citizen Task Mite Suite ---
+  async getCitizenTaskMiteTasks(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createCitizenTaskMiteTask(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateCitizenTaskMiteTask(id: string, updates: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteCitizenTaskMiteTask(id: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getCitizenTaskMiteNotes(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createCitizenTaskMiteNote(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async deleteCitizenTaskMiteNote(id: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  // --- DigiLocker KYC Suite ---
+  async getDigiLockerKyc(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/profile/kyc`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async updateDigiLockerKyc(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/profile/kyc`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async verifyDigiLockerKyc(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/profile/kyc/verify`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
 };
 
 // ============================================================================
@@ -2173,6 +2376,253 @@ export const advocateApi = {
 
   async dispatchClientHearingUpdate(data: any, token?: string) {
     const res = await fetch(`${API_BASE_URL}/advocate/causelist/notify-client`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  // --- Chamber Calendar Suite ---
+  async getCalendarEvents(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/events`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createCalendarEvent(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/events`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateCalendarEvent(id: string, updates: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/events/${id}`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteCalendarEvent(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/events/${id}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getCalendarBacklog(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/backlog`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createCalendarBacklogItem(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/backlog`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateCalendarBacklogItem(id: string, updates: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/backlog/${id}`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteCalendarBacklogItem(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/calendar/backlog/${id}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  // --- Professional Network Suite ---
+  async getNetworkContacts(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/contacts`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createNetworkContact(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/contacts`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateNetworkContactStage(id: string, stage: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/contacts/${id}/stage`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stage }),
+    });
+    return await res.json();
+  },
+
+  async deleteNetworkContact(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/contacts/${id}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getNetworkActivities(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/activities`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getNetworkFollowups(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/followups`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getNetworkRecommendations(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/recommendations`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async toggleNetworkRecommendation(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/network/recommendations/${id}/connect`, {
+      method: "POST",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  // --- Task Mite Suite ---
+  async getTaskMiteTasks(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/tasks`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createTaskMiteTask(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/tasks`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateTaskMiteTask(id: string, updates: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/tasks/${id}`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteTaskMiteTask(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/tasks/${id}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async getTaskMiteNotes(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/notes`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async createTaskMiteNote(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/notes`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async deleteTaskMiteNote(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/notes/${id}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  // --- BCI Credentials Suite ---
+  async getBciCredentials(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/profile/bci`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async updateBciCredentials(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/profile/bci`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async verifyBciCredentials(data: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/profile/bci/verify`, {
       method: "POST",
       headers: {
         ...advocateApi.getAuthHeader(token),

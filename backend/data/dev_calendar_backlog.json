@@ -1,0 +1,26 @@
+[
+  {
+    "id": "task-bk-1",
+    "title": "Draft Section 14 Eviction Notice",
+    "category": "drafting",
+    "priority": "high",
+    "estimatedTime": "1h 30m",
+    "caseRef": "Tenancy 108/2026"
+  },
+  {
+    "id": "task-bk-2",
+    "title": "Research Article 226 telegraph deviation locus",
+    "category": "research",
+    "priority": "urgent",
+    "estimatedTime": "2h",
+    "caseRef": "WP(C) 19482/2024"
+  },
+  {
+    "id": "task-bk-3",
+    "title": "Prepare compilation of Supreme Court citations for Bench 4",
+    "category": "evidence",
+    "priority": "normal",
+    "estimatedTime": "45m",
+    "caseRef": "ARB/NCLT/041/2024"
+  }
+]

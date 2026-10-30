@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { citizenApi } from "@/lib/api";
 import {
   Users,
   Search,
@@ -570,6 +571,40 @@ export function CitizenNetworkView({
     INITIAL_RECOMMENDED_SPECIALISTS
   );
 
+  // Fetch initial data from backend with fallback
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCitizenNetworkData() {
+      try {
+        const [cRes, aRes, fRes, rRes] = await Promise.allSettled([
+          citizenApi.getCitizenNetworkContacts(),
+          citizenApi.getCitizenNetworkActivities(),
+          citizenApi.getCitizenNetworkFollowups(),
+          citizenApi.getCitizenNetworkRecommendations(),
+        ]);
+        if (!isMounted) return;
+        if (cRes.status === "fulfilled" && cRes.value?.success && Array.isArray(cRes.value.contacts) && cRes.value.contacts.length > 0) {
+          setContacts(cRes.value.contacts);
+        }
+        if (aRes.status === "fulfilled" && aRes.value?.success && Array.isArray(aRes.value.activities) && aRes.value.activities.length > 0) {
+          setActivities(aRes.value.activities);
+        }
+        if (fRes.status === "fulfilled" && fRes.value?.success && Array.isArray(fRes.value.followups) && fRes.value.followups.length > 0) {
+          setFollowUps(fRes.value.followups);
+        }
+        if (rRes.status === "fulfilled" && rRes.value?.success && Array.isArray(rRes.value.recommendations) && rRes.value.recommendations.length > 0) {
+          setRecommendations(rRes.value.recommendations);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch citizen legal network data, using offline fallback:", err);
+      }
+    }
+    loadCitizenNetworkData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("all");
@@ -661,7 +696,7 @@ export function CitizenNetworkView({
   };
 
   // Move stage
-  const handleMoveStage = (contactId: string, newStage: CitizenPipelineStage) => {
+  const handleMoveStage = async (contactId: string, newStage: CitizenPipelineStage) => {
     setContacts((prev) =>
       prev.map((c) => {
         if (c.id === contactId) {
@@ -673,10 +708,15 @@ export function CitizenNetworkView({
     if (selectedContact && selectedContact.id === contactId) {
       setSelectedContact((prev) => (prev ? { ...prev, stage: newStage } : null));
     }
+    try {
+      await citizenApi.updateCitizenNetworkContactStage(contactId, newStage);
+    } catch (err) {
+      console.warn("Failed to update citizen contact stage:", err);
+    }
   };
 
   // Create Counsel Submission
-  const handleCreateCounsel = (e: React.FormEvent) => {
+  const handleCreateCounsel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCounselName.trim()) return;
 
@@ -705,22 +745,26 @@ export function CitizenNetworkView({
     setContacts((prev) => [newContact, ...prev]);
 
     // Push activity
-    setActivities((prev) => [
-      {
-        id: `c-act-${Date.now()}`,
-        type: "consultation",
-        advocateName: newContact.name,
-        description: `added to legal pipeline at stage ${newContact.stage.toUpperCase()}.`,
-        timestamp: "Just now",
-      },
-      ...prev,
-    ]);
+    const newAct: RepresentationActivity = {
+      id: `c-act-${Date.now()}`,
+      type: "consultation",
+      advocateName: newContact.name,
+      description: `added to legal pipeline at stage ${newContact.stage.toUpperCase()}.`,
+      timestamp: "Just now",
+    };
+    setActivities((prev) => [newAct, ...prev]);
 
     // Reset and close
     setNewCounselName("");
     setNewCounselRole("");
     setNewCounselStatusQuote("");
     setIsAddModalOpen(false);
+
+    try {
+      await citizenApi.createCitizenNetworkContact(newContact);
+    } catch (err) {
+      console.warn("Failed to persist citizen network contact:", err);
+    }
   };
 
   return (
@@ -1632,26 +1676,44 @@ export function CitizenNetworkView({
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
               <button
-                onClick={() => setSelectedContact(null)}
-                className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  if (onOpenConsultation) {
-                    onOpenConsultation(selectedContact);
-                  } else {
-                    alert(`Opening direct consultation with ${selectedContact.name}.`);
-                  }
+                type="button"
+                onClick={async () => {
+                  const cId = selectedContact.id;
+                  setContacts((prev) => prev.filter((c) => c.id !== cId));
                   setSelectedContact(null);
+                  try {
+                    await citizenApi.deleteCitizenNetworkContact(cId);
+                  } catch (err) {
+                    console.warn("Failed to delete citizen contact:", err);
+                  }
                 }}
-                className="px-4 py-2 rounded-full bg-[#6B1728] text-white text-xs font-bold cursor-pointer hover:bg-[#581220] transition-colors"
+                className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
               >
-                Book Consultation
+                Delete Contact
               </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedContact(null)}
+                  className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (onOpenConsultation) {
+                      onOpenConsultation(selectedContact);
+                    } else {
+                      alert(`Opening direct consultation with ${selectedContact.name}.`);
+                    }
+                    setSelectedContact(null);
+                  }}
+                  className="px-4 py-2 rounded-full bg-[#6B1728] text-white text-xs font-bold cursor-pointer hover:bg-[#581220] transition-colors"
+                >
+                  Book Consultation
+                </button>
+              </div>
             </div>
           </div>
         </div>

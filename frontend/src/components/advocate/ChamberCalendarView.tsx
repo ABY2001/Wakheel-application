@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { advocateApi, citizenApi } from "@/lib/api";
 import {
   Calendar as CalendarIcon,
   Plus,
@@ -171,6 +172,46 @@ export default function ChamberCalendarView({
   const [backlog, setBacklog] = useState<BacklogTask[]>(INITIAL_BACKLOG);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
+  // Fetch initial data from backend with fallback to initial state
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        if (isClientView) {
+          const [evRes, bkRes] = await Promise.allSettled([
+            citizenApi.getCitizenCalendarEvents(),
+            citizenApi.getCitizenCalendarBacklog(),
+          ]);
+          if (!isMounted) return;
+          if (evRes.status === "fulfilled" && evRes.value?.success && Array.isArray(evRes.value.events) && evRes.value.events.length > 0) {
+            setEvents(evRes.value.events);
+          }
+          if (bkRes.status === "fulfilled" && bkRes.value?.success && Array.isArray(bkRes.value.backlog) && bkRes.value.backlog.length > 0) {
+            setBacklog(bkRes.value.backlog);
+          }
+        } else {
+          const [evRes, bkRes] = await Promise.allSettled([
+            advocateApi.getCalendarEvents(),
+            advocateApi.getCalendarBacklog(),
+          ]);
+          if (!isMounted) return;
+          if (evRes.status === "fulfilled" && evRes.value?.success && Array.isArray(evRes.value.events) && evRes.value.events.length > 0) {
+            setEvents(evRes.value.events);
+          }
+          if (bkRes.status === "fulfilled" && bkRes.value?.success && Array.isArray(bkRes.value.backlog) && bkRes.value.backlog.length > 0) {
+            setBacklog(bkRes.value.backlog);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch calendar data, retaining local state:", err);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [isClientView]);
+
   // Modal / Add Form State
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
   const [addBacklogModalOpen, setAddBacklogModalOpen] = useState<boolean>(false);
@@ -225,7 +266,7 @@ export default function ChamberCalendarView({
   };
 
   // Add Event Handler
-  const handleCreateEvent = (e: React.FormEvent) => {
+  const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle.trim()) return;
 
@@ -245,10 +286,20 @@ export default function ChamberCalendarView({
     setNewEventTitle("");
     setNewEventCase("");
     setAddModalOpen(false);
+
+    try {
+      if (isClientView) {
+        await citizenApi.createCitizenCalendarEvent(newEvt);
+      } else {
+        await advocateApi.createCalendarEvent(newEvt);
+      }
+    } catch (err) {
+      console.warn("Failed to persist calendar event:", err);
+    }
   };
 
   // Add Backlog Item Handler
-  const handleCreateBacklog = (e: React.FormEvent) => {
+  const handleCreateBacklog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBacklogTitle.trim()) return;
 
@@ -263,10 +314,18 @@ export default function ChamberCalendarView({
     setBacklog((prev) => [newTask, ...prev]);
     setNewBacklogTitle("");
     setAddBacklogModalOpen(false);
+
+    try {
+      if (!isClientView) {
+        await advocateApi.createCalendarBacklogItem(newTask);
+      }
+    } catch (err) {
+      console.warn("Failed to persist backlog item:", err);
+    }
   };
 
   // Schedule a task from backlog to a day
-  const handleScheduleBacklogTask = (task: BacklogTask, targetDateStr: string) => {
+  const handleScheduleBacklogTask = async (task: BacklogTask, targetDateStr: string) => {
     const newEvt: CalendarEvent = {
       id: `evt-${Date.now()}`,
       title: task.title,
@@ -280,6 +339,17 @@ export default function ChamberCalendarView({
 
     setEvents((prev) => [...prev, newEvt]);
     setBacklog((prev) => prev.filter((t) => t.id !== task.id));
+
+    try {
+      if (isClientView) {
+        await citizenApi.createCitizenCalendarEvent(newEvt);
+      } else {
+        await advocateApi.createCalendarEvent(newEvt);
+        await advocateApi.deleteCalendarBacklogItem(task.id);
+      }
+    } catch (err) {
+      console.warn("Failed to persist scheduled backlog task:", err);
+    }
   };
 
   const getEventsForDate = (dateStr: string) => {
@@ -385,7 +455,17 @@ export default function ChamberCalendarView({
                     </span>
                     <button
                       type="button"
-                      onClick={() => setBacklog((prev) => prev.filter((t) => t.id !== task.id))}
+                      onClick={async () => {
+                        const taskId = task.id;
+                        setBacklog((prev) => prev.filter((t) => t.id !== taskId));
+                        try {
+                          if (!isClientView) {
+                            await advocateApi.deleteCalendarBacklogItem(taskId);
+                          }
+                        } catch (err) {
+                          console.warn("Failed to delete backlog item:", err);
+                        }
+                      }}
                       className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-red-500 transition cursor-pointer"
                       title="Remove from Backlog"
                     >
@@ -896,9 +976,17 @@ export default function ChamberCalendarView({
             <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800">
               <button
                 type="button"
-                onClick={() => {
-                  setEvents((prev) => prev.filter((e) => e.id !== selectedEvent.id));
+                onClick={async () => {
+                  const evId = selectedEvent.id;
+                  setEvents((prev) => prev.filter((e) => e.id !== evId));
                   setSelectedEvent(null);
+                  try {
+                    if (!isClientView) {
+                      await advocateApi.deleteCalendarEvent(evId);
+                    }
+                  } catch (err) {
+                    console.warn("Failed to delete event:", err);
+                  }
                 }}
                 className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
               >
@@ -916,11 +1004,19 @@ export default function ChamberCalendarView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
+                    const evId = selectedEvent.id;
                     setEvents((prev) =>
-                      prev.map((e) => (e.id === selectedEvent.id ? { ...e, status: "completed" } : e))
+                      prev.map((e) => (e.id === evId ? { ...e, status: "completed" } : e))
                     );
                     setSelectedEvent(null);
+                    try {
+                      if (!isClientView) {
+                        await advocateApi.updateCalendarEvent(evId, { status: "completed" });
+                      }
+                    } catch (err) {
+                      console.warn("Failed to update event:", err);
+                    }
                   }}
                   className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5"
                 >

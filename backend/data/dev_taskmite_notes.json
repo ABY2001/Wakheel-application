@@ -1,0 +1,43 @@
+[
+  {
+    "id": "note-1",
+    "title": "BNSS Section 479 Retrospective Bail Application Precedents",
+    "category": "precedent_notes",
+    "categoryLabel": "Precedent Research",
+    "content": "Supreme Court in In Re Policy Strategy for Grant of Bail observed that benevolent criminal procedure amendments apply retrospectively to pending under-trials. Check Article 20(1) protections.",
+    "tags": [
+      "BNSS",
+      "Bail",
+      "Article 20"
+    ],
+    "updatedAt": "2 hours ago",
+    "isPinned": true
+  },
+  {
+    "id": "note-2",
+    "title": "WP(C) 19482/2024 — Division Bench Rejoinder Strategy Notes",
+    "category": "hearing_memo",
+    "categoryLabel": "Hearing Memo",
+    "content": "Section 16(1) of Indian Telegraph Act requires prior written notice to occupier before felling yielding trees. KSEB line survey was conducted ex-parte without revenue demarcation.",
+    "tags": [
+      "High Court",
+      "Telegraph Act",
+      "Stay"
+    ],
+    "updatedAt": "Yesterday",
+    "isPinned": true
+  },
+  {
+    "id": "note-3",
+    "title": "Section 34 Arbitration Limitation — 120-Day Inflexible Ceiling",
+    "category": "precedent_notes",
+    "categoryLabel": "Arbitration Law",
+    "content": "Supreme Court in Simplex Infrastructure reiterated Section 5 of Limitation Act cannot condone delay beyond 30 days statutory extension. Outer limit is strictly 120 days.",
+    "tags": [
+      "Arbitration",
+      "Limitation",
+      "Commercial"
+    ],
+    "updatedAt": "3 days ago"
+  }
+]

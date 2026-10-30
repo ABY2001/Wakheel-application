@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { advocateApi } from "@/lib/api";
 import {
   Users,
   Search,
@@ -549,6 +550,40 @@ export function AdvocateNetworkView() {
     INITIAL_PEOPLE_YOU_MAY_KNOW
   );
 
+  // Fetch initial data from backend with fallback
+  useEffect(() => {
+    let isMounted = true;
+    async function loadNetworkData() {
+      try {
+        const [cRes, aRes, fRes, rRes] = await Promise.allSettled([
+          advocateApi.getNetworkContacts(),
+          advocateApi.getNetworkActivities(),
+          advocateApi.getNetworkFollowups(),
+          advocateApi.getNetworkRecommendations(),
+        ]);
+        if (!isMounted) return;
+        if (cRes.status === "fulfilled" && cRes.value?.success && Array.isArray(cRes.value.contacts) && cRes.value.contacts.length > 0) {
+          setContacts(cRes.value.contacts);
+        }
+        if (aRes.status === "fulfilled" && aRes.value?.success && Array.isArray(aRes.value.activities) && aRes.value.activities.length > 0) {
+          setActivities(aRes.value.activities);
+        }
+        if (fRes.status === "fulfilled" && fRes.value?.success && Array.isArray(fRes.value.followups) && fRes.value.followups.length > 0) {
+          setFollowUps(fRes.value.followups);
+        }
+        if (rRes.status === "fulfilled" && rRes.value?.success && Array.isArray(rRes.value.recommendations) && rRes.value.recommendations.length > 0) {
+          setRecommendations(rRes.value.recommendations);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch advocate network data, using offline fallback:", err);
+      }
+    }
+    loadNetworkData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("all");
@@ -625,7 +660,7 @@ export function AdvocateNetworkView() {
   const coreConversionPct = totalNetworkCount > 0 ? Math.round((activeCount / totalNetworkCount) * 100) : 13;
 
   // Toggle recommendation connect status
-  const handleToggleConnect = (id: string) => {
+  const handleToggleConnect = async (id: string) => {
     setRecommendations((prev) =>
       prev.map((r) => {
         if (r.id === id) {
@@ -635,10 +670,15 @@ export function AdvocateNetworkView() {
         return r;
       })
     );
+    try {
+      await advocateApi.toggleNetworkRecommendation(id);
+    } catch (err) {
+      console.warn("Failed to toggle recommendation:", err);
+    }
   };
 
   // Move stage
-  const handleMoveStage = (contactId: string, newStage: PipelineStage) => {
+  const handleMoveStage = async (contactId: string, newStage: PipelineStage) => {
     setContacts((prev) =>
       prev.map((c) => {
         if (c.id === contactId) {
@@ -650,10 +690,15 @@ export function AdvocateNetworkView() {
     if (selectedContact && selectedContact.id === contactId) {
       setSelectedContact((prev) => (prev ? { ...prev, stage: newStage } : null));
     }
+    try {
+      await advocateApi.updateNetworkContactStage(contactId, newStage);
+    } catch (err) {
+      console.warn("Failed to update contact stage:", err);
+    }
   };
 
   // Add Contact submission
-  const handleCreateContact = (e: React.FormEvent) => {
+  const handleCreateContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newContactName.trim()) return;
 
@@ -683,22 +728,26 @@ export function AdvocateNetworkView() {
     setContacts((prev) => [newContact, ...prev]);
 
     // Also push to activity feed
-    setActivities((prev) => [
-      {
-        id: `act-${Date.now()}`,
-        type: "connected",
-        advocateName: newContact.name,
-        description: `added to pipeline at ${newContact.stage.toUpperCase()} stage.`,
-        timestamp: "Just now",
-      },
-      ...prev,
-    ]);
+    const newAct: ActivityItem = {
+      id: `act-${Date.now()}`,
+      type: "connected",
+      advocateName: newContact.name,
+      description: `added to pipeline at ${newContact.stage.toUpperCase()} stage.`,
+      timestamp: "Just now",
+    };
+    setActivities((prev) => [newAct, ...prev]);
 
     // Reset and close
     setNewContactName("");
     setNewContactRole("");
     setNewContactStatusQuote("");
     setIsAddModalOpen(false);
+
+    try {
+      await advocateApi.createNetworkContact(newContact);
+    } catch (err) {
+      console.warn("Failed to persist new network contact:", err);
+    }
   };
 
   return (
@@ -1609,22 +1658,40 @@ export function AdvocateNetworkView() {
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
               <button
-                onClick={() => setSelectedContact(null)}
-                className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  alert(`Case brief draft shared with ${selectedContact.name}.`);
+                type="button"
+                onClick={async () => {
+                  const cId = selectedContact.id;
+                  setContacts((prev) => prev.filter((c) => c.id !== cId));
                   setSelectedContact(null);
+                  try {
+                    await advocateApi.deleteNetworkContact(cId);
+                  } catch (err) {
+                    console.warn("Failed to delete contact:", err);
+                  }
                 }}
-                className="px-4 py-2 rounded-full bg-[#6B1728] text-white text-xs font-bold cursor-pointer hover:bg-[#581220] transition-colors"
+                className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
               >
-                Send Case Brief
+                Delete Contact
               </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedContact(null)}
+                  className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    alert(`Case brief draft shared with ${selectedContact.name}.`);
+                    setSelectedContact(null);
+                  }}
+                  className="px-4 py-2 rounded-full bg-[#6B1728] text-white text-xs font-bold cursor-pointer hover:bg-[#581220] transition-colors"
+                >
+                  Send Case Brief
+                </button>
+              </div>
             </div>
           </div>
         </div>

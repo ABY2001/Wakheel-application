@@ -87,6 +87,32 @@ import {
   generatePassoverSlip,
   reassignCauselistItem,
   dispatchClientHearingUpdate,
+  getCalendarEvents,
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
+  getCalendarBacklog,
+  createCalendarBacklogItem,
+  updateCalendarBacklogItem,
+  deleteCalendarBacklogItem,
+  getNetworkContacts,
+  createNetworkContact,
+  updateNetworkContactStage,
+  deleteNetworkContact,
+  getNetworkActivities,
+  getNetworkFollowups,
+  getNetworkRecommendations,
+  toggleNetworkRecommendation,
+  getTaskMiteTasks,
+  createTaskMiteTask,
+  updateTaskMiteTask,
+  deleteTaskMiteTask,
+  getTaskMiteNotes,
+  createTaskMiteNote,
+  deleteTaskMiteNote,
+  getBciCredentials,
+  updateBciCredentials,
+  verifyBciCredentials,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -219,5 +245,39 @@ router.get("/causelist/radar", protect, getCauselistRadar);
 router.post("/causelist/passover", protect, generatePassoverSlip);
 router.post("/causelist/reassign", protect, reassignCauselistItem);
 router.post("/causelist/notify-client", protect, dispatchClientHearingUpdate);
+
+// 22. Chamber Calendar Fixtures & Backlog Pipeline
+router.get("/calendar/events", protect, getCalendarEvents);
+router.post("/calendar/events", protect, createCalendarEvent);
+router.put("/calendar/events/:id", protect, updateCalendarEvent);
+router.delete("/calendar/events/:id", protect, deleteCalendarEvent);
+router.get("/calendar/backlog", protect, getCalendarBacklog);
+router.post("/calendar/backlog", protect, createCalendarBacklogItem);
+router.put("/calendar/backlog/:id", protect, updateCalendarBacklogItem);
+router.delete("/calendar/backlog/:id", protect, deleteCalendarBacklogItem);
+
+// 23. Professional Network & Co-Counsel Funnel
+router.get("/network/contacts", protect, getNetworkContacts);
+router.post("/network/contacts", protect, createNetworkContact);
+router.put("/network/contacts/:id/stage", protect, updateNetworkContactStage);
+router.delete("/network/contacts/:id", protect, deleteNetworkContact);
+router.get("/network/activities", protect, getNetworkActivities);
+router.get("/network/followups", protect, getNetworkFollowups);
+router.get("/network/recommendations", protect, getNetworkRecommendations);
+router.post("/network/recommendations/:id/connect", protect, toggleNetworkRecommendation);
+
+// 24. Task Mite Chamber Checklist & Legal Notes
+router.get("/taskmite/tasks", protect, getTaskMiteTasks);
+router.post("/taskmite/tasks", protect, createTaskMiteTask);
+router.put("/taskmite/tasks/:id", protect, updateTaskMiteTask);
+router.delete("/taskmite/tasks/:id", protect, deleteTaskMiteTask);
+router.get("/taskmite/notes", protect, getTaskMiteNotes);
+router.post("/taskmite/notes", protect, createTaskMiteNote);
+router.delete("/taskmite/notes/:id", protect, deleteTaskMiteNote);
+
+// 25. BCI Credentials & Chamber Authentication Suite
+router.get("/profile/bci", protect, getBciCredentials);
+router.put("/profile/bci", protect, updateBciCredentials);
+router.post("/profile/bci/verify", protect, verifyBciCredentials);
 
 export default router;

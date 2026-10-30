@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { advocateApi, citizenApi } from "@/lib/api";
 import {
   CheckSquare,
   Square,
@@ -273,6 +274,46 @@ export function TaskMiteView({
   const [tasks, setTasks] = useState<TaskItem[]>(INITIAL_ADVOCATE_TASKS);
   const [notesList, setNotesList] = useState<ChamberNote[]>(INITIAL_CHAMBER_NOTES);
 
+  // Fetch initial data from backend with fallback
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTaskMiteData() {
+      try {
+        if (portalType === "citizen") {
+          const [tRes, nRes] = await Promise.allSettled([
+            citizenApi.getCitizenTaskMiteTasks(),
+            citizenApi.getCitizenTaskMiteNotes(),
+          ]);
+          if (!isMounted) return;
+          if (tRes.status === "fulfilled" && tRes.value?.success && Array.isArray(tRes.value.tasks) && tRes.value.tasks.length > 0) {
+            setTasks(tRes.value.tasks);
+          }
+          if (nRes.status === "fulfilled" && nRes.value?.success && Array.isArray(nRes.value.notes) && nRes.value.notes.length > 0) {
+            setNotesList(nRes.value.notes);
+          }
+        } else {
+          const [tRes, nRes] = await Promise.allSettled([
+            advocateApi.getTaskMiteTasks(),
+            advocateApi.getTaskMiteNotes(),
+          ]);
+          if (!isMounted) return;
+          if (tRes.status === "fulfilled" && tRes.value?.success && Array.isArray(tRes.value.tasks) && tRes.value.tasks.length > 0) {
+            setTasks(tRes.value.tasks);
+          }
+          if (nRes.status === "fulfilled" && nRes.value?.success && Array.isArray(nRes.value.notes) && nRes.value.notes.length > 0) {
+            setNotesList(nRes.value.notes);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch Task Mite data, using fallback:", err);
+      }
+    }
+    loadTaskMiteData();
+    return () => {
+      isMounted = false;
+    };
+  }, [portalType]);
+
   // Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -330,25 +371,36 @@ export function TaskMiteView({
   }, [tasks, searchQuery, statusFilter, priorityFilter, typeFilter]);
 
   // Toggle Task Completion
-  const handleToggleTaskStatus = (taskId: string, e?: React.MouseEvent) => {
+  const handleToggleTaskStatus = async (taskId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    let nextStatus: TaskStatus = "completed";
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id === taskId) {
           const isNowDone = t.status !== "completed";
+          nextStatus = isNowDone ? "completed" : "in_progress";
           return {
             ...t,
-            status: isNowDone ? "completed" : "in_progress",
+            status: nextStatus,
             completedAt: isNowDone ? "Just now" : undefined,
           };
         }
         return t;
       })
     );
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.updateCitizenTaskMiteTask(taskId, { status: nextStatus });
+      } else {
+        await advocateApi.updateTaskMiteTask(taskId, { status: nextStatus });
+      }
+    } catch (err) {
+      console.warn("Failed to update task status:", err);
+    }
   };
 
   // Move task status in Kanban
-  const handleUpdateStatus = (taskId: string, newStatus: TaskStatus) => {
+  const handleUpdateStatus = async (taskId: string, newStatus: TaskStatus) => {
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id === taskId) {
@@ -361,17 +413,35 @@ export function TaskMiteView({
         return t;
       })
     );
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.updateCitizenTaskMiteTask(taskId, { status: newStatus });
+      } else {
+        await advocateApi.updateTaskMiteTask(taskId, { status: newStatus });
+      }
+    } catch (err) {
+      console.warn("Failed to update task status:", err);
+    }
   };
 
   // Delete task
-  const handleDeleteTask = (taskId: string, e?: React.MouseEvent) => {
+  const handleDeleteTask = async (taskId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     if (selectedTask?.id === taskId) setSelectedTask(null);
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.deleteCitizenTaskMiteTask(taskId);
+      } else {
+        await advocateApi.deleteTaskMiteTask(taskId);
+      }
+    } catch (err) {
+      console.warn("Failed to delete task:", err);
+    }
   };
 
   // Submit new task
-  const handleCreateTask = (e: React.FormEvent) => {
+  const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
@@ -404,10 +474,20 @@ export function TaskMiteView({
     setNewTitle("");
     setNewNotes("");
     setIsAddTaskModalOpen(false);
+
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.createCitizenTaskMiteTask(newTask);
+      } else {
+        await advocateApi.createTaskMiteTask(newTask);
+      }
+    } catch (err) {
+      console.warn("Failed to persist task:", err);
+    }
   };
 
   // Submit new note
-  const handleCreateNote = (e: React.FormEvent) => {
+  const handleCreateNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!noteTitle.trim()) return;
 
@@ -439,6 +519,30 @@ export function TaskMiteView({
     setNoteContent("");
     setNoteTags("");
     setIsAddNoteModalOpen(false);
+
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.createCitizenTaskMiteNote(newNote);
+      } else {
+        await advocateApi.createTaskMiteNote(newNote);
+      }
+    } catch (err) {
+      console.warn("Failed to persist note:", err);
+    }
+  };
+
+  // Delete note
+  const handleDeleteNote = async (noteId: string) => {
+    setNotesList((prev) => prev.filter((n) => n.id !== noteId));
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.deleteCitizenTaskMiteNote(noteId);
+      } else {
+        await advocateApi.deleteTaskMiteNote(noteId);
+      }
+    } catch (err) {
+      console.warn("Failed to delete note:", err);
+    }
   };
 
   return (
@@ -1120,9 +1224,7 @@ export function TaskMiteView({
                     </div>
 
                     <button
-                      onClick={() =>
-                        setNotesList((prev) => prev.filter((n) => n.id !== note.id))
-                      }
+                      onClick={() => handleDeleteNote(note.id)}
                       className="p-1 text-zinc-400 hover:text-red-500 cursor-pointer"
                       title="Delete note"
                     >

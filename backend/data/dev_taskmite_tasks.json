@@ -1,0 +1,96 @@
+[
+  {
+    "id": "task-1",
+    "title": "File Rejoinder Affidavit in WP(C) 19482/2024 before 04:00 PM",
+    "caseMatter": "WP(C) 19482/2024",
+    "status": "in_progress",
+    "type": "Court Filing",
+    "dueDate": "Today",
+    "dueTime": "04:00 PM",
+    "isDueUrgent": true,
+    "priority": "urgent",
+    "assignee": {
+      "name": "Adv. Rajiv Malhotra",
+      "role": "Senior Associate",
+      "avatarInitials": "RM"
+    },
+    "notes": "Ensure Section 16 Indian Telegraph Act objection annexures are sworn before Commissioner of Oaths."
+  },
+  {
+    "id": "task-2",
+    "title": "Serve advance copy of Bail Application on Public Prosecutor",
+    "caseMatter": "BA 4192/2026",
+    "status": "not_started",
+    "type": "Court Filing",
+    "dueDate": "Tomorrow",
+    "dueTime": "11:00 AM",
+    "isDueUrgent": true,
+    "priority": "high",
+    "assignee": {
+      "name": "Suresh Rawat",
+      "role": "Chamber Clerk",
+      "avatarInitials": "SR"
+    },
+    "notes": "Obtain seal acknowledgement from High Court Prosecution Desk."
+  },
+  {
+    "id": "task-3",
+    "title": "Prepare cross-examination questionnaire for Plaintiff Witness in OS 412/2023",
+    "caseMatter": "OS 412/2023",
+    "status": "in_review",
+    "type": "Hearing Prep",
+    "dueDate": "04 Nov 2026",
+    "priority": "high",
+    "assignee": {
+      "name": "Adv. Sarah Jenkins",
+      "role": "Senior Counsel",
+      "avatarInitials": "SJ"
+    },
+    "notes": "Focus on Advocate Commissioner re-survey revenue marks and western boundary easement."
+  },
+  {
+    "id": "task-4",
+    "title": "Research Supreme Court citations on retrospective Section 479 BNSS application",
+    "caseMatter": "Chamber Research",
+    "status": "in_progress",
+    "type": "Research",
+    "dueDate": "06 Nov 2026",
+    "priority": "medium",
+    "assignee": {
+      "name": "Kunal Verma",
+      "role": "Paralegal",
+      "avatarInitials": "KV"
+    },
+    "notes": "Cross-reference recent 2024 Division Bench judgments from Bombay and Delhi High Courts."
+  },
+  {
+    "id": "task-5",
+    "title": "Finalize Section 17 Interim Relief memo for NCLT Arbitral Tribunal",
+    "caseMatter": "ARB/NCLT/041/2024",
+    "status": "not_started",
+    "type": "Drafting",
+    "dueDate": "14 Nov 2026",
+    "priority": "high",
+    "assignee": {
+      "name": "Adv. Rajesh V. Varma",
+      "role": "Commercial Counsel",
+      "avatarInitials": "RV"
+    },
+    "notes": "Attach audited escrow ledger statements and software maintenance logs."
+  },
+  {
+    "id": "task-6",
+    "title": "Draft Section 14 Eviction Notice for Alex Morgan tenancy matter",
+    "caseMatter": "Tenancy 108/2026",
+    "status": "completed",
+    "type": "Client Notice",
+    "dueDate": "14 Oct 2026",
+    "priority": "medium",
+    "assignee": {
+      "name": "Adv. Preeti Sharma",
+      "role": "Litigation Specialist",
+      "avatarInitials": "PS"
+    },
+    "completedAt": "14 Oct 2026"
+  }
+]

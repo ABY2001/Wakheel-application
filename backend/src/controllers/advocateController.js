@@ -2383,3 +2383,322 @@ export const dispatchClientHearingUpdate = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ============================================================================
+// CALENDAR FIXTURES & BACKLOG CONTROLLERS
+// ============================================================================
+export const getCalendarEvents = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const events = devStore.getCalendarEvents(advocateId);
+    res.json({ success: true, events });
+  } catch (error) {
+    console.error("getCalendarEvents error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCalendarEvent = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const event = devStore.addCalendarEvent(advocateId, req.body);
+    res.status(201).json({ success: true, event });
+  } catch (error) {
+    console.error("createCalendarEvent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCalendarEvent = async (req, res) => {
+  try {
+    const event = devStore.updateCalendarEvent(req.params.id, req.body);
+    if (!event) return res.status(404).json({ success: false, message: "Calendar event not found" });
+    res.json({ success: true, event });
+  } catch (error) {
+    console.error("updateCalendarEvent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCalendarEvent = async (req, res) => {
+  try {
+    devStore.deleteCalendarEvent(req.params.id);
+    res.json({ success: true, message: "Event removed from calendar" });
+  } catch (error) {
+    console.error("deleteCalendarEvent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCalendarBacklog = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const backlog = devStore.getCalendarBacklog(advocateId);
+    res.json({ success: true, backlog });
+  } catch (error) {
+    console.error("getCalendarBacklog error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCalendarBacklogItem = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const item = devStore.addCalendarBacklogItem(advocateId, req.body);
+    res.status(201).json({ success: true, item });
+  } catch (error) {
+    console.error("createCalendarBacklogItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCalendarBacklogItem = async (req, res) => {
+  try {
+    const item = devStore.updateCalendarBacklogItem(req.params.id, req.body);
+    if (!item) return res.status(404).json({ success: false, message: "Backlog item not found" });
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error("updateCalendarBacklogItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCalendarBacklogItem = async (req, res) => {
+  try {
+    devStore.deleteCalendarBacklogItem(req.params.id);
+    res.json({ success: true, message: "Backlog item deleted" });
+  } catch (error) {
+    console.error("deleteCalendarBacklogItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// PROFESSIONAL NETWORK CONTROLLERS
+// ============================================================================
+export const getNetworkContacts = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const contacts = devStore.getNetworkContacts(advocateId);
+    const activities = devStore.getNetworkActivities(advocateId);
+    const followups = devStore.getNetworkFollowups(advocateId);
+    const recommendations = devStore.getNetworkRecommendations(advocateId);
+    res.json({
+      success: true,
+      contacts,
+      activities,
+      followups,
+      recommendations,
+    });
+  } catch (error) {
+    console.error("getNetworkContacts error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createNetworkContact = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const contact = devStore.addNetworkContact(advocateId, req.body);
+    devStore.addNetworkActivity(advocateId, {
+      type: "connected",
+      advocateName: contact.name,
+      description: `added to pipeline at stage ${contact.stage.toUpperCase()}.`,
+    });
+    res.status(201).json({ success: true, contact });
+  } catch (error) {
+    console.error("createNetworkContact error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateNetworkContactStage = async (req, res) => {
+  try {
+    const { stage } = req.body;
+    const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+    if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
+    res.json({ success: true, contact });
+  } catch (error) {
+    console.error("updateNetworkContactStage error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteNetworkContact = async (req, res) => {
+  try {
+    devStore.deleteNetworkContact(req.params.id);
+    res.json({ success: true, message: "Contact deleted from network" });
+  } catch (error) {
+    console.error("deleteNetworkContact error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getNetworkActivities = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const activities = devStore.getNetworkActivities(advocateId);
+    res.json({ success: true, activities });
+  } catch (error) {
+    console.error("getNetworkActivities error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getNetworkFollowups = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const followups = devStore.getNetworkFollowups(advocateId);
+    res.json({ success: true, followups });
+  } catch (error) {
+    console.error("getNetworkFollowups error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getNetworkRecommendations = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const recommendations = devStore.getNetworkRecommendations(advocateId);
+    res.json({ success: true, recommendations });
+  } catch (error) {
+    console.error("getNetworkRecommendations error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleNetworkRecommendation = async (req, res) => {
+  try {
+    const rec = devStore.toggleNetworkRecommendation(req.params.id);
+    if (!rec) return res.status(404).json({ success: false, message: "Recommendation not found" });
+    res.json({ success: true, recommendation: rec });
+  } catch (error) {
+    console.error("toggleNetworkRecommendation error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// TASK MITE TASKS & CHAMBER NOTES CONTROLLERS
+// ============================================================================
+export const getTaskMiteTasks = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const tasks = devStore.getTaskMiteTasks(advocateId);
+    const notes = devStore.getTaskMiteNotes(advocateId);
+    res.json({ success: true, tasks, notes });
+  } catch (error) {
+    console.error("getTaskMiteTasks error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createTaskMiteTask = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const task = devStore.addTaskMiteTask(advocateId, req.body);
+    res.status(201).json({ success: true, task });
+  } catch (error) {
+    console.error("createTaskMiteTask error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateTaskMiteTask = async (req, res) => {
+  try {
+    const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.json({ success: true, task });
+  } catch (error) {
+    console.error("updateTaskMiteTask error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteTaskMiteTask = async (req, res) => {
+  try {
+    devStore.deleteTaskMiteTask(req.params.id);
+    res.json({ success: true, message: "Task deleted" });
+  } catch (error) {
+    console.error("deleteTaskMiteTask error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getTaskMiteNotes = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const notes = devStore.getTaskMiteNotes(advocateId);
+    res.json({ success: true, notes });
+  } catch (error) {
+    console.error("getTaskMiteNotes error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createTaskMiteNote = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const note = devStore.addTaskMiteNote(advocateId, req.body);
+    res.status(201).json({ success: true, note });
+  } catch (error) {
+    console.error("createTaskMiteNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteTaskMiteNote = async (req, res) => {
+  try {
+    devStore.deleteTaskMiteNote(req.params.id);
+    res.json({ success: true, message: "Note deleted" });
+  } catch (error) {
+    console.error("deleteTaskMiteNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// BCI CREDENTIALS & CHAMBER PROFILE CONTROLLERS
+// ============================================================================
+export const getBciCredentials = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const credentials = devStore.getBciCredentials(advocateId);
+    res.json({ success: true, credentials });
+  } catch (error) {
+    console.error("getBciCredentials error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateBciCredentials = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const credentials = devStore.updateBciCredentials(advocateId, req.body);
+    res.json({ success: true, credentials });
+  } catch (error) {
+    console.error("updateBciCredentials error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const verifyBciCredentials = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { enrollmentNumber, stateBarCouncil, enrollmentYear } = req.body;
+    const verifiedData = {
+      enrollmentNumber: enrollmentNumber || "K/001429/2012",
+      stateBarCouncil: stateBarCouncil || "Bar Council of Kerala",
+      enrollmentYear: enrollmentYear || 2012,
+      verificationStatus: "Verified",
+      verifiedBy: "Bar Council of India Verification Portal",
+      verifiedOn: new Date().toISOString(),
+      certificateHash: `SHA256:${Date.now().toString(16)}a9f24c`,
+    };
+    const credentials = devStore.updateBciCredentials(advocateId, verifiedData);
+    res.json({ success: true, message: "Bar Council credentials authenticated successfully.", credentials });
+  } catch (error) {
+    console.error("verifyBciCredentials error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -37,6 +37,10 @@ import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRad
 import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBillingView";
 import { AdvocateConflictScannerView } from "@/components/advocate/AdvocateConflictScannerView";
 import { AdvocateVakalathnamaView } from "@/components/advocate/AdvocateVakalathnamaView";
+import AdvocateProfileModal, {
+  AdvocateProfileData,
+  DEFAULT_ADVOCATE_PROFILE,
+} from "@/components/advocate/AdvocateProfileModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { advocateApi, copilotApi } from "@/lib/api";
 import {
@@ -151,6 +155,26 @@ export function AdvocateWorkspaceView() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [advocateProfile, setAdvocateProfile] = useState<AdvocateOnboardingData | null>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [advocateProfileData, setAdvocateProfileData] = useState<AdvocateProfileData>(DEFAULT_ADVOCATE_PROFILE);
+
+  const handleSaveAdvocateProfile = (updated: AdvocateProfileData) => {
+    setAdvocateProfileData(updated);
+    try {
+      localStorage.setItem("wakheel_advocate_chamber_profile", JSON.stringify(updated));
+      localStorage.setItem("wakheel_advocate_profile", JSON.stringify(updated));
+      setAdvocateProfile((prev: any) => ({
+        ...prev,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        email: updated.email,
+        mobileNumber: updated.mobileNumber,
+        barCouncilEnrollmentNumber: updated.barCouncilEnrollmentNumber,
+        roleDescription: updated.roleDescription,
+        practiceAreas: updated.practiceAreas,
+        organisationName: updated.organisationName,
+      }));
+    } catch {}
+  };
 
   // Live matters & leads state from advocateApi
   const [liveLeads, setLiveLeads] = useState<any[]>([]);
@@ -262,9 +286,25 @@ export function AdvocateWorkspaceView() {
 
   useEffect(() => {
     try {
-      const savedProfile = localStorage.getItem("wakheel_advocate_profile");
-      if (savedProfile) {
-        setAdvocateProfile(JSON.parse(savedProfile));
+      const savedChamberProfile = localStorage.getItem("wakheel_advocate_chamber_profile");
+      if (savedChamberProfile) {
+        setAdvocateProfileData({ ...DEFAULT_ADVOCATE_PROFILE, ...JSON.parse(savedChamberProfile) });
+      } else {
+        const savedProfile = localStorage.getItem("wakheel_advocate_profile");
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile);
+          setAdvocateProfile(parsed);
+          setAdvocateProfileData((prev) => ({
+            ...prev,
+            firstName: parsed.firstName || prev.firstName,
+            lastName: parsed.lastName || prev.lastName,
+            email: parsed.email || prev.email,
+            mobileNumber: parsed.mobileNumber || prev.mobileNumber,
+            barCouncilEnrollmentNumber: parsed.barCouncilEnrollmentNumber || prev.barCouncilEnrollmentNumber,
+            organisationName: parsed.organisationName || prev.organisationName,
+            practiceAreas: parsed.practiceAreas?.length ? parsed.practiceAreas : prev.practiceAreas,
+          }));
+        }
       }
       const isOnboarded = localStorage.getItem("wakheel_advocate_onboarded");
       const isFirstSignup = localStorage.getItem("wakheel_advocate_first_signup");
@@ -1029,13 +1069,21 @@ export function AdvocateWorkspaceView() {
   const isCommunications = ["inbox", "messages", "chats", "video-meet", "notifications"].includes(activeTab);
   const isKnowledgeBase = ["playbooks", "kb-articles", "library", "kb-research"].includes(activeTab);
 
-  const displayFullName = advocateProfile
+  const displayFullName = advocateProfileData
+    ? `Adv. ${advocateProfileData.firstName} ${advocateProfileData.lastName}`.trim()
+    : advocateProfile
     ? `${advocateProfile.firstName} ${advocateProfile.lastName}`.trim()
     : "Adv. Meera Krishnan";
-  const displayRoleSubtitle = (advocateProfile as any)?.enrollmentNumber || advocateProfile?.roleDescription || "Ernakulam, Kerala";
-  const displayInitials = advocateProfile
+  const displayRoleSubtitle =
+    advocateProfileData?.barCouncilEnrollmentNumber ||
+    (advocateProfile as any)?.enrollmentNumber ||
+    advocateProfile?.roleDescription ||
+    "K/001429/2012 • Kerala";
+  const displayInitials = advocateProfileData
+    ? `${advocateProfileData.firstName?.[0] || "M"}${advocateProfileData.lastName?.[0] || "K"}`
+    : advocateProfile
     ? `${advocateProfile.firstName[0] || "A"}${advocateProfile.lastName[0] || "D"}`
-    : "AD";
+    : "MK";
 
   const isFirmWorkspace = activeWorkspace.type === "firm";
   const currentFirm = userFirms.find((f) => f.id === activeWorkspace.firmId);
@@ -1262,19 +1310,27 @@ export function AdvocateWorkspaceView() {
 
           {/* Advocate Profile Card: (AD) Adv. Meera Krishnan, Ernakulam, Kerala */}
           {sidebarOpen && (
-            <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setProfileModalOpen(true)}
+              className="w-full text-left p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 flex items-center gap-3 transition-colors cursor-pointer group"
+              title="Click to view & edit Chamber Profile & BCI Credentials"
+            >
+              <div className="w-9 h-9 rounded-full bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                 {displayInitials}
               </div>
-              <div className="flex flex-col truncate">
-                <span className="text-xs font-bold text-black dark:text-white truncate">
-                  {displayFullName}
-                </span>
+              <div className="flex flex-col truncate flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-black dark:text-white truncate group-hover:underline">
+                    {displayFullName}
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="BCI Verified" />
+                </div>
                 <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
                   {displayRoleSubtitle}
                 </span>
               </div>
-            </div>
+            </button>
           )}
 
           {/* Module Filter Search */}
@@ -1458,17 +1514,25 @@ export function AdvocateWorkspaceView() {
             </button>
 
             {/* User Profile Pill */}
-            <div className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-              <div className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setProfileModalOpen(true)}
+              className="flex items-center gap-2 pl-2 border-l border-zinc-200 dark:border-zinc-800 hover:opacity-85 transition-all cursor-pointer group text-left"
+              title="View & Edit Chamber Profile & BCI Credentials"
+            >
+              <div className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
                 {displayInitials}
               </div>
               <div className="hidden md:flex flex-col text-left">
-                <span className="text-xs font-bold text-black dark:text-white leading-tight">
+                <span className="text-xs font-bold text-black dark:text-white leading-tight group-hover:underline">
                   {displayFullName}
                 </span>
-                <span className="text-[10px] text-zinc-500">Advocate</span>
+                <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                  <span>Advocate</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                </span>
               </div>
-            </div>
+            </button>
           </div>
 
         </header>
@@ -3153,28 +3217,16 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {/* VIEW: Settings Modal                                           */}
           {activeTab === "settings" && (
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-5">
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
-                  <h3 className="text-lg font-bold text-black dark:text-white">Chamber Preferences &amp; Settings</h3>
-                  <span className="text-xs font-mono text-zinc-400">Kerala / India Legal OS v1.0-fe</span>
-                </div>
-                <div className="space-y-4 text-xs">
-                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                    <span className="font-bold text-black dark:text-white block">Bar Council Credentials</span>
-                    <p className="text-zinc-500">Enrolled Advocate: {displayFullName} • {displayRoleSubtitle}</p>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                    <span className="font-bold text-black dark:text-white block">Theme &amp; Accessibility</span>
-                    <div className="flex items-center gap-3">
-                      <ThemeToggle />
-                      <span className="text-zinc-500">Toggle light / dark mode</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="w-full max-w-5xl mx-auto space-y-6">
+              <AdvocateProfileModal
+                isOpen={true}
+                isInline={true}
+                profile={advocateProfileData}
+                onSave={handleSaveAdvocateProfile}
+              />
             </div>
           )}
+
 
         </div>
       </main>
@@ -3600,6 +3652,16 @@ export function AdvocateWorkspaceView() {
           }}
           currentUserFullName={displayFullName}
           currentUserEmail={advocateProfile?.email || "advocate@inworth.law"}
+        />
+      )}
+
+      {/* Advocate Chamber Profile Management Modal */}
+      {profileModalOpen && (
+        <AdvocateProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          profile={advocateProfileData}
+          onSave={handleSaveAdvocateProfile}
         />
       )}
 

@@ -28,6 +28,7 @@ import { advocateApi, CaseNoteItem, CauseListItem } from "@/lib/api";
 import { AdvocateConsultationsView } from "./AdvocateConsultationsView";
 import { CourtCauselistRadarView } from "./CourtCauselistRadarView";
 import ChamberCalendarView from "./ChamberCalendarView";
+import { TaskMiteView } from "@/components/common/TaskMiteView";
 import dynamic from "next/dynamic";
 
 const CourtroomVoiceSimulatorView = dynamic(
@@ -200,7 +201,7 @@ export function ProductivityView({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 font-sans">
+    <div className="max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6 font-sans">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800 gap-4">
         <div>
@@ -368,49 +369,11 @@ export function ProductivityView({
 
       {/* VIEW: Taskmite */}
       {currentTab === "taskmite" && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-            <div>
-              <h3 className="text-base font-bold text-black dark:text-white">Taskmite — Chamber Action Checklist</h3>
-              <p className="text-xs text-zinc-500">Track filing deadlines, associate tasks, and court document submissions.</p>
-            </div>
-            <button className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer">
-              + Add Task
-            </button>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              { task: "File Rejoinder Affidavit in WP 1024/2026 before 04:00 PM", priority: "URGENT", due: "Today", assignedTo: "Adv. Rajiv Malhotra", done: false },
-              { task: "Serve advance copy of Bail Application on Standing Counsel", priority: "HIGH", due: "Tomorrow, 11:00 AM", assignedTo: "Suresh Rawat", done: false },
-              { task: "Draft Section 14 Eviction Notice for Alex Morgan matter", priority: "MEDIUM", due: "14 Oct", assignedTo: "Adv. Preeti Sharma", done: true },
-              { task: "Prepare synopsis of case laws on retrospective application of BNSS Section 479", priority: "MEDIUM", due: "15 Oct", assignedTo: "Kunal Verma", done: false },
-            ].map((t, idx) => (
-              <div key={idx} className={`p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 transition-all ${t.done ? "opacity-60" : ""}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-5 h-5 rounded-md border flex items-center justify-center cursor-pointer ${
-                    t.done ? "bg-black text-white dark:bg-white dark:text-black border-transparent" : "border-zinc-300 dark:border-zinc-700"
-                  }`}>
-                    {t.done && <Check className="w-3.5 h-3.5" />}
-                  </div>
-                  <div>
-                    <span className={`text-xs font-bold text-black dark:text-white ${t.done ? "line-through text-zinc-400" : ""}`}>
-                      {t.task}
-                    </span>
-                    <div className="flex items-center gap-2 text-[11px] text-zinc-500 mt-0.5">
-                      <span>Assigned: {t.assignedTo}</span>
-                      <span>•</span>
-                      <span>Due: {t.due}</span>
-                    </div>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  {t.priority}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <TaskMiteView
+          portalType="advocate"
+          advocateName={advocateName}
+          onSelectModule={onSelectModule}
+        />
       )}
 
       {/* VIEW: Time Sheet */}

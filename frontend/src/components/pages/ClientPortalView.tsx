@@ -3200,7 +3200,10 @@ export function ClientPortalView() {
           {/* VIEW: Productivity & Business Modules                          */}
           {/* ============================================================== */}
           {isProductivity && (
-            <ProductivityView />
+            <ProductivityView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+            />
           )}
 
           {isBusiness && (

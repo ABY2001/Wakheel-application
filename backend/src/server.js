@@ -2,15 +2,22 @@ import http from "http";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables (from backend/.env or root .env)
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config();
+
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import citizenRoutes from "./routes/citizenRoutes.js";
 import advocateRoutes from "./routes/advocateRoutes.js";
 import copilotRoutes from "./routes/copilotRoutes.js";
 import { initWebSocketServer } from "./socket.js";
-
-// Load environment variables
-dotenv.config();
 
 // Connect to MongoDB
 connectDB();

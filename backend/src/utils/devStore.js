@@ -5728,7 +5728,7 @@ export const DEFAULT_COURTROOM_SESSIONS = [
 // ============================================================================
 // DEFAULT CALENDAR CONSTANTS
 // ============================================================================
-const DEFAULT_CALENDAR_BACKLOG = [
+export const DEFAULT_CALENDAR_BACKLOG = [
   {
     id: "task-bk-1",
     title: "Draft Section 14 Eviction Notice",
@@ -5755,7 +5755,7 @@ const DEFAULT_CALENDAR_BACKLOG = [
   },
 ];
 
-const DEFAULT_CALENDAR_FIXTURES = [
+export const DEFAULT_CALENDAR_FIXTURES = [
   {
     id: "evt-1",
     title: "WP(C) 19482/2024 — Hearing on Stay Extension",
@@ -5812,7 +5812,7 @@ const DEFAULT_CALENDAR_FIXTURES = [
 // ============================================================================
 // DEFAULT PROFESSIONAL NETWORK CONSTANTS
 // ============================================================================
-const DEFAULT_NETWORK_CONTACTS = [
+export const DEFAULT_NETWORK_CONTACTS = [
   {
     id: "c-1",
     name: "Senior Adv. Sneha Kulkarni",
@@ -6015,7 +6015,7 @@ const DEFAULT_NETWORK_CONTACTS = [
   },
 ];
 
-const DEFAULT_NETWORK_ACTIVITIES = [
+export const DEFAULT_NETWORK_ACTIVITIES = [
   {
     id: "act-1",
     type: "connected",
@@ -6107,7 +6107,7 @@ const DEFAULT_NETWORK_RECOMMENDATIONS = [
 // ============================================================================
 // DEFAULT TASK MITE CONSTANTS
 // ============================================================================
-const DEFAULT_TASKMITE_TASKS = [
+export const DEFAULT_TASKMITE_TASKS = [
   {
     id: "task-1",
     title: "File Rejoinder Affidavit in WP(C) 19482/2024 before 04:00 PM",
@@ -6204,7 +6204,7 @@ const DEFAULT_TASKMITE_TASKS = [
   },
 ];
 
-const DEFAULT_TASKMITE_NOTES = [
+export const DEFAULT_TASKMITE_NOTES = [
   {
     id: "note-1",
     title: "BNSS Section 479 Retrospective Bail Application Precedents",

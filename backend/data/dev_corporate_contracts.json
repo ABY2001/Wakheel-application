@@ -1,0 +1,102 @@
+[
+  {
+    "id": "cont-1",
+    "contractId": "cont-1",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "title": "Series A Share Subscription & Shareholders' Agreement (SHA/SSA)",
+    "contractType": "sha_ssa",
+    "parties": [
+      "CyberCorp Technologies Pvt Ltd",
+      "Indus Venture Capital Fund I",
+      "Dr. Vikram Malhotra",
+      "Priya Sundaram"
+    ],
+    "effectiveDate": "2026-10-15",
+    "expiryDate": "2031-10-14",
+    "contractValue": 50000000,
+    "stampDutyPaid": 5000,
+    "eStampCertificateNumber": "IN-DL89210492819234P",
+    "governingLaw": "Laws of India (Arbitration under SIAC / New Delhi seat)",
+    "keyClauses": [
+      "Board Representation: 1 Nominee Director for Indus Venture Capital",
+      "Reserved Matters: 75% affirmative vote on M&A, debt > ₹1 Cr, IP sale",
+      "Tag-Along & Drag-Along Rights: Drag threshold set at 65% total equity",
+      "Liquidation Preference: 1x Non-Participating Preference on CCPS",
+      "Right of First Refusal (ROFR) & Anti-Dilution protection (Broad-Based Weighted Average)"
+    ],
+    "status": "executed",
+    "notes": "Stamped in NCT of Delhi. Filed Form PAS-3 and MGT-14 with ROC."
+  },
+  {
+    "id": "cont-2",
+    "contractId": "cont-2",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "title": "Mutual Non-Disclosure & Corporate Trade Secret Protection Agreement",
+    "contractType": "nda",
+    "parties": [
+      "CyberCorp Technologies Pvt Ltd",
+      "QuantEdge Financial Analytics Corp (US)"
+    ],
+    "effectiveDate": "2026-08-01",
+    "expiryDate": "2028-07-31",
+    "contractValue": 0,
+    "stampDutyPaid": 500,
+    "eStampCertificateNumber": "IN-DL40192837461298Q",
+    "governingLaw": "Laws of India (Courts of New Delhi)",
+    "keyClauses": [
+      "Strict confidentiality covering proprietary ML algorithmic trading models",
+      "2-Year non-solicitation of key software engineering personnel",
+      "Injunctive relief clause without proof of actual damages"
+    ],
+    "status": "executed",
+    "notes": "Standard bilingual execution completed digitally with DocuSign & DSC."
+  },
+  {
+    "id": "cont-3",
+    "contractId": "cont-3",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "title": "Managing Director Service & Executive Remuneration Agreement",
+    "contractType": "director_service",
+    "parties": [
+      "CyberCorp Technologies Pvt Ltd",
+      "Dr. Vikram Malhotra"
+    ],
+    "effectiveDate": "2026-04-01",
+    "expiryDate": "2029-03-31",
+    "contractValue": 7200000,
+    "stampDutyPaid": 1000,
+    "eStampCertificateNumber": "IN-DL10293847562019R",
+    "governingLaw": "Companies Act, 2013 (Section 197 read with Schedule V)",
+    "keyClauses": [
+      "Fixed Remuneration: ₹5,00,000 per month + 2% net profit performance commission",
+      "Approved by Nomination & Remuneration Committee & General Meeting",
+      "IP Assignment: Complete assignment of all patents and software developed during tenure"
+    ],
+    "status": "executed",
+    "notes": "Filed Form DIR-12 and MR-1 with RoC Delhi within 60 days of appointment."
+  },
+  {
+    "id": "cont-4",
+    "contractId": "cont-4",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "title": "Commercial Lease & Data Center Facility Deed",
+    "contractType": "commercial_lease",
+    "parties": [
+      "CyberCorp Technologies Pvt Ltd",
+      "Okhla Realtech Infrastructure LLP"
+    ],
+    "effectiveDate": "2025-06-01",
+    "expiryDate": "2028-05-31",
+    "contractValue": 10800000,
+    "stampDutyPaid": 45000,
+    "eStampCertificateNumber": "IN-DL78901234567890T",
+    "governingLaw": "Transfer of Property Act, 1882 & Delhi Rent Control Act",
+    "keyClauses": [
+      "Lease rent ₹3,00,000/month with 5% annual escalation",
+      "Security deposit: 6 months rent refundable on vacation",
+      "Registered with Sub-Registrar IV, Saket, New Delhi"
+    ],
+    "status": "stamped_registered",
+    "notes": "Original registered deed deposited in Corporate Bank Safe Deposit Locker."
+  }
+]

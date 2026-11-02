@@ -1,0 +1,67 @@
+[
+  {
+    "id": "vlt-1",
+    "vaultId": "vlt-1",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "docType": "moa_aoa",
+    "title": "Amended & Restated Memorandum & Articles of Association (MOA/AOA)",
+    "fileSize": "2.4 MB",
+    "uploadedAt": "2026-10-20",
+    "validUntil": "Permanent (Unless Altered)",
+    "holderName": "CyberCorp Technologies Pvt Ltd",
+    "issuingAuthority": "RoC Delhi & Haryana",
+    "status": "valid"
+  },
+  {
+    "id": "vlt-2",
+    "vaultId": "vlt-2",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "docType": "certificate_of_incorporation",
+    "title": "Certificate of Incorporation with Corporate Identity Number (CIN)",
+    "fileSize": "1.1 MB",
+    "uploadedAt": "2022-04-12",
+    "validUntil": "Permanent",
+    "holderName": "CyberCorp Technologies Pvt Ltd",
+    "issuingAuthority": "Ministry of Corporate Affairs (MCA)",
+    "status": "valid"
+  },
+  {
+    "id": "vlt-3",
+    "vaultId": "vlt-3",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "docType": "dsc_token",
+    "title": "Class 3 DSC Token: Dr. Vikram Malhotra (MD)",
+    "fileSize": "USB Crypto Token (e-Mudhra)",
+    "uploadedAt": "2025-01-15",
+    "validUntil": "2027-01-14",
+    "holderName": "Dr. Vikram Malhotra (DIN: 08912340)",
+    "issuingAuthority": "e-Mudhra CA",
+    "status": "valid"
+  },
+  {
+    "id": "vlt-4",
+    "vaultId": "vlt-4",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "docType": "dsc_token",
+    "title": "Class 3 DSC Token: CS Rajesh Sharma (FCS 8492)",
+    "fileSize": "USB Crypto Token (Capricorn)",
+    "uploadedAt": "2024-11-20",
+    "validUntil": "2026-11-19",
+    "holderName": "CS Rajesh Sharma (FCS 8492)",
+    "issuingAuthority": "Capricorn Identity Services",
+    "status": "expiring_soon"
+  },
+  {
+    "id": "vlt-5",
+    "vaultId": "vlt-5",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "docType": "trademark_cert",
+    "title": "Trademark Registration Certificate (Wordmark: CyberCorp, Class 42)",
+    "fileSize": "850 KB",
+    "uploadedAt": "2023-08-10",
+    "validUntil": "2033-08-09",
+    "holderName": "CyberCorp Technologies Pvt Ltd",
+    "issuingAuthority": "Trade Marks Registry, Govt of India",
+    "status": "valid"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "adv-ret-1",
+    "advocateId": "adv-ret-1",
+    "fullName": "Adv. Arvind Swaminathan, Senior Counsel",
+    "barEnrollmentNumber": "D/1482/2004",
+    "primaryJurisdiction": "NCLT Principal Bench & NCLAT New Delhi",
+    "specialization": "Insolvency & Bankruptcy (IBC), Oppression & Mergers (Sec 230-232)",
+    "email": "arvind.swaminathan@delhibar.in",
+    "phone": "+91 98110 49201",
+    "retainerFee": 75000,
+    "appearanceRatePerHearing": 35000,
+    "activeBriefsCount": 2,
+    "status": "active_retainer"
+  },
+  {
+    "id": "adv-ret-2",
+    "advocateId": "adv-ret-2",
+    "fullName": "Adv. K. R. Meenakshi Sundaram",
+    "barEnrollmentNumber": "D/2901/2012",
+    "primaryJurisdiction": "Delhi High Court (Commercial Division)",
+    "specialization": "Commercial Arbitration, Section 9 Injunctions & Shareholder Disputes",
+    "email": "meenakshi.sundaram@chamberslaw.in",
+    "phone": "+91 99102 38491",
+    "retainerFee": 50000,
+    "appearanceRatePerHearing": 25000,
+    "activeBriefsCount": 1,
+    "status": "active_retainer"
+  },
+  {
+    "id": "adv-ret-3",
+    "advocateId": "adv-ret-3",
+    "fullName": "Adv. Prateek Singhania",
+    "barEnrollmentNumber": "MAH/4019/2015",
+    "primaryJurisdiction": "NCLT Mumbai Bench & Bombay High Court",
+    "specialization": "Compounding of ROC Offences, SFIO Inquiries & SEBI SAT Appeals",
+    "email": "p.singhania@mumbaicorporatelaw.com",
+    "phone": "+91 98201 98472",
+    "retainerFee": 60000,
+    "appearanceRatePerHearing": 30000,
+    "activeBriefsCount": 1,
+    "status": "empanelled"
+  }
+]

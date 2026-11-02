@@ -42,6 +42,7 @@ import { CollabView } from "@/components/advocate/CollabView";
 import { TaskMiteView } from "@/components/common/TaskMiteView";
 import { BoardGovernanceView } from "@/components/firm/BoardGovernanceView";
 import { RocComplianceView } from "@/components/firm/RocComplianceView";
+import { LegalGatewayView } from "@/components/firm/LegalGatewayView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -607,26 +608,17 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             </div>
           )}
 
-          {/* Fallback for other tabs */}
-          {["retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
-            <div className="max-w-4xl mx-auto p-12 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center space-y-3 shadow-xs">
-              <div className="w-12 h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center mx-auto font-bold">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-black dark:text-white capitalize">
-                {activeTab.replace(/-/g, " ")} Suite
-              </h3>
-              <p className="text-xs text-zinc-500 max-w-md mx-auto">
-                Dedicated secretarial management for {firm.name}. Track client entities, generate certified true copies, and manage statutory registers.
-              </p>
-              <div className="pt-2">
-                <button
-                  onClick={() => setActiveTab("dashboard")}
-                  className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer"
-                >
-                  Return to Dashboard
-                </button>
-              </div>
+          {/* VIEW: Legal & Advocacy Gateway (Contracts, Retainer Counsel, Vault, Billing) */}
+          {(activeTab === "contracts" ||
+            activeTab === "retainer-advocates" ||
+            activeTab === "vault" ||
+            activeTab === "billing") && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <LegalGatewayView
+                firmName={firm.name}
+                csName={firm.founderName || "CS Corporate Practice"}
+                initialSubTab={activeTab as any}
+              />
             </div>
           )}
 

@@ -17,6 +17,10 @@ import { BoardResolution } from "../models/BoardResolution.js";
 import { CorporateEntity } from "../models/CorporateEntity.js";
 import { RocFiling } from "../models/RocFiling.js";
 import { StatutoryRegister } from "../models/StatutoryRegister.js";
+import { CorporateContract } from "../models/CorporateContract.js";
+import { RetainerAdvocate } from "../models/RetainerAdvocate.js";
+import { CorporateVaultItem } from "../models/CorporateVaultItem.js";
+import { SecretarialInvoice } from "../models/SecretarialInvoice.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -30,6 +34,10 @@ import {
   DEFAULT_CORPORATE_ENTITIES,
   DEFAULT_ROC_FILINGS,
   DEFAULT_STATUTORY_REGISTERS,
+  DEFAULT_CORPORATE_CONTRACTS,
+  DEFAULT_RETAINER_ADVOCATES,
+  DEFAULT_CORPORATE_VAULT_ITEMS,
+  DEFAULT_SECRETARIAL_INVOICES,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -360,6 +368,94 @@ export const seedMongoIfEmpty = async () => {
         certifiedAt: item.certifiedAt,
       }));
       await StatutoryRegister.insertMany(regDocs);
+    }
+
+    // Seed Corporate Contracts
+    const contCount = await CorporateContract.countDocuments();
+    if (contCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Commercial Contracts & SHAs...");
+      const contDocs = DEFAULT_CORPORATE_CONTRACTS.map((item) => ({
+        contractId: item.id,
+        userId: "cs_1",
+        companyName: item.companyName,
+        title: item.title,
+        contractType: item.contractType,
+        parties: item.parties,
+        effectiveDate: item.effectiveDate,
+        expiryDate: item.expiryDate,
+        contractValue: item.contractValue,
+        stampDutyPaid: item.stampDutyPaid,
+        eStampCertificateNumber: item.eStampCertificateNumber,
+        governingLaw: item.governingLaw,
+        keyClauses: item.keyClauses,
+        status: item.status,
+        notes: item.notes,
+      }));
+      await CorporateContract.insertMany(contDocs);
+    }
+
+    // Seed Retainer Advocates
+    const advCount = await RetainerAdvocate.countDocuments();
+    if (advCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Retainer Advocates...");
+      const advDocs = DEFAULT_RETAINER_ADVOCATES.map((item) => ({
+        advocateId: item.id,
+        userId: "cs_1",
+        fullName: item.fullName,
+        barEnrollmentNumber: item.barEnrollmentNumber,
+        primaryJurisdiction: item.primaryJurisdiction,
+        specialization: item.specialization,
+        email: item.email,
+        phone: item.phone,
+        retainerFee: item.retainerFee,
+        appearanceRatePerHearing: item.appearanceRatePerHearing,
+        activeBriefsCount: item.activeBriefsCount,
+        status: item.status,
+      }));
+      await RetainerAdvocate.insertMany(advDocs);
+    }
+
+    // Seed Corporate Vault Items
+    const vltCount = await CorporateVaultItem.countDocuments();
+    if (vltCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Corporate Vault Charters & DSC...");
+      const vltDocs = DEFAULT_CORPORATE_VAULT_ITEMS.map((item) => ({
+        vaultId: item.id,
+        userId: "cs_1",
+        companyName: item.companyName,
+        docType: item.docType,
+        title: item.title,
+        fileSize: item.fileSize,
+        uploadedAt: item.uploadedAt,
+        validUntil: item.validUntil,
+        holderName: item.holderName,
+        issuingAuthority: item.issuingAuthority,
+        status: item.status,
+      }));
+      await CorporateVaultItem.insertMany(vltDocs);
+    }
+
+    // Seed Secretarial Invoices
+    const invCount = await SecretarialInvoice.countDocuments();
+    if (invCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Fee Notes & Retainer Invoices...");
+      const invDocs = DEFAULT_SECRETARIAL_INVOICES.map((item) => ({
+        invoiceId: item.id,
+        userId: "cs_1",
+        invoiceNumber: item.invoiceNumber,
+        clientCompanyName: item.clientCompanyName,
+        clientGstin: item.clientGstin,
+        sacCode: item.sacCode,
+        billingType: item.billingType,
+        items: item.items,
+        subtotal: item.subtotal,
+        gstRate: item.gstRate,
+        gstAmount: item.gstAmount,
+        totalAmount: item.totalAmount,
+        dueDate: item.dueDate,
+        status: item.status,
+      }));
+      await SecretarialInvoice.insertMany(invDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

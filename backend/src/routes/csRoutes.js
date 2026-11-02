@@ -23,6 +23,22 @@ import {
   updateRegisterEntry,
   deleteRegisterEntry,
   getSecretarialAuditReport,
+  getCorporateContracts,
+  createCorporateContract,
+  updateCorporateContract,
+  deleteCorporateContract,
+  getRetainerAdvocates,
+  createRetainerAdvocate,
+  updateRetainerAdvocate,
+  deleteRetainerAdvocate,
+  getCorporateVaultItems,
+  createCorporateVaultItem,
+  updateCorporateVaultItem,
+  deleteCorporateVaultItem,
+  getSecretarialInvoices,
+  createSecretarialInvoice,
+  updateSecretarialInvoice,
+  deleteSecretarialInvoice,
 } from "../controllers/csController.js";
 
 const router = express.Router();
@@ -50,5 +66,21 @@ router.route("/registers/:id").put(protect, updateRegisterEntry).delete(protect,
 
 // Secretarial Audit & MR-3 Compliance Engine
 router.route("/audit").get(protect, getSecretarialAuditReport);
+
+// Commercial Contracts & Shareholders' Agreements (SHA/SSA)
+router.route("/contracts").get(protect, getCorporateContracts).post(protect, createCorporateContract);
+router.route("/contracts/:id").put(protect, updateCorporateContract).delete(protect, deleteCorporateContract);
+
+// Retainer Advocates & Litigation Counsel Network
+router.route("/advocates").get(protect, getRetainerAdvocates).post(protect, createRetainerAdvocate);
+router.route("/advocates/:id").put(protect, updateRetainerAdvocate).delete(protect, deleteRetainerAdvocate);
+
+// Corporate Statutory Vault & DSC Tokens
+router.route("/vault").get(protect, getCorporateVaultItems).post(protect, createCorporateVaultItem);
+router.route("/vault/:id").put(protect, updateCorporateVaultItem).delete(protect, deleteCorporateVaultItem);
+
+// Secretarial Fee Notes & Invoices
+router.route("/invoices").get(protect, getSecretarialInvoices).post(protect, createSecretarialInvoice);
+router.route("/invoices/:id").put(protect, updateSecretarialInvoice).delete(protect, deleteSecretarialInvoice);
 
 export default router;

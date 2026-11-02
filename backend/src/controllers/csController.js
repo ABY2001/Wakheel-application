@@ -3,6 +3,10 @@ import { BoardResolution } from "../models/BoardResolution.js";
 import { CorporateEntity } from "../models/CorporateEntity.js";
 import { RocFiling } from "../models/RocFiling.js";
 import { StatutoryRegister } from "../models/StatutoryRegister.js";
+import { CorporateContract } from "../models/CorporateContract.js";
+import { RetainerAdvocate } from "../models/RetainerAdvocate.js";
+import { CorporateVaultItem } from "../models/CorporateVaultItem.js";
+import { SecretarialInvoice } from "../models/SecretarialInvoice.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 
@@ -537,6 +541,409 @@ export const getSecretarialAuditReport = async (req, res) => {
     res.json({ success: true, report });
   } catch (error) {
     console.error("getSecretarialAuditReport error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 7. CORPORATE CONTRACTS & SHAREHOLDER AGREEMENTS (SHA/SSA)
+// ============================================================================
+
+export const getCorporateContracts = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { companyName, contractType } = req.query;
+
+    if (shouldUseDevStore()) {
+      const contracts = devStore.getCorporateContracts(userId, { companyName, contractType });
+      return res.json({ success: true, contracts, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    };
+    if (companyName) query.companyName = companyName;
+    if (contractType && contractType !== "ALL") query.contractType = contractType;
+
+    const contracts = await CorporateContract.find(query).sort({ effectiveDate: -1 });
+
+    res.json({
+      success: true,
+      contracts: contracts.map((c) => ({ ...c.toObject(), id: c.contractId || c._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getCorporateContracts error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCorporateContract = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const contract = devStore.createCorporateContract(userId, req.body);
+      return res.status(201).json({ success: true, contract });
+    }
+
+    const contract = await CorporateContract.create({
+      ...req.body,
+      contractId: req.body.id || `cont-${Date.now()}`,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      contract: { ...contract.toObject(), id: contract.contractId || contract._id.toString() },
+    });
+  } catch (error) {
+    console.error("createCorporateContract error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCorporateContract = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const contract = devStore.updateCorporateContract(req.params.id, req.body);
+      if (!contract) return res.status(404).json({ success: false, message: "Contract not found" });
+      return res.json({ success: true, contract });
+    }
+
+    const contract = await CorporateContract.findOneAndUpdate(
+      { $or: [{ contractId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!contract) return res.status(404).json({ success: false, message: "Contract not found" });
+
+    res.json({
+      success: true,
+      contract: { ...contract.toObject(), id: contract.contractId || contract._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateCorporateContract error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCorporateContract = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteCorporateContract(req.params.id);
+      return res.json({ success: true, message: "Contract deleted successfully" });
+    }
+
+    await CorporateContract.findOneAndDelete({
+      $or: [{ contractId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Contract deleted successfully" });
+  } catch (error) {
+    console.error("deleteCorporateContract error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 8. RETAINER ADVOCATES & LITIGATION GATEWAY
+// ============================================================================
+
+export const getRetainerAdvocates = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { status } = req.query;
+
+    if (shouldUseDevStore()) {
+      const advocates = devStore.getRetainerAdvocates(userId, { status });
+      return res.json({ success: true, advocates, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    };
+    if (status && status !== "ALL") query.status = status;
+
+    const advocates = await RetainerAdvocate.find(query).sort({ fullName: 1 });
+
+    res.json({
+      success: true,
+      advocates: advocates.map((a) => ({ ...a.toObject(), id: a.advocateId || a._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getRetainerAdvocates error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createRetainerAdvocate = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const advocate = devStore.createRetainerAdvocate(userId, req.body);
+      return res.status(201).json({ success: true, advocate });
+    }
+
+    const advocate = await RetainerAdvocate.create({
+      ...req.body,
+      advocateId: req.body.id || `adv-ret-${Date.now()}`,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      advocate: { ...advocate.toObject(), id: advocate.advocateId || advocate._id.toString() },
+    });
+  } catch (error) {
+    console.error("createRetainerAdvocate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateRetainerAdvocate = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const advocate = devStore.updateRetainerAdvocate(req.params.id, req.body);
+      if (!advocate) return res.status(404).json({ success: false, message: "Advocate not found" });
+      return res.json({ success: true, advocate });
+    }
+
+    const advocate = await RetainerAdvocate.findOneAndUpdate(
+      { $or: [{ advocateId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!advocate) return res.status(404).json({ success: false, message: "Advocate not found" });
+
+    res.json({
+      success: true,
+      advocate: { ...advocate.toObject(), id: advocate.advocateId || advocate._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateRetainerAdvocate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteRetainerAdvocate = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteRetainerAdvocate(req.params.id);
+      return res.json({ success: true, message: "Advocate deleted successfully" });
+    }
+
+    await RetainerAdvocate.findOneAndDelete({
+      $or: [{ advocateId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Advocate deleted successfully" });
+  } catch (error) {
+    console.error("deleteRetainerAdvocate error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 9. CORPORATE VAULT CHARTERS & DSC TOKENS
+// ============================================================================
+
+export const getCorporateVaultItems = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { companyName, docType } = req.query;
+
+    if (shouldUseDevStore()) {
+      const items = devStore.getCorporateVaultItems(userId, { companyName, docType });
+      return res.json({ success: true, items, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    };
+    if (companyName) query.companyName = companyName;
+    if (docType && docType !== "ALL") query.docType = docType;
+
+    const items = await CorporateVaultItem.find(query).sort({ uploadedAt: -1 });
+
+    res.json({
+      success: true,
+      items: items.map((i) => ({ ...i.toObject(), id: i.vaultId || i._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getCorporateVaultItems error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCorporateVaultItem = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const item = devStore.createCorporateVaultItem(userId, req.body);
+      return res.status(201).json({ success: true, item });
+    }
+
+    const item = await CorporateVaultItem.create({
+      ...req.body,
+      vaultId: req.body.id || `vlt-${Date.now()}`,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      item: { ...item.toObject(), id: item.vaultId || item._id.toString() },
+    });
+  } catch (error) {
+    console.error("createCorporateVaultItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCorporateVaultItem = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const item = devStore.updateCorporateVaultItem(req.params.id, req.body);
+      if (!item) return res.status(404).json({ success: false, message: "Vault item not found" });
+      return res.json({ success: true, item });
+    }
+
+    const item = await CorporateVaultItem.findOneAndUpdate(
+      { $or: [{ vaultId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!item) return res.status(404).json({ success: false, message: "Vault item not found" });
+
+    res.json({
+      success: true,
+      item: { ...item.toObject(), id: item.vaultId || item._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateCorporateVaultItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCorporateVaultItem = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteCorporateVaultItem(req.params.id);
+      return res.json({ success: true, message: "Vault item deleted successfully" });
+    }
+
+    await CorporateVaultItem.findOneAndDelete({
+      $or: [{ vaultId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Vault item deleted successfully" });
+  } catch (error) {
+    console.error("deleteCorporateVaultItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 10. SECRETARIAL FEE NOTES & RETAINER INVOICING
+// ============================================================================
+
+export const getSecretarialInvoices = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { status } = req.query;
+
+    if (shouldUseDevStore()) {
+      const invoices = devStore.getSecretarialInvoices(userId, { status });
+      return res.json({ success: true, invoices, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    };
+    if (status && status !== "ALL") query.status = status;
+
+    const invoices = await SecretarialInvoice.find(query).sort({ dueDate: -1 });
+
+    res.json({
+      success: true,
+      invoices: invoices.map((i) => ({ ...i.toObject(), id: i.invoiceId || i._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getSecretarialInvoices error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createSecretarialInvoice = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const invoice = devStore.createSecretarialInvoice(userId, req.body);
+      return res.status(201).json({ success: true, invoice });
+    }
+
+    const subtotal = Number(req.body.subtotal) || 50000;
+    const gstRate = Number(req.body.gstRate) || 18;
+    const gstAmount = Math.round((subtotal * gstRate) / 100);
+    const totalAmount = subtotal + gstAmount;
+
+    const invoice = await SecretarialInvoice.create({
+      ...req.body,
+      invoiceId: req.body.id || `inv-cs-${Date.now()}`,
+      subtotal,
+      gstRate,
+      gstAmount,
+      totalAmount,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      invoice: { ...invoice.toObject(), id: invoice.invoiceId || invoice._id.toString() },
+    });
+  } catch (error) {
+    console.error("createSecretarialInvoice error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateSecretarialInvoice = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const invoice = devStore.updateSecretarialInvoice(req.params.id, req.body);
+      if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found" });
+      return res.json({ success: true, invoice });
+    }
+
+    const invoice = await SecretarialInvoice.findOneAndUpdate(
+      { $or: [{ invoiceId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found" });
+
+    res.json({
+      success: true,
+      invoice: { ...invoice.toObject(), id: invoice.invoiceId || invoice._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateSecretarialInvoice error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteSecretarialInvoice = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteSecretarialInvoice(req.params.id);
+      return res.json({ success: true, message: "Invoice deleted successfully" });
+    }
+
+    await SecretarialInvoice.findOneAndDelete({
+      $or: [{ invoiceId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Invoice deleted successfully" });
+  } catch (error) {
+    console.error("deleteSecretarialInvoice error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

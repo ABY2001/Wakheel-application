@@ -4931,6 +4931,231 @@ export const devStore = {
   },
 
   // ==========================================================================
+  // --- CS Commercial Contracts & Shareholders' Agreements (SHA/SSA) ---
+  // ==========================================================================
+  getCorporateContracts(userId, filters = {}) {
+    let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
+    if (filters.companyName) {
+      contracts = contracts.filter((c) => c.companyName === filters.companyName);
+    }
+    if (filters.contractType && filters.contractType !== "ALL") {
+      contracts = contracts.filter((c) => c.contractType === filters.contractType);
+    }
+    return contracts;
+  },
+
+  createCorporateContract(userId, data) {
+    const contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
+    const newContract = {
+      id: data.id || `cont-${Date.now()}`,
+      contractId: data.id || `cont-${Date.now()}`,
+      userId,
+      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
+      title: data.title || "Commercial Master Service Agreement",
+      contractType: data.contractType || "vendor_msa",
+      parties: Array.isArray(data.parties) ? data.parties : ["CyberCorp Technologies Pvt Ltd", "Counterparty Entity"],
+      effectiveDate: data.effectiveDate || new Date().toISOString().split("T")[0],
+      expiryDate: data.expiryDate || "",
+      contractValue: Number(data.contractValue) || 0,
+      stampDutyPaid: Number(data.stampDutyPaid) || 500,
+      eStampCertificateNumber: data.eStampCertificateNumber || `IN-DL${Date.now().toString().slice(-14)}P`,
+      governingLaw: data.governingLaw || "Laws of India (New Delhi Courts)",
+      keyClauses: Array.isArray(data.keyClauses) ? data.keyClauses : ["Confidentiality & Non-Disclosure", "Arbitration & Dispute Resolution", "Indemnity & Limitation of Liability"],
+      status: data.status || "executed",
+      notes: data.notes || "",
+      createdAt: new Date().toISOString(),
+    };
+    contracts.unshift(newContract);
+    writeFile("dev_corporate_contracts.json", contracts);
+    return newContract;
+  },
+
+  updateCorporateContract(id, updates = {}) {
+    let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
+    const idx = contracts.findIndex((c) => c.id === id || c.contractId === id);
+    if (idx !== -1) {
+      contracts[idx] = { ...contracts[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_corporate_contracts.json", contracts);
+      return contracts[idx];
+    }
+    return null;
+  },
+
+  deleteCorporateContract(id) {
+    let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
+    contracts = contracts.filter((c) => c.id !== id && c.contractId !== id);
+    writeFile("dev_corporate_contracts.json", contracts);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- CS Retainer Advocates & Litigation Counsel Gateway ---
+  // ==========================================================================
+  getRetainerAdvocates(userId, filters = {}) {
+    let advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
+    if (filters.status && filters.status !== "ALL") {
+      advocates = advocates.filter((a) => a.status === filters.status);
+    }
+    return advocates;
+  },
+
+  createRetainerAdvocate(userId, data) {
+    const advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
+    const newAdvocate = {
+      id: data.id || `adv-ret-${Date.now()}`,
+      advocateId: data.id || `adv-ret-${Date.now()}`,
+      userId,
+      fullName: data.fullName || "Advocate Name",
+      barEnrollmentNumber: data.barEnrollmentNumber || "D/0000/2020",
+      primaryJurisdiction: data.primaryJurisdiction || "NCLT & High Court",
+      specialization: data.specialization || "Corporate Litigation & Dispute Resolution",
+      email: data.email || "counsel@bar.in",
+      phone: data.phone || "+91 98000 00000",
+      retainerFee: Number(data.retainerFee) || 50000,
+      appearanceRatePerHearing: Number(data.appearanceRatePerHearing) || 25000,
+      activeBriefsCount: Number(data.activeBriefsCount) || 1,
+      status: data.status || "active_retainer",
+      createdAt: new Date().toISOString(),
+    };
+    advocates.unshift(newAdvocate);
+    writeFile("dev_retainer_advocates.json", advocates);
+    return newAdvocate;
+  },
+
+  updateRetainerAdvocate(id, updates = {}) {
+    let advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
+    const idx = advocates.findIndex((a) => a.id === id || a.advocateId === id);
+    if (idx !== -1) {
+      advocates[idx] = { ...advocates[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_retainer_advocates.json", advocates);
+      return advocates[idx];
+    }
+    return null;
+  },
+
+  deleteRetainerAdvocate(id) {
+    let advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
+    advocates = advocates.filter((a) => a.id !== id && a.advocateId !== id);
+    writeFile("dev_retainer_advocates.json", advocates);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- CS Statutory Charters Vault & DSC Token Manager ---
+  // ==========================================================================
+  getCorporateVaultItems(userId, filters = {}) {
+    let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
+    if (filters.companyName) {
+      items = items.filter((v) => v.companyName === filters.companyName);
+    }
+    if (filters.docType && filters.docType !== "ALL") {
+      items = items.filter((v) => v.docType === filters.docType);
+    }
+    return items;
+  },
+
+  createCorporateVaultItem(userId, data) {
+    const items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
+    const newItem = {
+      id: data.id || `vlt-${Date.now()}`,
+      vaultId: data.id || `vlt-${Date.now()}`,
+      userId,
+      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
+      docType: data.docType || "moa_aoa",
+      title: data.title || "Statutory Charter Document",
+      fileSize: data.fileSize || "1.2 MB",
+      uploadedAt: data.uploadedAt || new Date().toISOString().split("T")[0],
+      validUntil: data.validUntil || "Permanent",
+      holderName: data.holderName || "Company Master",
+      issuingAuthority: data.issuingAuthority || "Ministry of Corporate Affairs",
+      status: data.status || "valid",
+      createdAt: new Date().toISOString(),
+    };
+    items.unshift(newItem);
+    writeFile("dev_corporate_vault.json", items);
+    return newItem;
+  },
+
+  updateCorporateVaultItem(id, updates = {}) {
+    let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
+    const idx = items.findIndex((v) => v.id === id || v.vaultId === id);
+    if (idx !== -1) {
+      items[idx] = { ...items[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_corporate_vault.json", items);
+      return items[idx];
+    }
+    return null;
+  },
+
+  deleteCorporateVaultItem(id) {
+    let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
+    items = items.filter((v) => v.id !== id && v.vaultId !== id);
+    writeFile("dev_corporate_vault.json", items);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- CS Fee Notes & Secretarial Invoicing ---
+  // ==========================================================================
+  getSecretarialInvoices(userId, filters = {}) {
+    let invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
+    if (filters.status && filters.status !== "ALL") {
+      invoices = invoices.filter((i) => i.status === filters.status);
+    }
+    return invoices;
+  },
+
+  createSecretarialInvoice(userId, data) {
+    const invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
+    const subtotal = Number(data.subtotal) || 50000;
+    const gstRate = Number(data.gstRate) || 18;
+    const gstAmount = Math.round((subtotal * gstRate) / 100);
+    const totalAmount = subtotal + gstAmount;
+
+    const newInvoice = {
+      id: data.id || `inv-cs-${Date.now()}`,
+      invoiceId: data.id || `inv-cs-${Date.now()}`,
+      userId,
+      invoiceNumber: data.invoiceNumber || `INV-CS-2026-0${invoices.length + 85}`,
+      clientCompanyName: data.clientCompanyName || "CyberCorp Technologies Pvt Ltd",
+      clientGstin: data.clientGstin || "07AAECS1234F1Z8",
+      sacCode: data.sacCode || "9982",
+      billingType: data.billingType || "monthly_retainer",
+      items: Array.isArray(data.items) && data.items.length > 0 ? data.items : [
+        { description: "Corporate Secretarial Advisory & Board Compliance Retainer", amount: subtotal }
+      ],
+      subtotal,
+      gstRate,
+      gstAmount,
+      totalAmount,
+      dueDate: data.dueDate || new Date().toISOString().split("T")[0],
+      status: data.status || "issued",
+      createdAt: new Date().toISOString(),
+    };
+    invoices.unshift(newInvoice);
+    writeFile("dev_secretarial_invoices.json", invoices);
+    return newInvoice;
+  },
+
+  updateSecretarialInvoice(id, updates = {}) {
+    let invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
+    const idx = invoices.findIndex((i) => i.id === id || i.invoiceId === id);
+    if (idx !== -1) {
+      invoices[idx] = { ...invoices[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_secretarial_invoices.json", invoices);
+      return invoices[idx];
+    }
+    return null;
+  },
+
+  deleteSecretarialInvoice(id) {
+    let invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
+    invoices = invoices.filter((i) => i.id !== id && i.invoiceId !== id);
+    writeFile("dev_secretarial_invoices.json", invoices);
+    return true;
+  },
+
+  // ==========================================================================
   // --- Profiles (BCI Credentials & DigiLocker KYC) ---
   // ==========================================================================
   getBciCredentials(userId) {
@@ -7211,4 +7436,267 @@ export const DEFAULT_STATUTORY_REGISTERS = [
     certifiedAt: "2026-03-20",
   },
 ];
+
+export const DEFAULT_CORPORATE_CONTRACTS = [
+  {
+    id: "cont-1",
+    contractId: "cont-1",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    title: "Series A Share Subscription & Shareholders' Agreement (SHA/SSA)",
+    contractType: "sha_ssa",
+    parties: ["CyberCorp Technologies Pvt Ltd", "Indus Venture Capital Fund I", "Dr. Vikram Malhotra", "Priya Sundaram"],
+    effectiveDate: "2026-10-15",
+    expiryDate: "2031-10-14",
+    contractValue: 50000000, // ₹5.00 Cr
+    stampDutyPaid: 5000,
+    eStampCertificateNumber: "IN-DL89210492819234P",
+    governingLaw: "Laws of India (Arbitration under SIAC / New Delhi seat)",
+    keyClauses: [
+      "Board Representation: 1 Nominee Director for Indus Venture Capital",
+      "Reserved Matters: 75% affirmative vote on M&A, debt > ₹1 Cr, IP sale",
+      "Tag-Along & Drag-Along Rights: Drag threshold set at 65% total equity",
+      "Liquidation Preference: 1x Non-Participating Preference on CCPS",
+      "Right of First Refusal (ROFR) & Anti-Dilution protection (Broad-Based Weighted Average)",
+    ],
+    status: "executed",
+    notes: "Stamped in NCT of Delhi. Filed Form PAS-3 and MGT-14 with ROC.",
+  },
+  {
+    id: "cont-2",
+    contractId: "cont-2",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    title: "Mutual Non-Disclosure & Corporate Trade Secret Protection Agreement",
+    contractType: "nda",
+    parties: ["CyberCorp Technologies Pvt Ltd", "QuantEdge Financial Analytics Corp (US)"],
+    effectiveDate: "2026-08-01",
+    expiryDate: "2028-07-31",
+    contractValue: 0,
+    stampDutyPaid: 500,
+    eStampCertificateNumber: "IN-DL40192837461298Q",
+    governingLaw: "Laws of India (Courts of New Delhi)",
+    keyClauses: [
+      "Strict confidentiality covering proprietary ML algorithmic trading models",
+      "2-Year non-solicitation of key software engineering personnel",
+      "Injunctive relief clause without proof of actual damages",
+    ],
+    status: "executed",
+    notes: "Standard bilingual execution completed digitally with DocuSign & DSC.",
+  },
+  {
+    id: "cont-3",
+    contractId: "cont-3",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    title: "Managing Director Service & Executive Remuneration Agreement",
+    contractType: "director_service",
+    parties: ["CyberCorp Technologies Pvt Ltd", "Dr. Vikram Malhotra"],
+    effectiveDate: "2026-04-01",
+    expiryDate: "2029-03-31",
+    contractValue: 7200000, // ₹72 Lakhs/annum
+    stampDutyPaid: 1000,
+    eStampCertificateNumber: "IN-DL10293847562019R",
+    governingLaw: "Companies Act, 2013 (Section 197 read with Schedule V)",
+    keyClauses: [
+      "Fixed Remuneration: ₹5,00,000 per month + 2% net profit performance commission",
+      "Approved by Nomination & Remuneration Committee & General Meeting",
+      "IP Assignment: Complete assignment of all patents and software developed during tenure",
+    ],
+    status: "executed",
+    notes: "Filed Form DIR-12 and MR-1 with RoC Delhi within 60 days of appointment.",
+  },
+  {
+    id: "cont-4",
+    contractId: "cont-4",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    title: "Commercial Lease & Data Center Facility Deed",
+    contractType: "commercial_lease",
+    parties: ["CyberCorp Technologies Pvt Ltd", "Okhla Realtech Infrastructure LLP"],
+    effectiveDate: "2025-06-01",
+    expiryDate: "2028-05-31",
+    contractValue: 10800000, // ₹36 Lakhs/annum
+    stampDutyPaid: 45000,
+    eStampCertificateNumber: "IN-DL78901234567890T",
+    governingLaw: "Transfer of Property Act, 1882 & Delhi Rent Control Act",
+    keyClauses: [
+      "Lease rent ₹3,00,000/month with 5% annual escalation",
+      "Security deposit: 6 months rent refundable on vacation",
+      "Registered with Sub-Registrar IV, Saket, New Delhi",
+    ],
+    status: "stamped_registered",
+    notes: "Original registered deed deposited in Corporate Bank Safe Deposit Locker.",
+  },
+];
+
+export const DEFAULT_RETAINER_ADVOCATES = [
+  {
+    id: "adv-ret-1",
+    advocateId: "adv-ret-1",
+    fullName: "Adv. Arvind Swaminathan, Senior Counsel",
+    barEnrollmentNumber: "D/1482/2004",
+    primaryJurisdiction: "NCLT Principal Bench & NCLAT New Delhi",
+    specialization: "Insolvency & Bankruptcy (IBC), Oppression & Mergers (Sec 230-232)",
+    email: "arvind.swaminathan@delhibar.in",
+    phone: "+91 98110 49201",
+    retainerFee: 75000,
+    appearanceRatePerHearing: 35000,
+    activeBriefsCount: 2,
+    status: "active_retainer",
+  },
+  {
+    id: "adv-ret-2",
+    advocateId: "adv-ret-2",
+    fullName: "Adv. K. R. Meenakshi Sundaram",
+    barEnrollmentNumber: "D/2901/2012",
+    primaryJurisdiction: "Delhi High Court (Commercial Division)",
+    specialization: "Commercial Arbitration, Section 9 Injunctions & Shareholder Disputes",
+    email: "meenakshi.sundaram@chamberslaw.in",
+    phone: "+91 99102 38491",
+    retainerFee: 50000,
+    appearanceRatePerHearing: 25000,
+    activeBriefsCount: 1,
+    status: "active_retainer",
+  },
+  {
+    id: "adv-ret-3",
+    advocateId: "adv-ret-3",
+    fullName: "Adv. Prateek Singhania",
+    barEnrollmentNumber: "MAH/4019/2015",
+    primaryJurisdiction: "NCLT Mumbai Bench & Bombay High Court",
+    specialization: "Compounding of ROC Offences, SFIO Inquiries & SEBI SAT Appeals",
+    email: "p.singhania@mumbaicorporatelaw.com",
+    phone: "+91 98201 98472",
+    retainerFee: 60000,
+    appearanceRatePerHearing: 30000,
+    activeBriefsCount: 1,
+    status: "empanelled",
+  },
+];
+
+export const DEFAULT_CORPORATE_VAULT_ITEMS = [
+  {
+    id: "vlt-1",
+    vaultId: "vlt-1",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    docType: "moa_aoa",
+    title: "Amended & Restated Memorandum & Articles of Association (MOA/AOA)",
+    fileSize: "2.4 MB",
+    uploadedAt: "2026-10-20",
+    validUntil: "Permanent (Unless Altered)",
+    holderName: "CyberCorp Technologies Pvt Ltd",
+    issuingAuthority: "RoC Delhi & Haryana",
+    status: "valid",
+  },
+  {
+    id: "vlt-2",
+    vaultId: "vlt-2",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    docType: "certificate_of_incorporation",
+    title: "Certificate of Incorporation with Corporate Identity Number (CIN)",
+    fileSize: "1.1 MB",
+    uploadedAt: "2022-04-12",
+    validUntil: "Permanent",
+    holderName: "CyberCorp Technologies Pvt Ltd",
+    issuingAuthority: "Ministry of Corporate Affairs (MCA)",
+    status: "valid",
+  },
+  {
+    id: "vlt-3",
+    vaultId: "vlt-3",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    docType: "dsc_token",
+    title: "Class 3 DSC Token: Dr. Vikram Malhotra (MD)",
+    fileSize: "USB Crypto Token (e-Mudhra)",
+    uploadedAt: "2025-01-15",
+    validUntil: "2027-01-14",
+    holderName: "Dr. Vikram Malhotra (DIN: 08912340)",
+    issuingAuthority: "e-Mudhra CA",
+    status: "valid",
+  },
+  {
+    id: "vlt-4",
+    vaultId: "vlt-4",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    docType: "dsc_token",
+    title: "Class 3 DSC Token: CS Rajesh Sharma (FCS 8492)",
+    fileSize: "USB Crypto Token (Capricorn)",
+    uploadedAt: "2024-11-20",
+    validUntil: "2026-11-19",
+    holderName: "CS Rajesh Sharma (FCS 8492)",
+    issuingAuthority: "Capricorn Identity Services",
+    status: "expiring_soon",
+  },
+  {
+    id: "vlt-5",
+    vaultId: "vlt-5",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    docType: "trademark_cert",
+    title: "Trademark Registration Certificate (Wordmark: CyberCorp, Class 42)",
+    fileSize: "850 KB",
+    uploadedAt: "2023-08-10",
+    validUntil: "2033-08-09",
+    holderName: "CyberCorp Technologies Pvt Ltd",
+    issuingAuthority: "Trade Marks Registry, Govt of India",
+    status: "valid",
+  },
+];
+
+export const DEFAULT_SECRETARIAL_INVOICES = [
+  {
+    id: "inv-cs-1",
+    invoiceId: "inv-cs-1",
+    invoiceNumber: "INV-CS-2026-084",
+    clientCompanyName: "CyberCorp Technologies Pvt Ltd",
+    clientGstin: "07AAECS1234F1Z8",
+    sacCode: "9982",
+    billingType: "monthly_retainer",
+    items: [
+      { description: "Monthly Corporate Secretarial Retainership (SS-1/SS-2 Compliance & Advisory)", amount: 35000 },
+      { description: "Board Meeting BM-04 Drafting, Minutes Circulation & CTC Extraction", amount: 15000 },
+    ],
+    subtotal: 50000,
+    gstRate: 18,
+    gstAmount: 9000,
+    totalAmount: 59000,
+    dueDate: "2026-11-15",
+    status: "issued",
+  },
+  {
+    id: "inv-cs-2",
+    invoiceId: "inv-cs-2",
+    invoiceNumber: "INV-CS-2026-079",
+    clientCompanyName: "CyberCorp Technologies Pvt Ltd",
+    clientGstin: "07AAECS1234F1Z8",
+    sacCode: "9982",
+    billingType: "annual_roc_package",
+    items: [
+      { description: "Statutory ROC Annual Filing Package: Form AOC-4 XBRL & Form MGT-7 Certification", amount: 45000 },
+      { description: "Director KYC Filing (DIR-3 KYC Web) for 4 Directors", amount: 8000 },
+    ],
+    subtotal: 53000,
+    gstRate: 18,
+    gstAmount: 9540,
+    totalAmount: 62540,
+    dueDate: "2026-10-31",
+    status: "paid",
+  },
+  {
+    id: "inv-cs-3",
+    invoiceId: "inv-cs-3",
+    invoiceNumber: "INV-CS-2026-072",
+    clientCompanyName: "Apex FinTech Solutions Ltd",
+    clientGstin: "27AALCA4512H1Z5",
+    sacCode: "9982",
+    billingType: "event_filing",
+    items: [
+      { description: "Private Placement Advisory & Form PAS-3 / MGT-14 Documentation", amount: 65000 },
+      { description: "Valuation Report Coordination & Stamp Duty Adjudication", amount: 25000 },
+    ],
+    subtotal: 90000,
+    gstRate: 18,
+    gstAmount: 16200,
+    totalAmount: 106200,
+    dueDate: "2026-11-20",
+    status: "issued",
+  },
+];
+
 

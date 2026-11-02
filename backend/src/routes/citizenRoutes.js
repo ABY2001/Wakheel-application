@@ -44,7 +44,12 @@ import {
   getUnreadMessageCount,
   getCitizenCalendarEvents,
   createCitizenCalendarEvent,
+  updateCitizenCalendarEvent,
+  deleteCitizenCalendarEvent,
   getCitizenCalendarBacklog,
+  createCitizenCalendarBacklogItem,
+  updateCitizenCalendarBacklogItem,
+  deleteCitizenCalendarBacklogItem,
   getCitizenNetworkContacts,
   createCitizenNetworkContact,
   updateCitizenNetworkContactStage,
@@ -122,7 +127,9 @@ router.route("/messages/:id/read").put(protect, markMessageRead);
 
 // 11. Citizen Calendar Fixtures & Hearing Backlog
 router.route("/calendar/events").get(protect, getCitizenCalendarEvents).post(protect, createCitizenCalendarEvent);
-router.route("/calendar/backlog").get(protect, getCitizenCalendarBacklog);
+router.route("/calendar/events/:id").put(protect, updateCitizenCalendarEvent).delete(protect, deleteCitizenCalendarEvent);
+router.route("/calendar/backlog").get(protect, getCitizenCalendarBacklog).post(protect, createCitizenCalendarBacklogItem);
+router.route("/calendar/backlog/:id").put(protect, updateCitizenCalendarBacklogItem).delete(protect, deleteCitizenCalendarBacklogItem);
 
 // 12. Citizen Legal Network & Counsel Pipeline
 router.route("/network/contacts").get(protect, getCitizenNetworkContacts).post(protect, createCitizenNetworkContact);

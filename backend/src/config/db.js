@@ -1,22 +1,26 @@
 import mongoose from "mongoose";
+import { seedMongoIfEmpty } from "../utils/seedMongo.js";
 
 let isMongoConnected = false;
 
 export const connectDB = async () => {
   try {
-    // Disable command buffering so queries don't hang for 10 seconds if MongoDB is offline
+    // Disable command buffering so queries don't hang if MongoDB is momentarily offline
     mongoose.set("bufferCommands", false);
 
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 2000, // Quick 2s check
+      serverSelectionTimeoutMS: 5000,
     });
     isMongoConnected = true;
     console.log(`✅ MongoDB Connected successfully: ${conn.connection.host}`);
+
+    // Auto-seed collections if empty
+    await seedMongoIfEmpty();
   } catch (error) {
     isMongoConnected = false;
     console.warn(`⚠️ MongoDB connection unavailable (${error.message}).`);
-    console.log(`💡 Local Dev Storage active: Login & Register will work smoothly without crashing!`);
-    console.log(`ℹ️ To connect real MongoDB: paste your MongoDB Atlas URI into backend/.env under MONGO_URI`);
+    console.log(`💡 Local Storage Fallback active: Login & all features will work smoothly without crashing!`);
+    console.log(`ℹ️ To connect real MongoDB: ensure your current IP address is whitelisted in MongoDB Atlas Network Access (0.0.0.0/0).`);
   }
 };
 

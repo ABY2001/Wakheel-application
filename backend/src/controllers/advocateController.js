@@ -8,6 +8,12 @@ import { Grievance } from "../models/Grievance.js";
 import { CitizenDocument } from "../models/CitizenDocument.js";
 import { CitizenProfile } from "../models/CitizenProfile.js";
 import { Message } from "../models/Message.js";
+import { CalendarEvent } from "../models/CalendarEvent.js";
+import { CalendarBacklog } from "../models/CalendarBacklog.js";
+import { NetworkContact } from "../models/NetworkContact.js";
+import { NetworkActivity } from "../models/NetworkActivity.js";
+import { TaskMiteTask } from "../models/TaskMiteTask.js";
+import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
@@ -2390,8 +2396,18 @@ export const dispatchClientHearingUpdate = async (req, res) => {
 export const getCalendarEvents = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const events = devStore.getCalendarEvents(advocateId);
-    res.json({ success: true, events });
+    if (shouldUseDevStore()) {
+      const events = devStore.getCalendarEvents(advocateId);
+      return res.json({ success: true, events, mode: "dummy_data" });
+    }
+    const events = await CalendarEvent.find({
+      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+    }).sort({ date: 1 });
+    res.json({
+      success: true,
+      events: events.map((e) => ({ ...e.toObject(), id: e.eventId || e._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getCalendarEvents error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2401,8 +2417,19 @@ export const getCalendarEvents = async (req, res) => {
 export const createCalendarEvent = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const event = devStore.addCalendarEvent(advocateId, req.body);
-    res.status(201).json({ success: true, event });
+    if (shouldUseDevStore()) {
+      const event = devStore.addCalendarEvent(advocateId, req.body);
+      return res.status(201).json({ success: true, event });
+    }
+    const event = await CalendarEvent.create({
+      ...req.body,
+      eventId: req.body.id || `evt-${Date.now()}`,
+      userId: advocateId,
+    });
+    res.status(201).json({
+      success: true,
+      event: { ...event.toObject(), id: event.eventId || event._id.toString() },
+    });
   } catch (error) {
     console.error("createCalendarEvent error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2411,9 +2438,18 @@ export const createCalendarEvent = async (req, res) => {
 
 export const updateCalendarEvent = async (req, res) => {
   try {
-    const event = devStore.updateCalendarEvent(req.params.id, req.body);
+    if (shouldUseDevStore()) {
+      const event = devStore.updateCalendarEvent(req.params.id, req.body);
+      if (!event) return res.status(404).json({ success: false, message: "Calendar event not found" });
+      return res.json({ success: true, event });
+    }
+    const event = await CalendarEvent.findOneAndUpdate(
+      { $or: [{ eventId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
     if (!event) return res.status(404).json({ success: false, message: "Calendar event not found" });
-    res.json({ success: true, event });
+    res.json({ success: true, event: { ...event.toObject(), id: event.eventId || event._id.toString() } });
   } catch (error) {
     console.error("updateCalendarEvent error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2422,7 +2458,13 @@ export const updateCalendarEvent = async (req, res) => {
 
 export const deleteCalendarEvent = async (req, res) => {
   try {
-    devStore.deleteCalendarEvent(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteCalendarEvent(req.params.id);
+      return res.json({ success: true, message: "Event removed from calendar" });
+    }
+    await CalendarEvent.deleteOne({
+      $or: [{ eventId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Event removed from calendar" });
   } catch (error) {
     console.error("deleteCalendarEvent error:", error);
@@ -2433,8 +2475,18 @@ export const deleteCalendarEvent = async (req, res) => {
 export const getCalendarBacklog = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const backlog = devStore.getCalendarBacklog(advocateId);
-    res.json({ success: true, backlog });
+    if (shouldUseDevStore()) {
+      const backlog = devStore.getCalendarBacklog(advocateId);
+      return res.json({ success: true, backlog, mode: "dummy_data" });
+    }
+    const backlog = await CalendarBacklog.find({
+      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+    }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      backlog: backlog.map((b) => ({ ...b.toObject(), id: b.taskId || b._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getCalendarBacklog error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2444,8 +2496,19 @@ export const getCalendarBacklog = async (req, res) => {
 export const createCalendarBacklogItem = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const item = devStore.addCalendarBacklogItem(advocateId, req.body);
-    res.status(201).json({ success: true, item });
+    if (shouldUseDevStore()) {
+      const item = devStore.addCalendarBacklogItem(advocateId, req.body);
+      return res.status(201).json({ success: true, item });
+    }
+    const item = await CalendarBacklog.create({
+      ...req.body,
+      taskId: req.body.id || `bk-${Date.now()}`,
+      userId: advocateId,
+    });
+    res.status(201).json({
+      success: true,
+      item: { ...item.toObject(), id: item.taskId || item._id.toString() },
+    });
   } catch (error) {
     console.error("createCalendarBacklogItem error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2454,9 +2517,18 @@ export const createCalendarBacklogItem = async (req, res) => {
 
 export const updateCalendarBacklogItem = async (req, res) => {
   try {
-    const item = devStore.updateCalendarBacklogItem(req.params.id, req.body);
+    if (shouldUseDevStore()) {
+      const item = devStore.updateCalendarBacklogItem(req.params.id, req.body);
+      if (!item) return res.status(404).json({ success: false, message: "Backlog item not found" });
+      return res.json({ success: true, item });
+    }
+    const item = await CalendarBacklog.findOneAndUpdate(
+      { $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
     if (!item) return res.status(404).json({ success: false, message: "Backlog item not found" });
-    res.json({ success: true, item });
+    res.json({ success: true, item: { ...item.toObject(), id: item.taskId || item._id.toString() } });
   } catch (error) {
     console.error("updateCalendarBacklogItem error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2465,7 +2537,13 @@ export const updateCalendarBacklogItem = async (req, res) => {
 
 export const deleteCalendarBacklogItem = async (req, res) => {
   try {
-    devStore.deleteCalendarBacklogItem(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteCalendarBacklogItem(req.params.id);
+      return res.json({ success: true, message: "Backlog item deleted" });
+    }
+    await CalendarBacklog.deleteOne({
+      $or: [{ taskId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Backlog item deleted" });
   } catch (error) {
     console.error("deleteCalendarBacklogItem error:", error);
@@ -2479,16 +2557,33 @@ export const deleteCalendarBacklogItem = async (req, res) => {
 export const getNetworkContacts = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const contacts = devStore.getNetworkContacts(advocateId);
-    const activities = devStore.getNetworkActivities(advocateId);
-    const followups = devStore.getNetworkFollowups(advocateId);
-    const recommendations = devStore.getNetworkRecommendations(advocateId);
+    if (shouldUseDevStore()) {
+      const contacts = devStore.getNetworkContacts(advocateId);
+      const activities = devStore.getNetworkActivities(advocateId);
+      const followups = devStore.getNetworkFollowups(advocateId);
+      const recommendations = devStore.getNetworkRecommendations(advocateId);
+      return res.json({
+        success: true,
+        contacts,
+        activities,
+        followups,
+        recommendations,
+        mode: "dummy_data",
+      });
+    }
+
+    const [contacts, activities] = await Promise.all([
+      NetworkContact.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+      NetworkActivity.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+    ]);
+
     res.json({
       success: true,
-      contacts,
-      activities,
-      followups,
-      recommendations,
+      contacts: contacts.map((c) => ({ ...c.toObject(), id: c.contactId || c._id.toString() })),
+      activities: activities.map((a) => ({ ...a.toObject(), id: a.activityId || a._id.toString() })),
+      followups: devStore.getNetworkFollowups(advocateId),
+      recommendations: devStore.getNetworkRecommendations(advocateId),
+      mode: "mongo_db",
     });
   } catch (error) {
     console.error("getNetworkContacts error:", error);
@@ -2499,13 +2594,34 @@ export const getNetworkContacts = async (req, res) => {
 export const createNetworkContact = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const contact = devStore.addNetworkContact(advocateId, req.body);
-    devStore.addNetworkActivity(advocateId, {
+    if (shouldUseDevStore()) {
+      const contact = devStore.addNetworkContact(advocateId, req.body);
+      devStore.addNetworkActivity(advocateId, {
+        type: "connected",
+        advocateName: contact.name,
+        description: `added to pipeline at stage ${contact.stage.toUpperCase()}.`,
+      });
+      return res.status(201).json({ success: true, contact });
+    }
+
+    const contact = await NetworkContact.create({
+      ...req.body,
+      contactId: req.body.id || `c-${Date.now()}`,
+      userId: advocateId,
+    });
+
+    await NetworkActivity.create({
+      activityId: `act-${Date.now()}`,
+      userId: advocateId,
       type: "connected",
       advocateName: contact.name,
       description: `added to pipeline at stage ${contact.stage.toUpperCase()}.`,
     });
-    res.status(201).json({ success: true, contact });
+
+    res.status(201).json({
+      success: true,
+      contact: { ...contact.toObject(), id: contact.contactId || contact._id.toString() },
+    });
   } catch (error) {
     console.error("createNetworkContact error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2515,9 +2631,19 @@ export const createNetworkContact = async (req, res) => {
 export const updateNetworkContactStage = async (req, res) => {
   try {
     const { stage } = req.body;
-    const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+    if (shouldUseDevStore()) {
+      const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+      if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
+      return res.json({ success: true, contact });
+    }
+
+    const contact = await NetworkContact.findOneAndUpdate(
+      { $or: [{ contactId: req.params.id }, { _id: req.params.id }] },
+      { $set: { stage } },
+      { new: true }
+    );
     if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
-    res.json({ success: true, contact });
+    res.json({ success: true, contact: { ...contact.toObject(), id: contact.contactId || contact._id.toString() } });
   } catch (error) {
     console.error("updateNetworkContactStage error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2526,7 +2652,13 @@ export const updateNetworkContactStage = async (req, res) => {
 
 export const deleteNetworkContact = async (req, res) => {
   try {
-    devStore.deleteNetworkContact(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteNetworkContact(req.params.id);
+      return res.json({ success: true, message: "Contact deleted from network" });
+    }
+    await NetworkContact.deleteOne({
+      $or: [{ contactId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Contact deleted from network" });
   } catch (error) {
     console.error("deleteNetworkContact error:", error);
@@ -2537,8 +2669,17 @@ export const deleteNetworkContact = async (req, res) => {
 export const getNetworkActivities = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const activities = devStore.getNetworkActivities(advocateId);
-    res.json({ success: true, activities });
+    if (shouldUseDevStore()) {
+      const activities = devStore.getNetworkActivities(advocateId);
+      return res.json({ success: true, activities });
+    }
+    const activities = await NetworkActivity.find({
+      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+    }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      activities: activities.map((a) => ({ ...a.toObject(), id: a.activityId || a._id.toString() })),
+    });
   } catch (error) {
     console.error("getNetworkActivities error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2584,9 +2725,21 @@ export const toggleNetworkRecommendation = async (req, res) => {
 export const getTaskMiteTasks = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const tasks = devStore.getTaskMiteTasks(advocateId);
-    const notes = devStore.getTaskMiteNotes(advocateId);
-    res.json({ success: true, tasks, notes });
+    if (shouldUseDevStore()) {
+      const tasks = devStore.getTaskMiteTasks(advocateId);
+      const notes = devStore.getTaskMiteNotes(advocateId);
+      return res.json({ success: true, tasks, notes, mode: "dummy_data" });
+    }
+    const [tasks, notes] = await Promise.all([
+      TaskMiteTask.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+      TaskMiteNote.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ isPinned: -1, createdAt: -1 }),
+    ]);
+    res.json({
+      success: true,
+      tasks: tasks.map((t) => ({ ...t.toObject(), id: t.taskId || t._id.toString() })),
+      notes: notes.map((n) => ({ ...n.toObject(), id: n.noteId || n._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getTaskMiteTasks error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2596,8 +2749,19 @@ export const getTaskMiteTasks = async (req, res) => {
 export const createTaskMiteTask = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const task = devStore.addTaskMiteTask(advocateId, req.body);
-    res.status(201).json({ success: true, task });
+    if (shouldUseDevStore()) {
+      const task = devStore.addTaskMiteTask(advocateId, req.body);
+      return res.status(201).json({ success: true, task });
+    }
+    const task = await TaskMiteTask.create({
+      ...req.body,
+      taskId: req.body.id || `task-${Date.now()}`,
+      userId: advocateId,
+    });
+    res.status(201).json({
+      success: true,
+      task: { ...task.toObject(), id: task.taskId || task._id.toString() },
+    });
   } catch (error) {
     console.error("createTaskMiteTask error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2606,9 +2770,18 @@ export const createTaskMiteTask = async (req, res) => {
 
 export const updateTaskMiteTask = async (req, res) => {
   try {
-    const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+    if (shouldUseDevStore()) {
+      const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+      if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+      return res.json({ success: true, task });
+    }
+    const task = await TaskMiteTask.findOneAndUpdate(
+      { $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
-    res.json({ success: true, task });
+    res.json({ success: true, task: { ...task.toObject(), id: task.taskId || task._id.toString() } });
   } catch (error) {
     console.error("updateTaskMiteTask error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2617,7 +2790,13 @@ export const updateTaskMiteTask = async (req, res) => {
 
 export const deleteTaskMiteTask = async (req, res) => {
   try {
-    devStore.deleteTaskMiteTask(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteTaskMiteTask(req.params.id);
+      return res.json({ success: true, message: "Task deleted" });
+    }
+    await TaskMiteTask.deleteOne({
+      $or: [{ taskId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Task deleted" });
   } catch (error) {
     console.error("deleteTaskMiteTask error:", error);
@@ -2628,8 +2807,18 @@ export const deleteTaskMiteTask = async (req, res) => {
 export const getTaskMiteNotes = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const notes = devStore.getTaskMiteNotes(advocateId);
-    res.json({ success: true, notes });
+    if (shouldUseDevStore()) {
+      const notes = devStore.getTaskMiteNotes(advocateId);
+      return res.json({ success: true, notes, mode: "dummy_data" });
+    }
+    const notes = await TaskMiteNote.find({
+      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+    }).sort({ isPinned: -1, createdAt: -1 });
+    res.json({
+      success: true,
+      notes: notes.map((n) => ({ ...n.toObject(), id: n.noteId || n._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getTaskMiteNotes error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2639,8 +2828,19 @@ export const getTaskMiteNotes = async (req, res) => {
 export const createTaskMiteNote = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const note = devStore.addTaskMiteNote(advocateId, req.body);
-    res.status(201).json({ success: true, note });
+    if (shouldUseDevStore()) {
+      const note = devStore.addTaskMiteNote(advocateId, req.body);
+      return res.status(201).json({ success: true, note });
+    }
+    const note = await TaskMiteNote.create({
+      ...req.body,
+      noteId: req.body.id || `note-${Date.now()}`,
+      userId: advocateId,
+    });
+    res.status(201).json({
+      success: true,
+      note: { ...note.toObject(), id: note.noteId || note._id.toString() },
+    });
   } catch (error) {
     console.error("createTaskMiteNote error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2649,11 +2849,25 @@ export const createTaskMiteNote = async (req, res) => {
 
 export const updateTaskMiteNote = async (req, res) => {
   try {
-    const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+    if (shouldUseDevStore()) {
+      const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "Note not found" });
+      }
+      return res.json({ success: true, note: updated });
+    }
+    const updated = await TaskMiteNote.findOneAndUpdate(
+      { $or: [{ noteId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
     if (!updated) {
       return res.status(404).json({ success: false, message: "Note not found" });
     }
-    res.json({ success: true, note: updated });
+    res.json({
+      success: true,
+      note: { ...updated.toObject(), id: updated.noteId || updated._id.toString() },
+    });
   } catch (error) {
     console.error("updateTaskMiteNote error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2662,7 +2876,13 @@ export const updateTaskMiteNote = async (req, res) => {
 
 export const deleteTaskMiteNote = async (req, res) => {
   try {
-    devStore.deleteTaskMiteNote(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteTaskMiteNote(req.params.id);
+      return res.json({ success: true, message: "Note deleted" });
+    }
+    await TaskMiteNote.deleteOne({
+      $or: [{ noteId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Note deleted" });
   } catch (error) {
     console.error("deleteTaskMiteNote error:", error);

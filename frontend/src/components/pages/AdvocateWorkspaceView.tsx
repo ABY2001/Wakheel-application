@@ -38,6 +38,7 @@ import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBil
 import { AdvocateConflictScannerView } from "@/components/advocate/AdvocateConflictScannerView";
 import { AdvocateVakalathnamaView } from "@/components/advocate/AdvocateVakalathnamaView";
 import ChamberCalendarView from "@/components/advocate/ChamberCalendarView";
+import { TaskMiteView } from "@/components/common/TaskMiteView";
 import AdvocateProfileModal, {
   AdvocateProfileData,
   DEFAULT_ADVOCATE_PROFILE,
@@ -1059,7 +1060,7 @@ export function AdvocateWorkspaceView() {
   const isCollab = ["my-network", "my-hub", "my-team", "collask"].includes(activeTab);
   const isERP = ["huremaso", "curemaso", "acmaso", "app-store"].includes(activeTab);
   const isAnalytics = ["ai-analytics", "reports"].includes(activeTab);
-  const isProductivity = ["notes", "issues-authorities", "time-sheet", "case-tracker", "practice-ai", "taskmite"].includes(activeTab);
+  const isProductivity = ["notes", "issues-authorities", "time-sheet", "case-tracker", "practice-ai"].includes(activeTab);
   const isBusiness = ["business-registration", "tax-compliance", "trademark-ip", "corporate-lawyer", "company-secretary", "auditor-ca"].includes(activeTab);
   const isPromo = ["marketing", "rd", "promotions"].includes(activeTab);
   const isCorporate = ["corp-ip-manager", "corp-compliances", "corp-contracts", "corp-documents", "corp-due-diligence"].includes(activeTab);
@@ -2902,6 +2903,19 @@ export function AdvocateWorkspaceView() {
           {activeTab === "calendar" && (
             <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
               <ChamberCalendarView advocateName={displayFullName} />
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Task Mite Action Checklist & Chamber Notes Studio        */}
+          {/* ============================================================== */}
+          {activeTab === "taskmite" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
+              <TaskMiteView
+                portalType="advocate"
+                advocateName={displayFullName}
+                onSelectModule={(m) => setActiveTab(m)}
+              />
             </div>
           )}
 

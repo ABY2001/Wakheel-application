@@ -1,0 +1,224 @@
+import { User } from "../models/User.js";
+import { AdvocateProfile } from "../models/AdvocateProfile.js";
+import { CitizenProfile } from "../models/CitizenProfile.js";
+import { Matter } from "../models/Matter.js";
+import { CauseList } from "../models/CauseList.js";
+import { Invoice } from "../models/Invoice.js";
+import { Consultation } from "../models/Consultation.js";
+import { Grievance } from "../models/Grievance.js";
+import { CalendarEvent } from "../models/CalendarEvent.js";
+import { CalendarBacklog } from "../models/CalendarBacklog.js";
+import { NetworkContact } from "../models/NetworkContact.js";
+import { NetworkActivity } from "../models/NetworkActivity.js";
+import { TaskMiteTask } from "../models/TaskMiteTask.js";
+import { TaskMiteNote } from "../models/TaskMiteNote.js";
+
+import {
+  DEFAULT_CALENDAR_FIXTURES,
+  DEFAULT_CALENDAR_BACKLOG,
+  DEFAULT_NETWORK_CONTACTS,
+  DEFAULT_NETWORK_ACTIVITIES,
+  DEFAULT_TASKMITE_TASKS,
+  DEFAULT_TASKMITE_NOTES,
+} from "./devStore.js";
+
+export const seedMongoIfEmpty = async () => {
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log("🌱 Seeding MongoDB initial Users & Profiles...");
+      const advocateUser = await User.create({
+        fullName: "Adv. Meera Krishnan",
+        email: "advocate@inworth.legal",
+        password: "$2a$10$wI5f6uT8rN9yB1p8.3uT2.xO3J7uL9f4bT2i8y7uT6rN5yB4p3uT2", // demo hash
+        role: "advocate",
+        barEnrollmentNumber: "K/001429/2012",
+        phone: "+91 94471 28910",
+        isVerified: true,
+      });
+
+      const citizenUser = await User.create({
+        fullName: "Sri. Gopakumar Nambiar",
+        email: "citizen@inworth.legal",
+        password: "$2a$10$wI5f6uT8rN9yB1p8.3uT2.xO3J7uL9f4bT2i8y7uT6rN5yB4p3uT2",
+        role: "citizen",
+        phone: "+91 98470 12345",
+        isVerified: true,
+      });
+
+      await AdvocateProfile.create({
+        userId: advocateUser._id,
+        barCouncilId: "K/001429/2012",
+        chamberName: "Krishnan & Chambers Legal",
+        primaryCourt: "High Court of Kerala",
+        specializations: ["Constitutional Writs", "Commercial Arbitration", "Civil Injunctions"],
+        experienceYears: 14,
+        officeAddress: "Chamber #412, Marine Drive, Kochi, Kerala - 682031",
+      });
+
+      await CitizenProfile.create({
+        userId: citizenUser._id,
+        aadhaarVerified: true,
+        address: "Nambiar Heritage, Kakkanad, Ernakulam, Kerala - 682030",
+      });
+    }
+
+    const matterCount = await Matter.countDocuments();
+    if (matterCount === 0) {
+      console.log("🌱 Seeding MongoDB initial Matters & Hearings...");
+      await Matter.create([
+        {
+          citizenId: "cit_1",
+          assignedAdvocateId: "adv_1",
+          advocateName: "Adv. Meera Krishnan",
+          matterTitle: "Writ Petition challenging 110kV KSEB Transmission Line realignment across private orchard",
+          caseTitle: "Gopakumar Nambiar v. Kerala State Electricity Board & Ors.",
+          matterType: "Writ Petition (Civil)",
+          caseNumber: "WP(C) 19482/2024",
+          cnrNumber: "KLHC01-019482-2024",
+          courtForum: "High Court of Kerala (Ernakulam)",
+          courtHall: "Court Hall 3A (Item #14)",
+          bench: "Division Bench",
+          petitioner: "Gopakumar Nambiar",
+          respondent: "Kerala State Electricity Board Ltd.",
+          status: "Admitted & Stay Granted",
+          filingDate: new Date("2024-10-18"),
+          nextHearingDate: new Date("2026-10-30"),
+        },
+        {
+          citizenId: "cit_2",
+          assignedAdvocateId: "adv_1",
+          advocateName: "Adv. Meera Krishnan",
+          matterTitle: "Civil Original Suit for Perpetual Prohibitory Injunction regarding Kanayannur boundary easement",
+          caseTitle: "Devika Menon v. K. R. Madhavan & Ors.",
+          matterType: "Original Petition (Civil)",
+          caseNumber: "OP 412/2026",
+          cnrNumber: "KLHC01-000412-2026",
+          courtForum: "Sub-Court, Ernakulam",
+          courtHall: "Court Hall 2",
+          bench: "Single Bench",
+          petitioner: "Devika Menon",
+          respondent: "K. R. Madhavan",
+          status: "Pre-Trial Scrutiny",
+          filingDate: new Date("2026-03-12"),
+          nextHearingDate: new Date("2026-10-30"),
+        },
+      ]);
+    }
+
+    // Seed Calendar Fixtures
+    const calCount = await CalendarEvent.countDocuments();
+    if (calCount === 0) {
+      console.log("🌱 Seeding MongoDB Calendar Fixtures...");
+      const calDocs = DEFAULT_CALENDAR_FIXTURES.map((item) => ({
+        eventId: item.id,
+        userId: "adv_1",
+        title: item.title,
+        category: item.category,
+        date: item.date,
+        time: item.time,
+        duration: item.duration,
+        caseNumber: item.caseNumber,
+        forum: item.forum,
+        clientName: item.clientName,
+        notes: item.notes,
+        status: item.status,
+      }));
+      await CalendarEvent.insertMany(calDocs);
+    }
+
+    // Seed Calendar Backlog
+    const backlogCount = await CalendarBacklog.countDocuments();
+    if (backlogCount === 0) {
+      console.log("🌱 Seeding MongoDB Calendar Backlog...");
+      const bDocs = DEFAULT_CALENDAR_BACKLOG.map((item) => ({
+        taskId: item.id,
+        userId: "adv_1",
+        title: item.title,
+        category: item.category,
+        priority: item.priority,
+        estimatedTime: item.estimatedTime,
+        caseRef: item.caseRef,
+      }));
+      await CalendarBacklog.insertMany(bDocs);
+    }
+
+    // Seed Network Contacts
+    const netCount = await NetworkContact.countDocuments();
+    if (netCount === 0) {
+      console.log("🌱 Seeding MongoDB Professional Network Contacts...");
+      const nDocs = DEFAULT_NETWORK_CONTACTS.map((item) => ({
+        contactId: item.id,
+        userId: "adv_1",
+        name: item.name,
+        degree: item.degree || "1st",
+        role: item.role,
+        chamber: item.chamber,
+        bench: item.bench,
+        court: item.court || item.bench,
+        location: item.location,
+        stage: item.stage,
+        practiceArea: item.practiceArea,
+        source: item.source,
+        mutualsCount: item.mutualsCount || 0,
+        statusQuote: item.statusQuote,
+        lastActive: item.lastActive,
+        isOnline: Boolean(item.isOnline),
+        barEnrollment: item.barEnrollment,
+        phone: item.phone,
+        email: item.email,
+        rating: item.rating || 4.8,
+        feeText: item.feeText,
+        assignedMatterNo: item.assignedMatterNo,
+        assignedMatterTitle: item.assignedMatterTitle,
+        nextHearingDate: item.nextHearingDate,
+        briefsCount: item.briefsCount || 0,
+      }));
+      await NetworkContact.insertMany(nDocs);
+    }
+
+    // Seed Task Mite Tasks
+    const taskCount = await TaskMiteTask.countDocuments();
+    if (taskCount === 0) {
+      console.log("🌱 Seeding MongoDB Task Mite Tasks...");
+      const tDocs = DEFAULT_TASKMITE_TASKS.map((item) => ({
+        taskId: item.id,
+        userId: "adv_1",
+        title: item.title,
+        caseMatter: item.caseMatter,
+        status: item.status,
+        type: item.type,
+        dueDate: item.dueDate,
+        dueTime: item.dueTime,
+        isDueUrgent: Boolean(item.isDueUrgent),
+        priority: item.priority,
+        assignee: item.assignee,
+        notes: item.notes,
+        completedAt: item.completedAt,
+      }));
+      await TaskMiteTask.insertMany(tDocs);
+    }
+
+    // Seed Task Mite Notes
+    const noteCount = await TaskMiteNote.countDocuments();
+    if (noteCount === 0) {
+      console.log("🌱 Seeding MongoDB Task Mite Notes...");
+      const noteDocs = DEFAULT_TASKMITE_NOTES.map((item) => ({
+        noteId: item.id,
+        userId: "adv_1",
+        title: item.title,
+        category: item.category,
+        categoryLabel: item.categoryLabel,
+        content: item.content,
+        tags: item.tags,
+        updatedAt: item.updatedAt,
+        isPinned: Boolean(item.isPinned),
+      }));
+      await TaskMiteNote.insertMany(noteDocs);
+    }
+
+    console.log("✅ MongoDB Schema & Seed verification completed successfully!");
+  } catch (error) {
+    console.warn("⚠️ seedMongoIfEmpty warning:", error.message);
+  }
+};

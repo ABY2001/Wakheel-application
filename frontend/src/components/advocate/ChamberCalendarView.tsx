@@ -318,6 +318,8 @@ export default function ChamberCalendarView({
     try {
       if (!isClientView) {
         await advocateApi.createCalendarBacklogItem(newTask);
+      } else {
+        await citizenApi.createCitizenCalendarBacklogItem(newTask);
       }
     } catch (err) {
       console.warn("Failed to persist backlog item:", err);
@@ -343,6 +345,7 @@ export default function ChamberCalendarView({
     try {
       if (isClientView) {
         await citizenApi.createCitizenCalendarEvent(newEvt);
+        await citizenApi.deleteCitizenCalendarBacklogItem(task.id);
       } else {
         await advocateApi.createCalendarEvent(newEvt);
         await advocateApi.deleteCalendarBacklogItem(task.id);

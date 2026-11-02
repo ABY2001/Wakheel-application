@@ -8,6 +8,12 @@ import { Invoice } from "../models/Invoice.js";
 import { Message } from "../models/Message.js";
 import { User } from "../models/User.js";
 import { AdvocateProfile } from "../models/AdvocateProfile.js";
+import { CalendarEvent } from "../models/CalendarEvent.js";
+import { CalendarBacklog } from "../models/CalendarBacklog.js";
+import { NetworkContact } from "../models/NetworkContact.js";
+import { NetworkActivity } from "../models/NetworkActivity.js";
+import { TaskMiteTask } from "../models/TaskMiteTask.js";
+import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
@@ -2524,8 +2530,18 @@ export const getUnreadMessageCount = async (req, res) => {
 export const getCitizenCalendarEvents = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const events = devStore.getCalendarEvents(userId);
-    res.json({ success: true, events });
+    if (shouldUseDevStore()) {
+      const events = devStore.getCalendarEvents(userId);
+      return res.json({ success: true, events, mode: "dummy_data" });
+    }
+    const events = await CalendarEvent.find({
+      $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }],
+    }).sort({ date: 1 });
+    res.json({
+      success: true,
+      events: events.map((e) => ({ ...e.toObject(), id: e.eventId || e._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getCitizenCalendarEvents error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2535,10 +2551,57 @@ export const getCitizenCalendarEvents = async (req, res) => {
 export const createCitizenCalendarEvent = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const event = devStore.addCalendarEvent(userId, req.body);
-    res.status(201).json({ success: true, event });
+    if (shouldUseDevStore()) {
+      const event = devStore.addCalendarEvent(userId, req.body);
+      return res.status(201).json({ success: true, event });
+    }
+    const event = await CalendarEvent.create({
+      ...req.body,
+      eventId: req.body.id || `evt-${Date.now()}`,
+      userId,
+    });
+    res.status(201).json({
+      success: true,
+      event: { ...event.toObject(), id: event.eventId || event._id.toString() },
+    });
   } catch (error) {
     console.error("createCitizenCalendarEvent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCitizenCalendarEvent = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const event = devStore.updateCalendarEvent(req.params.id, req.body);
+      if (!event) return res.status(404).json({ success: false, message: "Calendar event not found" });
+      return res.json({ success: true, event });
+    }
+    const event = await CalendarEvent.findOneAndUpdate(
+      { $or: [{ eventId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!event) return res.status(404).json({ success: false, message: "Calendar event not found" });
+    res.json({ success: true, event: { ...event.toObject(), id: event.eventId || event._id.toString() } });
+  } catch (error) {
+    console.error("updateCitizenCalendarEvent error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCitizenCalendarEvent = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteCalendarEvent(req.params.id);
+      return res.json({ success: true, message: "Event removed from calendar" });
+    }
+    await CalendarEvent.deleteOne({
+      $or: [{ eventId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Event removed from calendar" });
+  } catch (error) {
+    console.error("deleteCitizenCalendarEvent error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -2546,10 +2609,78 @@ export const createCitizenCalendarEvent = async (req, res) => {
 export const getCitizenCalendarBacklog = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const backlog = devStore.getCalendarBacklog(userId);
-    res.json({ success: true, backlog });
+    if (shouldUseDevStore()) {
+      const backlog = devStore.getCalendarBacklog(userId);
+      return res.json({ success: true, backlog, mode: "dummy_data" });
+    }
+    const backlog = await CalendarBacklog.find({
+      $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }],
+    }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      backlog: backlog.map((b) => ({ ...b.toObject(), id: b.taskId || b._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getCitizenCalendarBacklog error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCitizenCalendarBacklogItem = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const item = devStore.addCalendarBacklogItem(userId, req.body);
+      return res.status(201).json({ success: true, item });
+    }
+    const item = await CalendarBacklog.create({
+      ...req.body,
+      taskId: req.body.id || `bk-${Date.now()}`,
+      userId,
+    });
+    res.status(201).json({
+      success: true,
+      item: { ...item.toObject(), id: item.taskId || item._id.toString() },
+    });
+  } catch (error) {
+    console.error("createCitizenCalendarBacklogItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCitizenCalendarBacklogItem = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const item = devStore.updateCalendarBacklogItem(req.params.id, req.body);
+      if (!item) return res.status(404).json({ success: false, message: "Backlog item not found" });
+      return res.json({ success: true, item });
+    }
+    const item = await CalendarBacklog.findOneAndUpdate(
+      { $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!item) return res.status(404).json({ success: false, message: "Backlog item not found" });
+    res.json({ success: true, item: { ...item.toObject(), id: item.taskId || item._id.toString() } });
+  } catch (error) {
+    console.error("updateCitizenCalendarBacklogItem error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCitizenCalendarBacklogItem = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteCalendarBacklogItem(req.params.id);
+      return res.json({ success: true, message: "Backlog item deleted" });
+    }
+    await CalendarBacklog.deleteOne({
+      $or: [{ taskId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Backlog item deleted" });
+  } catch (error) {
+    console.error("deleteCitizenCalendarBacklogItem error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -2560,16 +2691,33 @@ export const getCitizenCalendarBacklog = async (req, res) => {
 export const getCitizenNetworkContacts = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const contacts = devStore.getNetworkContacts(userId);
-    const activities = devStore.getNetworkActivities(userId);
-    const followups = devStore.getNetworkFollowups(userId);
-    const recommendations = devStore.getNetworkRecommendations(userId);
+    if (shouldUseDevStore()) {
+      const contacts = devStore.getNetworkContacts(userId);
+      const activities = devStore.getNetworkActivities(userId);
+      const followups = devStore.getNetworkFollowups(userId);
+      const recommendations = devStore.getNetworkRecommendations(userId);
+      return res.json({
+        success: true,
+        contacts,
+        activities,
+        followups,
+        recommendations,
+        mode: "dummy_data",
+      });
+    }
+
+    const [contacts, activities] = await Promise.all([
+      NetworkContact.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+      NetworkActivity.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+    ]);
+
     res.json({
       success: true,
-      contacts,
-      activities,
-      followups,
-      recommendations,
+      contacts: contacts.map((c) => ({ ...c.toObject(), id: c.contactId || c._id.toString() })),
+      activities: activities.map((a) => ({ ...a.toObject(), id: a.activityId || a._id.toString() })),
+      followups: devStore.getNetworkFollowups(userId),
+      recommendations: devStore.getNetworkRecommendations(userId),
+      mode: "mongo_db",
     });
   } catch (error) {
     console.error("getCitizenNetworkContacts error:", error);
@@ -2580,13 +2728,34 @@ export const getCitizenNetworkContacts = async (req, res) => {
 export const createCitizenNetworkContact = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const contact = devStore.addNetworkContact(userId, req.body);
-    devStore.addNetworkActivity(userId, {
+    if (shouldUseDevStore()) {
+      const contact = devStore.addNetworkContact(userId, req.body);
+      devStore.addNetworkActivity(userId, {
+        type: "connected",
+        advocateName: contact.name,
+        description: `retained/shortlisted in legal pipeline stage ${contact.stage.toUpperCase()}.`,
+      });
+      return res.status(201).json({ success: true, contact });
+    }
+
+    const contact = await NetworkContact.create({
+      ...req.body,
+      contactId: req.body.id || `c-${Date.now()}`,
+      userId,
+    });
+
+    await NetworkActivity.create({
+      activityId: `act-${Date.now()}`,
+      userId,
       type: "connected",
       advocateName: contact.name,
       description: `retained/shortlisted in legal pipeline stage ${contact.stage.toUpperCase()}.`,
     });
-    res.status(201).json({ success: true, contact });
+
+    res.status(201).json({
+      success: true,
+      contact: { ...contact.toObject(), id: contact.contactId || contact._id.toString() },
+    });
   } catch (error) {
     console.error("createCitizenNetworkContact error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2596,9 +2765,19 @@ export const createCitizenNetworkContact = async (req, res) => {
 export const updateCitizenNetworkContactStage = async (req, res) => {
   try {
     const { stage } = req.body;
-    const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+    if (shouldUseDevStore()) {
+      const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+      if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
+      return res.json({ success: true, contact });
+    }
+
+    const contact = await NetworkContact.findOneAndUpdate(
+      { $or: [{ contactId: req.params.id }, { _id: req.params.id }] },
+      { $set: { stage } },
+      { new: true }
+    );
     if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
-    res.json({ success: true, contact });
+    res.json({ success: true, contact: { ...contact.toObject(), id: contact.contactId || contact._id.toString() } });
   } catch (error) {
     console.error("updateCitizenNetworkContactStage error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2607,7 +2786,13 @@ export const updateCitizenNetworkContactStage = async (req, res) => {
 
 export const deleteCitizenNetworkContact = async (req, res) => {
   try {
-    devStore.deleteNetworkContact(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteNetworkContact(req.params.id);
+      return res.json({ success: true, message: "Contact deleted from network" });
+    }
+    await NetworkContact.deleteOne({
+      $or: [{ contactId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Contact deleted from network" });
   } catch (error) {
     console.error("deleteCitizenNetworkContact error:", error);
@@ -2618,8 +2803,17 @@ export const deleteCitizenNetworkContact = async (req, res) => {
 export const getCitizenNetworkActivities = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const activities = devStore.getNetworkActivities(userId);
-    res.json({ success: true, activities });
+    if (shouldUseDevStore()) {
+      const activities = devStore.getNetworkActivities(userId);
+      return res.json({ success: true, activities });
+    }
+    const activities = await NetworkActivity.find({
+      $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }],
+    }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      activities: activities.map((a) => ({ ...a.toObject(), id: a.activityId || a._id.toString() })),
+    });
   } catch (error) {
     console.error("getCitizenNetworkActivities error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2654,9 +2848,21 @@ export const getCitizenNetworkRecommendations = async (req, res) => {
 export const getCitizenTaskMiteTasks = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const tasks = devStore.getTaskMiteTasks(userId);
-    const notes = devStore.getTaskMiteNotes(userId);
-    res.json({ success: true, tasks, notes });
+    if (shouldUseDevStore()) {
+      const tasks = devStore.getTaskMiteTasks(userId);
+      const notes = devStore.getTaskMiteNotes(userId);
+      return res.json({ success: true, tasks, notes, mode: "dummy_data" });
+    }
+    const [tasks, notes] = await Promise.all([
+      TaskMiteTask.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+      TaskMiteNote.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ isPinned: -1, createdAt: -1 }),
+    ]);
+    res.json({
+      success: true,
+      tasks: tasks.map((t) => ({ ...t.toObject(), id: t.taskId || t._id.toString() })),
+      notes: notes.map((n) => ({ ...n.toObject(), id: n.noteId || n._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getCitizenTaskMiteTasks error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2666,8 +2872,19 @@ export const getCitizenTaskMiteTasks = async (req, res) => {
 export const createCitizenTaskMiteTask = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const task = devStore.addTaskMiteTask(userId, req.body);
-    res.status(201).json({ success: true, task });
+    if (shouldUseDevStore()) {
+      const task = devStore.addTaskMiteTask(userId, req.body);
+      return res.status(201).json({ success: true, task });
+    }
+    const task = await TaskMiteTask.create({
+      ...req.body,
+      taskId: req.body.id || `task-${Date.now()}`,
+      userId,
+    });
+    res.status(201).json({
+      success: true,
+      task: { ...task.toObject(), id: task.taskId || task._id.toString() },
+    });
   } catch (error) {
     console.error("createCitizenTaskMiteTask error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2676,9 +2893,18 @@ export const createCitizenTaskMiteTask = async (req, res) => {
 
 export const updateCitizenTaskMiteTask = async (req, res) => {
   try {
-    const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+    if (shouldUseDevStore()) {
+      const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+      if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+      return res.json({ success: true, task });
+    }
+    const task = await TaskMiteTask.findOneAndUpdate(
+      { $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
     if (!task) return res.status(404).json({ success: false, message: "Task not found" });
-    res.json({ success: true, task });
+    res.json({ success: true, task: { ...task.toObject(), id: task.taskId || task._id.toString() } });
   } catch (error) {
     console.error("updateCitizenTaskMiteTask error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2687,7 +2913,13 @@ export const updateCitizenTaskMiteTask = async (req, res) => {
 
 export const deleteCitizenTaskMiteTask = async (req, res) => {
   try {
-    devStore.deleteTaskMiteTask(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteTaskMiteTask(req.params.id);
+      return res.json({ success: true, message: "Task deleted" });
+    }
+    await TaskMiteTask.deleteOne({
+      $or: [{ taskId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Task deleted" });
   } catch (error) {
     console.error("deleteCitizenTaskMiteTask error:", error);
@@ -2698,8 +2930,18 @@ export const deleteCitizenTaskMiteTask = async (req, res) => {
 export const getCitizenTaskMiteNotes = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const notes = devStore.getTaskMiteNotes(userId);
-    res.json({ success: true, notes });
+    if (shouldUseDevStore()) {
+      const notes = devStore.getTaskMiteNotes(userId);
+      return res.json({ success: true, notes, mode: "dummy_data" });
+    }
+    const notes = await TaskMiteNote.find({
+      $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }],
+    }).sort({ isPinned: -1, createdAt: -1 });
+    res.json({
+      success: true,
+      notes: notes.map((n) => ({ ...n.toObject(), id: n.noteId || n._id.toString() })),
+      mode: "mongo_db",
+    });
   } catch (error) {
     console.error("getCitizenTaskMiteNotes error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2709,8 +2951,19 @@ export const getCitizenTaskMiteNotes = async (req, res) => {
 export const createCitizenTaskMiteNote = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const note = devStore.addTaskMiteNote(userId, req.body);
-    res.status(201).json({ success: true, note });
+    if (shouldUseDevStore()) {
+      const note = devStore.addTaskMiteNote(userId, req.body);
+      return res.status(201).json({ success: true, note });
+    }
+    const note = await TaskMiteNote.create({
+      ...req.body,
+      noteId: req.body.id || `note-${Date.now()}`,
+      userId,
+    });
+    res.status(201).json({
+      success: true,
+      note: { ...note.toObject(), id: note.noteId || note._id.toString() },
+    });
   } catch (error) {
     console.error("createCitizenTaskMiteNote error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2719,11 +2972,25 @@ export const createCitizenTaskMiteNote = async (req, res) => {
 
 export const updateCitizenTaskMiteNote = async (req, res) => {
   try {
-    const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+    if (shouldUseDevStore()) {
+      const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "Note not found" });
+      }
+      return res.json({ success: true, note: updated });
+    }
+    const updated = await TaskMiteNote.findOneAndUpdate(
+      { $or: [{ noteId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
     if (!updated) {
       return res.status(404).json({ success: false, message: "Note not found" });
     }
-    res.json({ success: true, note: updated });
+    res.json({
+      success: true,
+      note: { ...updated.toObject(), id: updated.noteId || updated._id.toString() },
+    });
   } catch (error) {
     console.error("updateCitizenTaskMiteNote error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -2732,7 +2999,13 @@ export const updateCitizenTaskMiteNote = async (req, res) => {
 
 export const deleteCitizenTaskMiteNote = async (req, res) => {
   try {
-    devStore.deleteTaskMiteNote(req.params.id);
+    if (shouldUseDevStore()) {
+      devStore.deleteTaskMiteNote(req.params.id);
+      return res.json({ success: true, message: "Note deleted" });
+    }
+    await TaskMiteNote.deleteOne({
+      $or: [{ noteId: req.params.id }, { _id: req.params.id }],
+    });
     res.json({ success: true, message: "Note deleted" });
   } catch (error) {
     console.error("deleteCitizenTaskMiteNote error:", error);

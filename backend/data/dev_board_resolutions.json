@@ -1,0 +1,70 @@
+[
+  {
+    "id": "res-1",
+    "resolutionId": "res-1",
+    "meetingId": "bm-1",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "cin": "U72200DL2022PTC394812",
+    "resolutionNumber": "RES-01/BM-04/2026-27",
+    "type": "board",
+    "category": "banking",
+    "title": "Opening Current Account & Authorizing Digital Signatories with HDFC Bank Ltd",
+    "actSection": "Section 179(3)(e) of Companies Act 2013",
+    "preambleText": "WHEREAS the Company requires an enhanced corporate banking facility and CMS gateway for operational collections and automated payroll disbursements;",
+    "resolutionText": "RESOLVED THAT a Corporate Current Account in the name of 'CyberCorp Technologies Pvt Ltd' be opened with HDFC Bank Ltd, Connaught Place Branch, New Delhi, and that the Bank be and is hereby authorized to honor all cheques, promissory notes, and electronic RTGS/NEFT transfers drawn on behalf of the Company.",
+    "furtherResolutionText": "FURTHER RESOLVED THAT Dr. Vikram Malhotra (Director) and CS Rajesh Sharma (Company Secretary) be and are hereby jointly authorized to execute all account opening documentation, net banking mandates, and affix the Common Seal/Signature on behalf of the Company.",
+    "authorizedSignatories": [
+      "Dr. Vikram Malhotra",
+      "CS Rajesh Sharma"
+    ],
+    "status": "passed_unanimously",
+    "isCtcGenerated": true,
+    "ctcCertifiedBy": "CS Rajesh Sharma",
+    "ctcCertifiedAt": "2026-11-02"
+  },
+  {
+    "id": "res-2",
+    "resolutionId": "res-2",
+    "meetingId": "bm-1",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "cin": "U72200DL2022PTC394812",
+    "resolutionNumber": "RES-02/BM-04/2026-27",
+    "type": "special",
+    "category": "share_allotment",
+    "title": "Approval of Private Placement Offer Letter (Form PAS-4) for 50,000 Series A CCPS",
+    "actSection": "Section 42 & Section 62(1)(c) of Companies Act 2013 read with PAS Rules",
+    "preambleText": "WHEREAS the Company proposes to raise capital for tech stack expansion through issuance of 0.01% Compulsorily Convertible Preference Shares (CCPS) on private placement terms;",
+    "resolutionText": "RESOLVED THAT subject to the approval of shareholders in General Meeting, the draft Private Placement Offer Letter in Form PAS-4 along with Application Form as placed before the Board be and is hereby approved for circulation to the identified institutional investor M/s Indus Venture Capital Fund.",
+    "furtherResolutionText": "FURTHER RESOLVED THAT an Extraordinary General Meeting (EGM) of the Company be convened on Friday, 28 November 2026 at 11:30 AM to pass the requisite Special Resolution under Section 42 and 62 of the Act.",
+    "authorizedSignatories": [
+      "Priya Sundaram",
+      "CS Rajesh Sharma"
+    ],
+    "status": "passed_unanimously",
+    "isCtcGenerated": false,
+    "ctcCertifiedBy": "",
+    "ctcCertifiedAt": ""
+  },
+  {
+    "id": "res-3",
+    "resolutionId": "res-3",
+    "meetingId": "bm-1",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "cin": "U72200DL2022PTC394812",
+    "resolutionNumber": "RES-03/BM-04/2026-27",
+    "type": "board",
+    "category": "director_appointment",
+    "title": "Appointment of Dr. Ananya Sen as Additional Director (Independent)",
+    "actSection": "Section 161(1) and Section 149 of Companies Act 2013",
+    "preambleText": "WHEREAS the Nomination & Remuneration Committee has recommended the induction of Dr. Ananya Sen to strengthen board oversight in data privacy and cybersecurity standards;",
+    "resolutionText": "RESOLVED THAT pursuant to the provisions of Section 161(1) and other applicable provisions of the Companies Act, 2013 and the Articles of Association, Dr. Ananya Sen (DIN: 09841235) be and is hereby appointed as an Additional Director (Category: Independent) of the Company with immediate effect to hold office up to the date of the next Annual General Meeting.",
+    "furtherResolutionText": "FURTHER RESOLVED THAT CS Rajesh Sharma be authorized to electronically file Form DIR-12 with the Registrar of Companies, Delhi & Haryana, within 30 days.",
+    "authorizedSignatories": [
+      "Dr. Vikram Malhotra"
+    ],
+    "status": "passed_unanimously",
+    "isCtcGenerated": true,
+    "ctcCertifiedBy": "CS Rajesh Sharma",
+    "ctcCertifiedAt": "2026-11-01"
+  }
+]

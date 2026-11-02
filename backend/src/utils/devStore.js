@@ -4517,6 +4517,143 @@ export const devStore = {
   },
 
   // ==========================================================================
+  // --- CS Board Governance (Meetings, Resolutions & SS-1 Minutes) ---
+  // ==========================================================================
+  getBoardMeetings(userId) {
+    return readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
+  },
+
+  createBoardMeeting(userId, data) {
+    const meetings = readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
+    const newMeeting = {
+      id: data.id || `bm-${Date.now()}`,
+      meetingId: data.id || `bm-${Date.now()}`,
+      userId,
+      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
+      cin: data.cin || "U72200DL2022PTC394812",
+      meetingNumber: data.meetingNumber || `BM-0${meetings.length + 1}/2026-27`,
+      meetingType: data.meetingType || "board_meeting",
+      date: data.date || "2026-11-10",
+      time: data.time || "11:00 AM",
+      venue: data.venue || "Board Room, Registered Office & Two-Way Video Conference (Rule 3)",
+      isVideoConference: data.isVideoConference !== undefined ? data.isVideoConference : true,
+      chairperson: data.chairperson || "Dr. Vikram Malhotra (Chairman & Independent Director)",
+      directors: Array.isArray(data.directors) ? data.directors : [
+        { name: "Dr. Vikram Malhotra", din: "08912340", status: "present" },
+        { name: "CS Rajesh Sharma", din: "07849102", status: "present" },
+        { name: "Priya Sundaram", din: "09124589", status: "present_vc" },
+        { name: "Karan Patel", din: "06451290", status: "leave_of_absence" },
+      ],
+      isShorterNotice: Boolean(data.isShorterNotice),
+      shorterNoticeReason: data.shorterNoticeReason || "",
+      status: data.status || "scheduled",
+      agendaItems: Array.isArray(data.agendaItems) && data.agendaItems.length > 0 ? data.agendaItems : [
+        {
+          itemNumber: 1,
+          title: "Leave of Absence & Quorum Verification",
+          description: "Ascertain presence of required quorum per Section 174 of Companies Act 2013.",
+          proposedBy: "Dr. Vikram Malhotra",
+          isStatutory: true,
+        },
+        {
+          itemNumber: 2,
+          title: "Confirmation of Previous Minutes",
+          description: "Confirm minutes of previous board meeting per Secretarial Standard 1 (SS-1).",
+          proposedBy: "CS Rajesh Sharma",
+          isStatutory: true,
+        },
+      ],
+      minutes: data.minutes || { draftContent: "", finalContent: "", signedBy: "", signedAt: "" },
+      createdAt: new Date().toISOString(),
+    };
+    meetings.unshift(newMeeting);
+    writeFile("dev_board_meetings.json", meetings);
+    return newMeeting;
+  },
+
+  updateBoardMeeting(id, updates = {}) {
+    let meetings = readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
+    const idx = meetings.findIndex((m) => m.id === id || m.meetingId === id);
+    if (idx !== -1) {
+      meetings[idx] = { ...meetings[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_board_meetings.json", meetings);
+      return meetings[idx];
+    }
+    return null;
+  },
+
+  deleteBoardMeeting(id) {
+    let meetings = readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
+    meetings = meetings.filter((m) => m.id !== id && m.meetingId !== id);
+    writeFile("dev_board_meetings.json", meetings);
+    return true;
+  },
+
+  getBoardResolutions(userId) {
+    return readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+  },
+
+  createBoardResolution(userId, data) {
+    const resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+    const newRes = {
+      id: data.id || `res-${Date.now()}`,
+      resolutionId: data.id || `res-${Date.now()}`,
+      userId,
+      meetingId: data.meetingId || "bm-1",
+      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
+      cin: data.cin || "U72200DL2022PTC394812",
+      resolutionNumber: data.resolutionNumber || `RES-0${resolutions.length + 1}/BM-04/2026-27`,
+      type: data.type || "board",
+      category: data.category || "banking",
+      title: data.title || "Statutory Board Resolution",
+      actSection: data.actSection || "Section 179(3) of Companies Act 2013",
+      preambleText: data.preambleText || "",
+      resolutionText: data.resolutionText || "RESOLVED THAT the consent of the Board of Directors be and is hereby accorded...",
+      furtherResolutionText: data.furtherResolutionText || "FURTHER RESOLVED THAT any Director or Company Secretary be authorized to file e-forms...",
+      authorizedSignatories: Array.isArray(data.authorizedSignatories) ? data.authorizedSignatories : ["CS Rajesh Sharma", "Dr. Vikram Malhotra"],
+      status: data.status || "passed_unanimously",
+      isCtcGenerated: Boolean(data.isCtcGenerated),
+      ctcCertifiedBy: data.ctcCertifiedBy || "",
+      ctcCertifiedAt: data.ctcCertifiedAt || "",
+      createdAt: new Date().toISOString(),
+    };
+    resolutions.unshift(newRes);
+    writeFile("dev_board_resolutions.json", resolutions);
+    return newRes;
+  },
+
+  updateBoardResolution(id, updates = {}) {
+    let resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+    const idx = resolutions.findIndex((r) => r.id === id || r.resolutionId === id);
+    if (idx !== -1) {
+      resolutions[idx] = { ...resolutions[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_board_resolutions.json", resolutions);
+      return resolutions[idx];
+    }
+    return null;
+  },
+
+  deleteBoardResolution(id) {
+    let resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+    resolutions = resolutions.filter((r) => r.id !== id && r.resolutionId !== id);
+    writeFile("dev_board_resolutions.json", resolutions);
+    return true;
+  },
+
+  generateCtcResolution(id, certifiedBy) {
+    let resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+    const idx = resolutions.findIndex((r) => r.id === id || r.resolutionId === id);
+    if (idx !== -1) {
+      resolutions[idx].isCtcGenerated = true;
+      resolutions[idx].ctcCertifiedBy = certifiedBy || "CS Rajesh Sharma (FCS 8492, CP 10294)";
+      resolutions[idx].ctcCertifiedAt = new Date().toISOString().split("T")[0];
+      writeFile("dev_board_resolutions.json", resolutions);
+      return resolutions[idx];
+    }
+    return null;
+  },
+
+  // ==========================================================================
   // --- Profiles (BCI Credentials & DigiLocker KYC) ---
   // ==========================================================================
   getBciCredentials(userId) {
@@ -6270,3 +6407,181 @@ const DEFAULT_DIGILOCKER_KYC = {
   phone: "+91 94471 28930",
   email: "gopakumar.nambiar@inworth.gov.in",
 };
+
+// ============================================================================
+// DEFAULT CS BOARD GOVERNANCE CONSTANTS (MEETINGS & RESOLUTIONS)
+// ============================================================================
+export const DEFAULT_BOARD_MEETINGS = [
+  {
+    id: "bm-1",
+    meetingId: "bm-1",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    cin: "U72200DL2022PTC394812",
+    meetingNumber: "BM-04/2026-27",
+    meetingType: "board_meeting",
+    date: "2026-11-10",
+    time: "11:00 AM",
+    venue: "Board Room, Registered Office & Two-Way Video Conference (Rule 3)",
+    isVideoConference: true,
+    chairperson: "Dr. Vikram Malhotra (Chairman & Independent Director)",
+    directors: [
+      { name: "Dr. Vikram Malhotra", din: "08912340", status: "present" },
+      { name: "CS Rajesh Sharma", din: "07849102", status: "present" },
+      { name: "Priya Sundaram", din: "09124589", status: "present_vc" },
+      { name: "Karan Patel", din: "06451290", status: "leave_of_absence" },
+    ],
+    isShorterNotice: false,
+    shorterNoticeReason: "",
+    status: "notice_sent",
+    agendaItems: [
+      {
+        itemNumber: 1,
+        title: "Leave of Absence & Quorum Verification",
+        description: "To grant leave of absence to Mr. Karan Patel and ascertain quorum presence per Section 174.",
+        proposedBy: "Dr. Vikram Malhotra",
+        isStatutory: true,
+      },
+      {
+        itemNumber: 2,
+        title: "Confirmation of Previous Minutes (BM-03/2026-27)",
+        description: "To confirm and sign minutes of the previous Board Meeting held on 14 August 2026 per SS-1.",
+        proposedBy: "CS Rajesh Sharma",
+        isStatutory: true,
+      },
+      {
+        itemNumber: 3,
+        title: "Disclosure of Directors' Interest (Form MBP-1 / Section 184)",
+        description: "To take on record general notices of disclosure of interest received from Directors in Form MBP-1.",
+        proposedBy: "CS Rajesh Sharma",
+        isStatutory: true,
+      },
+      {
+        itemNumber: 4,
+        title: "Private Placement of 50,000 CCPS under Section 42 & 62(1)(c)",
+        description: "To approve Draft Form PAS-4 Private Placement Offer Letter and call an EGM for special resolution approval.",
+        proposedBy: "Priya Sundaram",
+        isStatutory: false,
+      },
+      {
+        itemNumber: 5,
+        title: "Revision of Bank Operation Mandates with HDFC Bank",
+        description: "To authorize Joint Signatures for all banking transactions exceeding ₹25,00,000.",
+        proposedBy: "Dr. Vikram Malhotra",
+        isStatutory: false,
+      },
+    ],
+    minutes: {
+      draftContent: "DRAFT MINUTES OF THE 4TH MEETING OF THE BOARD OF DIRECTORS OF CYBERCORP TECHNOLOGIES PVT LTD HELD ON TUESDAY, 10 NOVEMBER 2026 AT 11:00 AM...",
+      finalContent: "",
+      signedBy: "Dr. Vikram Malhotra",
+      signedAt: "",
+    },
+  },
+  {
+    id: "bm-2",
+    meetingId: "bm-2",
+    companyName: "Zenith FinTech India Pvt Ltd",
+    cin: "U65990MH2021PTC362145",
+    meetingNumber: "AGM-05/2026",
+    meetingType: "agm",
+    date: "2026-09-28",
+    time: "02:30 PM",
+    venue: "Auditorium Hall, Marine Lines, Mumbai & Live Webcast",
+    isVideoConference: true,
+    chairperson: "Smt. Devika Menon (Managing Director)",
+    directors: [
+      { name: "Smt. Devika Menon", din: "07123984", status: "present" },
+      { name: "Rahul Sharma", din: "08451290", status: "present" },
+      { name: "Arjun Nambiar", din: "09124589", status: "present" },
+    ],
+    isShorterNotice: false,
+    shorterNoticeReason: "",
+    status: "minutes_signed",
+    agendaItems: [
+      {
+        itemNumber: 1,
+        title: "Adoption of Audited Financial Statements FY 2025-26",
+        description: "To receive, consider and adopt audited Balance Sheet, P&L, and Board Report.",
+        proposedBy: "Smt. Devika Menon",
+        isStatutory: true,
+      },
+      {
+        itemNumber: 2,
+        title: "Declaration of Final Dividend of ₹2.50 per Equity Share",
+        description: "Recommendation of 25% dividend payout out of current year profits.",
+        proposedBy: "Rahul Sharma",
+        isStatutory: false,
+      },
+    ],
+    minutes: {
+      draftContent: "",
+      finalContent: "MINUTES OF THE 5TH ANNUAL GENERAL MEETING OF ZENITH FINTECH INDIA PVT LTD HELD ON 28 SEPTEMBER 2026... All ordinary resolutions passed unanimously. Entered into Minutes Book on 12 October 2026.",
+      signedBy: "Smt. Devika Menon",
+      signedAt: "2026-10-12",
+    },
+  },
+];
+
+export const DEFAULT_BOARD_RESOLUTIONS = [
+  {
+    id: "res-1",
+    resolutionId: "res-1",
+    meetingId: "bm-1",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    cin: "U72200DL2022PTC394812",
+    resolutionNumber: "RES-01/BM-04/2026-27",
+    type: "board",
+    category: "banking",
+    title: "Opening Current Account & Authorizing Digital Signatories with HDFC Bank Ltd",
+    actSection: "Section 179(3)(e) of Companies Act 2013",
+    preambleText: "WHEREAS the Company requires an enhanced corporate banking facility and CMS gateway for operational collections and automated payroll disbursements;",
+    resolutionText: "RESOLVED THAT a Corporate Current Account in the name of 'CyberCorp Technologies Pvt Ltd' be opened with HDFC Bank Ltd, Connaught Place Branch, New Delhi, and that the Bank be and is hereby authorized to honor all cheques, promissory notes, and electronic RTGS/NEFT transfers drawn on behalf of the Company.",
+    furtherResolutionText: "FURTHER RESOLVED THAT Dr. Vikram Malhotra (Director) and CS Rajesh Sharma (Company Secretary) be and are hereby jointly authorized to execute all account opening documentation, net banking mandates, and affix the Common Seal/Signature on behalf of the Company.",
+    authorizedSignatories: ["Dr. Vikram Malhotra", "CS Rajesh Sharma"],
+    status: "passed_unanimously",
+    isCtcGenerated: true,
+    ctcCertifiedBy: "CS Rajesh Sharma (FCS 8492, CP 10294)",
+    ctcCertifiedAt: "2026-11-01",
+  },
+  {
+    id: "res-2",
+    resolutionId: "res-2",
+    meetingId: "bm-1",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    cin: "U72200DL2022PTC394812",
+    resolutionNumber: "RES-02/BM-04/2026-27",
+    type: "special",
+    category: "share_allotment",
+    title: "Approval of Private Placement Offer Letter (Form PAS-4) for 50,000 Series A CCPS",
+    actSection: "Section 42 & Section 62(1)(c) of Companies Act 2013 read with PAS Rules",
+    preambleText: "WHEREAS the Company proposes to raise capital for tech stack expansion through issuance of 0.01% Compulsorily Convertible Preference Shares (CCPS) on private placement terms;",
+    resolutionText: "RESOLVED THAT subject to the approval of shareholders in General Meeting, the draft Private Placement Offer Letter in Form PAS-4 along with Application Form as placed before the Board be and is hereby approved for circulation to the identified institutional investor M/s Indus Venture Capital Fund.",
+    furtherResolutionText: "FURTHER RESOLVED THAT an Extraordinary General Meeting (EGM) of the Company be convened on Friday, 28 November 2026 at 11:30 AM to pass the requisite Special Resolution under Section 42 and 62 of the Act.",
+    authorizedSignatories: ["Priya Sundaram", "CS Rajesh Sharma"],
+    status: "passed_unanimously",
+    isCtcGenerated: false,
+    ctcCertifiedBy: "",
+    ctcCertifiedAt: "",
+  },
+  {
+    id: "res-3",
+    resolutionId: "res-3",
+    meetingId: "bm-1",
+    companyName: "CyberCorp Technologies Pvt Ltd",
+    cin: "U72200DL2022PTC394812",
+    resolutionNumber: "RES-03/BM-04/2026-27",
+    type: "board",
+    category: "director_appointment",
+    title: "Appointment of Dr. Ananya Sen as Additional Director (Independent)",
+    actSection: "Section 161(1) and Section 149 of Companies Act 2013",
+    preambleText: "WHEREAS the Nomination & Remuneration Committee has recommended the induction of Dr. Ananya Sen to strengthen board oversight in data privacy and cybersecurity standards;",
+    resolutionText: "RESOLVED THAT pursuant to the provisions of Section 161(1) and other applicable provisions of the Companies Act, 2013 and the Articles of Association, Dr. Ananya Sen (DIN: 09841235) be and is hereby appointed as an Additional Director (Category: Independent) of the Company with immediate effect to hold office up to the date of the next Annual General Meeting.",
+    furtherResolutionText: "FURTHER RESOLVED THAT CS Rajesh Sharma be authorized to electronically file Form DIR-12 with the Registrar of Companies, Delhi & Haryana, within 30 days.",
+    authorizedSignatories: ["Dr. Vikram Malhotra"],
+    status: "passed_unanimously",
+    isCtcGenerated: true,
+    ctcCertifiedBy: "CS Rajesh Sharma",
+    ctcCertifiedAt: "2026-11-01",
+  },
+];
+

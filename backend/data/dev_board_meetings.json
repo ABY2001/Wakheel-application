@@ -1,0 +1,138 @@
+[
+  {
+    "id": "bm-1",
+    "meetingId": "bm-1",
+    "companyName": "CyberCorp Technologies Pvt Ltd",
+    "cin": "U72200DL2022PTC394812",
+    "meetingNumber": "BM-04/2026-27",
+    "meetingType": "board_meeting",
+    "date": "2026-11-10",
+    "time": "11:00 AM",
+    "venue": "Board Room, Registered Office & Two-Way Video Conference (Rule 3)",
+    "isVideoConference": true,
+    "chairperson": "Dr. Vikram Malhotra (Chairman & Independent Director)",
+    "directors": [
+      {
+        "name": "Dr. Vikram Malhotra",
+        "din": "08912340",
+        "status": "present"
+      },
+      {
+        "name": "CS Rajesh Sharma",
+        "din": "07849102",
+        "status": "present"
+      },
+      {
+        "name": "Priya Sundaram",
+        "din": "09124589",
+        "status": "present_vc"
+      },
+      {
+        "name": "Karan Patel",
+        "din": "06451290",
+        "status": "leave_of_absence"
+      }
+    ],
+    "isShorterNotice": false,
+    "shorterNoticeReason": "",
+    "status": "notice_sent",
+    "agendaItems": [
+      {
+        "itemNumber": 1,
+        "title": "Leave of Absence & Quorum Verification",
+        "description": "To grant leave of absence to Mr. Karan Patel and ascertain quorum presence per Section 174.",
+        "proposedBy": "Dr. Vikram Malhotra",
+        "isStatutory": true
+      },
+      {
+        "itemNumber": 2,
+        "title": "Confirmation of Previous Minutes (BM-03/2026-27)",
+        "description": "To confirm and sign minutes of the previous Board Meeting held on 14 August 2026 per SS-1.",
+        "proposedBy": "CS Rajesh Sharma",
+        "isStatutory": true
+      },
+      {
+        "itemNumber": 3,
+        "title": "Disclosure of Directors' Interest (Form MBP-1 / Section 184)",
+        "description": "To take on record general notices of disclosure of interest received from Directors in Form MBP-1.",
+        "proposedBy": "CS Rajesh Sharma",
+        "isStatutory": true
+      },
+      {
+        "itemNumber": 4,
+        "title": "Private Placement of 50,000 CCPS under Section 42 & 62(1)(c)",
+        "description": "To approve Draft Form PAS-4 Private Placement Offer Letter and call an EGM for special resolution approval.",
+        "proposedBy": "Priya Sundaram",
+        "isStatutory": false
+      },
+      {
+        "itemNumber": 5,
+        "title": "Revision of Bank Operation Mandates with HDFC Bank",
+        "description": "To authorize Joint Signatures for all banking transactions exceeding ₹25,00,000.",
+        "proposedBy": "Dr. Vikram Malhotra",
+        "isStatutory": false
+      }
+    ],
+    "minutes": {
+      "draftContent": "DRAFT MINUTES OF THE 4TH MEETING OF THE BOARD OF DIRECTORS OF CYBERCORP TECHNOLOGIES PVT LTD HELD ON TUESDAY, 10 NOVEMBER 2026 AT 11:00 AM...",
+      "finalContent": "",
+      "signedBy": "Dr. Vikram Malhotra",
+      "signedAt": ""
+    }
+  },
+  {
+    "id": "bm-2",
+    "meetingId": "bm-2",
+    "companyName": "Zenith FinTech India Pvt Ltd",
+    "cin": "U65990MH2021PTC362145",
+    "meetingNumber": "AGM-05/2026",
+    "meetingType": "agm",
+    "date": "2026-09-28",
+    "time": "02:30 PM",
+    "venue": "Auditorium Hall, Marine Lines, Mumbai & Live Webcast",
+    "isVideoConference": true,
+    "chairperson": "Smt. Devika Menon (Managing Director)",
+    "directors": [
+      {
+        "name": "Smt. Devika Menon",
+        "din": "07123984",
+        "status": "present"
+      },
+      {
+        "name": "Rahul Sharma",
+        "din": "08451290",
+        "status": "present"
+      },
+      {
+        "name": "Arjun Nambiar",
+        "din": "09124589",
+        "status": "present"
+      }
+    ],
+    "isShorterNotice": false,
+    "shorterNoticeReason": "",
+    "status": "minutes_signed",
+    "agendaItems": [
+      {
+        "itemNumber": 1,
+        "title": "Adoption of Audited Financial Statements FY 2025-26",
+        "description": "To receive, consider and adopt audited Balance Sheet, P&L, and Board Report.",
+        "proposedBy": "Smt. Devika Menon",
+        "isStatutory": true
+      },
+      {
+        "itemNumber": 2,
+        "title": "Declaration of Final Dividend of ₹2.50 per Equity Share",
+        "description": "Recommendation of 25% dividend payout out of current year profits.",
+        "proposedBy": "Rahul Sharma",
+        "isStatutory": false
+      }
+    ],
+    "minutes": {
+      "draftContent": "",
+      "finalContent": "MINUTES OF THE 5TH ANNUAL GENERAL MEETING OF ZENITH FINTECH INDIA PVT LTD HELD ON 28 SEPTEMBER 2026... All ordinary resolutions passed unanimously. Entered into Minutes Book on 12 October 2026.",
+      "signedBy": "Smt. Devika Menon",
+      "signedAt": "2026-10-12"
+    }
+  }
+]

@@ -17,6 +17,7 @@ import authRoutes from "./routes/authRoutes.js";
 import citizenRoutes from "./routes/citizenRoutes.js";
 import advocateRoutes from "./routes/advocateRoutes.js";
 import copilotRoutes from "./routes/copilotRoutes.js";
+import csRoutes from "./routes/csRoutes.js";
 import { initWebSocketServer } from "./socket.js";
 
 // Connect to MongoDB
@@ -60,6 +61,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/citizen", citizenRoutes);
 app.use("/api/advocate", advocateRoutes);
 app.use("/api/copilot", copilotRoutes);
+app.use("/api/cs", csRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

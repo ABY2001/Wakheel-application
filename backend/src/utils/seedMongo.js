@@ -12,6 +12,8 @@ import { NetworkContact } from "../models/NetworkContact.js";
 import { NetworkActivity } from "../models/NetworkActivity.js";
 import { TaskMiteTask } from "../models/TaskMiteTask.js";
 import { TaskMiteNote } from "../models/TaskMiteNote.js";
+import { BoardMeeting } from "../models/BoardMeeting.js";
+import { BoardResolution } from "../models/BoardResolution.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -20,6 +22,8 @@ import {
   DEFAULT_NETWORK_ACTIVITIES,
   DEFAULT_TASKMITE_TASKS,
   DEFAULT_TASKMITE_NOTES,
+  DEFAULT_BOARD_MEETINGS,
+  DEFAULT_BOARD_RESOLUTIONS,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -215,6 +219,59 @@ export const seedMongoIfEmpty = async () => {
         isPinned: Boolean(item.isPinned),
       }));
       await TaskMiteNote.insertMany(noteDocs);
+    }
+
+    // Seed Board Meetings
+    const meetingCount = await BoardMeeting.countDocuments();
+    if (meetingCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Board Meetings (SS-1)...");
+      const mDocs = DEFAULT_BOARD_MEETINGS.map((item) => ({
+        meetingId: item.id,
+        userId: "cs_1",
+        companyName: item.companyName,
+        cin: item.cin,
+        meetingNumber: item.meetingNumber,
+        meetingType: item.meetingType,
+        date: item.date,
+        time: item.time,
+        venue: item.venue,
+        isVideoConference: item.isVideoConference,
+        chairperson: item.chairperson,
+        directors: item.directors,
+        isShorterNotice: item.isShorterNotice,
+        shorterNoticeReason: item.shorterNoticeReason,
+        status: item.status,
+        agendaItems: item.agendaItems,
+        minutes: item.minutes,
+      }));
+      await BoardMeeting.insertMany(mDocs);
+    }
+
+    // Seed Board Resolutions
+    const resCount = await BoardResolution.countDocuments();
+    if (resCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Board Resolutions & CTCs...");
+      const rDocs = DEFAULT_BOARD_RESOLUTIONS.map((item) => ({
+        resolutionId: item.id,
+        userId: "cs_1",
+        meetingId: item.meetingId,
+        companyName: item.companyName,
+        cin: item.cin,
+        resolutionNumber: item.resolutionNumber,
+        type: item.type,
+        category: item.category,
+        title: item.title,
+        actSection: item.actSection,
+        preambleText: item.preambleText,
+        resolutionText: item.resolutionText,
+        furtherResolutionText: item.furtherResolutionText,
+        authorizedSignatories: item.authorizedSignatories,
+        status: item.status,
+        isCtcGenerated: item.isCtcGenerated,
+        ctcCertifiedBy: item.ctcCertifiedBy,
+        ctcCertifiedAt: item.ctcCertifiedAt,
+      }));
+      await BoardResolution.insertMany(rDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

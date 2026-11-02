@@ -40,6 +40,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import ChamberCalendarView from "@/components/advocate/ChamberCalendarView";
 import { CollabView } from "@/components/advocate/CollabView";
 import { TaskMiteView } from "@/components/common/TaskMiteView";
+import { BoardGovernanceView } from "@/components/firm/BoardGovernanceView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -575,8 +576,19 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             </div>
           )}
 
+          {/* VIEW: Board Governance & Meetings (SS-1 / SS-2) */}
+          {(activeTab === "board-meetings" || activeTab === "resolutions") && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <BoardGovernanceView
+                firmName={firm.name}
+                csName={firm.founderName || "CS Corporate Practice"}
+                initialSubTab={activeTab === "resolutions" ? "resolutions" : "meetings"}
+              />
+            </div>
+          )}
+
           {/* Fallback for other tabs */}
-          {["corporate-entities", "board-meetings", "resolutions", "secretarial-audit", "statutory-registers", "retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
+          {["corporate-entities", "secretarial-audit", "statutory-registers", "retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
             <div className="max-w-4xl mx-auto p-12 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center space-y-3 shadow-xs">
               <div className="w-12 h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center mx-auto font-bold">
                 <Building2 className="w-6 h-6" />

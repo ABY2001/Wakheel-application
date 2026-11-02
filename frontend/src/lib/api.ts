@@ -3126,5 +3126,110 @@ function getFallbackAudit(bundleType?: string) {
   };
 }
 
+// ============================================================================
+// CS FIRM & CORPORATE GOVERNANCE API (SS-1, SS-2, MEETINGS & RESOLUTIONS)
+// ============================================================================
+export const csApi = {
+  async getBoardMeetings(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/meetings`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createBoardMeeting(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/meetings`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateBoardMeeting(id: string, updates: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/meetings/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteBoardMeeting(id: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/meetings/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getBoardResolutions(token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/resolutions`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async createBoardResolution(data: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/resolutions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateBoardResolution(id: string, updates: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/resolutions/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteBoardResolution(id: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/resolutions/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async generateCtcResolution(id: string, certifiedBy?: string, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/cs/resolutions/${id}/ctc`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ certifiedBy }),
+    });
+    return await res.json();
+  },
+};
+
+
 
 

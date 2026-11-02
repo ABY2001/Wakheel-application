@@ -41,6 +41,7 @@ import ChamberCalendarView from "@/components/advocate/ChamberCalendarView";
 import { CollabView } from "@/components/advocate/CollabView";
 import { TaskMiteView } from "@/components/common/TaskMiteView";
 import { BoardGovernanceView } from "@/components/firm/BoardGovernanceView";
+import { RocComplianceView } from "@/components/firm/RocComplianceView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -587,8 +588,27 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             </div>
           )}
 
+          {/* VIEW: ROC & MCA21 Compliance Suite, Statutory Registers & MR-3 Audit */}
+          {(activeTab === "corporate-entities" ||
+            activeTab === "secretarial-audit" ||
+            activeTab === "statutory-registers") && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <RocComplianceView
+                firmName={firm.name}
+                csName={firm.founderName || "CS Corporate Practice"}
+                initialSubTab={
+                  activeTab === "corporate-entities"
+                    ? "entities"
+                    : activeTab === "secretarial-audit"
+                    ? "secretarial-audit"
+                    : "registers"
+                }
+              />
+            </div>
+          )}
+
           {/* Fallback for other tabs */}
-          {["corporate-entities", "secretarial-audit", "statutory-registers", "retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
+          {["retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
             <div className="max-w-4xl mx-auto p-12 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center space-y-3 shadow-xs">
               <div className="w-12 h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center mx-auto font-bold">
                 <Building2 className="w-6 h-6" />

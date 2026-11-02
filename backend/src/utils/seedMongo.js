@@ -14,6 +14,9 @@ import { TaskMiteTask } from "../models/TaskMiteTask.js";
 import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { BoardMeeting } from "../models/BoardMeeting.js";
 import { BoardResolution } from "../models/BoardResolution.js";
+import { CorporateEntity } from "../models/CorporateEntity.js";
+import { RocFiling } from "../models/RocFiling.js";
+import { StatutoryRegister } from "../models/StatutoryRegister.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -24,6 +27,9 @@ import {
   DEFAULT_TASKMITE_NOTES,
   DEFAULT_BOARD_MEETINGS,
   DEFAULT_BOARD_RESOLUTIONS,
+  DEFAULT_CORPORATE_ENTITIES,
+  DEFAULT_ROC_FILINGS,
+  DEFAULT_STATUTORY_REGISTERS,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -272,6 +278,88 @@ export const seedMongoIfEmpty = async () => {
         ctcCertifiedAt: item.ctcCertifiedAt,
       }));
       await BoardResolution.insertMany(rDocs);
+    }
+
+    // Seed Corporate Entities
+    const entCount = await CorporateEntity.countDocuments();
+    if (entCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Corporate Entities...");
+      const entDocs = DEFAULT_CORPORATE_ENTITIES.map((item) => ({
+        entityId: item.id,
+        userId: "cs_1",
+        companyName: item.companyName,
+        cin: item.cin,
+        rocJurisdiction: item.rocJurisdiction,
+        entityType: item.entityType,
+        incorporationDate: item.incorporationDate,
+        authorizedCapital: item.authorizedCapital,
+        paidUpCapital: item.paidUpCapital,
+        registeredAddress: item.registeredAddress,
+        email: item.email,
+        pan: item.pan,
+        gstin: item.gstin,
+        directors: item.directors,
+        financialYearEnd: item.financialYearEnd,
+        complianceHealthScore: item.complianceHealthScore,
+        status: item.status,
+      }));
+      await CorporateEntity.insertMany(entDocs);
+    }
+
+    // Seed ROC Filings
+    const rocCount = await RocFiling.countDocuments();
+    if (rocCount === 0) {
+      console.log("🌱 Seeding MongoDB CS MCA21 & ROC Statutory Filings...");
+      const rocDocs = DEFAULT_ROC_FILINGS.map((item) => ({
+        filingId: item.id,
+        userId: "cs_1",
+        companyName: item.companyName,
+        cin: item.cin,
+        formName: item.formName,
+        formDescription: item.formDescription,
+        financialYear: item.financialYear,
+        statutorySection: item.statutorySection,
+        dueDate: item.dueDate,
+        filingDate: item.filingDate,
+        status: item.status,
+        srn: item.srn,
+        challanAmount: item.challanAmount,
+        lateFeeAmount: item.lateFeeAmount,
+        paymentStatus: item.paymentStatus,
+        signatoryDin: item.signatoryDin,
+        signatoryName: item.signatoryName,
+        pcsCertificateNumber: item.pcsCertificateNumber,
+        attachmentCount: item.attachmentCount,
+        notes: item.notes,
+      }));
+      await RocFiling.insertMany(rocDocs);
+    }
+
+    // Seed Statutory Registers
+    const regCount = await StatutoryRegister.countDocuments();
+    if (regCount === 0) {
+      console.log("🌱 Seeding MongoDB CS Statutory Registers...");
+      const regDocs = DEFAULT_STATUTORY_REGISTERS.map((item) => ({
+        registerEntryId: item.id,
+        userId: "cs_1",
+        companyName: item.companyName,
+        cin: item.cin,
+        registerType: item.registerType,
+        statutoryForm: item.statutoryForm,
+        folioOrRefNumber: item.folioOrRefNumber,
+        primaryHolderName: item.primaryHolderName,
+        identificationNumber: item.identificationNumber,
+        entryDate: item.entryDate,
+        particulars: item.particulars,
+        quantityOrAmount: item.quantityOrAmount,
+        distinctiveFrom: item.distinctiveFrom,
+        distinctiveTo: item.distinctiveTo,
+        certificateNumber: item.certificateNumber,
+        status: item.status,
+        certifiedBy: item.certifiedBy,
+        certifiedAt: item.certifiedAt,
+      }));
+      await StatutoryRegister.insertMany(regDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

@@ -1,5 +1,8 @@
 import { BoardMeeting } from "../models/BoardMeeting.js";
 import { BoardResolution } from "../models/BoardResolution.js";
+import { CorporateEntity } from "../models/CorporateEntity.js";
+import { RocFiling } from "../models/RocFiling.js";
+import { StatutoryRegister } from "../models/StatutoryRegister.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 
@@ -226,6 +229,314 @@ export const generateCtcResolution = async (req, res) => {
     });
   } catch (error) {
     console.error("generateCtcResolution error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 3. CORPORATE ENTITIES CONTROLLERS
+// ============================================================================
+
+export const getCorporateEntities = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const entities = devStore.getCorporateEntities(userId);
+      return res.json({ success: true, entities, mode: "dummy_data" });
+    }
+
+    const entities = await CorporateEntity.find({
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    }).sort({ companyName: 1 });
+
+    res.json({
+      success: true,
+      entities: entities.map((e) => ({ ...e.toObject(), id: e.entityId || e._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getCorporateEntities error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCorporateEntity = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const entity = devStore.createCorporateEntity(userId, req.body);
+      return res.status(201).json({ success: true, entity });
+    }
+
+    const entity = await CorporateEntity.create({
+      ...req.body,
+      entityId: req.body.id || `ent-${Date.now()}`,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      entity: { ...entity.toObject(), id: entity.entityId || entity._id.toString() },
+    });
+  } catch (error) {
+    console.error("createCorporateEntity error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCorporateEntity = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const entity = devStore.updateCorporateEntity(req.params.id, req.body);
+      if (!entity) return res.status(404).json({ success: false, message: "Entity not found" });
+      return res.json({ success: true, entity });
+    }
+
+    const entity = await CorporateEntity.findOneAndUpdate(
+      { $or: [{ entityId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!entity) return res.status(404).json({ success: false, message: "Entity not found" });
+
+    res.json({
+      success: true,
+      entity: { ...entity.toObject(), id: entity.entityId || entity._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateCorporateEntity error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCorporateEntity = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteCorporateEntity(req.params.id);
+      return res.json({ success: true, message: "Entity deleted successfully" });
+    }
+
+    await CorporateEntity.findOneAndDelete({
+      $or: [{ entityId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Entity deleted successfully" });
+  } catch (error) {
+    console.error("deleteCorporateEntity error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 4. MCA21 & ROC STATUTORY FILINGS CONTROLLERS
+// ============================================================================
+
+export const getRocFilings = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { companyName, status, formName } = req.query;
+
+    if (shouldUseDevStore()) {
+      const filings = devStore.getRocFilings(userId, { companyName, status, formName });
+      return res.json({ success: true, filings, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    };
+    if (companyName) query.companyName = companyName;
+    if (status && status !== "ALL") query.status = status;
+    if (formName && formName !== "ALL") query.formName = formName;
+
+    const filings = await RocFiling.find(query).sort({ dueDate: 1 });
+
+    res.json({
+      success: true,
+      filings: filings.map((f) => ({ ...f.toObject(), id: f.filingId || f._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getRocFilings error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createRocFiling = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const filing = devStore.createRocFiling(userId, req.body);
+      return res.status(201).json({ success: true, filing });
+    }
+
+    const filing = await RocFiling.create({
+      ...req.body,
+      filingId: req.body.id || `roc-${Date.now()}`,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      filing: { ...filing.toObject(), id: filing.filingId || filing._id.toString() },
+    });
+  } catch (error) {
+    console.error("createRocFiling error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateRocFiling = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const filing = devStore.updateRocFiling(req.params.id, req.body);
+      if (!filing) return res.status(404).json({ success: false, message: "Filing not found" });
+      return res.json({ success: true, filing });
+    }
+
+    const filing = await RocFiling.findOneAndUpdate(
+      { $or: [{ filingId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!filing) return res.status(404).json({ success: false, message: "Filing not found" });
+
+    res.json({
+      success: true,
+      filing: { ...filing.toObject(), id: filing.filingId || filing._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateRocFiling error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteRocFiling = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteRocFiling(req.params.id);
+      return res.json({ success: true, message: "Filing deleted successfully" });
+    }
+
+    await RocFiling.findOneAndDelete({
+      $or: [{ filingId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Filing deleted successfully" });
+  } catch (error) {
+    console.error("deleteRocFiling error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 5. STATUTORY REGISTERS CONTROLLERS (SEC 88, 170, 85, 186)
+// ============================================================================
+
+export const getStatutoryRegisters = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { companyName, registerType } = req.query;
+
+    if (shouldUseDevStore()) {
+      const registers = devStore.getStatutoryRegisters(userId, { companyName, registerType });
+      return res.json({ success: true, registers, mode: "dummy_data" });
+    }
+
+    const query = {
+      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+    };
+    if (companyName) query.companyName = companyName;
+    if (registerType && registerType !== "ALL") query.registerType = registerType;
+
+    const registers = await StatutoryRegister.find(query).sort({ entryDate: -1 });
+
+    res.json({
+      success: true,
+      registers: registers.map((r) => ({ ...r.toObject(), id: r.registerEntryId || r._id.toString() })),
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getStatutoryRegisters error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createRegisterEntry = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    if (shouldUseDevStore()) {
+      const entry = devStore.createRegisterEntry(userId, req.body);
+      return res.status(201).json({ success: true, entry });
+    }
+
+    const entry = await StatutoryRegister.create({
+      ...req.body,
+      registerEntryId: req.body.id || `reg-${Date.now()}`,
+      userId,
+    });
+
+    res.status(201).json({
+      success: true,
+      entry: { ...entry.toObject(), id: entry.registerEntryId || entry._id.toString() },
+    });
+  } catch (error) {
+    console.error("createRegisterEntry error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateRegisterEntry = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      const entry = devStore.updateRegisterEntry(req.params.id, req.body);
+      if (!entry) return res.status(404).json({ success: false, message: "Register entry not found" });
+      return res.json({ success: true, entry });
+    }
+
+    const entry = await StatutoryRegister.findOneAndUpdate(
+      { $or: [{ registerEntryId: req.params.id }, { _id: req.params.id }] },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!entry) return res.status(404).json({ success: false, message: "Register entry not found" });
+
+    res.json({
+      success: true,
+      entry: { ...entry.toObject(), id: entry.registerEntryId || entry._id.toString() },
+    });
+  } catch (error) {
+    console.error("updateRegisterEntry error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteRegisterEntry = async (req, res) => {
+  try {
+    if (shouldUseDevStore()) {
+      devStore.deleteRegisterEntry(req.params.id);
+      return res.json({ success: true, message: "Register entry deleted successfully" });
+    }
+
+    await StatutoryRegister.findOneAndDelete({
+      $or: [{ registerEntryId: req.params.id }, { _id: req.params.id }],
+    });
+    res.json({ success: true, message: "Register entry deleted successfully" });
+  } catch (error) {
+    console.error("deleteRegisterEntry error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 6. SECRETARIAL AUDIT REPORT (FORM MR-3 PER SECTION 204)
+// ============================================================================
+
+export const getSecretarialAuditReport = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { companyName } = req.query;
+    const report = devStore.getSecretarialAuditReport(userId, companyName || "CyberCorp Technologies Pvt Ltd");
+    res.json({ success: true, report });
+  } catch (error) {
+    console.error("getSecretarialAuditReport error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

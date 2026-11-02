@@ -929,6 +929,19 @@ export const citizenApi = {
     return await res.json();
   },
 
+  async updateCitizenTaskMiteNote(id: string, updates: any, token?: string) {
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
   async deleteCitizenTaskMiteNote(id: string, token?: string) {
     const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes/${id}`, {
@@ -2589,6 +2602,18 @@ export const advocateApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async updateTaskMiteNote(id: string, updates: any, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/taskmite/notes/${id}`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
     });
     return await res.json();
   },

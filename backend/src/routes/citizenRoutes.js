@@ -58,6 +58,7 @@ import {
   deleteCitizenTaskMiteTask,
   getCitizenTaskMiteNotes,
   createCitizenTaskMiteNote,
+  updateCitizenTaskMiteNote,
   deleteCitizenTaskMiteNote,
   getDigiLockerKyc,
   updateDigiLockerKyc,
@@ -135,7 +136,7 @@ router.route("/network/recommendations").get(protect, getCitizenNetworkRecommend
 router.route("/taskmite/tasks").get(protect, getCitizenTaskMiteTasks).post(protect, createCitizenTaskMiteTask);
 router.route("/taskmite/tasks/:id").put(protect, updateCitizenTaskMiteTask).delete(protect, deleteCitizenTaskMiteTask);
 router.route("/taskmite/notes").get(protect, getCitizenTaskMiteNotes).post(protect, createCitizenTaskMiteNote);
-router.route("/taskmite/notes/:id").delete(protect, deleteCitizenTaskMiteNote);
+router.route("/taskmite/notes/:id").put(protect, updateCitizenTaskMiteNote).delete(protect, deleteCitizenTaskMiteNote);
 
 // 14. DigiLocker & Aadhaar e-KYC Verification Suite
 router.route("/profile/kyc").get(protect, getDigiLockerKyc).put(protect, updateDigiLockerKyc);

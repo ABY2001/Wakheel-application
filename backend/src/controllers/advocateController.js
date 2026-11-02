@@ -2647,6 +2647,19 @@ export const createTaskMiteNote = async (req, res) => {
   }
 };
 
+export const updateTaskMiteNote = async (req, res) => {
+  try {
+    const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Note not found" });
+    }
+    res.json({ success: true, note: updated });
+  } catch (error) {
+    console.error("updateTaskMiteNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const deleteTaskMiteNote = async (req, res) => {
   try {
     devStore.deleteTaskMiteNote(req.params.id);

@@ -31,6 +31,9 @@ import {
   Flame,
   ArrowRight,
   Check,
+  Copy,
+  Star,
+  Bell,
 } from "lucide-react";
 
 export type TaskStatus = "not_started" | "in_progress" | "in_review" | "completed";
@@ -331,6 +334,50 @@ export function TaskMiteView({
   const [newAssigneeName, setNewAssigneeName] = useState("Adv. Rajiv Malhotra");
   const [newNotes, setNewNotes] = useState("");
 
+  // Notes UI State (Two-Pane Notes Studio)
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [notesSearchQuery, setNotesSearchQuery] = useState("");
+  const [noteTitleDraft, setNoteTitleDraft] = useState("");
+  const [noteContentDraft, setNoteContentDraft] = useState("");
+  const [noteCategoryDraft, setNoteCategoryDraft] = useState<ChamberNote["category"]>("hearing_memo");
+  const [noteTagsDraft, setNoteTagsDraft] = useState<string[]>([]);
+  const [noteTagInput, setNoteTagInput] = useState("");
+  const [noteIsPinnedDraft, setNoteIsPinnedDraft] = useState(false);
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [noteSaveStatus, setNoteSaveStatus] = useState<"saved" | "unsaved" | "saving">("saved");
+  const [copied, setCopied] = useState(false);
+
+  // Derived selected note
+  const selectedNote = useMemo(() => {
+    return notesList.find((n) => n.id === selectedNoteId) || null;
+  }, [notesList, selectedNoteId]);
+
+  // Derived filtered notes
+  const filteredNotes = useMemo(() => {
+    const q = notesSearchQuery.toLowerCase().trim();
+    return notesList.filter((n) => {
+      if (!q) return true;
+      return (
+        n.title.toLowerCase().includes(q) ||
+        n.content.toLowerCase().includes(q) ||
+        (n.categoryLabel && n.categoryLabel.toLowerCase().includes(q)) ||
+        (n.tags && n.tags.some((t) => t.toLowerCase().includes(q)))
+      );
+    });
+  }, [notesList, notesSearchQuery]);
+
+  // Sync draft states when selected note changes
+  useEffect(() => {
+    if (selectedNote) {
+      setNoteTitleDraft(selectedNote.title || "");
+      setNoteContentDraft(selectedNote.content || "");
+      setNoteCategoryDraft(selectedNote.category || "hearing_memo");
+      setNoteTagsDraft(selectedNote.tags || []);
+      setNoteIsPinnedDraft(Boolean(selectedNote.isPinned));
+      setNoteSaveStatus("saved");
+    }
+  }, [selectedNoteId]);
+
   // Add Note Modal State
   const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
@@ -486,6 +533,129 @@ export function TaskMiteView({
     }
   };
 
+  // Create a brand new note (matching the "Create note" / "Create New Note" button in screenshot)
+  const handleCreateNewNote = async () => {
+    const newNote: ChamberNote = {
+      id: `note-${Date.now()}`,
+      title: "Untitled Legal Memo",
+      category: "hearing_memo",
+      categoryLabel: "Hearing Memo",
+      content: "",
+      tags: ["Chamber"],
+      updatedAt: "Just now",
+      isPinned: false,
+    };
+
+    setNotesList((prev) => [newNote, ...prev]);
+    setSelectedNoteId(newNote.id);
+    setNoteTitleDraft(newNote.title);
+    setNoteContentDraft("");
+    setNoteCategoryDraft("hearing_memo");
+    setNoteTagsDraft(["Chamber"]);
+    setNoteIsPinnedDraft(false);
+    setNoteSaveStatus("saved");
+
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.createCitizenTaskMiteNote(newNote);
+      } else {
+        await advocateApi.createTaskMiteNote(newNote);
+      }
+    } catch (err) {
+      console.warn("Failed to persist new note:", err);
+    }
+  };
+
+  // Save current note updates to state & backend
+  const handleSaveCurrentNote = async (override?: Partial<ChamberNote>) => {
+    if (!selectedNoteId) return;
+    setIsSavingNote(true);
+    setNoteSaveStatus("saving");
+
+    const catLabels: Record<string, string> = {
+      hearing_memo: "Hearing Memo",
+      precedent_notes: "Precedent Research",
+      client_instructions: "Client Instructions",
+      statute_draft: "Statutory Draft",
+    };
+
+    const targetCategory = override?.category !== undefined ? override.category : noteCategoryDraft;
+    const updatedData: Partial<ChamberNote> = {
+      title: override?.title !== undefined ? override.title : noteTitleDraft.trim() || "Untitled Legal Memo",
+      content: override?.content !== undefined ? override.content : noteContentDraft,
+      category: targetCategory,
+      categoryLabel: catLabels[targetCategory] || "Legal Memo",
+      tags: override?.tags !== undefined ? override.tags : noteTagsDraft,
+      isPinned: override?.isPinned !== undefined ? override.isPinned : noteIsPinnedDraft,
+      updatedAt: "Just now",
+    };
+
+    setNotesList((prev) =>
+      prev.map((n) => (n.id === selectedNoteId ? { ...n, ...updatedData } : n))
+    );
+
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.updateCitizenTaskMiteNote(selectedNoteId, updatedData);
+      } else {
+        await advocateApi.updateTaskMiteNote(selectedNoteId, updatedData);
+      }
+      setNoteSaveStatus("saved");
+    } catch (err) {
+      console.warn("Failed to update note:", err);
+      setNoteSaveStatus("unsaved");
+    } finally {
+      setIsSavingNote(false);
+    }
+  };
+
+  // Pin note toggle
+  const handleTogglePinNote = async (noteId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const target = notesList.find((n) => n.id === noteId);
+    if (!target) return;
+    const nextPinned = !target.isPinned;
+    setNotesList((prev) =>
+      prev.map((n) => (n.id === noteId ? { ...n, isPinned: nextPinned } : n))
+    );
+    if (selectedNoteId === noteId) {
+      setNoteIsPinnedDraft(nextPinned);
+    }
+    try {
+      if (portalType === "citizen") {
+        await citizenApi.updateCitizenTaskMiteNote(noteId, { isPinned: nextPinned });
+      } else {
+        await advocateApi.updateTaskMiteNote(noteId, { isPinned: nextPinned });
+      }
+    } catch (err) {
+      console.warn("Failed to toggle note pin:", err);
+    }
+  };
+
+  // Copy note text
+  const handleCopyNote = () => {
+    const fullText = `${noteTitleDraft}\n\n${noteContentDraft}\n\nTags: #${noteTagsDraft.join(" #")}`;
+    navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Tag helpers
+  const handleAddTag = () => {
+    const clean = noteTagInput.trim().replace(/^#/, "");
+    if (!clean || noteTagsDraft.includes(clean)) return;
+    const next = [...noteTagsDraft, clean];
+    setNoteTagsDraft(next);
+    setNoteTagInput("");
+    handleSaveCurrentNote({ tags: next });
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const next = noteTagsDraft.filter((t) => t !== tagToRemove);
+    setNoteTagsDraft(next);
+    handleSaveCurrentNote({ tags: next });
+  };
+
   // Submit new note
   const handleCreateNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -515,6 +685,7 @@ export function TaskMiteView({
     };
 
     setNotesList((prev) => [newNote, ...prev]);
+    setSelectedNoteId(newNote.id);
     setNoteTitle("");
     setNoteContent("");
     setNoteTags("");
@@ -532,8 +703,12 @@ export function TaskMiteView({
   };
 
   // Delete note
-  const handleDeleteNote = async (noteId: string) => {
+  const handleDeleteNote = async (noteId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setNotesList((prev) => prev.filter((n) => n.id !== noteId));
+    if (selectedNoteId === noteId) {
+      setSelectedNoteId(null);
+    }
     try {
       if (portalType === "citizen") {
         await citizenApi.deleteCitizenTaskMiteNote(noteId);
@@ -655,7 +830,7 @@ export function TaskMiteView({
       <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-black">
         {/* =====================================================================
             TOP ACTION BAR: EXACT MATCH TO SCREENSHOT
-            [+ Add new] [Table view | Kanban board] [Filter Icon]
+            [+ Add new] [Table view | Kanban board] [Filter Icon] OR [Search, Bell, Avatar]
         ===================================================================== */}
         <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-black">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -665,7 +840,7 @@ export function TaskMiteView({
                 if (activeTool === "tasks") {
                   setIsAddTaskModalOpen(true);
                 } else {
-                  setIsAddNoteModalOpen(true);
+                  handleCreateNewNote();
                 }
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 font-extrabold text-xs tracking-wide shadow-xs cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
@@ -674,7 +849,7 @@ export function TaskMiteView({
               <span>Add new</span>
             </button>
 
-            {/* View Switchers: Table view | Kanban board */}
+            {/* View Switchers: Table view | Kanban board (Tasks only) */}
             {activeTool === "tasks" && (
               <div className="inline-flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                 <button
@@ -702,31 +877,65 @@ export function TaskMiteView({
               </div>
             )}
 
-            {/* Filter Slider Icon Button */}
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                isFilterOpen
-                  ? "bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6] border-[#6B1728]/30"
-                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-black dark:hover:text-white"
-              }`}
-              title="Toggle Filters"
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
+            {/* Filter Slider Icon Button (Tasks only) */}
+            {activeTool === "tasks" && (
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  isFilterOpen
+                    ? "bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6] border-[#6B1728]/30"
+                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-black dark:hover:text-white"
+                }`}
+                title="Toggle Filters"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          {/* Quick Search */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks, dockets, assignees..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
-            />
-          </div>
+          {/* Right Header items */}
+          {activeTool === "tasks" ? (
+            /* Quick Search for Tasks */
+            <div className="relative w-full sm:w-64">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search tasks, dockets, assignees..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
+              />
+            </div>
+          ) : (
+            /* Notes Subheader Right Controls (Matching uploaded screenshot: Search, Bell, Avatar) */
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("notes-search-input");
+                  if (el) el.focus();
+                }}
+                className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                title="Search notes"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer relative"
+                title="Notifications"
+              >
+                <Bell className="w-4 h-4" />
+                <span className="w-2 h-2 rounded-full bg-[#6B1728] absolute top-1.5 right-1.5" />
+              </button>
+              <div
+                className="w-8 h-8 rounded-full bg-[#003B5C] text-white flex items-center justify-center font-bold text-xs shadow-xs select-none"
+                title={advocateName}
+              >
+                {portalType === "citizen" ? "C" : "A"}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Filter Popover Row if toggled */}
@@ -1163,76 +1372,336 @@ export function TaskMiteView({
         )}
 
         {/* =====================================================================
-            VIEW 2: NOTES (CHAMBER NOTES TOOL)
+            VIEW 2: NOTES MODULE (EXACT TWO-PANE STRUCTURE MATCHING SCREENSHOT)
         ===================================================================== */}
         {activeTool === "notes" && (
-          <div className="p-4 sm:p-6 space-y-5 flex-1 overflow-y-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
-              <div>
-                <h3 className="text-base font-extrabold text-black dark:text-white">
-                  Chamber Notes &amp; Legal Memos
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Precedent bookmarks, case notes, hearing points, and client instructions.
-                </p>
+          <div className="flex-1 flex overflow-hidden min-h-0 bg-white dark:bg-black">
+            {/* -----------------------------------------------------------------
+                PANE 1: NOTES LIST SIDEBAR (MATCHING SCREENSHOT MIDDLE COLUMN)
+            ----------------------------------------------------------------- */}
+            <div className="w-72 sm:w-80 md:w-88 shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-white dark:bg-zinc-950 overflow-hidden">
+              {/* Header: [FileText Icon] Notes [Badge Count]     [+] */}
+              <div className="p-3.5 px-4 border-b border-zinc-100 dark:border-zinc-850 flex items-center justify-between bg-white dark:bg-zinc-950">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#006699] dark:text-[#38bdf8]" />
+                  <span className="font-extrabold text-xs sm:text-sm text-black dark:text-white tracking-tight">
+                    Notes
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#006699]/10 text-[#006699] dark:text-[#38bdf8] border border-[#006699]/20">
+                    {notesList.length}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCreateNewNote}
+                  className="p-1 rounded-md text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-850 transition cursor-pointer"
+                  title="Create note"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
 
-              <button
-                onClick={() => setIsAddNoteModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#6B1728] hover:bg-[#581220] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors self-start sm:self-auto"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ New Note</span>
-              </button>
+              {/* Search input: Search notes... */}
+              <div className="p-3 pb-2">
+                <div className="relative flex items-center">
+                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 pointer-events-none" />
+                  <input
+                    id="notes-search-input"
+                    type="text"
+                    value={notesSearchQuery}
+                    onChange={(e) => setNotesSearchQuery(e.target.value)}
+                    placeholder="Search notes..."
+                    className="w-full pl-8 pr-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-transparent focus:border-zinc-300 dark:focus:border-zinc-700 text-xs text-black dark:text-white placeholder:text-zinc-400 focus:outline-none transition-all"
+                  />
+                  {notesSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setNotesSearchQuery("")}
+                      className="absolute right-2.5 text-zinc-400 hover:text-black dark:hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Notes List / Empty State */}
+              <div className="flex-1 overflow-y-auto p-3 pt-1 space-y-2">
+                {filteredNotes.length === 0 ? (
+                  /* EXACT MATCH TO SCREENSHOT: Dashed Box "No notes found" + "Create note" */
+                  <div className="p-8 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-center space-y-1.5 mt-2 bg-zinc-50/50 dark:bg-zinc-900/30">
+                    <span className="text-xs font-semibold text-zinc-400">
+                      No notes found
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCreateNewNote}
+                      className="text-xs font-bold text-[#006699] dark:text-[#38bdf8] hover:underline cursor-pointer"
+                    >
+                      Create note
+                    </button>
+                  </div>
+                ) : (
+                  filteredNotes.map((note) => {
+                    const isSelected = selectedNoteId === note.id;
+                    return (
+                      <div
+                        key={note.id}
+                        onClick={() => setSelectedNoteId(note.id)}
+                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-2 group ${
+                          isSelected
+                            ? "bg-sky-50/70 dark:bg-sky-950/30 border-sky-300 dark:border-sky-800 shadow-2xs"
+                            : "bg-white dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-1.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${
+                              isSelected
+                                ? "bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6]"
+                                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                            }`}
+                          >
+                            {note.categoryLabel}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {note.isPinned && (
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+                            )}
+                            <span className="text-[10px] font-mono text-zinc-400">
+                              {note.updatedAt}
+                            </span>
+                          </div>
+                        </div>
+
+                        <h4
+                          className={`font-bold text-xs sm:text-sm line-clamp-1 leading-snug ${
+                            isSelected ? "text-black dark:text-white" : "text-zinc-800 dark:text-zinc-200"
+                          }`}
+                        >
+                          {note.title || "Untitled Note"}
+                        </h4>
+
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+                          {note.content || "Empty note content..."}
+                        </p>
+
+                        {note.tags && note.tags.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                            {note.tags.slice(0, 3).map((tg, i) => (
+                              <span
+                                key={i}
+                                className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                              >
+                                #{tg}
+                              </span>
+                            ))}
+                            {note.tags.length > 3 && (
+                              <span className="text-[9px] text-zinc-400">
+                                +{note.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {notesList.map((note) => (
-                <div
-                  key={note.id}
-                  className="p-5 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-2xs hover:border-black dark:hover:border-white transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6] border border-[#6B1728]/25">
-                        {note.categoryLabel}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        {note.updatedAt}
-                      </span>
-                    </div>
+            {/* -----------------------------------------------------------------
+                PANE 2: NOTE DETAIL / EDITOR PANE (MATCHING SCREENSHOT RIGHT COLUMN)
+            ----------------------------------------------------------------- */}
+            <div className="flex-1 flex flex-col h-full bg-white dark:bg-black overflow-hidden min-w-0">
+              {!selectedNote ? (
+                /* EXACT MATCH TO SCREENSHOT: No note selected empty state */
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 select-none">
+                  {/* Pale document icon */}
+                  <div className="w-16 h-16 rounded-2xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 flex items-center justify-center text-[#006699] dark:text-[#38bdf8]">
+                    <FileText className="w-8 h-8 stroke-[1.5]" />
+                  </div>
 
-                    <h4 className="font-extrabold text-sm text-black dark:text-white leading-snug">
-                      {note.title}
-                    </h4>
-
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-3 leading-relaxed">
-                      {note.content}
+                  <div className="space-y-1">
+                    <h3 className="text-base sm:text-lg font-extrabold text-black dark:text-white">
+                      No note selected
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-xs">
+                      Select a note from the left list or create a new one.
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-900 text-[11px]">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {note.tags.map((tg, i) => (
-                        <span
-                          key={i}
-                          className="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-mono text-[10px]"
-                        >
-                          #{tg}
-                        </span>
-                      ))}
+                  <button
+                    type="button"
+                    onClick={handleCreateNewNote}
+                    className="px-6 py-2.5 rounded-full bg-[#003B5C] hover:bg-[#002b44] text-white text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2 hover:scale-[1.02] active:scale-98"
+                  >
+                    <span>Create New Note</span>
+                  </button>
+                </div>
+              ) : (
+                /* ACTIVE NOTE EDITOR */
+                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                  {/* Top Note Action Bar */}
+                  <div className="p-3.5 px-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-zinc-950">
+                    <div className="flex items-center gap-2.5">
+                      {/* Category selector dropdown */}
+                      <select
+                        value={noteCategoryDraft}
+                        onChange={(e) => {
+                          const newCat = e.target.value as ChamberNote["category"];
+                          setNoteCategoryDraft(newCat);
+                          handleSaveCurrentNote({ category: newCat });
+                        }}
+                        className="px-3 py-1 rounded-full text-xs font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6] border border-[#6B1728]/25 focus:outline-none cursor-pointer"
+                      >
+                        <option value="hearing_memo">Hearing Memo</option>
+                        <option value="precedent_notes">Precedent Research</option>
+                        <option value="client_instructions">Client Instructions</option>
+                        <option value="statute_draft">Statutory Draft</option>
+                      </select>
+
+                      <span className="text-[11px] font-mono text-zinc-400">
+                        {noteSaveStatus === "saving" ? (
+                          <span className="text-amber-500 flex items-center gap-1">
+                            Saving...
+                          </span>
+                        ) : noteSaveStatus === "saved" ? (
+                          <span className="text-emerald-500 flex items-center gap-1">
+                            <Check className="w-3 h-3" /> Saved
+                          </span>
+                        ) : (
+                          "Unsaved edits"
+                        )}
+                      </span>
                     </div>
 
-                    <button
-                      onClick={() => handleDeleteNote(note.id)}
-                      className="p-1 text-zinc-400 hover:text-red-500 cursor-pointer"
-                      title="Delete note"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Pin button */}
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePinNote(selectedNote.id)}
+                        className={`p-2 rounded-full border transition cursor-pointer ${
+                          noteIsPinnedDraft
+                            ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-500"
+                            : "border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white"
+                        }`}
+                        title={noteIsPinnedDraft ? "Unpin note" : "Pin note to top"}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${noteIsPinnedDraft ? "fill-amber-400" : ""}`} />
+                      </button>
+
+                      {/* Copy note */}
+                      <button
+                        type="button"
+                        onClick={handleCopyNote}
+                        className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white transition cursor-pointer"
+                        title={copied ? "Copied!" : "Copy note content"}
+                      >
+                        {copied ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+
+                      {/* Delete note */}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteNote(selectedNote.id)}
+                        className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-red-500 hover:border-red-200 dark:hover:border-red-900 transition cursor-pointer"
+                        title="Delete note"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Close / Unselect note */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedNoteId(null)}
+                        className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-black dark:hover:text-white transition cursor-pointer"
+                        title="Close Note"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Note Editing Area */}
+                  <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-4">
+                    {/* Title Input */}
+                    <input
+                      type="text"
+                      value={noteTitleDraft}
+                      onChange={(e) => {
+                        setNoteTitleDraft(e.target.value);
+                        setNoteSaveStatus("unsaved");
+                      }}
+                      onBlur={() => handleSaveCurrentNote()}
+                      placeholder="Note Title..."
+                      className="w-full text-xl sm:text-2xl font-extrabold text-black dark:text-white bg-transparent border-none focus:outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700 tracking-tight"
+                    />
+
+                    {/* Tags row */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1 pb-2 border-b border-zinc-100 dark:border-zinc-850">
+                      <Tag className="w-3.5 h-3.5 text-zinc-400" />
+                      {noteTagsDraft.map((tg, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                        >
+                          #{tg}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tg)}
+                            className="hover:text-red-500 cursor-pointer ml-0.5"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+
+                      <div className="inline-flex items-center gap-1">
+                        <input
+                          type="text"
+                          value={noteTagInput}
+                          onChange={(e) => setNoteTagInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddTag();
+                            }
+                          }}
+                          placeholder="+ add tag"
+                          className="px-2 py-0.5 text-xs font-mono bg-transparent text-zinc-700 dark:text-zinc-300 placeholder:text-zinc-400 focus:outline-none w-20"
+                        />
+                        {noteTagInput && (
+                          <button
+                            type="button"
+                            onClick={handleAddTag}
+                            className="text-xs font-bold text-[#6B1728] dark:text-[#ff94a6] cursor-pointer"
+                          >
+                            Add
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content Textarea */}
+                    <textarea
+                      value={noteContentDraft}
+                      onChange={(e) => {
+                        setNoteContentDraft(e.target.value);
+                        setNoteSaveStatus("unsaved");
+                      }}
+                      onBlur={() => handleSaveCurrentNote()}
+                      placeholder="Start typing your chamber notes, precedent analysis, hearing points, or client dictation here..."
+                      className="w-full h-[calc(100vh-380px)] min-h-[300px] resize-none bg-transparent text-sm leading-relaxed text-black dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none font-sans"
+                    />
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}

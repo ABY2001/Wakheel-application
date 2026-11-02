@@ -2717,6 +2717,19 @@ export const createCitizenTaskMiteNote = async (req, res) => {
   }
 };
 
+export const updateCitizenTaskMiteNote = async (req, res) => {
+  try {
+    const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Note not found" });
+    }
+    res.json({ success: true, note: updated });
+  } catch (error) {
+    console.error("updateCitizenTaskMiteNote error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const deleteCitizenTaskMiteNote = async (req, res) => {
   try {
     devStore.deleteTaskMiteNote(req.params.id);

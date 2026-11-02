@@ -109,6 +109,7 @@ import {
   deleteTaskMiteTask,
   getTaskMiteNotes,
   createTaskMiteNote,
+  updateTaskMiteNote,
   deleteTaskMiteNote,
   getBciCredentials,
   updateBciCredentials,
@@ -273,7 +274,9 @@ router.put("/taskmite/tasks/:id", protect, updateTaskMiteTask);
 router.delete("/taskmite/tasks/:id", protect, deleteTaskMiteTask);
 router.get("/taskmite/notes", protect, getTaskMiteNotes);
 router.post("/taskmite/notes", protect, createTaskMiteNote);
-router.delete("/taskmite/notes/:id", protect, deleteTaskMiteNote);
+router.route("/taskmite/notes/:id")
+  .put(protect, updateTaskMiteNote)
+  .delete(protect, deleteTaskMiteNote);
 
 // 25. BCI Credentials & Chamber Authentication Suite
 router.get("/profile/bci", protect, getBciCredentials);

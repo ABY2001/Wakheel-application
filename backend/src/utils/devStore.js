@@ -4500,6 +4500,22 @@ export const devStore = {
     return true;
   },
 
+  updateTaskMiteNote(id, updates = {}) {
+    let notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+    const idx = notes.findIndex((n) => n.id === id);
+    if (idx !== -1) {
+      notes[idx] = {
+        ...notes[idx],
+        ...updates,
+        updatedAt: updates.updatedAt || "Just now",
+        lastModified: new Date().toISOString(),
+      };
+      writeFile("dev_taskmite_notes.json", notes);
+      return notes[idx];
+    }
+    return null;
+  },
+
   // ==========================================================================
   // --- Profiles (BCI Credentials & DigiLocker KYC) ---
   // ==========================================================================

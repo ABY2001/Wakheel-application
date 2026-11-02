@@ -37,6 +37,9 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import ChamberCalendarView from "@/components/advocate/ChamberCalendarView";
+import { CollabView } from "@/components/advocate/CollabView";
+import { TaskMiteView } from "@/components/common/TaskMiteView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -94,6 +97,18 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Compliance Calendar",
           subtitle: "Statutory deadlines & ROC timeline",
           icon: Calendar,
+        },
+        {
+          id: "my-hub",
+          label: "My Hub",
+          subtitle: "Command center & collaboration",
+          icon: Users,
+        },
+        {
+          id: "taskmite",
+          label: "Task Mite & Notes",
+          subtitle: "Secretarial notes & task delegation",
+          icon: CheckCircle2,
         },
         {
           id: "corporate-entities",
@@ -532,8 +547,36 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             </div>
           )}
 
+          {/* VIEW: Compliance Calendar */}
+          {activeTab === "compliance-calendar" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
+              <ChamberCalendarView advocateName={firm.founderName || "CS Corporate Practice"} />
+            </div>
+          )}
+
+          {/* VIEW: My Hub */}
+          {activeTab === "my-hub" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto space-y-6">
+              <CollabView
+                activeModule="my-hub"
+                onSelectModule={(m) => setActiveTab(m)}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Task Mite & Notes Studio */}
+          {activeTab === "taskmite" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
+              <TaskMiteView
+                portalType="advocate"
+                advocateName={firm.founderName || "CS Corporate Practice"}
+                onSelectModule={(m) => setActiveTab(m)}
+              />
+            </div>
+          )}
+
           {/* Fallback for other tabs */}
-          {["compliance-calendar", "corporate-entities", "board-meetings", "resolutions", "secretarial-audit", "statutory-registers", "retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
+          {["corporate-entities", "board-meetings", "resolutions", "secretarial-audit", "statutory-registers", "retainer-advocates", "contracts", "vault", "billing"].includes(activeTab) && (
             <div className="max-w-4xl mx-auto p-12 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center space-y-3 shadow-xs">
               <div className="w-12 h-12 rounded-2xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center mx-auto font-bold">
                 <Building2 className="w-6 h-6" />

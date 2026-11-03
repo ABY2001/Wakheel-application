@@ -538,28 +538,27 @@ export function CaWorkspaceView({
     <div className="w-full space-y-6">
       
       {/* =========================================================================
-          TOP BANNER & PRACTICE MODE IDENTIFIER
+          TOP BANNER & PRACTICE MODE IDENTIFIER (High Contrast Redesign)
       ========================================================================= */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-red-950/40 via-zinc-900 to-black border border-red-900/30 text-white relative overflow-hidden shadow-xl">
-        <div className="absolute right-0 top-0 bottom-0 w-96 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/10 via-transparent to-transparent pointer-events-none" />
+      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white relative overflow-hidden shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 rounded-full bg-red-600 text-white text-[11px] font-mono font-bold tracking-wider uppercase shadow-xs">
+              <span className="px-3 py-1 rounded-full bg-red-700 text-white text-[11px] font-mono font-bold tracking-wider uppercase shadow-xs">
                 CA FIRM WORKSPACE
               </span>
-              <span className="px-2.5 py-0.5 rounded-full border border-zinc-700 bg-zinc-800/80 text-[11px] font-mono font-semibold text-zinc-300">
+              <span className="px-2.5 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-[11px] font-mono font-bold text-zinc-800 dark:text-zinc-200">
                 ICAI Reg: FRN-018241N
               </span>
-              <span className="px-2.5 py-0.5 rounded-full border border-emerald-800 bg-emerald-950/60 text-[11px] font-mono font-semibold text-emerald-400 flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Valid COP &amp; UDIN Active
               </span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">
+            <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
               {firmName}
             </h2>
-            <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
               Statutory Tax Compliance, Income Tax E-filing (ITR 1-7), Dual Depreciation Schedules (Rule 5 vs Schedule II), Section 44AB Tax Audit Review with 1-Click ICAI UDIN generation, and 2B ITC matching.
             </p>
           </div>
@@ -568,9 +567,9 @@ export function CaWorkspaceView({
             {onSwitchToCs && (
               <button
                 onClick={onSwitchToCs}
-                className="px-4 py-2 rounded-full border border-zinc-700 hover:border-zinc-500 bg-zinc-900/80 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-900 dark:text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs"
               >
-                <Building2 className="w-3.5 h-3.5 text-zinc-400" />
+                <Building2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                 <span>Switch to CS Practice (MCA/ROC)</span>
               </button>
             )}
@@ -581,7 +580,7 @@ export function CaWorkspaceView({
                 else if (activeTab === "tax-audit") setNewAuditModalOpen(true);
                 else setNewReconModalOpen(true);
               }}
-              className="px-5 py-2.5 rounded-full bg-white hover:bg-zinc-100 text-black text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-100 text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>
@@ -598,30 +597,30 @@ export function CaWorkspaceView({
         </div>
 
         {/* Aggregate Quick Metric Badges */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-5 mt-5 border-t border-zinc-800/80 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-5 mt-5 border-t border-zinc-200 dark:border-zinc-800 text-xs">
           <div>
-            <span className="text-[10px] text-zinc-400 uppercase font-mono block">Gross Assessed</span>
-            <span className="font-bold text-white text-sm">{formatInr(metrics.totalGross)}</span>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase font-mono font-bold block mb-0.5">Gross Assessed</span>
+            <span className="font-bold text-zinc-900 dark:text-white text-sm">{formatInr(metrics.totalGross)}</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-400 uppercase font-mono block">GST Turnover Tracked</span>
-            <span className="font-bold text-white text-sm">{formatInr(metrics.totalGstTurnover)}</span>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase font-mono font-bold block mb-0.5">GST Turnover Tracked</span>
+            <span className="font-bold text-zinc-900 dark:text-white text-sm">{formatInr(metrics.totalGstTurnover)}</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-400 uppercase font-mono block">ITC Claimed</span>
-            <span className="font-bold text-emerald-400 text-sm">{formatInr(metrics.totalItc)}</span>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase font-mono font-bold block mb-0.5">ITC Claimed</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{formatInr(metrics.totalItc)}</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-400 uppercase font-mono block">Sec 44AB Audits</span>
-            <span className="font-bold text-white text-sm">{metrics.totalAudits} Mandates</span>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase font-mono font-bold block mb-0.5">Sec 44AB Audits</span>
+            <span className="font-bold text-zinc-900 dark:text-white text-sm">{metrics.totalAudits} Mandates</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-400 uppercase font-mono block">UDINs Issued</span>
-            <span className="font-bold text-cyan-400 text-sm">{metrics.udinDone} of {metrics.totalAudits}</span>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase font-mono font-bold block mb-0.5">UDINs Issued</span>
+            <span className="font-bold text-cyan-600 dark:text-cyan-400 text-sm">{metrics.udinDone} of {metrics.totalAudits}</span>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-400 uppercase font-mono block">Depr. Timing Diff</span>
-            <span className="font-bold text-amber-400 text-sm">{formatInr(metrics.totalDeprDiff)}</span>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase font-mono font-bold block mb-0.5">Depr. Timing Diff</span>
+            <span className="font-bold text-amber-600 dark:text-amber-400 text-sm">{formatInr(metrics.totalDeprDiff)}</span>
           </div>
         </div>
       </div>

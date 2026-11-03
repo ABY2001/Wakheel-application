@@ -316,52 +316,50 @@ export function UnifiedClientHubView({
     <div className="w-full space-y-6">
       
       {/* =========================================================================
-          TOP BANNER: 360° CLIENT COMPLIANCE MATRIX
+          TOP BANNER: 360° CLIENT COMPLIANCE MATRIX (High Contrast Redesign)
       ========================================================================= */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-zinc-900 via-neutral-900 to-black border border-zinc-800 text-white relative overflow-hidden shadow-2xl">
-        <div className="absolute right-0 top-0 bottom-0 w-96 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/10 via-blue-600/5 to-transparent pointer-events-none" />
-        
+      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white relative overflow-hidden shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-black border border-zinc-700 text-[10px] font-mono font-bold tracking-widest uppercase text-white shadow-xs">
+              <span className="px-3 py-1 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-[11px] font-mono font-extrabold tracking-widest uppercase shadow-xs">
                 UNIFIED CLIENT 360° HUB
               </span>
-              <span className="px-2.5 py-0.5 rounded-full border border-red-900/40 bg-red-950/60 text-[11px] font-mono font-bold text-red-300">
+              <span className="px-3 py-1 rounded-full border border-red-300 dark:border-red-800 bg-red-100 dark:bg-red-950/80 text-[11px] font-mono font-bold text-red-900 dark:text-red-200">
                 CS Governance + CA Taxation Bridge
               </span>
-              <span className="px-2.5 py-0.5 rounded-full border border-emerald-900/40 bg-emerald-950/60 text-[11px] font-mono font-bold text-emerald-300 flex items-center gap-1">
+              <span className="px-3 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-100 dark:bg-emerald-950/80 text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Dual Statutory Verified
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold tracking-tight text-white">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
                 {selectedEntity?.companyName || "Managed Corporate Client"}
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-white text-black uppercase">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 uppercase shadow-xs">
                 {selectedEntity?.entityType?.replace("_", " ") || "PVT LTD"}
               </span>
             </div>
 
-            <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 max-w-3xl leading-relaxed font-normal">
               Consolidated command center mapping MCA21 corporate filings, secretarial registers, and board resolutions with Income Tax ITR-6, GSTR-3B filings, Section 44AB tax audits, and Schedule III balance sheet reconciliations.
             </p>
           </div>
 
           {/* Quick Hub Actions */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setDossierPrintModalOpen(true)}
-              className="px-4 py-2.5 rounded-full border border-zinc-700 hover:border-zinc-500 bg-zinc-900/80 hover:bg-zinc-800 text-xs font-bold text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              className="px-4 py-2.5 rounded-xl border-2 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-900 dark:text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <Printer className="w-3.5 h-3.5 text-zinc-400" />
+              <Printer className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
               <span>Print 360° Board Dossier</span>
             </button>
             <button
               onClick={() => setNewEntityModalOpen(true)}
-              className="px-5 py-2.5 rounded-full bg-white hover:bg-zinc-100 text-black text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>+ Onboard New Entity</span>
@@ -369,68 +367,68 @@ export function UnifiedClientHubView({
           </div>
         </div>
 
-        {/* Selected Entity Key Attributes Ribbon */}
+        {/* Selected Entity Key Attributes Ribbon (High Contrast Container) */}
         {selectedEntity && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 pt-5 mt-5 border-t border-zinc-800/80 text-xs">
+          <div className="bg-zinc-50 dark:bg-zinc-900/70 p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 text-xs mt-5">
             <div>
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">CIN / LLPIN</span>
-              <div className="flex items-center gap-1 font-mono font-bold text-white text-xs truncate">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">CIN / LLPIN</span>
+              <div className="flex items-center gap-1.5 font-mono font-black text-zinc-950 dark:text-white text-xs truncate">
                 <span className="truncate">{selectedEntity.cin}</span>
                 <button
                   onClick={() => handleCopy(selectedEntity.cin, "copy-cin")}
                   title="Copy CIN"
-                  className="hover:text-red-400 shrink-0"
+                  className="hover:text-red-600 shrink-0 cursor-pointer p-0.5"
                 >
-                  {copiedId === "copy-cin" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                  {copiedId === "copy-cin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-900" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Permanent A/C (PAN)</span>
-              <div className="flex items-center gap-1 font-mono font-bold text-white text-xs">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Permanent A/C (PAN)</span>
+              <div className="flex items-center gap-1.5 font-mono font-black text-zinc-950 dark:text-white text-xs">
                 <span>{selectedEntity.pan || "AAECS1234F"}</span>
                 <button
                   onClick={() => handleCopy(selectedEntity.pan || "AAECS1234F", "copy-pan")}
                   title="Copy PAN"
-                  className="hover:text-red-400"
+                  className="hover:text-red-600 cursor-pointer p-0.5"
                 >
-                  {copiedId === "copy-pan" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                  {copiedId === "copy-pan" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-900" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">GSTIN Number</span>
-              <div className="flex items-center gap-1 font-mono font-bold text-cyan-400 text-xs truncate">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">GSTIN Number</span>
+              <div className="flex items-center gap-1.5 font-mono font-black text-blue-700 dark:text-cyan-400 text-xs truncate">
                 <span className="truncate">{selectedEntity.gstin || "07AAECS1234F1Z8"}</span>
                 <button
                   onClick={() => handleCopy(selectedEntity.gstin || "07AAECS1234F1Z8", "copy-gstin")}
                   title="Copy GSTIN"
-                  className="hover:text-cyan-200 shrink-0"
+                  className="hover:text-blue-900 dark:hover:text-cyan-200 shrink-0 cursor-pointer p-0.5"
                 >
-                  {copiedId === "copy-gstin" ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                  {copiedId === "copy-gstin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-900" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Share Capital (Auth/Paid)</span>
-              <span className="font-bold text-white text-xs">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Share Capital (Auth/Paid)</span>
+              <span className="font-extrabold text-zinc-950 dark:text-white text-xs">
                 {formatInr(selectedEntity.authorizedCapital)} / {formatInr(selectedEntity.paidUpCapital)}
               </span>
             </div>
 
             <div>
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Active Directors / KMPs</span>
-              <span className="font-bold text-white text-xs">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Active Directors / KMPs</span>
+              <span className="font-extrabold text-zinc-950 dark:text-white text-xs">
                 {selectedEntity.directors?.length || 2} Appointed (All KYC Clear)
               </span>
             </div>
 
             <div>
-              <span className="text-[10px] text-zinc-400 uppercase font-mono block">Composite 360° Score</span>
-              <span className="font-bold text-emerald-400 text-sm flex items-center gap-1">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Composite 360° Score</span>
+              <span className="font-black text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 {compositeScore}/100 Grade A+
               </span>
@@ -442,19 +440,19 @@ export function UnifiedClientHubView({
       {/* =========================================================================
           CLIENT SELECTOR CARDS ROW
       ========================================================================= */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
             Switch Managed Client Entity ({entities.length} Portfolios):
           </span>
-          <div className="relative w-64">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative w-72">
+            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search entity, CIN, PAN..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1 text-xs rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-red-600 transition-all font-sans"
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-red-600 transition-all font-sans font-medium"
             />
           </div>
         </div>
@@ -473,30 +471,30 @@ export function UnifiedClientHubView({
                 <button
                   key={ent.id || (ent as any)._id}
                   onClick={() => setSelectedEntityId(ent.id || (ent as any)._id)}
-                  className={`p-4 rounded-2xl text-left border transition-all cursor-pointer space-y-2 ${
+                  className={`p-4 rounded-2xl text-left border-2 transition-all cursor-pointer space-y-2 ${
                     isSelected
-                      ? "bg-black text-white dark:bg-white dark:text-black border-transparent shadow-lg scale-101"
-                      : "bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600"
+                      ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-lg scale-101"
+                      : "bg-white dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-xs"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="font-bold text-xs truncate leading-tight">
+                    <div className="font-extrabold text-sm truncate leading-tight">
                       {ent.companyName}
                     </div>
                     <span
-                      className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase shrink-0 ${
                         isSelected
-                          ? "bg-zinc-800 text-zinc-200 dark:bg-zinc-200 dark:text-zinc-900"
-                          : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500"
+                          ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900"
+                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                       }`}
                     >
                       {ent.entityType.replace("_", " ")}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono opacity-80">
-                    <span className="truncate">{ent.cin}</span>
-                    <span className="text-emerald-500 font-bold ml-2 shrink-0">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="truncate opacity-90">{ent.cin}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-extrabold ml-2 shrink-0">
                       {ent.complianceHealthScore || 96}% Health
                     </span>
                   </div>
@@ -509,7 +507,7 @@ export function UnifiedClientHubView({
       {/* =========================================================================
           SUB-TAB NAVIGATION (360° Matrix, Secretarial CS, Taxation CA, Recon Audit)
       ========================================================================= */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-zinc-200 dark:border-zinc-800 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           {[
             {
@@ -549,19 +547,19 @@ export function UnifiedClientHubView({
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id as any)}
-                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
                   isActive
-                    ? "bg-black text-white dark:bg-white dark:text-black shadow-md scale-102"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-md scale-102"
+                    : "text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent font-semibold"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{tab.label}</span>
                 <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                     isActive
-                      ? "bg-zinc-800 text-zinc-200 dark:bg-zinc-200 dark:text-zinc-900"
-                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                      ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900"
+                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                   }`}
                 >
                   {tab.badge}
@@ -574,9 +572,9 @@ export function UnifiedClientHubView({
         <button
           onClick={loadAllData}
           title="Refresh All Client Data"
-          className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+          className="p-2.5 rounded-xl border-2 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-700 hover:text-black dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer shadow-xs"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-red-600" : ""}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-red-600" : ""}`} />
         </button>
       </div>
 
@@ -590,69 +588,69 @@ export function UnifiedClientHubView({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* PILLAR LEFT: Company Secretary (ICSI / MCA21) */}
-            <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xs">
+            <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 flex items-center justify-center font-black text-xs shadow-xs">
                     CS
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-black dark:text-white">
+                    <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white">
                       Secretarial &amp; Corporate Governance
                     </h3>
-                    <p className="text-[10px] font-mono text-zinc-500">
+                    <p className="text-[11px] font-mono font-medium text-zinc-600 dark:text-zinc-400">
                       Companies Act 2013 • ICSI Secretarial Standards (SS-1 &amp; SS-2)
                     </p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                   98% Secretarial Score
                 </span>
               </div>
 
               {/* Secretarial Key Data Points */}
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">RoC Jurisdiction</span>
-                  <span className="font-bold text-black dark:text-white block truncate">{selectedEntity.rocJurisdiction}</span>
-                  <span className="text-[10px] text-zinc-500">Incorp: {selectedEntity.incorporationDate}</span>
+                <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 uppercase font-bold tracking-wider">RoC Jurisdiction</span>
+                  <span className="font-extrabold text-zinc-950 dark:text-white block truncate">{selectedEntity.rocJurisdiction}</span>
+                  <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">Incorp: {selectedEntity.incorporationDate}</span>
                 </div>
-                <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Board &amp; Committees</span>
-                  <span className="font-bold text-black dark:text-white block">
+                <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 uppercase font-bold tracking-wider">Board &amp; Committees</span>
+                  <span className="font-extrabold text-zinc-950 dark:text-white block">
                     {clientData.boardMeetings.length || 4} Meetings Conducted
                   </span>
-                  <span className="text-[10px] text-zinc-500">All SS-1 Quorum &amp; Agendas Logged</span>
+                  <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">All SS-1 Quorum &amp; Agendas Logged</span>
                 </div>
               </div>
 
               {/* MCA21 Recent Filings List */}
               <div className="space-y-2">
-                <span className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                <span className="text-xs font-extrabold text-zinc-950 dark:text-white flex items-center justify-between">
                   <span>Recent MCA21 Filings &amp; Challans:</span>
                   <button
                     onClick={() => setActiveSubTab("secretarial-cs")}
-                    className="text-[11px] text-zinc-500 hover:text-black dark:hover:text-white font-normal"
+                    className="text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-bold cursor-pointer"
                   >
                     View All ({clientData.rocFilings.length}) →
                   </button>
                 </span>
                 
-                <div className="divide-y divide-zinc-100 dark:divide-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden text-xs">
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden text-xs">
                   {clientData.rocFilings.slice(0, 3).map((filing, idx) => (
                     <div key={idx} className="p-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
+                          <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white">
                             {filing.formName}
                           </span>
-                          <span className="font-semibold text-black dark:text-white">{filing.purpose}</span>
+                          <span className="font-bold text-zinc-900 dark:text-white">{filing.purpose}</span>
                         </div>
-                        <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                        <div className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5 font-medium">
                           SRN: {filing.srn || "SRN-F8910482"} • Fee: {formatInr(filing.amountPaid || 600)}
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
                         {filing.status || "Approved"}
                       </span>
                     </div>
@@ -663,7 +661,7 @@ export function UnifiedClientHubView({
               {/* Active Directors with DIN & Web KYC Status */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-black dark:text-white">
+                  <span className="text-xs font-extrabold text-zinc-950 dark:text-white">
                     Designated Directors &amp; DIN Register:
                   </span>
                   <button
@@ -675,11 +673,11 @@ export function UnifiedClientHubView({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {selectedEntity.directors?.map((dir, i) => (
-                    <div key={i} className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-0.5">
-                      <div className="font-bold text-black dark:text-white truncate">{dir.name}</div>
-                      <div className="text-[10px] font-mono text-zinc-400">DIN: {dir.din} • {dir.designation}</div>
-                      <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-2.5 h-2.5" />
+                    <div key={i} className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                      <div className="font-extrabold text-zinc-950 dark:text-white truncate">{dir.name}</div>
+                      <div className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 font-medium">DIN: {dir.din} • {dir.designation}</div>
+                      <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
                         DIR-3 Web KYC Verified
                       </div>
                     </div>
@@ -689,108 +687,108 @@ export function UnifiedClientHubView({
             </div>
 
             {/* PILLAR RIGHT: Chartered Accountant (ICAI / CBDT / CBIC) */}
-            <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xs">
+            <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 space-y-5 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-red-700 text-white flex items-center justify-center font-bold text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-red-700 text-white flex items-center justify-center font-black text-xs shadow-xs">
                     CA
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-black dark:text-white">
+                    <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white">
                       Taxation, GST &amp; Statutory Audit
                     </h3>
-                    <p className="text-[10px] font-mono text-zinc-500">
+                    <p className="text-[11px] font-mono font-medium text-zinc-600 dark:text-zinc-400">
                       Income Tax Act 1961 • GST Act 2017 • ICAI Audit Standards
                     </p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40">
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-blue-100 text-blue-900 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                   96% Tax Health
                 </span>
               </div>
 
               {/* Tax Key Data Points */}
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">ITR-6 Corporate Return</span>
-                  <span className="font-bold text-black dark:text-white block">
+                <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 uppercase font-bold tracking-wider">ITR-6 Corporate Return</span>
+                  <span className="font-extrabold text-zinc-950 dark:text-white block">
                     {clientData.itrReturns[0]?.status?.toUpperCase() || "FILED"} (AY 2026-27)
                   </span>
-                  <span className="text-[10px] text-emerald-600 font-bold">
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">
                     AIS: {clientData.itrReturns[0]?.aisStatus || "Reconciled"}
                   </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">GST Compliance</span>
-                  <span className="font-bold text-black dark:text-white block">
+                <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                  <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 uppercase font-bold tracking-wider">GST Compliance</span>
+                  <span className="font-extrabold text-zinc-950 dark:text-white block">
                     {clientData.gstReturns.length || 3} Filings Tracked
                   </span>
-                  <span className="text-[10px] text-zinc-500">Rule 36(4) 2B Strict Match Active</span>
+                  <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">Rule 36(4) 2B Strict Match Active</span>
                 </div>
               </div>
 
               {/* Section 44AB Form 3CD & ICAI UDIN Plaque */}
-              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-black dark:text-white flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-red-600" />
+                  <span className="text-xs font-extrabold text-zinc-950 dark:text-white flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-red-600" />
                     Section 44AB Tax Audit &amp; Form 3CD
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
                     UDIN Active
                   </span>
                 </div>
                 <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="text-zinc-500">Generated ICAI UDIN:</span>
-                  <div className="flex items-center gap-1 font-bold text-red-600">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Generated ICAI UDIN:</span>
+                  <div className="flex items-center gap-1 font-black text-red-600 dark:text-red-400 text-xs">
                     <span>{clientData.taxAudits[0]?.udin || "26054921Y4P7Z6"}</span>
                     <button
                       onClick={() => handleCopy(clientData.taxAudits[0]?.udin || "26054921Y4P7Z6", "copy-3cd-udin")}
                       title="Copy UDIN"
-                      className="hover:text-black dark:hover:text-white"
+                      className="hover:text-black dark:hover:text-white cursor-pointer"
                     >
-                      {copiedId === "copy-3cd-udin" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                      {copiedId === "copy-3cd-udin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
                     </button>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-[10px] font-mono pt-1 text-center">
-                  <div className="p-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-zinc-400 block">TURNOVER</span>
-                    <span className="font-bold text-black dark:text-white">
+                  <div className="p-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 dark:text-zinc-400 block font-bold">TURNOVER</span>
+                    <span className="font-extrabold text-zinc-950 dark:text-white text-xs">
                       {formatInr(clientData.taxAudits[0]?.turnoverOrGrossReceipts || 48500000)}
                     </span>
                   </div>
-                  <div className="p-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-zinc-400 block">GP / NP %</span>
-                    <span className="font-bold text-black dark:text-white">
+                  <div className="p-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 dark:text-zinc-400 block font-bold">GP / NP %</span>
+                    <span className="font-extrabold text-zinc-950 dark:text-white text-xs">
                       {clientData.taxAudits[0]?.grossProfitRatio || 24.5}% / {clientData.taxAudits[0]?.netProfitRatio || 8.2}%
                     </span>
                   </div>
-                  <div className="p-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    <span className="text-zinc-400 block">DISALLOWANCES</span>
-                    <span className="font-bold text-emerald-600">₹0 Nil</span>
+                  <div className="p-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 dark:text-zinc-400 block font-bold">DISALLOWANCES</span>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">₹0 Nil</span>
                   </div>
                 </div>
               </div>
 
               {/* Schedule III Financial Recon & Dual Depr */}
-              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs font-mono">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs font-mono">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-black dark:text-white flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="font-extrabold text-zinc-950 dark:text-white flex items-center gap-1.5 font-sans text-xs">
+                    <Layers className="w-4 h-4 text-amber-500" />
                     Dual Depreciation &amp; Ind AS 12 Deferred Tax
                   </span>
-                  <span className="text-[10px] text-zinc-400">FY 2025-26</span>
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold">FY 2025-26</span>
                 </div>
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-zinc-500">Book Depr (Sch II) vs Tax Depr (Rule 5):</span>
-                  <span className="font-bold text-black dark:text-white">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Book Depr (Sch II) vs Tax Depr (Rule 5):</span>
+                  <span className="font-extrabold text-zinc-950 dark:text-white">
                     {formatInr(clientData.bsRecons[0]?.bookDepreciation || 3800000)} vs {formatInr(clientData.bsRecons[0]?.taxDepreciation || 4450000)}
                   </span>
                 </div>
-                <div className="flex justify-between text-[11px] pt-0.5 border-t border-zinc-200 dark:border-zinc-800">
-                  <span className="text-zinc-500">Net Deferred Tax Liability (DTL) @ 25.17%:</span>
-                  <span className="font-bold text-red-500">
+                <div className="flex justify-between text-xs pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Net Deferred Tax Liability (DTL) @ 25.17%:</span>
+                  <span className="font-extrabold text-red-600 dark:text-red-400">
                     {formatInr(clientData.bsRecons[0]?.deferredTaxLiability || 163605)}
                   </span>
                 </div>
@@ -802,56 +800,56 @@ export function UnifiedClientHubView({
           {/* =======================================================================
               CROSS-PORTAL RECONCILIATION RADAR (MCA21 vs CBDT vs GSTN)
           ======================================================================= */}
-          <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
+          <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Scale className="w-4 h-4 text-black dark:text-white" />
+              <div className="flex items-center gap-2.5">
+                <Scale className="w-5 h-5 text-zinc-900 dark:text-white" />
                 <div>
-                  <h3 className="text-sm font-bold text-black dark:text-white">
+                  <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white">
                     Cross-Portal Financial Harmonization Radar
                   </h3>
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                     Automatic verification between MCA Form AOC-4 Financials, CBDT ITR-6 Schedule BP, and ICAI Form 3CD Clause 40
                   </p>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1.5">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 100% Data Consistency
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-                <span className="text-[10px] text-zinc-400 uppercase block">1. Form AOC-4 (MCA21)</span>
-                <span className="text-base font-bold text-black dark:text-white">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-bold block">1. Form AOC-4 (MCA21)</span>
+                <span className="text-lg font-black text-zinc-950 dark:text-white block">
                   {formatInr(crossPortalRecon?.aoc4Turnover || 48500000)}
                 </span>
-                <span className="text-[10px] text-zinc-500 block truncate">SRN: {crossPortalRecon?.srnAoc4}</span>
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block truncate font-medium">SRN: {crossPortalRecon?.srnAoc4}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-                <span className="text-[10px] text-zinc-400 uppercase block">2. ITR-6 Revenue (CBDT)</span>
-                <span className="text-base font-bold text-black dark:text-white">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-bold block">2. ITR-6 Revenue (CBDT)</span>
+                <span className="text-lg font-black text-zinc-950 dark:text-white block">
                   {formatInr(crossPortalRecon?.itrGross || 48500000)}
                 </span>
-                <span className="text-[10px] text-zinc-500 block truncate">Ack: {crossPortalRecon?.ackItr}</span>
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block truncate font-medium">Ack: {crossPortalRecon?.ackItr}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-                <span className="text-[10px] text-zinc-400 uppercase block">3. Form 3CD Clause 40 (ICAI)</span>
-                <span className="text-base font-bold text-black dark:text-white">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-bold block">3. Form 3CD Clause 40 (ICAI)</span>
+                <span className="text-lg font-black text-zinc-950 dark:text-white block">
                   {formatInr(crossPortalRecon?.auditTurnover || 48500000)}
                 </span>
-                <span className="text-[10px] text-zinc-500 block truncate">UDIN: {crossPortalRecon?.udin}</span>
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 block truncate font-medium">UDIN: {crossPortalRecon?.udin}</span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 space-y-1">
-                <span className="text-[10px] text-emerald-600 uppercase font-bold block">Inter-Portal Variance</span>
-                <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 space-y-1">
+                <span className="text-[11px] text-emerald-800 dark:text-emerald-300 uppercase font-bold block">Inter-Portal Variance</span>
+                <span className="text-lg font-black text-emerald-700 dark:text-emerald-300 block">
                   ₹0 Nil (Matched)
                 </span>
-                <span className="text-[10px] text-emerald-500 block">Zero Statutory Audit Risk</span>
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 block font-semibold">Zero Statutory Audit Risk</span>
               </div>
             </div>
           </div>
@@ -859,15 +857,15 @@ export function UnifiedClientHubView({
           {/* =======================================================================
               UNIFIED STATUTORY DEADLINES TIMELINE (CS & CA COMBINED)
           ======================================================================= */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
+          <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-black dark:text-white" />
-                <h3 className="text-sm font-bold text-black dark:text-white">
+              <div className="flex items-center gap-2.5">
+                <Calendar className="w-5 h-5 text-zinc-900 dark:text-white" />
+                <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white">
                   Unified Statutory Calendar for {selectedEntity.companyName}
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-zinc-400 font-bold uppercase">
+              <span className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 font-bold uppercase">
                 FY 2025-26 &amp; AY 2026-27
               </span>
             </div>
@@ -903,15 +901,15 @@ export function UnifiedClientHubView({
                   badge: "Annual",
                 },
               ].map((item, i) => (
-                <div key={i} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                <div key={i} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-black text-white dark:bg-white dark:text-black">
+                    <span className="font-mono font-black text-xs px-2 py-0.5 rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-950">
                       {item.date}
                     </span>
-                    <span className="text-[10px] font-mono text-zinc-400 font-semibold">{item.type}</span>
+                    <span className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 font-bold">{item.type}</span>
                   </div>
-                  <div className="font-bold text-black dark:text-white">{item.label}</div>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">{item.desc}</p>
+                  <div className="font-extrabold text-zinc-950 dark:text-white text-sm">{item.label}</div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">{item.desc}</p>
                 </div>
               ))}
             </div>

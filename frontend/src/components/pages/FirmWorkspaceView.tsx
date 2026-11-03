@@ -34,6 +34,8 @@ import {
   BarChart3,
   PanelLeftClose,
   PanelLeft,
+  Calculator,
+  Percent,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -43,6 +45,7 @@ import { TaskMiteView } from "@/components/common/TaskMiteView";
 import { BoardGovernanceView } from "@/components/firm/BoardGovernanceView";
 import { RocComplianceView } from "@/components/firm/RocComplianceView";
 import { LegalGatewayView } from "@/components/firm/LegalGatewayView";
+import { CaWorkspaceView } from "@/components/firm/CaWorkspaceView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -50,6 +53,7 @@ interface FirmWorkspaceViewProps {
 
 export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [practiceMode, setPracticeMode] = useState<"cs" | "ca">("cs");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [newFilingModalOpen, setNewFilingModalOpen] = useState(false);
@@ -181,7 +185,94 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
     },
   ];
 
-  const filteredSections = menuSections
+  // Menu Categories for Chartered Accountant Firm
+  const caMenuSections = [
+    {
+      category: "TAXATION & ITR FILING",
+      items: [
+        {
+          id: "ca-income-tax",
+          label: "Income Tax & ITR",
+          subtitle: "ITR 1-7, AIS/26AS & Advance Tax",
+          icon: Calculator,
+        },
+        {
+          id: "ca-gst",
+          label: "GST Compliance",
+          subtitle: "GSTR-1, 3B, 9 & 2B Matcher",
+          icon: Percent,
+        },
+        {
+          id: "compliance-calendar",
+          label: "Tax Calendar",
+          subtitle: "Statutory deadlines & tax timeline",
+          icon: Calendar,
+        },
+        {
+          id: "my-hub",
+          label: "My Hub",
+          subtitle: "Tax team command center",
+          icon: Users,
+        },
+        {
+          id: "taskmite",
+          label: "Audit Notes & Mite",
+          subtitle: "Audit checklists & workpapers",
+          icon: CheckCircle2,
+        },
+      ],
+    },
+    {
+      category: "AUDIT & ATTESTATION",
+      items: [
+        {
+          id: "ca-tax-audit",
+          label: "Tax Audit & 3CD",
+          subtitle: "Sec 44AB 44 Clauses & 1-Click UDIN",
+          icon: ShieldCheck,
+        },
+        {
+          id: "ca-financial-recon",
+          label: "Schedule III & BS Recon",
+          subtitle: "Dual Depr (Rule 5 vs Sch II) & Ind AS 12",
+          icon: Layers,
+        },
+      ],
+    },
+    {
+      category: "LEGAL & ADVOCACY GATEWAY",
+      items: [
+        {
+          id: "corporate-entities",
+          label: "Assessee Clients",
+          subtitle: "Corporate entities & LLP portfolio",
+          icon: Building2,
+        },
+        {
+          id: "retainer-advocates",
+          label: "Advocate Network",
+          subtitle: "High Court & ITAT litigation counsel",
+          icon: Scale,
+        },
+        {
+          id: "vault",
+          label: "Attestation Vault",
+          subtitle: "Signed 3CD packs & balance sheets",
+          icon: FolderLock,
+        },
+        {
+          id: "billing",
+          label: "Client Invoices",
+          subtitle: "Tax retainers & audit fee notes",
+          icon: Receipt,
+        },
+      ],
+    },
+  ];
+
+  const activeSections = practiceMode === "ca" ? caMenuSections : menuSections;
+
+  const filteredSections = activeSections
     .map((section) => ({
       ...section,
       items: section.items.filter(
@@ -232,6 +323,65 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
             </button>
           </div>
+
+          {/* Practice Mode Switcher Pill */}
+          {sidebarOpen ? (
+            <div className="flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 mb-3">
+              <button
+                onClick={() => {
+                  setPracticeMode("cs");
+                  if (activeTab.startsWith("ca-")) setActiveTab("dashboard");
+                }}
+                className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  practiceMode === "cs"
+                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                    : "text-zinc-500 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                CS Practice
+              </button>
+              <button
+                onClick={() => {
+                  setPracticeMode("ca");
+                  if (
+                    activeTab === "dashboard" ||
+                    activeTab === "roc-filings" ||
+                    activeTab === "board-meetings" ||
+                    activeTab === "resolutions" ||
+                    activeTab === "secretarial-audit" ||
+                    activeTab === "statutory-registers"
+                  ) {
+                    setActiveTab("ca-income-tax");
+                  }
+                }}
+                className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  practiceMode === "ca"
+                    ? "bg-red-700 text-white shadow-xs"
+                    : "text-zinc-500 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                CA Practice
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1 mb-3">
+              <button
+                onClick={() => {
+                  setPracticeMode(practiceMode === "cs" ? "ca" : "cs");
+                  if (practiceMode === "cs") setActiveTab("ca-income-tax");
+                  else setActiveTab("dashboard");
+                }}
+                className={`w-10 h-7 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center justify-center cursor-pointer ${
+                  practiceMode === "ca"
+                    ? "bg-red-700 text-white"
+                    : "bg-black text-white dark:bg-white dark:text-black"
+                }`}
+                title={`Current: ${practiceMode.toUpperCase()} Practice. Click to toggle.`}
+              >
+                {practiceMode.toUpperCase()}
+              </button>
+            </div>
+          )}
 
           {/* Search Filter */}
           {sidebarOpen && (
@@ -291,16 +441,20 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
         <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
           <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center shrink-0">
-                CS
+              <div className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
+                practiceMode === "ca"
+                  ? "bg-red-700 text-white"
+                  : "bg-black text-white dark:bg-white dark:text-black"
+              }`}>
+                {practiceMode.toUpperCase()}
               </div>
               {sidebarOpen && (
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-black dark:text-white truncate">
-                    {firm.founderName || "CS Rajesh Sharma"}
+                    {firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
                   </span>
                   <span className="text-[10px] text-zinc-500 truncate">
-                    Company Secretary • {firm.name}
+                    {practiceMode === "ca" ? "Chartered Accountant" : "Company Secretary"} • {firm.name}
                   </span>
                 </div>
               )}
@@ -322,8 +476,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               <h1 className="text-xl font-bold text-black dark:text-white tracking-tight">
                 Welcome back, <span className="underline decoration-1 underline-offset-4">{firm.founderName}</span>
               </h1>
-              <span className="px-2 py-0.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900">
-                ICSI Verified
+              <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${
+                practiceMode === "ca"
+                  ? "border-red-900/40 bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300"
+                  : "border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900"
+              }`}>
+                {practiceMode === "ca" ? "ICAI Verified • FRN-018241N" : "ICSI Verified"}
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-zinc-500">
@@ -340,7 +498,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               className="px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <PhoneCall className="w-3.5 h-3.5" />
-              <span>ROC Hotline</span>
+              <span>{practiceMode === "ca" ? "Tax Helpdesk" : "ROC Hotline"}</span>
             </button>
 
             <button
@@ -352,13 +510,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-black dark:bg-white" />
             </button>
 
-            <button
-              onClick={() => setNewFilingModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ New MCA Filing</span>
-            </button>
+            {practiceMode === "ca" ? (
+              <button
+                onClick={() => setActiveTab("ca-income-tax")}
+                className="px-4 py-2 rounded-full bg-red-700 hover:bg-red-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ New ITR / Form 3CD</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setNewFilingModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ New MCA Filing</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -618,6 +786,32 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 firmName={firm.name}
                 csName={firm.founderName || "CS Corporate Practice"}
                 initialSubTab={activeTab as any}
+              />
+            </div>
+          )}
+
+          {/* VIEW: CA Firm Practice Suite (Income Tax, GST, Tax Audit 3CD, Financial Recon) */}
+          {(activeTab === "ca-income-tax" ||
+            activeTab === "ca-gst" ||
+            activeTab === "ca-tax-audit" ||
+            activeTab === "ca-financial-recon") && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <CaWorkspaceView
+                firmName={firm.name}
+                caName={firm.founderName || "CA Ramanathan Iyer"}
+                initialTab={
+                  activeTab === "ca-gst"
+                    ? "gst"
+                    : activeTab === "ca-tax-audit"
+                    ? "tax-audit"
+                    : activeTab === "ca-financial-recon"
+                    ? "financial-recon"
+                    : "income-tax"
+                }
+                onSwitchToCs={() => {
+                  setPracticeMode("cs");
+                  setActiveTab("dashboard");
+                }}
               />
             </div>
           )}

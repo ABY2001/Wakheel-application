@@ -21,6 +21,10 @@ import { CorporateContract } from "../models/CorporateContract.js";
 import { RetainerAdvocate } from "../models/RetainerAdvocate.js";
 import { CorporateVaultItem } from "../models/CorporateVaultItem.js";
 import { SecretarialInvoice } from "../models/SecretarialInvoice.js";
+import { IncomeTaxReturn } from "../models/IncomeTaxReturn.js";
+import { GstReturn } from "../models/GstReturn.js";
+import { TaxAudit3CD } from "../models/TaxAudit3CD.js";
+import { BalanceSheetRecon } from "../models/BalanceSheetRecon.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -38,6 +42,10 @@ import {
   DEFAULT_RETAINER_ADVOCATES,
   DEFAULT_CORPORATE_VAULT_ITEMS,
   DEFAULT_SECRETARIAL_INVOICES,
+  DEFAULT_INCOME_TAX_RETURNS,
+  DEFAULT_GST_RETURNS,
+  DEFAULT_TAX_AUDIT_3CD,
+  DEFAULT_BALANCE_SHEET_RECONS,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -456,6 +464,123 @@ export const seedMongoIfEmpty = async () => {
         status: item.status,
       }));
       await SecretarialInvoice.insertMany(invDocs);
+    }
+
+    // Seed CA Income Tax Returns
+    const itrCount = await IncomeTaxReturn.countDocuments();
+    if (itrCount === 0) {
+      console.log("🌱 Seeding MongoDB CA Income Tax Returns & ITRs...");
+      const itrDocs = DEFAULT_INCOME_TAX_RETURNS.map((item) => ({
+        itrId: item.id,
+        userId: "ca_1",
+        clientName: item.clientName,
+        pan: item.pan,
+        assessmentYear: item.assessmentYear,
+        financialYear: item.financialYear,
+        itrForm: item.itrForm,
+        grossTotalIncome: item.grossTotalIncome,
+        deductionsChapterVIA: item.deductionsChapterVIA,
+        taxableIncome: item.taxableIncome,
+        taxPayable: item.taxPayable,
+        tdsTcsCredit: item.tdsTcsCredit,
+        advanceTaxPaid: item.advanceTaxPaid,
+        selfAssessmentTax: item.selfAssessmentTax,
+        refundDueOrPayable: item.refundDueOrPayable,
+        aisReconciliationStatus: item.aisReconciliationStatus,
+        filingDueDate: item.filingDueDate,
+        filingDate: item.filingDate,
+        acknowledgementNumber: item.acknowledgementNumber,
+        status: item.status,
+        notes: item.notes,
+      }));
+      await IncomeTaxReturn.insertMany(itrDocs);
+    }
+
+    // Seed CA GST Returns
+    const gstCount = await GstReturn.countDocuments();
+    if (gstCount === 0) {
+      console.log("🌱 Seeding MongoDB CA GST Returns...");
+      const gstDocs = DEFAULT_GST_RETURNS.map((item) => ({
+        gstReturnId: item.id,
+        userId: "ca_1",
+        clientName: item.clientName,
+        gstin: item.gstin,
+        returnType: item.returnType,
+        returnPeriod: item.returnPeriod,
+        dueDate: item.dueDate,
+        filingDate: item.filingDate,
+        taxableTurnover: item.taxableTurnover,
+        igstAmount: item.igstAmount,
+        cgstAmount: item.cgstAmount,
+        sgstAmount: item.sgstAmount,
+        totalTaxLiability: item.totalTaxLiability,
+        itcClaimed: item.itcClaimed,
+        itcAvailable2B: item.itcAvailable2B,
+        itcDifference: item.itcDifference,
+        arn: item.arn,
+        status: item.status,
+        notes: item.notes,
+      }));
+      await GstReturn.insertMany(gstDocs);
+    }
+
+    // Seed CA Tax Audit 3CD Reports
+    const audCount = await TaxAudit3CD.countDocuments();
+    if (audCount === 0) {
+      console.log("🌱 Seeding MongoDB CA Tax Audit 3CD & UDIN Reports...");
+      const audDocs = DEFAULT_TAX_AUDIT_3CD.map((item) => ({
+        auditId: item.id,
+        userId: "ca_1",
+        clientName: item.clientName,
+        pan: item.pan,
+        financialYear: item.financialYear,
+        assessmentYear: item.assessmentYear,
+        auditType: item.auditType,
+        turnover: item.turnover,
+        grossProfitRatio: item.grossProfitRatio,
+        netProfitRatio: item.netProfitRatio,
+        disallowanceSec43B: item.disallowanceSec43B,
+        disallowanceSec40A3: item.disallowanceSec40A3,
+        disallowanceSec40aia: item.disallowanceSec40aia,
+        totalDisallowances: item.totalDisallowances,
+        udin: item.udin,
+        caFirmName: item.caFirmName,
+        caPartnerName: item.caPartnerName,
+        caMembershipNumber: item.caMembershipNumber,
+        caFirmRegistrationNumber: item.caFirmRegistrationNumber,
+        auditOpinion: item.auditOpinion,
+        status: item.status,
+        notes: item.notes,
+      }));
+      await TaxAudit3CD.insertMany(audDocs);
+    }
+
+    // Seed CA Balance Sheet Reconciliations
+    const bsCount = await BalanceSheetRecon.countDocuments();
+    if (bsCount === 0) {
+      console.log("🌱 Seeding MongoDB CA Balance Sheet Reconciliations...");
+      const bsDocs = DEFAULT_BALANCE_SHEET_RECONS.map((item) => ({
+        reconId: item.id,
+        userId: "ca_1",
+        clientName: item.clientName,
+        financialYear: item.financialYear,
+        accountingStandard: item.accountingStandard,
+        totalAssets: item.totalAssets,
+        totalLiabilities: item.totalLiabilities,
+        shareCapital: item.shareCapital,
+        reservesAndSurplus: item.reservesAndSurplus,
+        longTermBorrowings: item.longTermBorrowings,
+        tradePayables: item.tradePayables,
+        tangibleFixedAssets: item.tangibleFixedAssets,
+        cashAndBank: item.cashAndBank,
+        bookDepreciationScheduleII: item.bookDepreciationScheduleII,
+        taxDepreciationRule5: item.taxDepreciationRule5,
+        depreciationDifference: item.depreciationDifference,
+        deferredTaxAssetLiability: item.deferredTaxAssetLiability,
+        reconciliationNotes: item.reconciliationNotes,
+        status: item.status,
+      }));
+      await BalanceSheetRecon.insertMany(bsDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

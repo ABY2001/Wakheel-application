@@ -5156,6 +5156,313 @@ export const devStore = {
   },
 
   // ==========================================================================
+  // --- CA Income Tax Returns & ITR Filing Studio ---
+  // ==========================================================================
+  getIncomeTaxReturns(userId, filters = {}) {
+    let returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
+    if (filters.clientName) {
+      returns = returns.filter((r) => r.clientName === filters.clientName);
+    }
+    if (filters.assessmentYear) {
+      returns = returns.filter((r) => r.assessmentYear === filters.assessmentYear);
+    }
+    if (filters.itrForm && filters.itrForm !== "ALL") {
+      returns = returns.filter((r) => r.itrForm === filters.itrForm);
+    }
+    if (filters.status && filters.status !== "ALL") {
+      returns = returns.filter((r) => r.status === filters.status);
+    }
+    return returns;
+  },
+
+  createIncomeTaxReturn(userId, data) {
+    const returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
+    const gross = Number(data.grossTotalIncome) || 0;
+    const deductions = Number(data.deductionsChapterVIA) || 0;
+    const taxable = Math.max(0, gross - deductions);
+    const taxPayable = Number(data.taxPayable) || Math.round(taxable * 0.2517); // base corporate tax estimate
+    const tds = Number(data.tdsTcsCredit) || 0;
+    const adv = Number(data.advanceTaxPaid) || 0;
+    const refund = Math.max(0, tds + adv - taxPayable);
+
+    const newReturn = {
+      id: data.id || `itr-${Date.now()}`,
+      itrId: data.id || `itr-${Date.now()}`,
+      userId,
+      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
+      pan: (data.pan || "AAECS1234F").toUpperCase(),
+      assessmentYear: data.assessmentYear || "AY 2026-27",
+      financialYear: data.financialYear || "FY 2025-26",
+      itrForm: data.itrForm || "ITR-6",
+      grossTotalIncome: gross,
+      deductionsChapterVIA: deductions,
+      taxableIncome: taxable,
+      taxPayable,
+      tdsTcsCredit: tds,
+      advanceTaxPaid: adv,
+      selfAssessmentTax: Number(data.selfAssessmentTax) || 0,
+      refundDueOrPayable: refund,
+      aisReconciliationStatus: data.aisReconciliationStatus || "matched",
+      filingDueDate: data.filingDueDate || "2026-10-31",
+      filingDate: data.filingDate || "",
+      acknowledgementNumber: data.acknowledgementNumber || "",
+      status: data.status || "drafted",
+      notes: data.notes || "Drafted in CA Tax Studio.",
+      createdAt: new Date().toISOString(),
+    };
+    returns.unshift(newReturn);
+    writeFile("dev_income_tax_returns.json", returns);
+    return newReturn;
+  },
+
+  updateIncomeTaxReturn(id, updates = {}) {
+    let returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
+    const idx = returns.findIndex((r) => r.id === id || r.itrId === id);
+    if (idx !== -1) {
+      returns[idx] = { ...returns[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_income_tax_returns.json", returns);
+      return returns[idx];
+    }
+    return null;
+  },
+
+  deleteIncomeTaxReturn(id) {
+    let returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
+    returns = returns.filter((r) => r.id !== id && r.itrId !== id);
+    writeFile("dev_income_tax_returns.json", returns);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- CA GST Compliance Hub (GSTR-1, GSTR-3B, GSTR-9) ---
+  // ==========================================================================
+  getGstReturns(userId, filters = {}) {
+    let returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
+    if (filters.clientName) {
+      returns = returns.filter((g) => g.clientName === filters.clientName);
+    }
+    if (filters.returnType && filters.returnType !== "ALL") {
+      returns = returns.filter((g) => g.returnType === filters.returnType);
+    }
+    if (filters.status && filters.status !== "ALL") {
+      returns = returns.filter((g) => g.status === filters.status);
+    }
+    return returns;
+  },
+
+  createGstReturn(userId, data) {
+    const returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
+    const turnover = Number(data.taxableTurnover) || 0;
+    const igst = Number(data.igstAmount) || Math.round(turnover * 0.09);
+    const cgst = Number(data.cgstAmount) || Math.round(turnover * 0.045);
+    const sgst = Number(data.sgstAmount) || Math.round(turnover * 0.045);
+    const liability = igst + cgst + sgst;
+    const itcClaimed = Number(data.itcClaimed) || 0;
+    const itc2B = Number(data.itcAvailable2B) || itcClaimed;
+
+    const newGst = {
+      id: data.id || `gst-${Date.now()}`,
+      gstReturnId: data.id || `gst-${Date.now()}`,
+      userId,
+      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
+      gstin: (data.gstin || "07AAECS1234F1Z8").toUpperCase(),
+      returnType: data.returnType || "GSTR-3B",
+      returnPeriod: data.returnPeriod || "October 2026",
+      dueDate: data.dueDate || "2026-11-20",
+      filingDate: data.filingDate || "",
+      taxableTurnover: turnover,
+      igstAmount: igst,
+      cgstAmount: cgst,
+      sgstAmount: sgst,
+      totalTaxLiability: liability,
+      itcClaimed,
+      itcAvailable2B: itc2B,
+      itcDifference: itcClaimed - itc2B,
+      arn: data.arn || "",
+      status: data.status || "ready_to_file",
+      notes: data.notes || "Reconciled against purchase register and GSTR-2B.",
+      createdAt: new Date().toISOString(),
+    };
+    returns.unshift(newGst);
+    writeFile("dev_gst_returns.json", returns);
+    return newGst;
+  },
+
+  updateGstReturn(id, updates = {}) {
+    let returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
+    const idx = returns.findIndex((g) => g.id === id || g.gstReturnId === id);
+    if (idx !== -1) {
+      returns[idx] = { ...returns[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_gst_returns.json", returns);
+      return returns[idx];
+    }
+    return null;
+  },
+
+  deleteGstReturn(id) {
+    let returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
+    returns = returns.filter((g) => g.id !== id && g.gstReturnId !== id);
+    writeFile("dev_gst_returns.json", returns);
+    return true;
+  },
+
+  // ==========================================================================
+  // --- CA Statutory & Tax Audit (Form 3CD & UDIN Generator) ---
+  // ==========================================================================
+  getTaxAuditReports(userId, filters = {}) {
+    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    if (filters.clientName) {
+      reports = reports.filter((a) => a.clientName === filters.clientName);
+    }
+    if (filters.auditType && filters.auditType !== "ALL") {
+      reports = reports.filter((a) => a.auditType === filters.auditType);
+    }
+    return reports;
+  },
+
+  createTaxAuditReport(userId, data) {
+    const reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    const d43b = Number(data.disallowanceSec43B) || 0;
+    const d40a3 = Number(data.disallowanceSec40A3) || 0;
+    const d40aia = Number(data.disallowanceSec40aia) || 0;
+
+    const newReport = {
+      id: data.id || `aud-3cd-${Date.now()}`,
+      auditId: data.id || `aud-3cd-${Date.now()}`,
+      userId,
+      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
+      pan: (data.pan || "AAECS1234F").toUpperCase(),
+      financialYear: data.financialYear || "FY 2025-26",
+      assessmentYear: data.assessmentYear || "AY 2026-27",
+      auditType: data.auditType || "tax_audit_44ab",
+      turnover: Number(data.turnover) || 85000000,
+      grossProfitRatio: Number(data.grossProfitRatio) || 24.5,
+      netProfitRatio: Number(data.netProfitRatio) || 11.2,
+      disallowanceSec43B: d43b,
+      disallowanceSec40A3: d40a3,
+      disallowanceSec40aia: d40aia,
+      totalDisallowances: d43b + d40a3 + d40aia,
+      udin: data.udin || `26054921AAAAAA${Math.floor(1000 + Math.random() * 9000)}`,
+      caFirmName: data.caFirmName || "Singhania & Verma Associates, Chartered Accountants",
+      caPartnerName: data.caPartnerName || "CA Rajesh Singhania (FCA)",
+      caMembershipNumber: data.caMembershipNumber || "054921",
+      caFirmRegistrationNumber: data.caFirmRegistrationNumber || "014920N",
+      auditOpinion: data.auditOpinion || "unqualified_clean",
+      status: data.status || "udin_generated",
+      notes: data.notes || "Audited strictly per ICAI Standards on Auditing (SAs) and Guidance Note on Tax Audit.",
+      createdAt: new Date().toISOString(),
+    };
+    reports.unshift(newReport);
+    writeFile("dev_tax_audit_3cd.json", reports);
+    return newReport;
+  },
+
+  updateTaxAuditReport(id, updates = {}) {
+    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    const idx = reports.findIndex((a) => a.id === id || a.auditId === id);
+    if (idx !== -1) {
+      reports[idx] = { ...reports[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_tax_audit_3cd.json", reports);
+      return reports[idx];
+    }
+    return null;
+  },
+
+  deleteTaxAuditReport(id) {
+    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    reports = reports.filter((a) => a.id !== id && a.auditId !== id);
+    writeFile("dev_tax_audit_3cd.json", reports);
+    return true;
+  },
+
+  generateUdin(id, partnerName, membershipNo) {
+    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    const idx = reports.findIndex((a) => a.id === id || a.auditId === id);
+    if (idx !== -1) {
+      const year = new Date().getFullYear().toString().slice(-2);
+      const mem = (membershipNo || reports[idx].caMembershipNumber || "054921").padStart(6, "0");
+      const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const generatedUdin = `${year}${mem}${randomSuffix}`.slice(0, 18);
+
+      reports[idx].udin = generatedUdin;
+      reports[idx].status = "signed_uploaded";
+      if (partnerName) reports[idx].caPartnerName = partnerName;
+      if (membershipNo) reports[idx].caMembershipNumber = membershipNo;
+
+      writeFile("dev_tax_audit_3cd.json", reports);
+      return reports[idx];
+    }
+    return null;
+  },
+
+  // ==========================================================================
+  // --- CA Balance Sheet & Financial Statements Reconciliation ---
+  // ==========================================================================
+  getBalanceSheetRecons(userId, filters = {}) {
+    let recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
+    if (filters.clientName) {
+      recons = recons.filter((b) => b.clientName === filters.clientName);
+    }
+    if (filters.financialYear) {
+      recons = recons.filter((b) => b.financialYear === filters.financialYear);
+    }
+    return recons;
+  },
+
+  createBalanceSheetRecon(userId, data) {
+    const recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
+    const bookDep = Number(data.bookDepreciationScheduleII) || 2800000;
+    const taxDep = Number(data.taxDepreciationRule5) || 3450000;
+    const diff = taxDep - bookDep;
+    const dtl = Math.round(diff * -0.2517); // 25.17% corporate tax rate
+
+    const newRecon = {
+      id: data.id || `bs-${Date.now()}`,
+      reconId: data.id || `bs-${Date.now()}`,
+      userId,
+      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
+      financialYear: data.financialYear || "FY 2025-26",
+      accountingStandard: data.accountingStandard || "Ind_AS",
+      totalAssets: Number(data.totalAssets) || 45000000,
+      totalLiabilities: Number(data.totalLiabilities) || 45000000,
+      shareCapital: Number(data.shareCapital) || 2500000,
+      reservesAndSurplus: Number(data.reservesAndSurplus) || 18500000,
+      longTermBorrowings: Number(data.longTermBorrowings) || 12000000,
+      tradePayables: Number(data.tradePayables) || 6500000,
+      tangibleFixedAssets: Number(data.tangibleFixedAssets) || 22000000,
+      cashAndBank: Number(data.cashAndBank) || 8400000,
+      bookDepreciationScheduleII: bookDep,
+      taxDepreciationRule5: taxDep,
+      depreciationDifference: diff,
+      deferredTaxAssetLiability: dtl,
+      reconciliationNotes: data.reconciliationNotes || "Depreciation timing differences reconciled under Ind AS 12.",
+      status: data.status || "reconciled",
+      createdAt: new Date().toISOString(),
+    };
+    recons.unshift(newRecon);
+    writeFile("dev_balance_sheet_recons.json", recons);
+    return newRecon;
+  },
+
+  updateBalanceSheetRecon(id, updates = {}) {
+    let recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
+    const idx = recons.findIndex((b) => b.id === id || b.reconId === id);
+    if (idx !== -1) {
+      recons[idx] = { ...recons[idx], ...updates, updatedAt: new Date().toISOString() };
+      writeFile("dev_balance_sheet_recons.json", recons);
+      return recons[idx];
+    }
+    return null;
+  },
+
+  deleteBalanceSheetRecon(id) {
+    let recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
+    recons = recons.filter((b) => b.id !== id && b.reconId !== id);
+    writeFile("dev_balance_sheet_recons.json", recons);
+    return true;
+  },
+
+  // ==========================================================================
   // --- Profiles (BCI Credentials & DigiLocker KYC) ---
   // ==========================================================================
   getBciCredentials(userId) {
@@ -7696,6 +8003,284 @@ export const DEFAULT_SECRETARIAL_INVOICES = [
     totalAmount: 106200,
     dueDate: "2026-11-20",
     status: "issued",
+  },
+];
+
+export const DEFAULT_INCOME_TAX_RETURNS = [
+  {
+    id: "itr-1",
+    itrId: "itr-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    pan: "AAECS1234F",
+    assessmentYear: "AY 2026-27",
+    financialYear: "FY 2025-26",
+    itrForm: "ITR-6",
+    grossTotalIncome: 28500000,
+    deductionsChapterVIA: 1500000,
+    taxableIncome: 27000000,
+    taxPayable: 6795900,
+    tdsTcsCredit: 4200000,
+    advanceTaxPaid: 2600000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 4100,
+    aisReconciliationStatus: "matched",
+    filingDueDate: "2026-10-31",
+    filingDate: "2026-10-28",
+    acknowledgementNumber: "684920194820194",
+    status: "filed_verified",
+    notes: "Filed per Section 139(1) with verified electronic DSC. Section 115BAA 22% base tax applied.",
+  },
+  {
+    id: "itr-2",
+    itrId: "itr-2",
+    clientName: "Apex FinTech Solutions Ltd",
+    pan: "AALCA4512H",
+    assessmentYear: "AY 2026-27",
+    financialYear: "FY 2025-26",
+    itrForm: "ITR-6",
+    grossTotalIncome: 142000000,
+    deductionsChapterVIA: 4500000,
+    taxableIncome: 137500000,
+    taxPayable: 34608750,
+    tdsTcsCredit: 22000000,
+    advanceTaxPaid: 12650000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 41250,
+    aisReconciliationStatus: "matched",
+    filingDueDate: "2026-10-31",
+    filingDate: "2026-10-25",
+    acknowledgementNumber: "910284719204812",
+    status: "processed_143_1",
+    notes: "Intimation under Section 143(1) received without any prima-facie adjustments.",
+  },
+  {
+    id: "itr-3",
+    itrId: "itr-3",
+    clientName: "GreenEarth AgriVentures LLP",
+    pan: "AABFG9012K",
+    assessmentYear: "AY 2026-27",
+    financialYear: "FY 2025-26",
+    itrForm: "ITR-5",
+    grossTotalIncome: 18400000,
+    deductionsChapterVIA: 800000,
+    taxableIncome: 17600000,
+    taxPayable: 5491200,
+    tdsTcsCredit: 3100000,
+    advanceTaxPaid: 2400000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 8800,
+    aisReconciliationStatus: "matched",
+    filingDueDate: "2026-10-31",
+    filingDate: "2026-10-29",
+    acknowledgementNumber: "492019482018471",
+    status: "filed_verified",
+    notes: "Partnership remuneration allowed under Section 40(b) verified per Partnership Deed.",
+  },
+  {
+    id: "itr-4",
+    itrId: "itr-4",
+    clientName: "Dr. Vikram Malhotra (MD & Founder)",
+    pan: "AAECS9988D",
+    assessmentYear: "AY 2026-27",
+    financialYear: "FY 2025-26",
+    itrForm: "ITR-3",
+    grossTotalIncome: 8400000,
+    deductionsChapterVIA: 450000,
+    taxableIncome: 7950000,
+    taxPayable: 2324400,
+    tdsTcsCredit: 2400000,
+    advanceTaxPaid: 0,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 75600,
+    aisReconciliationStatus: "matched",
+    filingDueDate: "2026-07-31",
+    filingDate: "2026-07-28",
+    acknowledgementNumber: "104928194829104",
+    status: "processed_143_1",
+    notes: "Directorship salary and capital gains from mutual fund switches reconciled with 26AS/AIS.",
+  },
+];
+
+export const DEFAULT_GST_RETURNS = [
+  {
+    id: "gst-1",
+    gstReturnId: "gst-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    gstin: "07AAECS1234F1Z8",
+    returnType: "GSTR-3B",
+    returnPeriod: "October 2026",
+    dueDate: "2026-11-20",
+    filingDate: "2026-11-18",
+    taxableTurnover: 12500000,
+    igstAmount: 1125000,
+    cgstAmount: 562500,
+    sgstAmount: 562500,
+    totalTaxLiability: 2250000,
+    itcClaimed: 1680000,
+    itcAvailable2B: 1680000,
+    itcDifference: 0,
+    arn: "AA0710260194820",
+    status: "filed",
+    notes: "100% ITC match with auto-drafted GSTR-2B. Cash ledger utilized for ₹570,000 balance.",
+  },
+  {
+    id: "gst-2",
+    gstReturnId: "gst-2",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    gstin: "07AAECS1234F1Z8",
+    returnType: "GSTR-1",
+    returnPeriod: "October 2026",
+    dueDate: "2026-11-11",
+    filingDate: "2026-11-10",
+    taxableTurnover: 12500000,
+    igstAmount: 1125000,
+    cgstAmount: 562500,
+    sgstAmount: 562500,
+    totalTaxLiability: 2250000,
+    itcClaimed: 0,
+    itcAvailable2B: 0,
+    itcDifference: 0,
+    arn: "AA0710260049281",
+    status: "filed",
+    notes: "E-invoices auto-populated from IRP portal. B2B invoices reconciled.",
+  },
+  {
+    id: "gst-3",
+    gstReturnId: "gst-3",
+    clientName: "Apex FinTech Solutions Ltd",
+    gstin: "27AALCA4512H1Z5",
+    returnType: "GSTR-3B",
+    returnPeriod: "October 2026",
+    dueDate: "2026-11-20",
+    filingDate: "",
+    taxableTurnover: 48000000,
+    igstAmount: 4320000,
+    cgstAmount: 2160000,
+    sgstAmount: 2160000,
+    totalTaxLiability: 8640000,
+    itcClaimed: 6450000,
+    itcAvailable2B: 6450000,
+    itcDifference: 0,
+    arn: "",
+    status: "ready_to_file",
+    notes: "Reconciliation complete. Awaiting partner OTP / DSC authorization.",
+  },
+  {
+    id: "gst-4",
+    gstReturnId: "gst-4",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    gstin: "07AAECS1234F1Z8",
+    returnType: "GSTR-9",
+    returnPeriod: "FY 2025-26",
+    dueDate: "2026-12-31",
+    filingDate: "2026-11-01",
+    taxableTurnover: 145000000,
+    igstAmount: 13050000,
+    cgstAmount: 6525000,
+    sgstAmount: 6525000,
+    totalTaxLiability: 26100000,
+    itcClaimed: 19800000,
+    itcAvailable2B: 19800000,
+    itcDifference: 0,
+    arn: "AA0712250918234",
+    status: "filed",
+    notes: "Annual return filed. Reconciliation with audited financial statements signed.",
+  },
+];
+
+export const DEFAULT_TAX_AUDIT_3CD = [
+  {
+    id: "aud-3cd-1",
+    auditId: "aud-3cd-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    pan: "AAECS1234F",
+    financialYear: "FY 2025-26",
+    assessmentYear: "AY 2026-27",
+    auditType: "tax_audit_44ab",
+    turnover: 85000000,
+    grossProfitRatio: 24.5,
+    netProfitRatio: 11.2,
+    disallowanceSec43B: 0,
+    disallowanceSec40A3: 0,
+    disallowanceSec40aia: 0,
+    totalDisallowances: 0,
+    udin: "26054921AAAAAA1029",
+    caFirmName: "Singhania & Verma Associates, Chartered Accountants",
+    caPartnerName: "CA Rajesh Singhania (FCA)",
+    caMembershipNumber: "054921",
+    caFirmRegistrationNumber: "014920N",
+    auditOpinion: "unqualified_clean",
+    status: "signed_uploaded",
+    notes: "Clean report issued under Section 44AB. Form 3CA and 44-Clause Form 3CD electronically uploaded.",
+  },
+  {
+    id: "aud-3cd-2",
+    auditId: "aud-3cd-2",
+    clientName: "Apex FinTech Solutions Ltd",
+    pan: "AALCA4512H",
+    financialYear: "FY 2025-26",
+    assessmentYear: "AY 2026-27",
+    auditType: "statutory_audit_143",
+    turnover: 450000000,
+    grossProfitRatio: 32.8,
+    netProfitRatio: 15.4,
+    disallowanceSec43B: 0,
+    disallowanceSec40A3: 0,
+    disallowanceSec40aia: 0,
+    totalDisallowances: 0,
+    udin: "26054921AAAAAB4920",
+    caFirmName: "Singhania & Verma Associates, Chartered Accountants",
+    caPartnerName: "CA Sneha Verma (FCA)",
+    caMembershipNumber: "062194",
+    caFirmRegistrationNumber: "014920N",
+    auditOpinion: "unqualified_clean",
+    status: "signed_uploaded",
+    notes: "CARO 2020 21-clause compliance verified. Internal Financial Controls over Financial Reporting (IFCoFR) tested effective.",
+  },
+];
+
+export const DEFAULT_BALANCE_SHEET_RECONS = [
+  {
+    id: "bs-1",
+    reconId: "bs-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    financialYear: "FY 2025-26",
+    accountingStandard: "Ind_AS",
+    totalAssets: 45000000,
+    totalLiabilities: 45000000,
+    shareCapital: 2500000,
+    reservesAndSurplus: 18500000,
+    longTermBorrowings: 12000000,
+    tradePayables: 6500000,
+    tangibleFixedAssets: 22000000,
+    cashAndBank: 8400000,
+    bookDepreciationScheduleII: 2800000,
+    taxDepreciationRule5: 3450000,
+    depreciationDifference: 650000,
+    deferredTaxAssetLiability: -163800,
+    reconciliationNotes: "Depreciation timing differences reconciled under Ind AS 12. Book profit adjusted for MAT under Section 115JB.",
+    status: "reconciled",
+  },
+  {
+    id: "bs-2",
+    reconId: "bs-2",
+    clientName: "Apex FinTech Solutions Ltd",
+    financialYear: "FY 2025-26",
+    accountingStandard: "Ind_AS",
+    totalAssets: 280000000,
+    totalLiabilities: 280000000,
+    shareCapital: 62500000,
+    reservesAndSurplus: 125000000,
+    longTermBorrowings: 50000000,
+    tradePayables: 28000000,
+    tangibleFixedAssets: 110000000,
+    cashAndBank: 45000000,
+    bookDepreciationScheduleII: 14200000,
+    taxDepreciationRule5: 17800000,
+    depreciationDifference: 3600000,
+    deferredTaxAssetLiability: -906120,
+    reconciliationNotes: "Full Schedule III financial reconciliation. Revenue recognized strictly per Ind AS 115 (Contracts with Customers).",
+    status: "reconciled",
   },
 ];
 

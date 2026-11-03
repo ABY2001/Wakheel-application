@@ -1,0 +1,52 @@
+[
+  {
+    "id": "aud-3cd-1",
+    "auditId": "aud-3cd-1",
+    "clientName": "CyberCorp Technologies Pvt Ltd",
+    "pan": "AAECS1234F",
+    "financialYear": "FY 2025-26",
+    "assessmentYear": "AY 2026-27",
+    "auditType": "tax_audit_44ab",
+    "turnover": 85000000,
+    "grossProfitRatio": 24.5,
+    "netProfitRatio": 11.2,
+    "disallowanceSec43B": 0,
+    "disallowanceSec40A3": 0,
+    "disallowanceSec40aia": 0,
+    "totalDisallowances": 0,
+    "udin": "26054921Y4P7Z6",
+    "caFirmName": "Singhania & Verma Associates, Chartered Accountants",
+    "caPartnerName": {
+      "caMembershipNo": "401928"
+    },
+    "caMembershipNumber": "054921",
+    "caFirmRegistrationNumber": "014920N",
+    "auditOpinion": "unqualified_clean",
+    "status": "signed_uploaded",
+    "notes": "Clean report issued under Section 44AB. Form 3CA and 44-Clause Form 3CD electronically uploaded."
+  },
+  {
+    "id": "aud-3cd-2",
+    "auditId": "aud-3cd-2",
+    "clientName": "Apex FinTech Solutions Ltd",
+    "pan": "AALCA4512H",
+    "financialYear": "FY 2025-26",
+    "assessmentYear": "AY 2026-27",
+    "auditType": "statutory_audit_143",
+    "turnover": 450000000,
+    "grossProfitRatio": 32.8,
+    "netProfitRatio": 15.4,
+    "disallowanceSec43B": 0,
+    "disallowanceSec40A3": 0,
+    "disallowanceSec40aia": 0,
+    "totalDisallowances": 0,
+    "udin": "26054921AAAAAB4920",
+    "caFirmName": "Singhania & Verma Associates, Chartered Accountants",
+    "caPartnerName": "CA Sneha Verma (FCA)",
+    "caMembershipNumber": "062194",
+    "caFirmRegistrationNumber": "014920N",
+    "auditOpinion": "unqualified_clean",
+    "status": "signed_uploaded",
+    "notes": "CARO 2020 21-clause compliance verified. Internal Financial Controls over Financial Reporting (IFCoFR) tested effective."
+  }
+]

@@ -12,6 +12,12 @@ import {
   auditContract,
   redlineClause,
 } from "../controllers/copilotController.js";
+import {
+  draftSection186,
+  analyzeClause43bMsme,
+  draftGstDrc01Reply,
+  interactiveCsCaQuery,
+} from "../controllers/csCaCopilotController.js";
 
 const router = express.Router();
 
@@ -37,6 +43,12 @@ router.post("/chronology/generate-synopsis", generateHighCourtSynopsis);
 // 6. Contract Intelligence & Risk Audit (Option C)
 router.post("/contract/audit", auditContract);
 router.post("/contract/redline", redlineClause);
+
+// 7. Specialized AI Copilot for CS & CA (Milestone 6)
+router.post("/cs/section-186-drafter", draftSection186);
+router.post("/ca/clause-43b-msme-analyzer", analyzeClause43bMsme);
+router.post("/ca/gst-drc01-replier", draftGstDrc01Reply);
+router.post("/cs-ca/interactive-query", interactiveCsCaQuery);
 
 export default router;
 

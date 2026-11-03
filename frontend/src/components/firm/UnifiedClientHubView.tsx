@@ -351,6 +351,14 @@ export function UnifiedClientHubView({
           {/* Quick Hub Actions */}
           <div className="flex flex-wrap items-center gap-3">
             <button
+              onClick={() => onNavigateToTab?.("ai-copilot")}
+              className="px-4 py-2.5 rounded-xl border-2 border-amber-400 dark:border-amber-600 hover:border-amber-500 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-xs font-extrabold text-amber-900 dark:text-amber-200 transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              title="Launch Specialized AI Copilot for this client"
+            >
+              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>AI Copilot</span>
+            </button>
+            <button
               onClick={() => setDossierPrintModalOpen(true)}
               className="px-4 py-2.5 rounded-xl border-2 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-900 dark:text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs"
             >

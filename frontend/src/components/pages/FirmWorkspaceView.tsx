@@ -36,6 +36,7 @@ import {
   PanelLeft,
   Calculator,
   Percent,
+  Sparkles,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -47,6 +48,7 @@ import { RocComplianceView } from "@/components/firm/RocComplianceView";
 import { LegalGatewayView } from "@/components/firm/LegalGatewayView";
 import { CaWorkspaceView } from "@/components/firm/CaWorkspaceView";
 import { UnifiedClientHubView } from "@/components/firm/UnifiedClientHubView";
+import { SpecializedCsCaCopilotView } from "@/components/firm/SpecializedCsCaCopilotView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -169,6 +171,17 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
       ],
     },
     {
+      category: "INTELLIGENT STATUTORY ADVISORY",
+      items: [
+        {
+          id: "ai-copilot",
+          label: "CS AI Copilot",
+          subtitle: "Sec 186 Drafter, Secretarial AI & MCA",
+          icon: Sparkles,
+        },
+      ],
+    },
+    {
       category: "LEGAL & ADVOCACY GATEWAY",
       items: [
         {
@@ -250,6 +263,17 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Schedule III & BS Recon",
           subtitle: "Dual Depr (Rule 5 vs Sch II) & Ind AS 12",
           icon: Layers,
+        },
+      ],
+    },
+    {
+      category: "INTELLIGENT STATUTORY ADVISORY",
+      items: [
+        {
+          id: "ai-copilot",
+          label: "CA AI Copilot",
+          subtitle: "Clause 43B(h) MSME & GST Replier",
+          icon: Sparkles,
         },
       ],
     },
@@ -541,6 +565,20 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               }`}>
                 {practiceMode === "ca" ? "ICAI Verified • FRN-018241N" : "ICSI Verified"}
               </span>
+
+              {/* Quick Launch AI Copilot Button */}
+              <button
+                onClick={() => setActiveTab("ai-copilot")}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  activeTab === "ai-copilot"
+                    ? "bg-amber-400 text-zinc-950 border-amber-500 shadow-sm font-black"
+                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-amber-400 shadow-xs"
+                }`}
+                title="Specialized AI Copilot for CS & CA"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>AI Copilot</span>
+              </button>
             </div>
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <Shield className="w-3.5 h-3.5 text-black dark:text-white" />
@@ -909,6 +947,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 onSwitchToCs={() => {
                   setPracticeMode("cs");
                   setActiveTab("dashboard");
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Specialized AI Copilot for CS & CA */}
+          {activeTab === "ai-copilot" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <SpecializedCsCaCopilotView
+                firmName={firm.name}
+                practitionerName={firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                defaultClient={{
+                  name: "CyberCorp Technologies Pvt Ltd",
+                  cin: "U72200DL2022PTC394812",
+                  pan: "AAECS1234F",
+                  gstin: "07AAECS1234F1Z8",
+                  paidUpCapital: 25000000,
                 }}
               />
             </div>

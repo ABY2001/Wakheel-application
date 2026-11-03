@@ -54,12 +54,21 @@ interface FirmWorkspaceViewProps {
 
 export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [practiceMode, setPracticeMode] = useState<"cs" | "ca">("cs");
+  const [practiceMode, setPracticeModeState] = useState<"cs" | "ca">("cs");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [newFilingModalOpen, setNewFilingModalOpen] = useState(false);
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const setPracticeMode = (mode: "cs" | "ca") => {
+    setPracticeModeState(mode);
+    try {
+      localStorage.setItem("wakheel_practice_mode", mode);
+    } catch {
+      // ignore
+    }
+  };
 
   // Active Firm State
   const [firm, setFirm] = useState<any>({
@@ -77,6 +86,10 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
       const stored = localStorage.getItem("wakheel_firm_profile");
       if (stored) {
         setFirm(JSON.parse(stored));
+      }
+      const savedMode = localStorage.getItem("wakheel_practice_mode");
+      if (savedMode === "ca" || savedMode === "cs") {
+        setPracticeModeState(savedMode);
       }
     } catch {
       // ignore
@@ -472,11 +485,55 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
         
         {/* Top Header Bar */}
         <header className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black flex items-center justify-between shrink-0">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2.5">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-xl font-bold text-black dark:text-white tracking-tight">
                 Welcome back, <span className="underline decoration-1 underline-offset-4">{firm.founderName}</span>
               </h1>
+
+              {/* HIGHLY VISIBLE PRACTICE MODE SWITCHER PILL IN TOP HEADER */}
+              <div className="flex items-center p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                <button
+                  onClick={() => {
+                    setPracticeMode("cs");
+                    if (activeTab.startsWith("ca-")) setActiveTab("dashboard");
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    practiceMode === "cs"
+                      ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                  title="Switch to Company Secretary Practice"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>CS Practice</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setPracticeMode("ca");
+                    if (
+                      activeTab === "dashboard" ||
+                      activeTab === "roc-filings" ||
+                      activeTab === "board-meetings" ||
+                      activeTab === "resolutions" ||
+                      activeTab === "secretarial-audit" ||
+                      activeTab === "statutory-registers"
+                    ) {
+                      setActiveTab("ca-income-tax");
+                    }
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    practiceMode === "ca"
+                      ? "bg-red-700 text-white shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                  title="Switch to Chartered Accountant Practice"
+                >
+                  <Calculator className="w-3.5 h-3.5" />
+                  <span>CA Practice</span>
+                </button>
+              </div>
+
               <span className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold ${
                 practiceMode === "ca"
                   ? "border-red-900/40 bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300"
@@ -558,6 +615,38 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Practice Switcher Alert Card: Switch to CA Practice */}
+              <div className="p-5 rounded-3xl bg-gradient-to-r from-red-950/40 via-zinc-900 to-black border border-red-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-red-700 flex items-center justify-center font-bold text-white shrink-0 shadow-sm">
+                    CA
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-white">
+                        Chartered Accountant (CA) Practice Workspace
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-red-600 text-white">
+                        ICAI VERIFIED
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Manage Income Tax (ITR 1-7), GST Compliance (GSTR-1/3B/9), Section 44AB Form 3CD Tax Audit &amp; 1-Click UDIN generator.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setPracticeMode("ca");
+                    setActiveTab("ca-income-tax");
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer shadow-md flex items-center gap-2"
+                >
+                  <Calculator className="w-3.5 h-3.5" />
+                  <span>Switch to CA Mode →</span>
+                </button>
               </div>
 
               {/* Action Banner: Connect to Advocates */}

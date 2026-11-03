@@ -46,6 +46,7 @@ import { BoardGovernanceView } from "@/components/firm/BoardGovernanceView";
 import { RocComplianceView } from "@/components/firm/RocComplianceView";
 import { LegalGatewayView } from "@/components/firm/LegalGatewayView";
 import { CaWorkspaceView } from "@/components/firm/CaWorkspaceView";
+import { UnifiedClientHubView } from "@/components/firm/UnifiedClientHubView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -757,18 +758,26 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             </div>
           )}
 
-          {/* VIEW: ROC & MCA21 Compliance Suite, Statutory Registers & MR-3 Audit */}
-          {(activeTab === "corporate-entities" ||
-            activeTab === "secretarial-audit" ||
+          {/* VIEW: Unified CS & CA Client Hub (Single Pane of Glass) */}
+          {activeTab === "corporate-entities" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <UnifiedClientHubView
+                firmName={firm.name}
+                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
+                onNavigateToTab={(tabId) => setActiveTab(tabId)}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Secretarial Audit & MR-3 / Statutory Registers */}
+          {(activeTab === "secretarial-audit" ||
             activeTab === "statutory-registers") && (
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <RocComplianceView
                 firmName={firm.name}
                 csName={firm.founderName || "CS Corporate Practice"}
                 initialSubTab={
-                  activeTab === "corporate-entities"
-                    ? "entities"
-                    : activeTab === "secretarial-audit"
+                  activeTab === "secretarial-audit"
                     ? "secretarial-audit"
                     : "registers"
                 }

@@ -551,70 +551,105 @@ export function ChallanDscWorkspaceView({
                     key={cert.id || cert.certificateId}
                     className={`p-4 rounded-2xl border-2 transition-all space-y-3 relative ${
                       isSelected
-                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-lg scale-101"
-                        : "bg-white dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800 shadow-xs"
+                        ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-xl scale-101"
+                        : "bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800 shadow-xs"
                     }`}
+                    style={
+                      isSelected
+                        ? { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" }
+                        : { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#e4e4e7" }
+                    }
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-0.5">
-                        <div className="font-extrabold text-sm truncate flex items-center gap-1.5">
-                          <Usb className={`w-4 h-4 ${isPlugged ? "text-emerald-500" : "text-zinc-400"}`} />
+                        <div
+                          className="font-extrabold text-sm truncate flex items-center gap-1.5"
+                          style={{ color: isSelected ? "#ffffff" : "#09090b" }}
+                        >
+                          <Usb
+                            className="w-4 h-4 shrink-0"
+                            style={{ color: isPlugged ? "#10b981" : isSelected ? "#a1a1aa" : "#71717a" }}
+                          />
                           <span>{cert.holderName}</span>
                         </div>
-                        <div className="text-[10px] font-mono opacity-80 truncate">
+                        <div
+                          className="text-[10px] font-mono truncate"
+                          style={{ color: isSelected ? "#a1a1aa" : "#52525b" }}
+                        >
                           {cert.membershipNumber || cert.din || "Authorized Signatory"} • {cert.pan}
                         </div>
                       </div>
                       <span
-                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
+                        className="text-[10px] font-mono font-black px-2.5 py-0.5 rounded-full uppercase shrink-0"
+                        style={
                           cert.holderRole === "practicing_cs"
-                            ? "bg-black text-white dark:bg-zinc-200 dark:text-zinc-900"
+                            ? { backgroundColor: isSelected ? "#27272a" : "#18181b", color: "#ffffff" }
                             : cert.holderRole === "practicing_ca"
-                            ? "bg-red-700 text-white"
-                            : "bg-blue-700 text-white"
-                        }`}
+                            ? { backgroundColor: "#991b1b", color: "#ffffff" }
+                            : { backgroundColor: "#1d4ed8", color: "#ffffff" }
+                        }
                       >
                         {cert.holderRole.replace("_", " ")}
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono space-y-1">
+                    {/* Metadata Box with Guaranteed High Contrast */}
+                    <div
+                      className="p-2.5 rounded-xl border text-[11px] font-mono space-y-1.5"
+                      style={
+                        isSelected
+                          ? { backgroundColor: "#18181b", color: "#ffffff", borderColor: "#27272a" }
+                          : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#e4e4e7" }
+                      }
+                    >
                       <div className="flex justify-between">
-                        <span className="opacity-70">Hardware:</span>
-                        <span className="font-bold truncate">{cert.hardwareModel.split(" ")[0]} {cert.hardwareModel.split(" ")[1]}</span>
+                        <span style={{ color: isSelected ? "#a1a1aa" : "#52525b" }}>Hardware:</span>
+                        <span className="font-black truncate" style={{ color: isSelected ? "#ffffff" : "#09090b" }}>
+                          {cert.hardwareModel.split(" ")[0]} {cert.hardwareModel.split(" ")[1]}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="opacity-70">Serial #:</span>
-                        <span className="font-bold truncate">{cert.serialNumber}</span>
+                        <span style={{ color: isSelected ? "#a1a1aa" : "#52525b" }}>Serial #:</span>
+                        <span className="font-black truncate" style={{ color: isSelected ? "#ffffff" : "#09090b" }}>
+                          {cert.serialNumber}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="opacity-70">Valid Till:</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{cert.validTo}</span>
+                        <span style={{ color: isSelected ? "#a1a1aa" : "#52525b" }}>Valid Till:</span>
+                        <span className="font-black" style={{ color: isSelected ? "#34d399" : "#059669" }}>
+                          {cert.validTo}
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-1">
                       <button
                         onClick={() => setSelectedCertId(cert.id || cert.certificateId)}
-                        className={`px-3 py-1 rounded-xl text-xs font-bold cursor-pointer transition-all ${
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-black cursor-pointer transition-all border shadow-xs"
+                        style={
                           isSelected
-                            ? "bg-amber-400 text-zinc-950 font-black shadow-xs"
-                            : "bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-300"
-                        }`}
+                            ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" }
+                            : { backgroundColor: "#e4e4e7", color: "#09090b", borderColor: "#d4d4d8" }
+                        }
                       >
-                        {isSelected ? "Active Signer" : "Select Signer"}
+                        {isSelected ? "✓ Active Signer" : "Select Signer"}
                       </button>
 
                       <button
                         onClick={() => handleTogglePlug(cert.id || cert.certificateId, cert.tokenStatus)}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold border flex items-center gap-1 cursor-pointer transition-colors ${
+                        className="px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold border flex items-center gap-1 cursor-pointer transition-colors"
+                        style={
                           isPlugged
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300"
-                            : "bg-zinc-100 text-zinc-600 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-400"
-                        }`}
+                            ? { backgroundColor: "#ecfdf5", color: "#065f46", borderColor: "#a7f3d0" }
+                            : {
+                                backgroundColor: isSelected ? "#27272a" : "#f4f4f5",
+                                color: isSelected ? "#e4e4e7" : "#52525b",
+                                borderColor: isSelected ? "#3f3f46" : "#d4d4d8",
+                              }
+                        }
                         title={isPlugged ? "Click to simulate USB token removal" : "Click to simulate USB token insertion"}
                       >
-                        {isPlugged ? <Lock className="w-3 h-3 text-emerald-600" /> : <Unlock className="w-3 h-3" />}
+                        {isPlugged ? <Lock className="w-3 h-3 text-emerald-600" /> : <Unlock className="w-3 h-3 text-zinc-500" />}
                         <span>{isPlugged ? "Plugged In" : "Unplugged"}</span>
                       </button>
                     </div>
@@ -957,9 +992,14 @@ export function ChallanDscWorkspaceView({
                     onClick={() => setPortalFilter(portal)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       portalFilter === portal
-                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-sm"
+                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-sm font-black"
                         : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
                     }`}
+                    style={
+                      portalFilter === portal
+                        ? { backgroundColor: "#18181b", color: "#ffffff" }
+                        : undefined
+                    }
                   >
                     {portal === "ALL"
                       ? "All Portals"

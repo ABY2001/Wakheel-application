@@ -42,6 +42,7 @@ import {
 import { csApi } from "@/lib/api";
 import caApiDefault, { caApi as caApiNamed } from "@/lib/caApi";
 const caApi = caApiNamed || caApiDefault || ({} as any);
+import { ExecutiveBoardDossierView } from "./ExecutiveBoardDossierView";
 
 export interface CorporateDirector {
   din: string;
@@ -1538,92 +1539,26 @@ export function UnifiedClientHubView({
       )}
 
       {/* =========================================================================
-          MODAL: PRINT 360° BOARD COMPLIANCE DOSSIER
+          MODAL: PRINT 360° BOARD COMPLIANCE DOSSIER (EXECUTIVE SUITE)
       ========================================================================= */}
       {dossierPrintModalOpen && selectedEntity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6 space-y-5 text-black dark:text-white max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Printer className="w-5 h-5 text-black dark:text-white" />
-                <div>
-                  <h3 className="text-base font-bold text-black dark:text-white">
-                    360° Corporate Statutory Dossier
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-mono">
-                    Prepared for Board of Directors &amp; Audit Committee Review
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setDossierPrintModalOpen(false)}
-                className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Dossier Preview Sheet */}
-            <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 font-sans text-xs">
-              <div className="text-center space-y-1 pb-4 border-b border-zinc-200 dark:border-zinc-800">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 font-bold block">
-                  CONFIDENTIAL EXECUTIVE COMPLIANCE REPORT
-                </span>
-                <h4 className="text-lg font-bold text-black dark:text-white">
-                  {selectedEntity.companyName}
-                </h4>
-                <div className="text-[11px] font-mono text-zinc-500">
-                  CIN: {selectedEntity.cin} • PAN: {selectedEntity.pan} • GSTIN: {selectedEntity.gstin}
-                </div>
-                <div className="text-[11px] font-bold text-emerald-600 pt-1">
-                  Compliance Status: {compositeScore}/100 Grade A+ (All Statutory Obligations Reconciled)
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 font-mono text-[11px]">
-                <div className="space-y-1.5 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-black dark:text-white font-bold block border-b pb-1 border-zinc-200 dark:border-zinc-800">
-                    MCA21 &amp; SECRETARIAL (CS)
-                  </span>
-                  <div>Form AOC-4 SRN: {crossPortalRecon?.srnAoc4}</div>
-                  <div>Form MGT-7: Annual Return Filed</div>
-                  <div>DIR-3 Web KYC: All Directors Done</div>
-                  <div>SS-1 Board Meetings: 4 Conducted</div>
-                </div>
-
-                <div className="space-y-1.5 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  <span className="text-black dark:text-white font-bold block border-b pb-1 border-zinc-200 dark:border-zinc-800">
-                    TAXATION &amp; AUDIT (CA)
-                  </span>
-                  <div>ITR-6 Ack #: {crossPortalRecon?.ackItr}</div>
-                  <div>Form 3CD UDIN: {crossPortalRecon?.udin}</div>
-                  <div>Turnover Reconciled: {formatInr(crossPortalRecon?.auditTurnover || 48500000)}</div>
-                  <div>Rule 36(4) 2B ITC: 100% Eligible</div>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono text-[10px] text-zinc-500">
-                Attested by: {practitionerName} • Wakheel Enterprise Governance Engine • Date: {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-end gap-2 border-t border-zinc-200 dark:border-zinc-800">
-              <button
-                onClick={() => setDossierPrintModalOpen(false)}
-                className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold cursor-pointer"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer flex items-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Dossier</span>
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4 sm:p-6 animate-in fade-in">
+          <div className="w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-3xl bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 p-4 sm:p-6 shadow-2xl">
+            <ExecutiveBoardDossierView
+              firmName={firmName}
+              practitionerName={practitionerName}
+              defaultClient={{
+                name: selectedEntity.companyName,
+                cin: selectedEntity.cin,
+                pan: selectedEntity.pan,
+                gstin: selectedEntity.gstin,
+                paidUpCapital: selectedEntity.paidUpCapital,
+                authorizedCapital: selectedEntity.authorizedCapital,
+                turnover: crossPortalRecon?.auditTurnover || 48500000,
+                directors: selectedEntity.directors,
+              }}
+              onClose={() => setDossierPrintModalOpen(false)}
+            />
           </div>
         </div>
       )}

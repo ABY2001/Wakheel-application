@@ -20,6 +20,7 @@ import copilotRoutes from "./routes/copilotRoutes.js";
 import csRoutes from "./routes/csRoutes.js";
 import caRoutes from "./routes/caRoutes.js";
 import challanDscRoutes from "./routes/challanDscRoutes.js";
+import boardDossierRoutes from "./routes/boardDossierRoutes.js";
 import { initWebSocketServer } from "./socket.js";
 
 // Connect to MongoDB
@@ -66,6 +67,7 @@ app.use("/api/copilot", copilotRoutes);
 app.use("/api/cs", csRoutes);
 app.use("/api/ca", caRoutes);
 app.use("/api/dsc-challan", challanDscRoutes);
+app.use("/api/board-dossier", boardDossierRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

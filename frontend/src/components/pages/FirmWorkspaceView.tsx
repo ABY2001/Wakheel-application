@@ -39,6 +39,7 @@ import {
   Sparkles,
   KeyRound,
   Usb,
+  Award,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -52,6 +53,7 @@ import { CaWorkspaceView } from "@/components/firm/CaWorkspaceView";
 import { UnifiedClientHubView } from "@/components/firm/UnifiedClientHubView";
 import { SpecializedCsCaCopilotView } from "@/components/firm/SpecializedCsCaCopilotView";
 import { ChallanDscWorkspaceView } from "@/components/firm/ChallanDscWorkspaceView";
+import { ExecutiveBoardDossierView } from "@/components/firm/ExecutiveBoardDossierView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -177,6 +179,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           subtitle: "Members, directors & charges (Sec 88)",
           icon: Layers,
         },
+        {
+          id: "board-dossier",
+          label: "Board & Audit Dossier",
+          subtitle: "Section 177 Pack & Joint Sign-Off",
+          icon: Award,
+        },
       ],
     },
     {
@@ -278,6 +286,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Schedule III & BS Recon",
           subtitle: "Dual Depr (Rule 5 vs Sch II) & Ind AS 12",
           icon: Layers,
+        },
+        {
+          id: "board-dossier",
+          label: "Board & Audit Dossier",
+          subtitle: "Section 177 Pack & Joint Sign-Off",
+          icon: Award,
         },
       ],
     },
@@ -607,6 +621,20 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               >
                 <KeyRound className="w-3.5 h-3.5 text-blue-500" />
                 <span>DSC &amp; Challans</span>
+              </button>
+
+              {/* Quick Launch Board Dossier Button */}
+              <button
+                onClick={() => setActiveTab("board-dossier")}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  activeTab === "board-dossier"
+                    ? "bg-purple-700 text-white border-purple-800 shadow-sm font-black"
+                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-purple-500 shadow-xs"
+                }`}
+                title="Executive Board & Audit Committee Dossier Exporter (Section 177)"
+              >
+                <Award className="w-3.5 h-3.5 text-purple-500" />
+                <span>Board Dossier</span>
               </button>
             </div>
             <div className="flex items-center gap-2 text-xs text-zinc-500">
@@ -1009,6 +1037,25 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                   cin: "U72200DL2022PTC394812",
                   pan: "AAECS1234F",
                   gstin: "07AAECS1234F1Z8",
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Executive Board & Audit Committee PDF Dossier Exporter (Section 177) */}
+          {activeTab === "board-dossier" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <ExecutiveBoardDossierView
+                firmName={firm.name}
+                practitionerName={firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                defaultClient={{
+                  name: "CyberCorp Technologies Pvt Ltd",
+                  cin: "U72200DL2022PTC394812",
+                  pan: "AAECS1234F",
+                  gstin: "07AAECS1234F1Z8",
+                  authorizedCapital: 50000000,
+                  paidUpCapital: 25000000,
+                  turnover: 48500000,
                 }}
               />
             </div>

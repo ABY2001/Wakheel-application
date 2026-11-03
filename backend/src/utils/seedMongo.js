@@ -27,6 +27,7 @@ import { TaxAudit3CD } from "../models/TaxAudit3CD.js";
 import { BalanceSheetRecon } from "../models/BalanceSheetRecon.js";
 import { DscCertificate } from "../models/DscCertificate.js";
 import { StatutoryChallan } from "../models/StatutoryChallan.js";
+import { BoardDossier } from "../models/BoardDossier.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -50,6 +51,7 @@ import {
   DEFAULT_BALANCE_SHEET_RECONS,
   DEFAULT_DSC_CERTIFICATES,
   DEFAULT_STATUTORY_CHALLANS,
+  DEFAULT_BOARD_DOSSIERS,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -641,6 +643,31 @@ export const seedMongoIfEmpty = async () => {
         clientBilled: item.clientBilled,
       }));
       await StatutoryChallan.insertMany(chlDocs);
+    }
+
+    // Seed Executive Board Dossiers
+    const dosCount = await BoardDossier.countDocuments();
+    if (dosCount === 0) {
+      console.log("🌱 Seeding MongoDB Executive Board Dossiers...");
+      const dosDocs = DEFAULT_BOARD_DOSSIERS.map((item) => ({
+        dossierId: item.dossierId,
+        userId: item.userId,
+        clientEntity: item.clientEntity,
+        financialYear: item.financialYear,
+        assessmentYear: item.assessmentYear,
+        boardMeetingDate: item.boardMeetingDate,
+        meetingType: item.meetingType,
+        governanceStandard: item.governanceStandard,
+        directorsList: item.directorsList,
+        csGovernanceData: item.csGovernanceData,
+        caAuditData: item.caAuditData,
+        auditCommitteeRisks: item.auditCommitteeRisks,
+        boardResolutionsExtracts: item.boardResolutionsExtracts,
+        dualAttestationSignOff: item.dualAttestationSignOff,
+        dossierDigestSha256: item.dossierDigestSha256,
+        version: item.version,
+      }));
+      await BoardDossier.insertMany(dosDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

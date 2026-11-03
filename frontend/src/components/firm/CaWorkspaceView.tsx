@@ -43,7 +43,8 @@ import {
   AlertTriangle,
   FileCheck,
 } from "lucide-react";
-import { caApi } from "@/lib/caApi";
+import caApiDefault, { caApi as caApiNamed } from "@/lib/caApi";
+const caApi = caApiNamed || caApiDefault || ({} as any);
 
 export interface IncomeTaxReturnItem {
   id: string;
@@ -406,16 +407,16 @@ export function CaWorkspaceView({
 
   // Load CA Data safely
   const loadCaData = async () => {
-    if (!caApi?.getIncomeTaxReturns) {
+    if (!caApi || typeof caApi.getIncomeTaxReturns !== "function") {
       return;
     }
     setLoading(true);
     try {
       const [itrRes, gstRes, auditRes, reconRes] = await Promise.allSettled([
-        caApi.getIncomeTaxReturns(),
-        caApi.getGstReturns(),
-        caApi.getTaxAuditReports(),
-        caApi.getBalanceSheetRecons(),
+        typeof caApi.getIncomeTaxReturns === "function" ? caApi.getIncomeTaxReturns() : Promise.resolve({ returns: [] }),
+        typeof caApi.getGstReturns === "function" ? caApi.getGstReturns() : Promise.resolve({ returns: [] }),
+        typeof caApi.getTaxAuditReports === "function" ? caApi.getTaxAuditReports() : Promise.resolve({ reports: [] }),
+        typeof caApi.getBalanceSheetRecons === "function" ? caApi.getBalanceSheetRecons() : Promise.resolve({ reconciliations: [] }),
       ]);
 
       if (itrRes.status === "fulfilled" && itrRes.value?.returns?.length) {
@@ -458,12 +459,14 @@ export function CaWorkspaceView({
   // 1-Click UDIN Generation Handler
   const handleGenerateUdin = async (audit: TaxAuditItem) => {
     try {
-      const res = await caApi.generateUdin(audit.id, {
-        caMembershipNo: audit.caMembershipNo || "401928",
-        financialYear: audit.financialYear,
-        turnover: audit.turnoverOrGrossReceipts,
-        documentType: "Form 3CD Tax Audit Report",
-      });
+      const res = typeof caApi?.generateUdin === "function" 
+        ? await caApi.generateUdin(audit.id, {
+            caMembershipNo: audit.caMembershipNo || "401928",
+            financialYear: audit.financialYear,
+            turnover: audit.turnoverOrGrossReceipts,
+            documentType: "Form 3CD Tax Audit Report",
+          })
+        : { success: false, udin: null };
 
       if (res.success && res.udin) {
         setTaxAudits((prev) =>
@@ -1899,19 +1902,21 @@ export function CaWorkspaceView({
                 const deductionsChapterVIA = Number((form.elements.namedItem("deductionsChapterVIA") as HTMLInputElement).value) || 0;
 
                 try {
-                  const res = await caApi.createIncomeTaxReturn({
-                    clientName,
-                    pan,
-                    itrForm,
-                    grossTotalIncome,
-                    deductionsChapterVIA,
-                    assessmentYear: "2026-27",
-                    financialYear: "2025-26",
-                    status: "computed",
-                    filingDueDate: "2026-07-31",
-                    taxRegime: "new_115bac",
-                    aisStatus: "reconciled",
-                  });
+                  const res = typeof caApi?.createIncomeTaxReturn === "function"
+                    ? await caApi.createIncomeTaxReturn({
+                        clientName,
+                        pan,
+                        itrForm,
+                        grossTotalIncome,
+                        deductionsChapterVIA,
+                        assessmentYear: "2026-27",
+                        financialYear: "2025-26",
+                        status: "computed",
+                        filingDueDate: "2026-07-31",
+                        taxRegime: "new_115bac",
+                        aisStatus: "reconciled",
+                      })
+                    : { success: false };
                   if (res.success && res.returnDoc) {
                     setItrReturns((prev) => [res.returnDoc, ...prev]);
                   }
@@ -2035,21 +2040,23 @@ export function CaWorkspaceView({
                 const itcClaimed = Number((form.elements.namedItem("itcClaimed") as HTMLInputElement).value) || 0;
 
                 try {
-                  const res = await caApi.createGstReturn({
-                    clientName,
-                    gstin,
-                    returnType,
-                    returnPeriod,
-                    financialYear: "2025-26",
-                    taxableTurnover,
-                    itcClaimed,
-                    itcAvailable2B: itcClaimed,
-                    igst: Math.round(taxableTurnover * 0.18),
-                    cgst: 0,
-                    sgst: 0,
-                    status: "ready_to_file",
-                    filingDueDate: "2026-11-20",
-                  });
+                  const res = typeof caApi?.createGstReturn === "function"
+                    ? await caApi.createGstReturn({
+                        clientName,
+                        gstin,
+                        returnType,
+                        returnPeriod,
+                        financialYear: "2025-26",
+                        taxableTurnover,
+                        itcClaimed,
+                        itcAvailable2B: itcClaimed,
+                        igst: Math.round(taxableTurnover * 0.18),
+                        cgst: 0,
+                        sgst: 0,
+                        status: "ready_to_file",
+                        filingDueDate: "2026-11-20",
+                      })
+                    : { success: false };
                   if (res.success && res.returnDoc) {
                     setGstReturns((prev) => [res.returnDoc, ...prev]);
                   }
@@ -2179,22 +2186,24 @@ export function CaWorkspaceView({
                 const np = Number((form.elements.namedItem("np") as HTMLInputElement).value) || 0;
 
                 try {
-                  const res = await caApi.createTaxAuditReport({
-                    clientName,
-                    pan,
-                    assessmentYear: "2026-27",
-                    financialYear: "2025-26",
-                    turnoverOrGrossReceipts: turnover,
-                    grossProfitRatio: gp,
-                    netProfitRatio: np,
-                    auditSection: turnover > 100000000 ? "Section 44AB(a) > 10 Cr" : "Section 44AB(a) > 1 Cr",
-                    status: "in_progress",
-                    clausesReviewed: 44,
-                    totalClauses: 44,
-                    caName: "CA Ramanathan Iyer",
-                    caMembershipNo: "401928",
-                    caFirmRegNo: "018241N",
-                  });
+                  const res = typeof caApi?.createTaxAuditReport === "function"
+                    ? await caApi.createTaxAuditReport({
+                        clientName,
+                        pan,
+                        assessmentYear: "2026-27",
+                        financialYear: "2025-26",
+                        turnoverOrGrossReceipts: turnover,
+                        grossProfitRatio: gp,
+                        netProfitRatio: np,
+                        auditSection: turnover > 100000000 ? "Section 44AB(a) > 10 Cr" : "Section 44AB(a) > 1 Cr",
+                        status: "in_progress",
+                        clausesReviewed: 44,
+                        totalClauses: 44,
+                        caName: "CA Ramanathan Iyer",
+                        caMembershipNo: "401928",
+                        caFirmRegNo: "018241N",
+                      })
+                    : { success: false };
                   if (res.success && res.report) {
                     setTaxAudits((prev) => [res.report, ...prev]);
                   }
@@ -2313,23 +2322,25 @@ export function CaWorkspaceView({
                 const taxDepr = Number((form.elements.namedItem("taxDepr") as HTMLInputElement).value) || 0;
 
                 try {
-                  const res = await caApi.createBalanceSheetRecon({
-                    clientName,
-                    cinOrPan,
-                    financialYear: "2025-26",
-                    totalAssets,
-                    totalLiabilities: totalAssets,
-                    shareholdersEquity: Math.round(totalAssets * 0.45),
-                    bookDepreciation: bookDepr,
-                    taxDepreciation: taxDepr,
-                    depreciationDifference: bookDepr - taxDepr,
-                    deferredTaxLiability: Math.max(0, Math.round((taxDepr - bookDepr) * 0.2517)),
-                    deferredTaxAsset: Math.max(0, Math.round((bookDepr - taxDepr) * 0.2517)),
-                    currentRatio: 1.85,
-                    debtEquityRatio: 0.65,
-                    status: "reconciled",
-                    reconciledBy: "CA Ramanathan Iyer",
-                  });
+                  const res = typeof caApi?.createBalanceSheetRecon === "function"
+                    ? await caApi.createBalanceSheetRecon({
+                        clientName,
+                        cinOrPan,
+                        financialYear: "2025-26",
+                        totalAssets,
+                        totalLiabilities: totalAssets,
+                        shareholdersEquity: Math.round(totalAssets * 0.45),
+                        bookDepreciation: bookDepr,
+                        taxDepreciation: taxDepr,
+                        depreciationDifference: bookDepr - taxDepr,
+                        deferredTaxLiability: Math.max(0, Math.round((taxDepr - bookDepr) * 0.2517)),
+                        deferredTaxAsset: Math.max(0, Math.round((bookDepr - taxDepr) * 0.2517)),
+                        currentRatio: 1.85,
+                        debtEquityRatio: 0.65,
+                        status: "reconciled",
+                        reconciledBy: "CA Ramanathan Iyer",
+                      })
+                    : { success: false };
                   if (res.success && res.recon) {
                     setBsRecons((prev) => [res.recon, ...prev]);
                   }

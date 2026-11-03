@@ -25,6 +25,8 @@ import { IncomeTaxReturn } from "../models/IncomeTaxReturn.js";
 import { GstReturn } from "../models/GstReturn.js";
 import { TaxAudit3CD } from "../models/TaxAudit3CD.js";
 import { BalanceSheetRecon } from "../models/BalanceSheetRecon.js";
+import { DscCertificate } from "../models/DscCertificate.js";
+import { StatutoryChallan } from "../models/StatutoryChallan.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -46,6 +48,8 @@ import {
   DEFAULT_GST_RETURNS,
   DEFAULT_TAX_AUDIT_3CD,
   DEFAULT_BALANCE_SHEET_RECONS,
+  DEFAULT_DSC_CERTIFICATES,
+  DEFAULT_STATUTORY_CHALLANS,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -581,6 +585,62 @@ export const seedMongoIfEmpty = async () => {
         status: item.status,
       }));
       await BalanceSheetRecon.insertMany(bsDocs);
+    }
+
+    // Seed Class 3 DSC Certificates
+    const dscCount = await DscCertificate.countDocuments();
+    if (dscCount === 0) {
+      console.log("🌱 Seeding MongoDB Class 3 DSC Certificates...");
+      const dscDocs = DEFAULT_DSC_CERTIFICATES.map((item) => ({
+        certificateId: item.certificateId,
+        userId: item.userId,
+        holderName: item.holderName,
+        holderRole: item.holderRole,
+        pan: item.pan,
+        membershipNumber: item.membershipNumber,
+        din: item.din,
+        tokenProvider: item.tokenProvider,
+        hardwareModel: item.hardwareModel,
+        serialNumber: item.serialNumber,
+        issuerCa: item.issuerCa,
+        validFrom: item.validFrom,
+        validTo: item.validTo,
+        keyAlgorithm: item.keyAlgorithm,
+        keyUsage: item.keyUsage,
+        tokenStatus: item.tokenStatus,
+        totalSignaturesAffixed: item.totalSignaturesAffixed,
+        lastUsedAt: item.lastUsedAt,
+      }));
+      await DscCertificate.insertMany(dscDocs);
+    }
+
+    // Seed Statutory E-Challans
+    const chlCount = await StatutoryChallan.countDocuments();
+    if (chlCount === 0) {
+      console.log("🌱 Seeding MongoDB Statutory E-Challans...");
+      const chlDocs = DEFAULT_STATUTORY_CHALLANS.map((item) => ({
+        challanId: item.challanId,
+        userId: item.userId,
+        portal: item.portal,
+        challanType: item.challanType,
+        entityName: item.entityName,
+        cinOrPanOrGstin: item.cinOrPanOrGstin,
+        financialYear: item.financialYear,
+        assessmentYear: item.assessmentYear,
+        filingForm: item.filingForm,
+        srnOrCpinOrCin: item.srnOrCpinOrCin,
+        bsrCode: item.bsrCode,
+        challanSerialNumber: item.challanSerialNumber,
+        tenderedBank: item.tenderedBank,
+        paymentMode: item.paymentMode,
+        amountBreakdown: item.amountBreakdown,
+        paymentStatus: item.paymentStatus,
+        paidAt: item.paidAt,
+        receiptNumber: item.receiptNumber,
+        dscSignatory: item.dscSignatory,
+        clientBilled: item.clientBilled,
+      }));
+      await StatutoryChallan.insertMany(chlDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

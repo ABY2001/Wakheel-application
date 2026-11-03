@@ -280,3 +280,6 @@ export const caApi = {
     }
   },
 };
+
+export default caApi;
+

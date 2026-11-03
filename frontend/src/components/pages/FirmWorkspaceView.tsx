@@ -37,6 +37,8 @@ import {
   Calculator,
   Percent,
   Sparkles,
+  KeyRound,
+  Usb,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -49,6 +51,7 @@ import { LegalGatewayView } from "@/components/firm/LegalGatewayView";
 import { CaWorkspaceView } from "@/components/firm/CaWorkspaceView";
 import { UnifiedClientHubView } from "@/components/firm/UnifiedClientHubView";
 import { SpecializedCsCaCopilotView } from "@/components/firm/SpecializedCsCaCopilotView";
+import { ChallanDscWorkspaceView } from "@/components/firm/ChallanDscWorkspaceView";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
@@ -138,6 +141,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Managed Entities",
           subtitle: "Client companies & LLP register",
           icon: Building2,
+        },
+        {
+          id: "dsc-challans",
+          label: "Class 3 DSC & Challans",
+          subtitle: "USB Crypto Token & ROC Payments",
+          icon: KeyRound,
         },
       ],
     },
@@ -246,6 +255,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Audit Notes & Mite",
           subtitle: "Audit checklists & workpapers",
           icon: CheckCircle2,
+        },
+        {
+          id: "dsc-challans",
+          label: "Class 3 DSC & Challans",
+          subtitle: "USB Crypto Token & Tax Payments",
+          icon: KeyRound,
         },
       ],
     },
@@ -579,6 +594,20 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>AI Copilot</span>
               </button>
+
+              {/* Quick Launch DSC & Challans Button */}
+              <button
+                onClick={() => setActiveTab("dsc-challans")}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  activeTab === "dsc-challans"
+                    ? "bg-blue-600 text-white border-blue-700 shadow-sm font-black"
+                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-blue-500 shadow-xs"
+                }`}
+                title="Class 3 DSC Crypto Token & Statutory E-Challans"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-blue-500" />
+                <span>DSC &amp; Challans</span>
+              </button>
             </div>
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <Shield className="w-3.5 h-3.5 text-black dark:text-white" />
@@ -656,7 +685,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               </div>
 
               {/* Practice Switcher Alert Card: Switch to CA Practice */}
-              <div className="p-5 rounded-3xl bg-gradient-to-r from-red-950/40 via-zinc-900 to-black border border-red-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-md">
+              <div className="p-5 rounded-3xl bg-zinc-950 dark:bg-zinc-900 border-2 border-red-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-md">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-red-700 flex items-center justify-center font-bold text-white shrink-0 shadow-sm">
                     CA
@@ -670,7 +699,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                         ICAI VERIFIED
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-zinc-300 mt-0.5">
                       Manage Income Tax (ITR 1-7), GST Compliance (GSTR-1/3B/9), Section 44AB Form 3CD Tax Audit &amp; 1-Click UDIN generator.
                     </p>
                   </div>
@@ -964,6 +993,22 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                   pan: "AAECS1234F",
                   gstin: "07AAECS1234F1Z8",
                   paidUpCapital: 25000000,
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Class 3 DSC Crypto Token Manager & Statutory E-Challan Simulator */}
+          {activeTab === "dsc-challans" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <ChallanDscWorkspaceView
+                firmName={firm.name}
+                practitionerName={firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                defaultClient={{
+                  name: "CyberCorp Technologies Pvt Ltd",
+                  cin: "U72200DL2022PTC394812",
+                  pan: "AAECS1234F",
+                  gstin: "07AAECS1234F1Z8",
                 }}
               />
             </div>

@@ -40,7 +40,8 @@ import {
   Share2,
 } from "lucide-react";
 import { csApi } from "@/lib/api";
-import { caApi } from "@/lib/caApi";
+import caApiDefault, { caApi as caApiNamed } from "@/lib/caApi";
+const caApi = caApiNamed || caApiDefault || ({} as any);
 
 export interface CorporateDirector {
   din: string;

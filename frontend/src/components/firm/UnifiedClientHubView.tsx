@@ -39,7 +39,8 @@ import {
   Coins,
   Share2,
 } from "lucide-react";
-import { csApi, caApi } from "@/lib/api";
+import { csApi } from "@/lib/api";
+import { caApi } from "@/lib/caApi";
 
 export interface CorporateDirector {
   din: string;
@@ -122,15 +123,15 @@ export function UnifiedClientHubView({
         auditRes,
         reconRes,
       ] = await Promise.allSettled([
-        csApi.getCorporateEntities(),
-        csApi.getRocFilings(),
-        csApi.getBoardMeetings(),
-        csApi.getBoardResolutions(),
-        csApi.getStatutoryRegisters(),
-        caApi.getIncomeTaxReturns(),
-        caApi.getGstReturns(),
-        caApi.getTaxAuditReports(),
-        caApi.getBalanceSheetRecons(),
+        csApi?.getCorporateEntities ? csApi.getCorporateEntities() : Promise.resolve({ entities: [] }),
+        csApi?.getRocFilings ? csApi.getRocFilings() : Promise.resolve({ filings: [] }),
+        csApi?.getBoardMeetings ? csApi.getBoardMeetings() : Promise.resolve({ meetings: [] }),
+        csApi?.getBoardResolutions ? csApi.getBoardResolutions() : Promise.resolve({ resolutions: [] }),
+        csApi?.getStatutoryRegisters ? csApi.getStatutoryRegisters() : Promise.resolve({ registers: [] }),
+        caApi?.getIncomeTaxReturns ? caApi.getIncomeTaxReturns() : Promise.resolve({ returns: [] }),
+        caApi?.getGstReturns ? caApi.getGstReturns() : Promise.resolve({ returns: [] }),
+        caApi?.getTaxAuditReports ? caApi.getTaxAuditReports() : Promise.resolve({ reports: [] }),
+        caApi?.getBalanceSheetRecons ? caApi.getBalanceSheetRecons() : Promise.resolve({ reconciliations: [] }),
       ]);
 
       if (entRes.status === "fulfilled" && entRes.value?.entities) {

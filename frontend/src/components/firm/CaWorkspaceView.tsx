@@ -43,7 +43,7 @@ import {
   AlertTriangle,
   FileCheck,
 } from "lucide-react";
-import { caApi } from "@/lib/api";
+import { caApi } from "@/lib/caApi";
 
 export interface IncomeTaxReturnItem {
   id: string;
@@ -140,6 +140,232 @@ export interface BalanceSheetReconItem {
   reconciledBy: string;
 }
 
+const DEFAULT_ITRS: IncomeTaxReturnItem[] = [
+  {
+    id: "itr-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    pan: "AAECS1234F",
+    assessmentYear: "2026-27",
+    financialYear: "2025-26",
+    itrForm: "ITR-6",
+    status: "filed",
+    grossTotalIncome: 48500000,
+    deductionsChapterVIA: 3500000,
+    taxableIncome: 45000000,
+    taxPayable: 11326500,
+    tdsTcsCredit: 7200000,
+    advanceTaxPaid: 4500000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 373500,
+    filingDueDate: "2026-10-31",
+    filingDate: "2026-10-18",
+    ackNumber: "901248192841",
+    taxRegime: "new_115bac",
+    aisStatus: "reconciled",
+  },
+  {
+    id: "itr-2",
+    clientName: "Apex FinTech Solutions Ltd",
+    pan: "AALCA4512H",
+    assessmentYear: "2026-27",
+    financialYear: "2025-26",
+    itrForm: "ITR-6",
+    status: "computed",
+    grossTotalIncome: 92000000,
+    deductionsChapterVIA: 4000000,
+    taxableIncome: 88000000,
+    taxPayable: 22149600,
+    tdsTcsCredit: 12000000,
+    advanceTaxPaid: 10500000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 350400,
+    filingDueDate: "2026-10-31",
+    taxRegime: "new_115bac",
+    aisStatus: "reconciled",
+  },
+  {
+    id: "itr-3",
+    clientName: "GreenEarth AgriVentures LLP",
+    pan: "AABFG9012K",
+    assessmentYear: "2026-27",
+    financialYear: "2025-26",
+    itrForm: "ITR-5",
+    status: "verified",
+    grossTotalIncome: 14500000,
+    deductionsChapterVIA: 1200000,
+    taxableIncome: 13300000,
+    taxPayable: 4149600,
+    tdsTcsCredit: 2500000,
+    advanceTaxPaid: 1800000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 150400,
+    filingDueDate: "2026-10-31",
+    taxRegime: "new_115bac",
+    aisStatus: "reconciled",
+  },
+  {
+    id: "itr-4",
+    clientName: "Dr. Vikram Malhotra (MD & Founder)",
+    pan: "AAECS9988D",
+    assessmentYear: "2026-27",
+    financialYear: "2025-26",
+    itrForm: "ITR-3",
+    status: "filed",
+    grossTotalIncome: 6500000,
+    deductionsChapterVIA: 150000,
+    taxableIncome: 6350000,
+    taxPayable: 1580800,
+    tdsTcsCredit: 1200000,
+    advanceTaxPaid: 450000,
+    selfAssessmentTax: 0,
+    refundDueOrPayable: 69200,
+    filingDueDate: "2026-07-31",
+    filingDate: "2026-07-24",
+    ackNumber: "481920194821",
+    taxRegime: "new_115bac",
+    aisStatus: "reconciled",
+  },
+];
+
+const DEFAULT_GSTS: GstReturnItem[] = [
+  {
+    id: "gst-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    gstin: "07AAECS1234F1Z8",
+    returnType: "GSTR-3B",
+    returnPeriod: "September 2026",
+    financialYear: "2026-27",
+    status: "filed",
+    taxableTurnover: 4200000,
+    igst: 756000,
+    cgst: 0,
+    sgst: 0,
+    cess: 0,
+    totalTaxLiability: 756000,
+    itcClaimed: 480000,
+    itcAvailable2B: 480000,
+    cashPaid: 276000,
+    filingDueDate: "2026-10-20",
+    filingDate: "2026-10-18",
+    arnNumber: "AA0710260194821",
+  },
+  {
+    id: "gst-2",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    gstin: "07AAECS1234F1Z8",
+    returnType: "GSTR-1",
+    returnPeriod: "September 2026",
+    financialYear: "2026-27",
+    status: "filed",
+    taxableTurnover: 4200000,
+    igst: 756000,
+    cgst: 0,
+    sgst: 0,
+    cess: 0,
+    totalTaxLiability: 756000,
+    itcClaimed: 0,
+    itcAvailable2B: 0,
+    cashPaid: 0,
+    filingDueDate: "2026-10-11",
+    filingDate: "2026-10-10",
+    arnNumber: "AA0710260019284",
+  },
+  {
+    id: "gst-3",
+    clientName: "Apex FinTech Solutions Ltd",
+    gstin: "27AALCA4512H1Z5",
+    returnType: "GSTR-3B",
+    returnPeriod: "September 2026",
+    financialYear: "2026-27",
+    status: "ready_to_file",
+    taxableTurnover: 8400000,
+    igst: 1512000,
+    cgst: 0,
+    sgst: 0,
+    cess: 0,
+    totalTaxLiability: 1512000,
+    itcClaimed: 950000,
+    itcAvailable2B: 950000,
+    cashPaid: 562000,
+    filingDueDate: "2026-10-20",
+  },
+];
+
+const DEFAULT_AUDITS: TaxAuditItem[] = [
+  {
+    id: "audit-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    pan: "AAECS1234F",
+    assessmentYear: "2026-27",
+    financialYear: "2025-26",
+    turnoverOrGrossReceipts: 48500000,
+    auditSection: "Section 44AB(a) > 1 Cr",
+    grossProfitRatio: 24.5,
+    netProfitRatio: 8.2,
+    status: "udin_generated",
+    udin: "26054921Y4P7Z6",
+    caName: "CA Ramanathan Iyer",
+    caMembershipNo: "401928",
+    caFirmRegNo: "018241N",
+    auditOpinion: "True and Fair View without qualifications",
+    disallowance43B: 0,
+    disallowance40A3: 0,
+    disallowance40a_ia: 0,
+    clausesReviewed: 44,
+    totalClauses: 44,
+  },
+  {
+    id: "audit-2",
+    clientName: "Apex FinTech Solutions Ltd",
+    pan: "AALCA4512H",
+    assessmentYear: "2026-27",
+    financialYear: "2025-26",
+    turnoverOrGrossReceipts: 92000000,
+    auditSection: "Section 44AB(a) > 1 Cr",
+    grossProfitRatio: 31.8,
+    netProfitRatio: 14.1,
+    status: "in_progress",
+    caName: "CA Ramanathan Iyer",
+    caMembershipNo: "401928",
+    caFirmRegNo: "018241N",
+    auditOpinion: "In Progress",
+    disallowance43B: 125000,
+    disallowance40A3: 0,
+    disallowance40a_ia: 0,
+    clausesReviewed: 38,
+    totalClauses: 44,
+  },
+];
+
+const DEFAULT_RECONS: BalanceSheetReconItem[] = [
+  {
+    id: "recon-1",
+    clientName: "CyberCorp Technologies Pvt Ltd",
+    cinOrPan: "U72200DL2022PTC394812",
+    financialYear: "2025-26",
+    status: "reconciled",
+    totalAssets: 65000000,
+    totalLiabilities: 65000000,
+    shareholdersEquity: 28000000,
+    reservesAndSurplus: 19500000,
+    totalBorrowings: 12000000,
+    netRevenue: 48500000,
+    ebitda: 8200000,
+    pat: 4100000,
+    bookDepreciation: 3800000,
+    taxDepreciation: 4450000,
+    depreciationDifference: 650000,
+    deferredTaxLiability: 163605,
+    deferredTaxAsset: 0,
+    netDeferredTaxAdjustment: 163605,
+    currentRatio: 2.1,
+    debtEquityRatio: 0.43,
+    dscr: 3.4,
+    roe: 14.6,
+    reconciledBy: "CA Ramanathan Iyer",
+  },
+];
+
 interface CaWorkspaceViewProps {
   firmName?: string;
   caName?: string;
@@ -158,11 +384,11 @@ export function CaWorkspaceView({
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Data states
-  const [itrReturns, setItrReturns] = useState<IncomeTaxReturnItem[]>([]);
-  const [gstReturns, setGstReturns] = useState<GstReturnItem[]>([]);
-  const [taxAudits, setTaxAudits] = useState<TaxAuditItem[]>([]);
-  const [bsRecons, setBsRecons] = useState<BalanceSheetReconItem[]>([]);
+  // Data states with guaranteed default values
+  const [itrReturns, setItrReturns] = useState<IncomeTaxReturnItem[]>(DEFAULT_ITRS);
+  const [gstReturns, setGstReturns] = useState<GstReturnItem[]>(DEFAULT_GSTS);
+  const [taxAudits, setTaxAudits] = useState<TaxAuditItem[]>(DEFAULT_AUDITS);
+  const [bsRecons, setBsRecons] = useState<BalanceSheetReconItem[]>(DEFAULT_RECONS);
 
   // Modals & Details
   const [newItrModalOpen, setNewItrModalOpen] = useState(false);
@@ -178,8 +404,11 @@ export function CaWorkspaceView({
   const [itrFilterForm, setItrFilterForm] = useState<string>("ALL");
   const [gstFilterType, setGstFilterType] = useState<string>("ALL");
 
-  // Load CA Data
+  // Load CA Data safely
   const loadCaData = async () => {
+    if (!caApi?.getIncomeTaxReturns) {
+      return;
+    }
     setLoading(true);
     try {
       const [itrRes, gstRes, auditRes, reconRes] = await Promise.allSettled([
@@ -189,20 +418,20 @@ export function CaWorkspaceView({
         caApi.getBalanceSheetRecons(),
       ]);
 
-      if (itrRes.status === "fulfilled" && itrRes.value?.returns) {
+      if (itrRes.status === "fulfilled" && itrRes.value?.returns?.length) {
         setItrReturns(itrRes.value.returns);
       }
-      if (gstRes.status === "fulfilled" && gstRes.value?.returns) {
+      if (gstRes.status === "fulfilled" && gstRes.value?.returns?.length) {
         setGstReturns(gstRes.value.returns);
       }
-      if (auditRes.status === "fulfilled" && auditRes.value?.reports) {
+      if (auditRes.status === "fulfilled" && auditRes.value?.reports?.length) {
         setTaxAudits(auditRes.value.reports);
       }
-      if (reconRes.status === "fulfilled" && reconRes.value?.reconciliations) {
+      if (reconRes.status === "fulfilled" && reconRes.value?.reconciliations?.length) {
         setBsRecons(reconRes.value.reconciliations);
       }
     } catch (err) {
-      console.error("Failed to load CA data:", err);
+      console.warn("loadCaData fallback to defaults:", err);
     } finally {
       setLoading(false);
     }

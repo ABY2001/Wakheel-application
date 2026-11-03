@@ -670,6 +670,7 @@ export function CaWorkspaceView({
                     ? "bg-black text-white dark:bg-white dark:text-black shadow-md scale-102"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent"
                 }`}
+                style={isActive ? { backgroundColor: "#000000", color: "#ffffff" } : undefined}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{tab.label}</span>

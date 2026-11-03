@@ -426,6 +426,7 @@ export function SpecializedCsCaCopilotView({
                     ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-md scale-102"
                     : "text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent font-semibold"
                 }`}
+                style={isActive ? { backgroundColor: "#18181b", color: "#ffffff" } : undefined}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{tab.label}</span>

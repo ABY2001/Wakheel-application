@@ -558,6 +558,7 @@ export function ExecutiveBoardDossierView({
                   ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-sm"
                   : "bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800"
               }`}
+              style={isActive ? { backgroundColor: "#09090b", color: "#ffffff" } : undefined}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>

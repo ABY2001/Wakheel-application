@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import { DEFAULT_DUE_DILIGENCE_AUDITS } from "./seedDueDiligence.js";
 import { DEFAULT_STATUTORY_NOTICES } from "./seedNotices.js";
+import { DEFAULT_MDP_FIRM_GOVERNANCE } from "./seedMdpGovernance.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -5783,6 +5784,118 @@ export const devStore = {
     writeFile("dev_statutory_notices.json", notices);
     return { success: true };
   },
+
+  // MDP Firm Governance & Regulatory Lock Methods
+  getMdpFirmGovernance() {
+    return readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+  },
+
+  updateMdpFirmGovernance(updates) {
+    const current = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    const updated = { ...current, ...updates, updatedAt: new Date().toISOString() };
+    writeFile("dev_mdp_governance.json", updated);
+    return updated;
+  },
+
+  updateMdpTeamMember(memberId, updates) {
+    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    const index = gov.members.findIndex((m) => m.memberId === memberId);
+    if (index === -1) return null;
+    gov.members[index] = { ...gov.members[index], ...updates };
+    writeFile("dev_mdp_governance.json", gov);
+    return gov.members[index];
+  },
+
+  getDelegatedTasks() {
+    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    return gov.delegatedTasks || [];
+  },
+
+  createDelegatedTask(taskData) {
+    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    const newTask = {
+      taskId: taskData.taskId || `TASK-DEL-${Date.now()}`,
+      title: taskData.title,
+      clientName: taskData.clientName || "CyberCorp Technologies Pvt Ltd",
+      module: taskData.module || "ROC_FILING",
+      assignedTrainee: taskData.assignedTrainee || {
+        memberId: "mbr-trainee-pooja",
+        name: "Pooja Hegde",
+        role: "CS Trainee (Executive)",
+      },
+      reviewingPartner: taskData.reviewingPartner || {
+        memberId: "mbr-cs-rajesh",
+        name: "CS Rajesh Sharma",
+        role: "Managing Partner",
+      },
+      workpaperReference: taskData.workpaperReference || "WP-NEW-01",
+      traineeNotes: taskData.traineeNotes || "",
+      partnerReviewNotes: "",
+      status: "DRAFTING_BY_TRAINEE",
+      fourEyesVerified: false,
+      statutoryLockPreventedDsc: true,
+      submittedAt: new Date().toISOString(),
+    };
+    gov.delegatedTasks = [newTask, ...(gov.delegatedTasks || [])];
+    writeFile("dev_mdp_governance.json", gov);
+    return newTask;
+  },
+
+  reviewDelegatedTask(taskId, { partnerReviewNotes, status, reviewingPartner }) {
+    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    const index = gov.delegatedTasks.findIndex((t) => t.taskId === taskId);
+    if (index === -1) return null;
+    const task = gov.delegatedTasks[index];
+    if (partnerReviewNotes !== undefined) task.partnerReviewNotes = partnerReviewNotes;
+    if (status) task.status = status;
+    if (status === "PARTNER_APPROVED") {
+      task.fourEyesVerified = true;
+      task.statutoryLockPreventedDsc = false;
+      task.reviewedAt = new Date().toISOString();
+    }
+    if (reviewingPartner) {
+      task.reviewingPartner = reviewingPartner;
+    }
+    gov.delegatedTasks[index] = task;
+    writeFile("dev_mdp_governance.json", gov);
+    return task;
+  },
+
+  getDualSignOffGates() {
+    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    return gov.dualSignOffGates || [];
+  },
+
+  signDualSignOffGate(gateId, { role, signatoryName, membershipNumber, udin }) {
+    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+    const index = gov.dualSignOffGates.findIndex((g) => g.gateId === gateId);
+    if (index === -1) return null;
+    const gate = gov.dualSignOffGates[index];
+
+    if (role === "CS" || role === "practicing_cs" || role === "managing_partner") {
+      gate.csGate.status = "SIGNED";
+      gate.csGate.signedBy = signatoryName || "CS Rajesh Sharma";
+      gate.csGate.membershipNumber = membershipNumber || "FCS-8921";
+      gate.csGate.signedAt = new Date().toISOString();
+    } else if (role === "CA" || role === "practicing_ca" || role === "senior_partner") {
+      gate.caGate.status = "SIGNED";
+      gate.caGate.signedBy = signatoryName || "CA Ramanathan Iyer";
+      gate.caGate.membershipNumber = membershipNumber || "FCA-054921";
+      gate.caGate.udin = udin || `26054921${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      gate.caGate.signedAt = new Date().toISOString();
+    }
+
+    if (gate.csGate.status === "SIGNED" && gate.caGate.status === "SIGNED") {
+      gate.overallStatus = "FULLY_CERTIFIED_RELEASED";
+      gate.releaseCertificateHash = `SHA256:${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}94812a0f`;
+    } else if (gate.csGate.status === "SIGNED" || gate.caGate.status === "SIGNED") {
+      gate.overallStatus = "PARTIALLY_SIGNED";
+    }
+
+    gov.dualSignOffGates[index] = gate;
+    writeFile("dev_mdp_governance.json", gov);
+    return gate;
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -9029,7 +9142,7 @@ export const DEFAULT_BOARD_DOSSIERS = [
   },
 ];
 
-export { DEFAULT_DUE_DILIGENCE_AUDITS, DEFAULT_STATUTORY_NOTICES };
+export { DEFAULT_DUE_DILIGENCE_AUDITS, DEFAULT_STATUTORY_NOTICES, DEFAULT_MDP_FIRM_GOVERNANCE };
 
 
 

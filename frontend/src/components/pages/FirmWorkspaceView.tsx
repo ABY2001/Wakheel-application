@@ -41,6 +41,7 @@ import {
   Usb,
   Award,
   Mail,
+  ShieldAlert,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -57,6 +58,7 @@ import { ChallanDscWorkspaceView } from "@/components/firm/ChallanDscWorkspaceVi
 import { ExecutiveBoardDossierView } from "@/components/firm/ExecutiveBoardDossierView";
 import { StatutoryDueDiligenceView } from "@/components/firm/StatutoryDueDiligenceView";
 import { StatutoryNoticeMailroomView } from "@/components/firm/StatutoryNoticeMailroomView";
+import { MdpFirmGovernanceView } from "@/components/firm/MdpFirmGovernanceView";
 import { useTheme } from "@/context/ThemeContext";
 
 interface FirmWorkspaceViewProps {
@@ -226,6 +228,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           icon: Mail,
         },
         {
+          id: "mdp-governance",
+          label: "MDP Governance & Locks",
+          subtitle: "Role Partitioning & Code Locks",
+          icon: ShieldAlert,
+        },
+        {
           id: "contracts",
           label: "Commercial Contracts",
           subtitle: "Shareholder agreements, NDAs & audit",
@@ -350,6 +358,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "SCN & Notice Mailroom",
           subtitle: "Limitation Clocks & SCN Rebuttal",
           icon: Mail,
+        },
+        {
+          id: "mdp-governance",
+          label: "MDP Governance & Locks",
+          subtitle: "Role Partitioning & Code Locks",
+          icon: ShieldAlert,
         },
         {
           id: "vault",
@@ -735,6 +749,26 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 />
                 <span style={{ color: activeTab === "notice-mailroom" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
                   SCN Mailroom
+                </span>
+              </button>
+
+              {/* Quick Launch MDP Governance Button */}
+              <button
+                onClick={() => setActiveTab("mdp-governance")}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                style={
+                  activeTab === "mdp-governance"
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                }
+                title="Multi-Disciplinary Firm (MDP) Governance, Regulatory Code Locks & 4-Eyes Queue"
+              >
+                <Users
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: activeTab === "mdp-governance" ? (isDark ? "#7c3aed" : "#a855f7") : "#9333ea" }}
+                />
+                <span style={{ color: activeTab === "mdp-governance" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  MDP Governance
                 </span>
               </button>
             </div>
@@ -1193,6 +1227,13 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                   gstin: "07AAECS1234F1Z8",
                 }}
               />
+            </div>
+          )}
+
+          {/* VIEW: Role-Based Partitioning & Multi-Disciplinary Firm (MDP) Engine */}
+          {activeTab === "mdp-governance" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <MdpFirmGovernanceView />
             </div>
           )}
 

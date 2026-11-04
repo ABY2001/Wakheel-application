@@ -30,6 +30,7 @@ import { StatutoryChallan } from "../models/StatutoryChallan.js";
 import { BoardDossier } from "../models/BoardDossier.js";
 import { DueDiligenceAudit } from "../models/DueDiligenceAudit.js";
 import { StatutoryNotice } from "../models/StatutoryNotice.js";
+import { MdpFirmGovernance } from "../models/MdpFirmGovernance.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -56,6 +57,7 @@ import {
   DEFAULT_BOARD_DOSSIERS,
   DEFAULT_DUE_DILIGENCE_AUDITS,
   DEFAULT_STATUTORY_NOTICES,
+  DEFAULT_MDP_FIRM_GOVERNANCE,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -705,6 +707,13 @@ export const seedMongoIfEmpty = async () => {
     if (noticeCount === 0) {
       console.log("🌱 Seeding MongoDB Statutory Notices & SCN Mailroom...");
       await StatutoryNotice.insertMany(DEFAULT_STATUTORY_NOTICES);
+    }
+
+    // Seed Multi-Disciplinary Firm (MDP) Governance & Regulatory Rules
+    const mdpCount = await MdpFirmGovernance.countDocuments();
+    if (mdpCount === 0) {
+      console.log("🌱 Seeding MongoDB MDP Firm Governance & Regulatory Lock Rules...");
+      await MdpFirmGovernance.create(DEFAULT_MDP_FIRM_GOVERNANCE);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

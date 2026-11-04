@@ -54,12 +54,15 @@ import { UnifiedClientHubView } from "@/components/firm/UnifiedClientHubView";
 import { SpecializedCsCaCopilotView } from "@/components/firm/SpecializedCsCaCopilotView";
 import { ChallanDscWorkspaceView } from "@/components/firm/ChallanDscWorkspaceView";
 import { ExecutiveBoardDossierView } from "@/components/firm/ExecutiveBoardDossierView";
+import { useTheme } from "@/context/ThemeContext";
 
 interface FirmWorkspaceViewProps {
   firmData?: any;
 }
 
 export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [practiceMode, setPracticeModeState] = useState<"cs" | "ca">("cs");
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -546,18 +549,25 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               </h1>
 
               {/* HIGHLY VISIBLE PRACTICE MODE SWITCHER PILL IN TOP HEADER */}
-              <div className="flex items-center p-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 shadow-xs">
+              <div
+                className="flex items-center p-0.5 rounded-full border shadow-xs"
+                style={
+                  isDark
+                    ? { backgroundColor: "#18181b", borderColor: "#27272a" }
+                    : { backgroundColor: "#f4f4f5", borderColor: "#e4e4e7" }
+                }
+              >
                 <button
                   onClick={() => {
                     setPracticeMode("cs");
                     if (activeTab.startsWith("ca-")) setActiveTab("dashboard");
                   }}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className="px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  style={
                     practiceMode === "cs"
-                      ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-black"
-                      : "text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white"
-                  }`}
-                  style={practiceMode === "cs" ? { backgroundColor: "#000000", color: "#ffffff" } : undefined}
+                      ? (isDark ? { backgroundColor: "#ffffff", color: "#000000" } : { backgroundColor: "#000000", color: "#ffffff" })
+                      : { color: isDark ? "#a1a1aa" : "#52525b" }
+                  }
                   title="Switch to Company Secretary Practice"
                 >
                   <Building2 className="w-3.5 h-3.5" />
@@ -577,12 +587,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                       setActiveTab("ca-income-tax");
                     }
                   }}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className="px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  style={
                     practiceMode === "ca"
-                      ? "bg-red-700 text-white shadow-xs font-black"
-                      : "text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white"
-                  }`}
-                  style={practiceMode === "ca" ? { backgroundColor: "#b91c1c", color: "#ffffff" } : undefined}
+                      ? { backgroundColor: "#b91c1c", color: "#ffffff" }
+                      : { color: isDark ? "#a1a1aa" : "#52525b" }
+                  }
                   title="Switch to Chartered Accountant Practice"
                 >
                   <Calculator className="w-3.5 h-3.5" />
@@ -590,78 +600,75 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 </button>
               </div>
 
-              <span className={`px-2.5 py-1 rounded-full border text-[10px] font-mono font-black ${
-                practiceMode === "ca"
-                  ? "border-red-300 bg-red-100 text-red-900 dark:border-red-900 dark:bg-red-950/80 dark:text-red-200"
-                  : "border-zinc-300 bg-zinc-100 text-zinc-950 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-              }`}>
+              <span
+                className="px-2.5 py-1 rounded-full border text-[10px] font-mono font-black"
+                style={
+                  practiceMode === "ca"
+                    ? (isDark ? { backgroundColor: "#450a0a", color: "#fecaca", borderColor: "#991b1b" } : { backgroundColor: "#fee2e2", color: "#991b1b", borderColor: "#fca5a5" })
+                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#d4d4d8" })
+                }
+              >
                 {practiceMode === "ca" ? "ICAI Verified • FRN-018241N" : "ICSI Verified"}
               </span>
 
               {/* Quick Launch AI Copilot Button */}
               <button
                 onClick={() => setActiveTab("ai-copilot")}
-                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  activeTab === "ai-copilot"
-                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-md font-black"
-                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 shadow-xs"
-                }`}
+                className="px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
                 style={
                   activeTab === "ai-copilot"
-                    ? { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" }
-                    : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" }
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
                 }
                 title="Specialized AI Copilot for CS & CA"
               >
                 <Sparkles
                   className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: activeTab === "ai-copilot" ? "#fbbf24" : "#d97706" }}
+                  style={{ color: activeTab === "ai-copilot" ? (isDark ? "#d97706" : "#fbbf24") : "#d97706" }}
                 />
-                <span style={{ color: activeTab === "ai-copilot" ? "#ffffff" : "#18181b" }}>AI Copilot</span>
+                <span style={{ color: activeTab === "ai-copilot" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  AI Copilot
+                </span>
               </button>
 
               {/* Quick Launch DSC & Challans Button */}
               <button
                 onClick={() => setActiveTab("dsc-challans")}
-                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  activeTab === "dsc-challans"
-                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-md font-black"
-                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 shadow-xs"
-                }`}
+                className="px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
                 style={
                   activeTab === "dsc-challans"
-                    ? { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" }
-                    : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" }
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
                 }
                 title="Class 3 DSC Crypto Token & Statutory E-Challans"
               >
                 <KeyRound
                   className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: activeTab === "dsc-challans" ? "#38bdf8" : "#2563eb" }}
+                  style={{ color: activeTab === "dsc-challans" ? (isDark ? "#0284c7" : "#38bdf8") : "#2563eb" }}
                 />
-                <span style={{ color: activeTab === "dsc-challans" ? "#ffffff" : "#18181b" }}>DSC &amp; Challans</span>
+                <span style={{ color: activeTab === "dsc-challans" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  DSC &amp; Challans
+                </span>
               </button>
 
               {/* Quick Launch Board Dossier Button */}
               <button
                 onClick={() => setActiveTab("board-dossier")}
-                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                  activeTab === "board-dossier"
-                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-md font-black"
-                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 shadow-xs"
-                }`}
+                className="px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
                 style={
                   activeTab === "board-dossier"
-                    ? { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" }
-                    : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" }
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
                 }
                 title="Executive Board & Audit Committee Dossier Exporter (Section 177)"
               >
                 <Award
                   className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: activeTab === "board-dossier" ? "#c084fc" : "#9333ea" }}
+                  style={{ color: activeTab === "board-dossier" ? (isDark ? "#7e22ce" : "#c084fc") : "#9333ea" }}
                 />
-                <span style={{ color: activeTab === "board-dossier" ? "#ffffff" : "#18181b" }}>Board Dossier</span>
+                <span style={{ color: activeTab === "board-dossier" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  Board Dossier
+                </span>
               </button>
             </div>
             <div className="flex items-center gap-2 text-xs text-zinc-500">

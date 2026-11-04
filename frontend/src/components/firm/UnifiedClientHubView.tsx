@@ -43,6 +43,7 @@ import { csApi } from "@/lib/api";
 import caApiDefault, { caApi as caApiNamed } from "@/lib/caApi";
 const caApi = caApiNamed || caApiDefault || ({} as any);
 import { ExecutiveBoardDossierView } from "./ExecutiveBoardDossierView";
+import { useTheme } from "@/context/ThemeContext";
 
 export interface CorporateDirector {
   din: string;
@@ -86,6 +87,8 @@ export function UnifiedClientHubView({
   initialEntityId,
   onNavigateToTab,
 }: UnifiedClientHubViewProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [loading, setLoading] = useState(false);
   const [entities, setEntities] = useState<ClientEntity[]>([]);
   const [selectedEntityId, setSelectedEntityId] = useState<string>(initialEntityId || "");
@@ -320,32 +323,73 @@ export function UnifiedClientHubView({
       {/* =========================================================================
           TOP BANNER: 360° CLIENT COMPLIANCE MATRIX (High Contrast Redesign)
       ========================================================================= */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white relative overflow-hidden shadow-sm">
+      <div
+        className="p-6 sm:p-7 rounded-3xl border-2 relative overflow-hidden shadow-sm"
+        style={
+          isDark
+            ? { backgroundColor: "#09090b", borderColor: "#27272a", color: "#ffffff" }
+            : { backgroundColor: "#ffffff", borderColor: "#e4e4e7", color: "#09090b" }
+        }
+      >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-[11px] font-mono font-extrabold tracking-widest uppercase shadow-xs">
+              <span
+                className="px-3 py-1 rounded-full text-[11px] font-mono font-extrabold tracking-widest uppercase shadow-xs border"
+                style={
+                  isDark
+                    ? { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#ffffff" }
+                    : { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" }
+                }
+              >
                 UNIFIED CLIENT 360° HUB
               </span>
-              <span className="px-3 py-1 rounded-full border border-red-300 dark:border-red-800 bg-red-100 dark:bg-red-950/80 text-[11px] font-mono font-bold text-red-900 dark:text-red-200">
+              <span
+                className="px-3 py-1 rounded-full border text-[11px] font-mono font-bold"
+                style={
+                  isDark
+                    ? { backgroundColor: "#450a0a", color: "#fecaca", borderColor: "#991b1b" }
+                    : { backgroundColor: "#fee2e2", color: "#991b1b", borderColor: "#fca5a5" }
+                }
+              >
                 CS Governance + CA Taxation Bridge
               </span>
-              <span className="px-3 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-100 dark:bg-emerald-950/80 text-[11px] font-mono font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+              <span
+                className="px-3 py-1 rounded-full border text-[11px] font-mono font-bold flex items-center gap-1.5"
+                style={
+                  isDark
+                    ? { backgroundColor: "#052e16", color: "#a7f3d0", borderColor: "#166534" }
+                    : { backgroundColor: "#d1fae5", color: "#065f46", borderColor: "#6ee7b7" }
+                }
+              >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Dual Statutory Verified
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
+              <h2
+                className="text-2xl sm:text-3xl font-black tracking-tight"
+                style={{ color: isDark ? "#ffffff" : "#09090b" }}
+              >
                 {selectedEntity?.companyName || "Managed Corporate Client"}
               </h2>
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 uppercase shadow-xs">
+              <span
+                className="px-3 py-1 rounded-full text-xs font-mono font-extrabold border uppercase shadow-xs"
+                style={
+                  isDark
+                    ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" }
+                    : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#d4d4d8" }
+                }
+              >
                 {selectedEntity?.entityType?.replace("_", " ") || "PVT LTD"}
               </span>
             </div>
 
-            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 max-w-3xl leading-relaxed font-normal">
+            <p
+              className="text-xs sm:text-sm max-w-3xl leading-relaxed font-normal"
+              style={{ color: isDark ? "#d4d4d8" : "#3f3f46" }}
+            >
               Consolidated command center mapping MCA21 corporate filings, secretarial registers, and board resolutions with Income Tax ITR-6, GSTR-3B filings, Section 44AB tax audits, and Schedule III balance sheet reconciliations.
             </p>
           </div>
@@ -354,22 +398,37 @@ export function UnifiedClientHubView({
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => onNavigateToTab?.("ai-copilot")}
-              className="px-4 py-2.5 rounded-xl border-2 border-amber-400 dark:border-amber-600 hover:border-amber-500 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-xs font-extrabold text-amber-900 dark:text-amber-200 transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              className="px-4 py-2.5 rounded-xl border-2 text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              style={
+                isDark
+                  ? { backgroundColor: "#451a03", color: "#fde68a", borderColor: "#78350f" }
+                  : { backgroundColor: "#fef3c7", color: "#92400e", borderColor: "#fcd34d" }
+              }
               title="Launch Specialized AI Copilot for this client"
             >
-              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <Sparkles className="w-4 h-4" style={{ color: isDark ? "#fbbf24" : "#d97706" }} />
               <span>AI Copilot</span>
             </button>
             <button
               onClick={() => setDossierPrintModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl border-2 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-900 dark:text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              className="px-4 py-2.5 rounded-xl border-2 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              style={
+                isDark
+                  ? { backgroundColor: "#18181b", color: "#ffffff", borderColor: "#3f3f46" }
+                  : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#d4d4d8" }
+              }
             >
-              <Printer className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              <Printer className="w-4 h-4" style={{ color: isDark ? "#ffffff" : "#09090b" }} />
               <span>Print 360° Board Dossier</span>
             </button>
             <button
               onClick={() => setNewEntityModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all cursor-pointer border"
+              style={
+                isDark
+                  ? { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#ffffff" }
+                  : { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" }
+              }
             >
               <Plus className="w-4 h-4" />
               <span>+ Onboard New Entity</span>
@@ -379,66 +438,73 @@ export function UnifiedClientHubView({
 
         {/* Selected Entity Key Attributes Ribbon (High Contrast Container) */}
         {selectedEntity && (
-          <div className="bg-zinc-50 dark:bg-zinc-900/70 p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 text-xs mt-5">
+          <div
+            className="p-4 sm:p-5 rounded-2xl border grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 text-xs mt-5"
+            style={
+              isDark
+                ? { backgroundColor: "#18181b", borderColor: "#27272a" }
+                : { backgroundColor: "#f4f4f5", borderColor: "#e4e4e7" }
+            }
+          >
             <div>
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">CIN / LLPIN</span>
-              <div className="flex items-center gap-1.5 font-mono font-black text-zinc-950 dark:text-white text-xs truncate">
+              <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>CIN / LLPIN</span>
+              <div className="flex items-center gap-1.5 font-mono font-black text-xs truncate" style={{ color: isDark ? "#ffffff" : "#09090b" }}>
                 <span className="truncate">{selectedEntity.cin}</span>
                 <button
                   onClick={() => handleCopy(selectedEntity.cin, "copy-cin")}
                   title="Copy CIN"
                   className="hover:text-red-600 shrink-0 cursor-pointer p-0.5"
                 >
-                  {copiedId === "copy-cin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-900" />}
+                  {copiedId === "copy-cin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
                 </button>
               </div>
             </div>
 
             <div>
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Permanent A/C (PAN)</span>
-              <div className="flex items-center gap-1.5 font-mono font-black text-zinc-950 dark:text-white text-xs">
+              <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>Permanent A/C (PAN)</span>
+              <div className="flex items-center gap-1.5 font-mono font-black text-xs" style={{ color: isDark ? "#ffffff" : "#09090b" }}>
                 <span>{selectedEntity.pan || "AAECS1234F"}</span>
                 <button
                   onClick={() => handleCopy(selectedEntity.pan || "AAECS1234F", "copy-pan")}
                   title="Copy PAN"
                   className="hover:text-red-600 cursor-pointer p-0.5"
                 >
-                  {copiedId === "copy-pan" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-900" />}
+                  {copiedId === "copy-pan" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
                 </button>
               </div>
             </div>
 
             <div>
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">GSTIN Number</span>
-              <div className="flex items-center gap-1.5 font-mono font-black text-blue-700 dark:text-cyan-400 text-xs truncate">
+              <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>GSTIN Number</span>
+              <div className="flex items-center gap-1.5 font-mono font-black text-xs truncate" style={{ color: isDark ? "#38bdf8" : "#0284c7" }}>
                 <span className="truncate">{selectedEntity.gstin || "07AAECS1234F1Z8"}</span>
                 <button
                   onClick={() => handleCopy(selectedEntity.gstin || "07AAECS1234F1Z8", "copy-gstin")}
                   title="Copy GSTIN"
                   className="hover:text-blue-900 dark:hover:text-cyan-200 shrink-0 cursor-pointer p-0.5"
                 >
-                  {copiedId === "copy-gstin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-900" />}
+                  {copiedId === "copy-gstin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
                 </button>
               </div>
             </div>
 
             <div>
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Share Capital (Auth/Paid)</span>
-              <span className="font-extrabold text-zinc-950 dark:text-white text-xs">
+              <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>Share Capital (Auth/Paid)</span>
+              <span className="font-extrabold text-xs block" style={{ color: isDark ? "#ffffff" : "#09090b" }}>
                 {formatInr(selectedEntity.authorizedCapital)} / {formatInr(selectedEntity.paidUpCapital)}
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Active Directors / KMPs</span>
-              <span className="font-extrabold text-zinc-950 dark:text-white text-xs">
+              <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>Active Directors / KMPs</span>
+              <span className="font-extrabold text-xs block" style={{ color: isDark ? "#ffffff" : "#09090b" }}>
                 {selectedEntity.directors?.length || 2} Appointed (All KYC Clear)
               </span>
             </div>
 
             <div>
-              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 uppercase font-mono font-bold block mb-1">Composite 360° Score</span>
-              <span className="font-black text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-1">
+              <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>Composite 360° Score</span>
+              <span className="font-black text-sm flex items-center gap-1" style={{ color: isDark ? "#34d399" : "#047857" }}>
                 <Sparkles className="w-3.5 h-3.5" />
                 {compositeScore}/100 Grade A+
               </span>
@@ -482,21 +548,28 @@ export function UnifiedClientHubView({
                   key={ent.id || (ent as any)._id}
                   onClick={() => setSelectedEntityId(ent.id || (ent as any)._id)}
                   className={`p-4 rounded-2xl text-left border-2 transition-all cursor-pointer space-y-2 ${
-                    isSelected
-                      ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-lg scale-101"
-                      : "bg-white dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-xs"
+                    isSelected ? "shadow-lg scale-101" : "shadow-xs"
                   }`}
+                  style={
+                    isSelected
+                      ? { backgroundColor: isDark ? "#ffffff" : "#09090b", color: isDark ? "#09090b" : "#ffffff", borderColor: isDark ? "#ffffff" : "#09090b" }
+                      : { backgroundColor: isDark ? "#09090b" : "#ffffff", color: isDark ? "#ffffff" : "#09090b", borderColor: isDark ? "#27272a" : "#e4e4e7" }
+                  }
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="font-extrabold text-sm truncate leading-tight">
+                    <div
+                      className="font-extrabold text-sm truncate leading-tight"
+                      style={{ color: isSelected ? (isDark ? "#09090b" : "#ffffff") : (isDark ? "#ffffff" : "#09090b") }}
+                    >
                       {ent.companyName}
                     </div>
                     <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase shrink-0 ${
+                      className="text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase shrink-0"
+                      style={
                         isSelected
-                          ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900"
-                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                      }`}
+                          ? { backgroundColor: isDark ? "#e4e4e7" : "#27272a", color: isDark ? "#09090b" : "#ffffff" }
+                          : { backgroundColor: isDark ? "#27272a" : "#f4f4f5", color: isDark ? "#e4e4e7" : "#52525b" }
+                      }
                     >
                       {ent.entityType.replace("_", " ")}
                     </span>
@@ -504,7 +577,7 @@ export function UnifiedClientHubView({
 
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="truncate opacity-90">{ent.cin}</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-extrabold ml-2 shrink-0">
+                    <span className="font-extrabold ml-2 shrink-0" style={{ color: isSelected ? (isDark ? "#059669" : "#34d399") : (isDark ? "#34d399" : "#059669") }}>
                       {ent.complianceHealthScore || 96}% Health
                     </span>
                   </div>
@@ -562,16 +635,27 @@ export function UnifiedClientHubView({
                     ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-md scale-102"
                     : "text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent font-semibold"
                 }`}
-                style={isActive ? { backgroundColor: "#18181b", color: "#ffffff" } : undefined}
+                style={
+                  isActive
+                    ? (isDark
+                        ? { backgroundColor: "#ffffff", color: "#09090b" }
+                        : { backgroundColor: "#09090b", color: "#ffffff" })
+                    : undefined
+                }
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{tab.label}</span>
                 <span
-                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full"
+                  style={
                     isActive
-                      ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900"
-                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                  }`}
+                      ? (isDark
+                          ? { backgroundColor: "#e4e4e7", color: "#09090b" }
+                          : { backgroundColor: "#27272a", color: "#ffffff" })
+                      : (isDark
+                          ? { backgroundColor: "#27272a", color: "#d4d4d8" }
+                          : { backgroundColor: "#e4e4e7", color: "#3f3f46" })
+                  }
                 >
                   {tab.badge}
                 </span>

@@ -35,3 +35,9 @@ export const connectDB = async () => {
 export const getIsMongoConnected = () => {
   return isMongoConnected && mongoose.connection.readyState === 1;
 };
+
+export const isMongoConnectedCheck = () => {
+  return mongoose.connection.readyState === 1;
+};
+
+export { isMongoConnectedCheck as isMongoConnected };

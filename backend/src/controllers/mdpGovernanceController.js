@@ -1,6 +1,8 @@
 import { MdpFirmGovernance } from "../models/MdpFirmGovernance.js";
 import { devStore } from "../utils/devStore.js";
-import { isMongoConnected } from "../config/db.js";
+import mongoose from "mongoose";
+
+const isMongoConnected = () => mongoose.connection.readyState === 1;
 
 export const mdpGovernanceController = {
   // 1. Get entire MDP Firm Governance Profile (Roster, Rules, Delegated Tasks, Dual Gates)

@@ -51,109 +51,6 @@ export interface BacklogTask {
   caseRef?: string;
 }
 
-const INITIAL_EVENTS: CalendarEvent[] = [
-  {
-    id: "evt-1",
-    title: "WP(C) 19482/2024 — Hearing on Stay Extension",
-    category: "hearing",
-    date: "2026-10-30",
-    time: "10:15 AM",
-    duration: "45m",
-    caseNumber: "WP(C) 19482/2024",
-    forum: "High Court of Kerala • Court Hall 3A (Item #14)",
-    clientName: "Gopakumar Nambiar",
-    notes: "Division bench hearing on status quo regarding overhead line realignment.",
-    status: "urgent",
-  },
-  {
-    id: "evt-2",
-    title: "Client Video Consultation: Land Dispute Injunction",
-    category: "consultation",
-    date: "2026-10-30",
-    time: "02:30 PM",
-    duration: "30m",
-    caseNumber: "OP 412/2026",
-    forum: "Virtual Consultation Room #4",
-    clientName: "Devika Menon",
-    notes: "Review title deed chain from Kanayannur SRO prior to civil suit filing.",
-    status: "confirmed",
-  },
-  {
-    id: "evt-3",
-    title: "Registry Defect Scrutiny Cure Deadline",
-    category: "deadline",
-    date: "2026-10-29",
-    time: "04:00 PM",
-    duration: "1h",
-    caseNumber: "Bail Appl. 4182/2026",
-    forum: "Principal Registry • Filing Counter 2",
-    clientName: "Arjun V. Nair",
-    notes: "Re-present bail memo with certified FIR copy and medical certs.",
-    status: "completed",
-  },
-  {
-    id: "evt-4",
-    title: "Section 138 NI Act Cross-Examination",
-    category: "hearing",
-    date: "2026-10-31",
-    time: "11:00 AM",
-    duration: "1h 15m",
-    caseNumber: "CC 892/2025",
-    forum: "JFCM-II, Ernakulam",
-    clientName: "Highland Spices & Exports",
-    notes: "Cross examination of CW1 on bank memo ledger entries.",
-    status: "confirmed",
-  },
-  {
-    id: "evt-5",
-    title: "Corporate Arbitration Chamber Session",
-    category: "meeting",
-    date: "2026-10-27",
-    time: "03:30 PM",
-    duration: "2h",
-    caseNumber: "ARB/2026/08",
-    forum: "Chambers 412, Marine Drive",
-    clientName: "Oceanic Cold Chain Logistics",
-    notes: "Finalize statement of defense and counter-claim calculations.",
-    status: "completed",
-  },
-];
-
-const INITIAL_BACKLOG: BacklogTask[] = [
-  {
-    id: "bk-1",
-    title: "Draft Rejoinder Affidavit in WP 19482/2024",
-    category: "drafting",
-    priority: "urgent",
-    estimatedTime: "1h 30m",
-    caseRef: "WP(C) 19482/2024",
-  },
-  {
-    id: "bk-2",
-    title: "Verify Welfare Stamps (₹25 + ₹2) on newly signed Vakalatnamas",
-    category: "filing",
-    priority: "high",
-    estimatedTime: "20m",
-    caseRef: "General Chamber",
-  },
-  {
-    id: "bk-3",
-    title: "Research Supreme Court precedent on S.482 BNSS retrospective scope",
-    category: "research",
-    priority: "normal",
-    estimatedTime: "45m",
-    caseRef: "Bail Appl. 4182/2026",
-  },
-  {
-    id: "bk-4",
-    title: "Telephone client Sri. Gopakumar regarding additional electricity bills",
-    category: "client",
-    priority: "high",
-    estimatedTime: "15m",
-    caseRef: "WP(C) 19482/2024",
-  },
-];
-
 interface ChamberCalendarViewProps {
   advocateName?: string;
   isClientView?: boolean;
@@ -168,8 +65,8 @@ export default function ChamberCalendarView({
   const [waitingListOpen, setWaitingListOpen] = useState<boolean>(true);
 
   // Events & Backlog State
-  const [events, setEvents] = useState<CalendarEvent[]>(INITIAL_EVENTS);
-  const [backlog, setBacklog] = useState<BacklogTask[]>(INITIAL_BACKLOG);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [backlog, setBacklog] = useState<BacklogTask[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   // Fetch initial data from backend with fallback to initial state

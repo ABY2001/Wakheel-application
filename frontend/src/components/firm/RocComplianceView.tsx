@@ -106,327 +106,6 @@ export interface StatutoryRegisterItem {
   certifiedAt?: string;
 }
 
-const INITIAL_ENTITIES: CorporateEntityItem[] = [
-  {
-    id: "ent-1",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    rocJurisdiction: "RoC Delhi & Haryana",
-    entityType: "pvt_ltd",
-    incorporationDate: "2022-04-12",
-    authorizedCapital: 5000000,
-    paidUpCapital: 2500000,
-    registeredAddress: "Plot 42, Okhla Industrial Area Phase-III, New Delhi, DL 110020",
-    email: "compliance@cybercorp.tech",
-    pan: "AAECS1234F",
-    gstin: "07AAECS1234F1Z8",
-    directors: [
-      { din: "08912340", name: "Dr. Vikram Malhotra", designation: "Managing Director", appointmentDate: "2022-04-12", active: true },
-      { din: "07849102", name: "CS Rajesh Sharma", designation: "Whole-Time Director & KMP", appointmentDate: "2022-04-12", active: true },
-      { din: "09124589", name: "Priya Sundaram", designation: "Director", appointmentDate: "2022-04-12", active: true },
-      { din: "09841235", name: "Dr. Ananya Sen", designation: "Additional Director (Independent)", appointmentDate: "2026-11-01", active: true },
-    ],
-    financialYearEnd: "March 31",
-    complianceHealthScore: 96,
-    status: "active",
-  },
-  {
-    id: "ent-2",
-    companyName: "Apex FinTech Solutions Ltd",
-    cin: "L65990MH2019PLC318902",
-    rocJurisdiction: "RoC Mumbai",
-    entityType: "public_ltd",
-    incorporationDate: "2019-08-20",
-    authorizedCapital: 100000000,
-    paidUpCapital: 62500000,
-    registeredAddress: "Level 14, Tower B, Peninsula Business Park, Lower Parel, Mumbai, MH 400013",
-    email: "secretarial@apexfintech.in",
-    pan: "AALCA4512H",
-    gstin: "27AALCA4512H1Z5",
-    directors: [
-      { din: "01429810", name: "Rajeshwar Singhania", designation: "Executive Chairperson", appointmentDate: "2019-08-20", active: true },
-      { din: "02849120", name: "Sunita Mehra", designation: "Whole-Time Director & CEO", appointmentDate: "2020-02-14", active: true },
-      { din: "05839210", name: "Anand K. Verma", designation: "Independent Director", appointmentDate: "2021-09-01", active: true },
-    ],
-    financialYearEnd: "March 31",
-    complianceHealthScore: 92,
-    status: "active",
-  },
-  {
-    id: "ent-3",
-    companyName: "GreenEarth AgriVentures LLP",
-    cin: "AAB-4921",
-    rocJurisdiction: "RoC Bangalore",
-    entityType: "llp",
-    incorporationDate: "2023-01-15",
-    authorizedCapital: 1500000,
-    paidUpCapital: 1500000,
-    registeredAddress: "4th Floor, Indiranagar 100ft Road, Bengaluru, KA 560038",
-    email: "legal@greenearthllp.com",
-    pan: "AABFG9012K",
-    gstin: "29AABFG9012K1ZQ",
-    directors: [
-      { din: "07849102", name: "CS Rajesh Sharma", designation: "Designated Partner", appointmentDate: "2023-01-15", active: true },
-      { din: "08192039", name: "Arvind Rao", designation: "Designated Partner", appointmentDate: "2023-01-15", active: true },
-    ],
-    financialYearEnd: "March 31",
-    complianceHealthScore: 98,
-    status: "active",
-  },
-];
-
-const INITIAL_FILINGS: RocFilingItem[] = [
-  {
-    id: "roc-1",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    formName: "AOC-4",
-    formDescription: "Filing of Financial Statements, Balance Sheet, P&L & Auditor Report with ROC",
-    financialYear: "FY 2025-26",
-    statutorySection: "Section 137, Companies Act 2013",
-    dueDate: "2026-10-30",
-    filingDate: "2026-10-25",
-    status: "approved",
-    srn: "F93821048",
-    challanAmount: 600,
-    lateFeeAmount: 0,
-    paymentStatus: "paid",
-    signatoryDin: "08912340",
-    signatoryName: "Dr. Vikram Malhotra (MD)",
-    pcsCertificateNumber: "CS Rajesh Sharma (FCS 8492, CP 10294)",
-    attachmentCount: 4,
-    notes: "Approved under STP mode by RoC Delhi.",
-  },
-  {
-    id: "roc-2",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    formName: "MGT-7",
-    formDescription: "Annual Return of Company Certified by Practising Company Secretary (PCS)",
-    financialYear: "FY 2025-26",
-    statutorySection: "Section 92(1) & Rule 11 of Management and Administration Rules",
-    dueDate: "2026-11-29",
-    filingDate: "",
-    status: "dsc_affixed",
-    srn: "",
-    challanAmount: 600,
-    lateFeeAmount: 0,
-    paymentStatus: "unpaid",
-    signatoryDin: "07849102",
-    signatoryName: "CS Rajesh Sharma (Director & KMP)",
-    pcsCertificateNumber: "CS Rajesh Sharma (FCS 8492, CP 10294)",
-    attachmentCount: 3,
-    notes: "DSC affixation completed. Ready for portal upload on MCA21 V3.",
-  },
-  {
-    id: "roc-3",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    formName: "DIR-12",
-    formDescription: "Appointment of Dr. Ananya Sen as Additional Director (Category: Independent)",
-    financialYear: "FY 2026-27",
-    statutorySection: "Section 161(1) and Section 170, Companies Act 2013",
-    dueDate: "2026-12-01",
-    filingDate: "2026-11-02",
-    status: "uploaded_mca",
-    srn: "G29481023",
-    challanAmount: 300,
-    lateFeeAmount: 0,
-    paymentStatus: "paid",
-    signatoryDin: "08912340",
-    signatoryName: "Dr. Vikram Malhotra (MD)",
-    pcsCertificateNumber: "CS Rajesh Sharma (CP 10294)",
-    attachmentCount: 3,
-    notes: "Filed with DIR-2 Consent letter and Form MBP-1 Disclosure.",
-  },
-  {
-    id: "roc-4",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    formName: "PAS-3",
-    formDescription: "Return of Allotment for 50,000 Series A CCPS under Section 42 Private Placement",
-    financialYear: "FY 2026-27",
-    statutorySection: "Section 39 & Section 42, Companies Act 2013",
-    dueDate: "2026-12-15",
-    filingDate: "",
-    status: "drafted",
-    srn: "",
-    challanAmount: 1000,
-    lateFeeAmount: 0,
-    paymentStatus: "unpaid",
-    signatoryDin: "09124589",
-    signatoryName: "Priya Sundaram (Director)",
-    pcsCertificateNumber: "CS Rajesh Sharma (CP 10294)",
-    attachmentCount: 2,
-    notes: "Drafted post EGM approval. Valuation certificate attached.",
-  },
-  {
-    id: "roc-5",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    formName: "CHG-1",
-    formDescription: "Creation of Charge in favour of HDFC Bank Limited (Working Capital Limit ₹2.5 Cr)",
-    financialYear: "FY 2026-27",
-    statutorySection: "Section 77(1), Companies Act 2013",
-    dueDate: "2026-11-25",
-    filingDate: "2026-11-01",
-    status: "approved",
-    srn: "C83920194",
-    challanAmount: 600,
-    lateFeeAmount: 0,
-    paymentStatus: "paid",
-    signatoryDin: "08912340",
-    signatoryName: "Dr. Vikram Malhotra (MD)",
-    pcsCertificateNumber: "CS Rajesh Sharma (CP 10294)",
-    attachmentCount: 2,
-    notes: "Certificate of Registration of Charge issued by RoC Delhi.",
-  },
-  {
-    id: "roc-6",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    formName: "DPT-3",
-    formDescription: "Return of Deposits and Particulars of Transactions Not Considered as Deposit",
-    financialYear: "FY 2025-26",
-    statutorySection: "Section 73 read with Rule 16 of Deposit Rules 2014",
-    dueDate: "2026-06-30",
-    filingDate: "2026-06-25",
-    status: "approved",
-    srn: "E19283746",
-    challanAmount: 600,
-    lateFeeAmount: 0,
-    paymentStatus: "paid",
-    signatoryDin: "07849102",
-    signatoryName: "CS Rajesh Sharma (Director & KMP)",
-    pcsCertificateNumber: "CS Rajesh Sharma (FCS 8492)",
-    attachmentCount: 1,
-    notes: "Auditor certificate on loans from directors and bank limits attached.",
-  },
-];
-
-const INITIAL_REGISTERS: StatutoryRegisterItem[] = [
-  {
-    id: "reg-1",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "members",
-    statutoryForm: "MGT-1",
-    folioOrRefNumber: "FOLIO-001",
-    primaryHolderName: "Dr. Vikram Malhotra",
-    identificationNumber: "PAN: AAECS1234F",
-    entryDate: "2022-04-12",
-    particulars: "Subscription to Memorandum: 125,000 Equity Shares of ₹10 each fully paid up",
-    quantityOrAmount: 125000,
-    distinctiveFrom: "000001",
-    distinctiveTo: "125000",
-    certificateNumber: "CERT-0001",
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2022-04-15",
-  },
-  {
-    id: "reg-2",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "members",
-    statutoryForm: "MGT-1",
-    folioOrRefNumber: "FOLIO-002",
-    primaryHolderName: "Priya Sundaram",
-    identificationNumber: "PAN: BDFPS5678G",
-    entryDate: "2022-04-12",
-    particulars: "Subscription to Memorandum: 125,000 Equity Shares of ₹10 each fully paid up",
-    quantityOrAmount: 125000,
-    distinctiveFrom: "125001",
-    distinctiveTo: "250000",
-    certificateNumber: "CERT-0002",
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2022-04-15",
-  },
-  {
-    id: "reg-3",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "directors",
-    statutoryForm: "Sec 170",
-    folioOrRefNumber: "DIR-01",
-    primaryHolderName: "Dr. Vikram Malhotra",
-    identificationNumber: "DIN: 08912340",
-    entryDate: "2022-04-12",
-    particulars: "Appointed as Managing Director. Holds 125,000 Equity Shares (50% voting capital).",
-    quantityOrAmount: 125000,
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2022-04-15",
-  },
-  {
-    id: "reg-4",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "directors",
-    statutoryForm: "Sec 170",
-    folioOrRefNumber: "DIR-02",
-    primaryHolderName: "CS Rajesh Sharma",
-    identificationNumber: "DIN: 07849102",
-    entryDate: "2022-04-12",
-    particulars: "Appointed as Whole-Time Director & Company Secretary (KMP under Sec 203).",
-    quantityOrAmount: 0,
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2022-04-15",
-  },
-  {
-    id: "reg-5",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "directors",
-    statutoryForm: "Sec 170",
-    folioOrRefNumber: "DIR-03",
-    primaryHolderName: "Dr. Ananya Sen",
-    identificationNumber: "DIN: 09841235",
-    entryDate: "2026-11-01",
-    particulars: "Appointed as Additional Director (Independent) pursuant to Section 161(1).",
-    quantityOrAmount: 0,
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2026-11-01",
-  },
-  {
-    id: "reg-6",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "charges",
-    statutoryForm: "CHG-7",
-    folioOrRefNumber: "CHG-2026-01",
-    primaryHolderName: "HDFC Bank Limited",
-    identificationNumber: "CHG-ID: 10098421",
-    entryDate: "2026-11-01",
-    particulars: "Hypothecation of entire current assets, book debts and plant & machinery for ₹2,50,00,000 facility.",
-    quantityOrAmount: 25000000,
-    certificateNumber: "SRN: C83920194",
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2026-11-01",
-  },
-  {
-    id: "reg-7",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    registerType: "loans_investments",
-    statutoryForm: "MBP-2",
-    folioOrRefNumber: "LOAN-01",
-    primaryHolderName: "FinEdge Analytics Technologies Pvt Ltd",
-    identificationNumber: "CIN: U74999MH2023PTC412901",
-    entryDate: "2026-03-20",
-    particulars: "Inter-corporate deposit given under Section 186 at 9.5% interest per annum with prior board consent.",
-    quantityOrAmount: 5000000,
-    certificateNumber: "RES-03/BM-02",
-    status: "active",
-    certifiedBy: "CS Rajesh Sharma, FCS 8492",
-    certifiedAt: "2026-03-20",
-  },
-];
-
 interface RocComplianceViewProps {
   firmName?: string;
   csName?: string;
@@ -447,10 +126,10 @@ export function RocComplianceView({
   }, [initialSubTab]);
 
   // Master Data
-  const [entities, setEntities] = useState<CorporateEntityItem[]>(INITIAL_ENTITIES);
+  const [entities, setEntities] = useState<CorporateEntityItem[]>([]);
   const [selectedCompanyName, setSelectedCompanyName] = useState<string>("CyberCorp Technologies Pvt Ltd");
-  const [filings, setFilings] = useState<RocFilingItem[]>(INITIAL_FILINGS);
-  const [registers, setRegisters] = useState<StatutoryRegisterItem[]>(INITIAL_REGISTERS);
+  const [filings, setFilings] = useState<RocFilingItem[]>([]);
+  const [registers, setRegisters] = useState<StatutoryRegisterItem[]>([]);
   const [auditReport, setAuditReport] = useState<any>(null);
 
   // Filters & Search
@@ -537,8 +216,7 @@ export function RocComplianceView({
   const currentEntity = useMemo(() => {
     return (
       entities.find((e) => e.companyName === selectedCompanyName) ||
-      entities[0] ||
-      INITIAL_ENTITIES[0]
+      entities[0] || null
     );
   }, [entities, selectedCompanyName]);
 
@@ -594,7 +272,7 @@ export function RocComplianceView({
     const newFiling: RocFilingItem = {
       id: `roc-${Date.now()}`,
       companyName: selectedCompanyName,
-      cin: currentEntity.cin,
+      cin: currentEntity?.cin || "U72200DL2022PTC394812",
       formName: newFormName.trim(),
       formDescription: newFormDescription.trim(),
       financialYear: "FY 2026-27",
@@ -606,8 +284,8 @@ export function RocComplianceView({
       challanAmount: Number(newChallanAmount) || 600,
       lateFeeAmount: 0,
       paymentStatus: "unpaid",
-      signatoryDin: currentEntity.directors[0]?.din || "08912340",
-      signatoryName: newSignatoryName || currentEntity.directors[0]?.name || "Managing Director",
+      signatoryDin: currentEntity?.directors?.[0]?.din || "08912340",
+      signatoryName: newSignatoryName || currentEntity?.directors?.[0]?.name || "Managing Director",
       pcsCertificateNumber: `${csName} (FCS 8492, CP 10294)`,
       attachmentCount: 2,
       notes: "Newly scheduled statutory ROC filing.",
@@ -639,7 +317,7 @@ export function RocComplianceView({
     const newEntry: StatutoryRegisterItem = {
       id: `reg-${Date.now()}`,
       companyName: selectedCompanyName,
-      cin: currentEntity.cin,
+      cin: currentEntity?.cin || "U72200DL2022PTC394812",
       registerType: newRegType,
       statutoryForm: formMap[newRegType] || "MGT-1",
       folioOrRefNumber: newRegFolio.trim(),
@@ -755,11 +433,11 @@ export function RocComplianceView({
 
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
                 <Building2 className="w-3 h-3 text-zinc-400" />
-                <span className="font-mono text-[11px]">{currentEntity.cin}</span>
+                <span className="font-mono text-[11px]">{currentEntity?.cin || "U72200DL2022PTC394812"}</span>
               </div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-xs text-emerald-300 font-semibold">
                 <Sparkles className="w-3 h-3 text-emerald-400" />
-                <span>Health Score: {currentEntity.complianceHealthScore}%</span>
+                <span>Health Score: {(currentEntity?.complianceHealthScore ?? 100)}%</span>
               </div>
             </div>
           </div>
@@ -1716,7 +1394,7 @@ export function RocComplianceView({
                 </h3>
                 <p className="text-[11px] font-mono text-zinc-500">CIN: {selectedRegisterRecord.cin}</p>
                 <p className="text-[11px] text-zinc-500">
-                  Registered Office: {currentEntity.registeredAddress}
+                  Registered Office: {currentEntity?.registeredAddress || "Registered Office"}
                 </p>
                 <div className="pt-2">
                   <span className="px-3 py-1 rounded-full text-[11px] font-bold font-sans bg-black text-white dark:bg-white dark:text-black uppercase">
@@ -1840,7 +1518,7 @@ export function RocComplianceView({
                 </h3>
                 <p className="text-xs font-medium text-zinc-500">FOR THE FINANCIAL YEAR ENDED 31ST MARCH, 2026</p>
                 <p className="text-xs font-bold text-black dark:text-white">To the Members of {selectedCompanyName.toUpperCase()}</p>
-                <p className="text-[11px] font-mono text-zinc-500">CIN: {currentEntity.cin}</p>
+                <p className="text-[11px] font-mono text-zinc-500">CIN: {currentEntity?.cin || "U72200DL2022PTC394812"}</p>
               </div>
 
               <div className="space-y-3 leading-relaxed text-xs">

@@ -29,6 +29,7 @@ import { DscCertificate } from "../models/DscCertificate.js";
 import { StatutoryChallan } from "../models/StatutoryChallan.js";
 import { BoardDossier } from "../models/BoardDossier.js";
 import { DueDiligenceAudit } from "../models/DueDiligenceAudit.js";
+import { StatutoryNotice } from "../models/StatutoryNotice.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -54,6 +55,7 @@ import {
   DEFAULT_STATUTORY_CHALLANS,
   DEFAULT_BOARD_DOSSIERS,
   DEFAULT_DUE_DILIGENCE_AUDITS,
+  DEFAULT_STATUTORY_NOTICES,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -696,6 +698,13 @@ export const seedMongoIfEmpty = async () => {
         status: item.status,
       }));
       await DueDiligenceAudit.insertMany(ddDocs);
+    }
+
+    // Seed Statutory Notices & Show Cause Notices
+    const noticeCount = await StatutoryNotice.countDocuments();
+    if (noticeCount === 0) {
+      console.log("🌱 Seeding MongoDB Statutory Notices & SCN Mailroom...");
+      await StatutoryNotice.insertMany(DEFAULT_STATUTORY_NOTICES);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

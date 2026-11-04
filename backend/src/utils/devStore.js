@@ -3,6 +3,7 @@ import path from "path";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import { DEFAULT_DUE_DILIGENCE_AUDITS } from "./seedDueDiligence.js";
+import { DEFAULT_STATUTORY_NOTICES } from "./seedNotices.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -5720,6 +5721,68 @@ export const devStore = {
     writeFile("dev_due_diligence_audits.json", audits);
     return { success: true };
   },
+
+  // --- Statutory E-Notice & SCN Legal Mailroom ---
+  getStatutoryNotices(filters = {}) {
+    let notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    if (filters.portal && filters.portal !== "ALL") {
+      notices = notices.filter((n) => n.portal === filters.portal);
+    }
+    if (filters.status && filters.status !== "ALL") {
+      notices = notices.filter((n) => n.status === filters.status);
+    }
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      notices = notices.filter((n) =>
+        n.referenceNumber?.toLowerCase().includes(q) ||
+        n.statutorySection?.toLowerCase().includes(q) ||
+        n.allegationSubject?.toLowerCase().includes(q) ||
+        n.issuingAuthority?.toLowerCase().includes(q) ||
+        n.clientEntity?.name?.toLowerCase().includes(q)
+      );
+    }
+    return notices;
+  },
+
+  getStatutoryNoticeById(id) {
+    const notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    return notices.find((n) => n.id === id || n.noticeId === id || n._id === id) || null;
+  },
+
+  createStatutoryNotice(data) {
+    const notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    const newNotice = {
+      id: data.id || `notice-${Date.now()}`,
+      noticeId: data.noticeId || `WAK-SCN-${Date.now()}`,
+      ...data,
+      status: data.status || "PENDING_RESPONSE",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    notices.unshift(newNotice);
+    writeFile("dev_statutory_notices.json", notices);
+    return newNotice;
+  },
+
+  updateStatutoryNotice(id, updates) {
+    let notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    const index = notices.findIndex((n) => n.id === id || n.noticeId === id);
+    if (index === -1) return null;
+    notices[index] = {
+      ...notices[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    writeFile("dev_statutory_notices.json", notices);
+    return notices[index];
+  },
+
+  deleteStatutoryNotice(id) {
+    let notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    notices = notices.filter((n) => n.id !== id && n.noticeId !== id);
+    writeFile("dev_statutory_notices.json", notices);
+    return { success: true };
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -8966,7 +9029,7 @@ export const DEFAULT_BOARD_DOSSIERS = [
   },
 ];
 
-export { DEFAULT_DUE_DILIGENCE_AUDITS };
+export { DEFAULT_DUE_DILIGENCE_AUDITS, DEFAULT_STATUTORY_NOTICES };
 
 
 

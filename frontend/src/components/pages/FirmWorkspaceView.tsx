@@ -40,6 +40,7 @@ import {
   KeyRound,
   Usb,
   Award,
+  Mail,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -55,6 +56,7 @@ import { SpecializedCsCaCopilotView } from "@/components/firm/SpecializedCsCaCop
 import { ChallanDscWorkspaceView } from "@/components/firm/ChallanDscWorkspaceView";
 import { ExecutiveBoardDossierView } from "@/components/firm/ExecutiveBoardDossierView";
 import { StatutoryDueDiligenceView } from "@/components/firm/StatutoryDueDiligenceView";
+import { StatutoryNoticeMailroomView } from "@/components/firm/StatutoryNoticeMailroomView";
 import { useTheme } from "@/context/ThemeContext";
 
 interface FirmWorkspaceViewProps {
@@ -218,6 +220,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           icon: Scale,
         },
         {
+          id: "notice-mailroom",
+          label: "SCN & Notice Mailroom",
+          subtitle: "Limitation Clocks & SCN Rebuttal",
+          icon: Mail,
+        },
+        {
           id: "contracts",
           label: "Commercial Contracts",
           subtitle: "Shareholder agreements, NDAs & audit",
@@ -336,6 +344,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Advocate Network",
           subtitle: "High Court & ITAT litigation counsel",
           icon: Scale,
+        },
+        {
+          id: "notice-mailroom",
+          label: "SCN & Notice Mailroom",
+          subtitle: "Limitation Clocks & SCN Rebuttal",
+          icon: Mail,
         },
         {
           id: "vault",
@@ -701,6 +715,26 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 />
                 <span style={{ color: activeTab === "due-diligence" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
                   Due Diligence
+                </span>
+              </button>
+
+              {/* Quick Launch SCN Notice Mailroom Button */}
+              <button
+                onClick={() => setActiveTab("notice-mailroom")}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                style={
+                  activeTab === "notice-mailroom"
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                }
+                title="Statutory E-Notice & SCN Legal Mailroom with Limitation Clocks"
+              >
+                <Mail
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: activeTab === "notice-mailroom" ? (isDark ? "#b91c1c" : "#f87171") : "#dc2626" }}
+                />
+                <span style={{ color: activeTab === "notice-mailroom" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  SCN Mailroom
                 </span>
               </button>
             </div>
@@ -1132,6 +1166,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           {activeTab === "due-diligence" && (
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <StatutoryDueDiligenceView
+                firmName={firm.name}
+                csName={firm.founderName || "CS Rajesh Sharma (FCS-8921, CP-10293)"}
+                caName="CA Ramanathan Iyer (M.No 054921, FRN-018241N)"
+                defaultClient={{
+                  name: "CyberCorp Technologies Pvt Ltd",
+                  cin: "U72200DL2022PTC394812",
+                  pan: "AAECS1234F",
+                  gstin: "07AAECS1234F1Z8",
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: Statutory E-Notice & SCN Legal Mailroom */}
+          {activeTab === "notice-mailroom" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <StatutoryNoticeMailroomView
                 firmName={firm.name}
                 csName={firm.founderName || "CS Rajesh Sharma (FCS-8921, CP-10293)"}
                 caName="CA Ramanathan Iyer (M.No 054921, FRN-018241N)"

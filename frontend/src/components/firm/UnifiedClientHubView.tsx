@@ -38,6 +38,7 @@ import {
   UserCheck,
   Coins,
   Share2,
+  Mail,
 } from "lucide-react";
 import { csApi } from "@/lib/api";
 import caApiDefault, { caApi as caApiNamed } from "@/lib/caApi";
@@ -408,6 +409,19 @@ export function UnifiedClientHubView({
             >
               <Scale className="w-4 h-4" style={{ color: isDark ? "#818cf8" : "#4f46e5" }} />
               <span>Due Diligence Audit</span>
+            </button>
+            <button
+              onClick={() => onNavigateToTab?.("notice-mailroom")}
+              className="px-4 py-2.5 rounded-xl border-2 text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              style={
+                isDark
+                  ? { backgroundColor: "#450a0a", color: "#fecaca", borderColor: "#991b1b" }
+                  : { backgroundColor: "#fee2e2", color: "#991b1b", borderColor: "#fca5a5" }
+              }
+              title="Statutory E-Notice & SCN Legal Mailroom with Limitation Clocks"
+            >
+              <Mail className="w-4 h-4" style={{ color: isDark ? "#f87171" : "#dc2626" }} />
+              <span>SCN Mailroom</span>
             </button>
             <button
               onClick={() => onNavigateToTab?.("ai-copilot")}

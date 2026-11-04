@@ -55,177 +55,6 @@ const formatInr = (amount?: number | null) => {
   }).format(amount);
 };
 
-// Default seed tokens if API loading
-const DEFAULT_CERTIFICATES: DscCertificateItem[] = [
-  {
-    id: "dsc-cs-1",
-    certificateId: "DSC-CS-8921",
-    holderName: "CS Rajesh Sharma",
-    holderRole: "practicing_cs",
-    pan: "AAECS1234F",
-    membershipNumber: "FCS-8921, CP-10293",
-    tokenProvider: "e-Mudhra",
-    hardwareModel: "WatchData ProxKey USB Token (FIPS 140-2 Level 2)",
-    serialNumber: "7A 4B 91 02 C8 3F E1 2D",
-    issuerCa: "e-Mudhra Sub-CA for Class 3 Individual 2014 (CCA India)",
-    validFrom: "2024-05-10",
-    validTo: "2027-05-09",
-    keyAlgorithm: "RSA 2048-bit / SHA-256",
-    keyUsage: ["Digital Signature", "Non-Repudiation"],
-    tokenStatus: "plugged_in",
-    totalSignaturesAffixed: 142,
-    lastUsedAt: "2026-10-28T10:15:00Z",
-  },
-  {
-    id: "dsc-ca-1",
-    certificateId: "DSC-CA-054921",
-    holderName: "CA Ramanathan Iyer",
-    holderRole: "practicing_ca",
-    pan: "AAECS1234F",
-    membershipNumber: "M.No 054921, FRN-018241N",
-    tokenProvider: "Capricorn CA",
-    hardwareModel: "ePass2003 Auto USB Token (FIPS 140-2 Level 2)",
-    serialNumber: "8C 1F 3A 99 B0 44 2E 11",
-    issuerCa: "Capricorn CA 2014 Class 3 Signing (CCA India)",
-    validFrom: "2024-08-15",
-    validTo: "2027-08-14",
-    keyAlgorithm: "RSA 2048-bit / SHA-256",
-    keyUsage: ["Digital Signature", "Non-Repudiation"],
-    tokenStatus: "plugged_in",
-    totalSignaturesAffixed: 218,
-    lastUsedAt: "2026-10-30T14:30:00Z",
-  },
-  {
-    id: "dsc-dir-1",
-    certificateId: "DSC-DIR-08912340",
-    holderName: "Vikram Malhotra",
-    holderRole: "company_director",
-    pan: "ABCPM5678K",
-    din: "08912340",
-    tokenProvider: "VSign",
-    hardwareModel: "mToken CryptoID USB Token",
-    serialNumber: "3D 99 E4 71 88 1A 5B 00",
-    issuerCa: "VSign CA Class 3 Individual 2014 (CCA India)",
-    validFrom: "2025-01-10",
-    validTo: "2028-01-09",
-    keyAlgorithm: "RSA 2048-bit / SHA-256",
-    keyUsage: ["Digital Signature", "Non-Repudiation"],
-    tokenStatus: "plugged_in",
-    totalSignaturesAffixed: 34,
-    lastUsedAt: "2026-10-25T11:45:00Z",
-  },
-];
-
-const DEFAULT_CHALLANS: StatutoryChallanItem[] = [
-  {
-    id: "chl-mca-1",
-    challanId: "CHL-MCA-001",
-    portal: "MCA21",
-    challanType: "ROC_ANNUAL_FILING",
-    entityName: "CyberCorp Technologies Pvt Ltd",
-    cinOrPanOrGstin: "U72200DL2022PTC394812",
-    financialYear: "2025-26",
-    filingForm: "AOC-4",
-    srnOrCpinOrCin: "SRN-F8910482",
-    bsrCode: "0290142",
-    challanSerialNumber: "00124",
-    tenderedBank: "State Bank of India (SBI)",
-    paymentMode: "INTERNET_BANKING",
-    amountBreakdown: {
-      baseFeeOrTax: 600,
-      additionalOrLateFee: 0,
-      interest: 0,
-      penalty: 0,
-      totalAmount: 600,
-    },
-    paymentStatus: "PAID",
-    paidAt: "2026-10-14T11:30:00Z",
-    receiptNumber: "RCPT-MCA-2026-0891",
-    dscSignatory: "CS Rajesh Sharma (FCS-8921)",
-    clientBilled: true,
-  },
-  {
-    id: "chl-mca-2",
-    challanId: "CHL-MCA-002",
-    portal: "MCA21",
-    challanType: "ROC_ANNUAL_FILING",
-    entityName: "CyberCorp Technologies Pvt Ltd",
-    cinOrPanOrGstin: "U72200DL2022PTC394812",
-    financialYear: "2025-26",
-    filingForm: "MGT-7",
-    srnOrCpinOrCin: "SRN-G1048921",
-    bsrCode: "0290142",
-    challanSerialNumber: "00125",
-    tenderedBank: "HDFC Bank Corporate",
-    paymentMode: "INTERNET_BANKING",
-    amountBreakdown: {
-      baseFeeOrTax: 600,
-      additionalOrLateFee: 0,
-      interest: 0,
-      penalty: 0,
-      totalAmount: 600,
-    },
-    paymentStatus: "GENERATED",
-    dscSignatory: "CS Rajesh Sharma (FCS-8921)",
-    clientBilled: false,
-  },
-  {
-    id: "chl-gst-1",
-    challanId: "CHL-GST-001",
-    portal: "GSTN",
-    challanType: "PMT_06_MONTHLY",
-    entityName: "CyberCorp Technologies Pvt Ltd",
-    cinOrPanOrGstin: "07AAECS1234F1Z8",
-    financialYear: "2025-26",
-    filingForm: "GSTR-3B",
-    srnOrCpinOrCin: "26100700192841",
-    bsrCode: "0290142",
-    challanSerialNumber: "04912",
-    tenderedBank: "State Bank of India (SBI)",
-    paymentMode: "INTERNET_BANKING",
-    amountBreakdown: {
-      baseFeeOrTax: 485000,
-      additionalOrLateFee: 0,
-      interest: 0,
-      penalty: 0,
-      totalAmount: 485000,
-    },
-    paymentStatus: "PAID",
-    paidAt: "2026-10-18T14:15:00Z",
-    receiptNumber: "RCPT-GST-2026-5912",
-    dscSignatory: "CA Ramanathan Iyer (M.No 054921)",
-    clientBilled: true,
-  },
-  {
-    id: "chl-it-1",
-    challanId: "CHL-IT-001",
-    portal: "CBDT_INCOME_TAX",
-    challanType: "ITNS_280_ADVANCE_TAX",
-    entityName: "CyberCorp Technologies Pvt Ltd",
-    cinOrPanOrGstin: "AAECS1234F",
-    financialYear: "2025-26",
-    assessmentYear: "2026-27",
-    filingForm: "ITR-6",
-    srnOrCpinOrCin: "02901422610202600124",
-    bsrCode: "0290142",
-    challanSerialNumber: "00124",
-    tenderedBank: "State Bank of India (SBI)",
-    paymentMode: "INTERNET_BANKING",
-    amountBreakdown: {
-      baseFeeOrTax: 1250000,
-      additionalOrLateFee: 0,
-      interest: 0,
-      penalty: 0,
-      totalAmount: 1250000,
-    },
-    paymentStatus: "PAID",
-    paidAt: "2026-10-15T10:00:00Z",
-    receiptNumber: "RCPT-IT-2026-9041",
-    dscSignatory: "CA Ramanathan Iyer (M.No 054921)",
-    clientBilled: true,
-  },
-];
-
 export function ChallanDscWorkspaceView({
   firmName = "Wakheel Corporate & Tax Advisory LLP",
   practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
@@ -243,8 +72,8 @@ export function ChallanDscWorkspaceView({
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // DSC Datasets
-  const [certificates, setCertificates] = useState<DscCertificateItem[]>(DEFAULT_CERTIFICATES);
-  const [selectedCertId, setSelectedCertId] = useState<string>("dsc-cs-1");
+  const [certificates, setCertificates] = useState<DscCertificateItem[]>([]);
+  const [selectedCertId, setSelectedCertId] = useState<string>("");
 
   // Signing Sandbox State
   const [signingDocType, setSigningDocType] = useState<string>("board_resolution");
@@ -255,7 +84,7 @@ export function ChallanDscWorkspaceView({
   const [verifyStatus, setVerifyStatus] = useState<any>(null);
 
   // Challans Datasets
-  const [challans, setChallans] = useState<StatutoryChallanItem[]>(DEFAULT_CHALLANS);
+  const [challans, setChallans] = useState<StatutoryChallanItem[]>([]);
   const [portalFilter, setPortalFilter] = useState<"ALL" | "MCA21" | "GSTN" | "CBDT_INCOME_TAX">("ALL");
 
   // Late Fee Calculator State
@@ -291,6 +120,7 @@ export function ChallanDscWorkspaceView({
 
       if (dscRes.status === "fulfilled" && dscRes.value?.certificates?.length > 0) {
         setCertificates(dscRes.value.certificates);
+        setSelectedCertId((prev) => prev || dscRes.value.certificates[0]?.id || dscRes.value.certificates[0]?.certificateId || "");
       }
       if (chlRes.status === "fulfilled" && chlRes.value?.challans?.length > 0) {
         setChallans(chlRes.value.challans);

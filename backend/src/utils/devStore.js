@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
+import { DEFAULT_DUE_DILIGENCE_AUDITS } from "./seedDueDiligence.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -5664,6 +5665,61 @@ export const devStore = {
     writeFile("dev_board_dossiers.json", dossiers);
     return { success: true };
   },
+
+  // --- Statutory Due Diligence & M&A Compliance Health Scorecard ---
+  getDueDiligenceAudits(userId, filters = {}) {
+    let audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    if (filters.entityName) {
+      audits = audits.filter((a) =>
+        a.clientEntity?.name?.toLowerCase().includes(filters.entityName.toLowerCase()) ||
+        a.clientEntity?.cin?.toUpperCase() === filters.entityName.toUpperCase()
+      );
+    }
+    if (filters.riskCategory) {
+      audits = audits.filter((a) => a.riskCategory === filters.riskCategory);
+    }
+    return audits;
+  },
+
+  getDueDiligenceAuditById(id) {
+    const audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    return audits.find((a) => a.id === id || a.auditId === id || a._id === id) || null;
+  },
+
+  createDueDiligenceAudit(userId, data) {
+    const audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    const newAudit = {
+      id: data.id || `dd-${Date.now()}`,
+      auditId: data.auditId || `WAK-DD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      userId: userId || "cs_1",
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    audits.unshift(newAudit);
+    writeFile("dev_due_diligence_audits.json", audits);
+    return newAudit;
+  },
+
+  updateDueDiligenceAudit(id, updates) {
+    let audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    const index = audits.findIndex((a) => a.id === id || a.auditId === id);
+    if (index === -1) return null;
+    audits[index] = {
+      ...audits[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    writeFile("dev_due_diligence_audits.json", audits);
+    return audits[index];
+  },
+
+  deleteDueDiligenceAudit(id) {
+    let audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    audits = audits.filter((a) => a.id !== id && a.auditId !== id);
+    writeFile("dev_due_diligence_audits.json", audits);
+    return { success: true };
+  },
 };
 
 const DEFAULT_AGENTS = [
@@ -8909,6 +8965,9 @@ export const DEFAULT_BOARD_DOSSIERS = [
     createdAt: "2026-11-03T10:00:00Z",
   },
 ];
+
+export { DEFAULT_DUE_DILIGENCE_AUDITS };
+
 
 
 

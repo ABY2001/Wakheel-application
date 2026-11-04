@@ -496,21 +496,32 @@ export function ChallanDscWorkspaceView({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                  isActive
-                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-md scale-102"
-                    : "text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-transparent font-semibold"
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                  isActive ? "shadow-md scale-102" : "shadow-xs"
                 }`}
-                style={isActive ? { backgroundColor: "#18181b", color: "#ffffff" } : undefined}
+                style={
+                  isActive
+                    ? (isDark
+                        ? { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#ffffff" }
+                        : { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" })
+                    : (isDark
+                        ? { backgroundColor: "#18181b", color: "#a1a1aa", borderColor: "#27272a" }
+                        : { backgroundColor: "#f4f4f5", color: "#27272a", borderColor: "#e4e4e7" })
+                }
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{tab.label}</span>
                 <span
-                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full"
+                  style={
                     isActive
-                      ? "bg-zinc-800 text-zinc-100 dark:bg-zinc-200 dark:text-zinc-900"
-                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                  }`}
+                      ? (isDark
+                          ? { backgroundColor: "#e4e4e7", color: "#09090b" }
+                          : { backgroundColor: "#27272a", color: "#ffffff" })
+                      : (isDark
+                          ? { backgroundColor: "#27272a", color: "#a1a1aa" }
+                          : { backgroundColor: "#e4e4e7", color: "#52525b" })
+                  }
                 >
                   {tab.badge}
                 </span>
@@ -549,6 +560,9 @@ export function ChallanDscWorkspaceView({
               {certificates.map((cert) => {
                 const isSelected = cert.id === selectedCertId || cert.certificateId === selectedCertId;
                 const isPlugged = cert.tokenStatus === "plugged_in";
+                // Determine whether this specific card has a dark or light background
+                const isCardDark = isSelected ? !isDark : isDark;
+
                 return (
                   <div
                     key={cert.id || cert.certificateId}
@@ -557,24 +571,20 @@ export function ChallanDscWorkspaceView({
                         ? "shadow-xl scale-101"
                         : "shadow-xs"
                     }`}
-                    style={
-                      isSelected
-                        ? (isDark
-                            ? { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#ffffff" }
-                            : { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" })
-                        : (isDark
-                            ? { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#27272a" }
-                            : { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#e4e4e7" })
-                    }
+                    style={{
+                      backgroundColor: isCardDark ? "#09090b" : "#ffffff",
+                      color: isCardDark ? "#ffffff" : "#09090b",
+                      borderColor: isSelected
+                        ? (isCardDark ? "#52525b" : "#09090b")
+                        : (isCardDark ? "#27272a" : "#e4e4e7"),
+                    }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-0.5">
                         <div
                           className="font-extrabold text-sm truncate flex items-center gap-1.5"
                           style={{
-                            color: isSelected
-                              ? (isDark ? "#09090b" : "#ffffff")
-                              : (isDark ? "#ffffff" : "#09090b"),
+                            color: isCardDark ? "#ffffff" : "#09090b",
                           }}
                         >
                           <Usb
@@ -582,9 +592,7 @@ export function ChallanDscWorkspaceView({
                             style={{
                               color: isPlugged
                                 ? "#10b981"
-                                : isSelected
-                                ? (isDark ? "#52525b" : "#a1a1aa")
-                                : (isDark ? "#a1a1aa" : "#71717a"),
+                                : (isCardDark ? "#a1a1aa" : "#71717a"),
                             }}
                           />
                           <span>{cert.holderName}</span>
@@ -592,9 +600,7 @@ export function ChallanDscWorkspaceView({
                         <div
                           className="text-[10px] font-mono truncate"
                           style={{
-                            color: isSelected
-                              ? (isDark ? "#52525b" : "#a1a1aa")
-                              : (isDark ? "#a1a1aa" : "#52525b"),
+                            color: isCardDark ? "#d4d4d8" : "#52525b",
                           }}
                         >
                           {cert.membershipNumber || cert.din || "Authorized Signatory"} • {cert.pan}
@@ -604,9 +610,9 @@ export function ChallanDscWorkspaceView({
                         className="text-[10px] font-mono font-black px-2.5 py-0.5 rounded-full uppercase shrink-0"
                         style={
                           cert.holderRole === "practicing_cs"
-                            ? (isSelected
-                                ? (isDark ? { backgroundColor: "#e4e4e7", color: "#09090b" } : { backgroundColor: "#27272a", color: "#ffffff" })
-                                : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5" } : { backgroundColor: "#18181b", color: "#ffffff" }))
+                            ? (isCardDark
+                                ? { backgroundColor: "#27272a", color: "#ffffff", border: "1px solid #3f3f46" }
+                                : { backgroundColor: "#18181b", color: "#ffffff" })
                             : cert.holderRole === "practicing_ca"
                             ? { backgroundColor: "#991b1b", color: "#ffffff" }
                             : { backgroundColor: "#1d4ed8", color: "#ffffff" }
@@ -619,31 +625,27 @@ export function ChallanDscWorkspaceView({
                     {/* Metadata Box with Guaranteed High Contrast */}
                     <div
                       className="p-2.5 rounded-xl border text-[11px] font-mono space-y-1.5"
-                      style={
-                        isSelected
-                          ? (isDark
-                              ? { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#e4e4e7" }
-                              : { backgroundColor: "#18181b", color: "#ffffff", borderColor: "#27272a" })
-                          : (isDark
-                              ? { backgroundColor: "#18181b", color: "#ffffff", borderColor: "#27272a" }
-                              : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#e4e4e7" })
-                      }
+                      style={{
+                        backgroundColor: isCardDark ? "#18181b" : "#f4f4f5",
+                        color: isCardDark ? "#ffffff" : "#09090b",
+                        borderColor: isCardDark ? "#27272a" : "#e4e4e7",
+                      }}
                     >
                       <div className="flex justify-between">
-                        <span style={{ color: isSelected ? (isDark ? "#52525b" : "#a1a1aa") : (isDark ? "#a1a1aa" : "#52525b") }}>Hardware:</span>
-                        <span className="font-black truncate" style={{ color: isSelected ? (isDark ? "#09090b" : "#ffffff") : (isDark ? "#ffffff" : "#09090b") }}>
+                        <span style={{ color: isCardDark ? "#d4d4d8" : "#52525b" }}>Hardware:</span>
+                        <span className="font-black truncate" style={{ color: isCardDark ? "#ffffff" : "#09090b" }}>
                           {cert.hardwareModel.split(" ")[0]} {cert.hardwareModel.split(" ")[1]}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: isSelected ? (isDark ? "#52525b" : "#a1a1aa") : (isDark ? "#a1a1aa" : "#52525b") }}>Serial #:</span>
-                        <span className="font-black truncate" style={{ color: isSelected ? (isDark ? "#09090b" : "#ffffff") : (isDark ? "#ffffff" : "#09090b") }}>
+                        <span style={{ color: isCardDark ? "#d4d4d8" : "#52525b" }}>Serial #:</span>
+                        <span className="font-black truncate" style={{ color: isCardDark ? "#ffffff" : "#09090b" }}>
                           {cert.serialNumber}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: isSelected ? (isDark ? "#52525b" : "#a1a1aa") : (isDark ? "#a1a1aa" : "#52525b") }}>Valid Till:</span>
-                        <span className="font-black" style={{ color: isDark ? "#059669" : "#34d399" }}>
+                        <span style={{ color: isCardDark ? "#d4d4d8" : "#52525b" }}>Valid Till:</span>
+                        <span className="font-black" style={{ color: isCardDark ? "#34d399" : "#047857" }}>
                           {cert.validTo}
                         </span>
                       </div>
@@ -655,12 +657,16 @@ export function ChallanDscWorkspaceView({
                         className="px-3.5 py-1.5 rounded-xl text-xs font-black cursor-pointer transition-all border shadow-xs"
                         style={
                           isSelected
-                            ? (isDark
-                                ? { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" }
-                                : { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" })
-                            : (isDark
-                                ? { backgroundColor: "#27272a", color: "#ffffff", borderColor: "#3f3f46" }
-                                : { backgroundColor: "#e4e4e7", color: "#09090b", borderColor: "#d4d4d8" })
+                            ? {
+                                backgroundColor: "#059669",
+                                color: "#ffffff",
+                                borderColor: "#10b981",
+                              }
+                            : {
+                                backgroundColor: isCardDark ? "#27272a" : "#f4f4f5",
+                                color: isCardDark ? "#ffffff" : "#09090b",
+                                borderColor: isCardDark ? "#3f3f46" : "#d4d4d8",
+                              }
                         }
                       >
                         {isSelected ? "✓ Active Signer" : "Select Signer"}
@@ -673,14 +679,18 @@ export function ChallanDscWorkspaceView({
                           isPlugged
                             ? { backgroundColor: "#ecfdf5", color: "#065f46", borderColor: "#a7f3d0" }
                             : {
-                                backgroundColor: isSelected ? (isDark ? "#e4e4e7" : "#27272a") : (isDark ? "#27272a" : "#f4f4f5"),
-                                color: isSelected ? (isDark ? "#09090b" : "#e4e4e7") : (isDark ? "#a1a1aa" : "#52525b"),
-                                borderColor: isSelected ? (isDark ? "#d4d4d8" : "#3f3f46") : (isDark ? "#3f3f46" : "#d4d4d8"),
+                                backgroundColor: isCardDark ? "#27272a" : "#f4f4f5",
+                                color: isCardDark ? "#f4f4f5" : "#52525b",
+                                borderColor: isCardDark ? "#3f3f46" : "#d4d4d8",
                               }
                         }
                         title={isPlugged ? "Click to simulate USB token removal" : "Click to simulate USB token insertion"}
                       >
-                        {isPlugged ? <Lock className="w-3 h-3 text-emerald-600" /> : <Unlock className="w-3 h-3 text-zinc-500" />}
+                        {isPlugged ? (
+                          <Lock className="w-3 h-3 text-emerald-600" />
+                        ) : (
+                          <Unlock className="w-3 h-3 text-amber-500" />
+                        )}
                         <span>{isPlugged ? "Plugged In" : "Unplugged"}</span>
                       </button>
                     </div>
@@ -1021,15 +1031,15 @@ export function ChallanDscWorkspaceView({
                   <button
                     key={portal}
                     onClick={() => setPortalFilter(portal)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      portalFilter === portal
-                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 shadow-sm font-black"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    }`}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border shadow-xs"
                     style={
                       portalFilter === portal
-                        ? { backgroundColor: "#18181b", color: "#ffffff" }
-                        : undefined
+                        ? (isDark
+                            ? { backgroundColor: "#ffffff", color: "#09090b", borderColor: "#ffffff" }
+                            : { backgroundColor: "#09090b", color: "#ffffff", borderColor: "#09090b" })
+                        : (isDark
+                            ? { backgroundColor: "#18181b", color: "#a1a1aa", borderColor: "#27272a" }
+                            : { backgroundColor: "#f4f4f5", color: "#27272a", borderColor: "#e4e4e7" })
                     }
                   >
                     {portal === "ALL"

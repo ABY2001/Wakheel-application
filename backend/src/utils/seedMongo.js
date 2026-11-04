@@ -28,6 +28,7 @@ import { BalanceSheetRecon } from "../models/BalanceSheetRecon.js";
 import { DscCertificate } from "../models/DscCertificate.js";
 import { StatutoryChallan } from "../models/StatutoryChallan.js";
 import { BoardDossier } from "../models/BoardDossier.js";
+import { DueDiligenceAudit } from "../models/DueDiligenceAudit.js";
 
 import {
   DEFAULT_CALENDAR_FIXTURES,
@@ -52,6 +53,7 @@ import {
   DEFAULT_DSC_CERTIFICATES,
   DEFAULT_STATUTORY_CHALLANS,
   DEFAULT_BOARD_DOSSIERS,
+  DEFAULT_DUE_DILIGENCE_AUDITS,
 } from "./devStore.js";
 
 export const seedMongoIfEmpty = async () => {
@@ -668,6 +670,32 @@ export const seedMongoIfEmpty = async () => {
         version: item.version,
       }));
       await BoardDossier.insertMany(dosDocs);
+    }
+
+    // Seed Statutory Due Diligence Audits
+    const ddCount = await DueDiligenceAudit.countDocuments();
+    if (ddCount === 0) {
+      console.log("🌱 Seeding MongoDB Statutory Due Diligence Audits...");
+      const ddDocs = DEFAULT_DUE_DILIGENCE_AUDITS.map((item) => ({
+        auditId: item.auditId,
+        userId: item.userId,
+        clientEntity: item.clientEntity,
+        auditScope: item.auditScope,
+        transactionContext: item.transactionContext,
+        overallScore: item.overallScore,
+        grade: item.grade,
+        riskCategory: item.riskCategory,
+        checkpoints: item.checkpoints,
+        totalCheckpoints: item.totalCheckpoints,
+        passedCheckpoints: item.passedCheckpoints,
+        failedCheckpoints: item.failedCheckpoints,
+        penaltyExposure: item.penaltyExposure,
+        compoundingRoadmap: item.compoundingRoadmap,
+        redFlags: item.redFlags,
+        attestation: item.attestation,
+        status: item.status,
+      }));
+      await DueDiligenceAudit.insertMany(ddDocs);
     }
 
     console.log("✅ MongoDB Schema & Seed verification completed successfully!");

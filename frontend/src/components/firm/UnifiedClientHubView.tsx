@@ -397,6 +397,19 @@ export function UnifiedClientHubView({
           {/* Quick Hub Actions */}
           <div className="flex flex-wrap items-center gap-3">
             <button
+              onClick={() => onNavigateToTab?.("due-diligence")}
+              className="px-4 py-2.5 rounded-xl border-2 text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              style={
+                isDark
+                  ? { backgroundColor: "#1e1b4b", color: "#c7d2fe", borderColor: "#3730a3" }
+                  : { backgroundColor: "#e0e7ff", color: "#3730a3", borderColor: "#a5b4fc" }
+              }
+              title="Run 100-Point Statutory Due Diligence & M&A Compliance Health Scorecard"
+            >
+              <Scale className="w-4 h-4" style={{ color: isDark ? "#818cf8" : "#4f46e5" }} />
+              <span>Due Diligence Audit</span>
+            </button>
+            <button
               onClick={() => onNavigateToTab?.("ai-copilot")}
               className="px-4 py-2.5 rounded-xl border-2 text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
               style={

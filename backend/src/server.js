@@ -21,6 +21,7 @@ import csRoutes from "./routes/csRoutes.js";
 import caRoutes from "./routes/caRoutes.js";
 import challanDscRoutes from "./routes/challanDscRoutes.js";
 import boardDossierRoutes from "./routes/boardDossierRoutes.js";
+import dueDiligenceRoutes from "./routes/dueDiligenceRoutes.js";
 import { initWebSocketServer } from "./socket.js";
 
 // Connect to MongoDB
@@ -68,6 +69,7 @@ app.use("/api/cs", csRoutes);
 app.use("/api/ca", caRoutes);
 app.use("/api/dsc-challan", challanDscRoutes);
 app.use("/api/board-dossier", boardDossierRoutes);
+app.use("/api/due-diligence", dueDiligenceRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

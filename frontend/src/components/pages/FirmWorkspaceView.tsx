@@ -54,6 +54,7 @@ import { UnifiedClientHubView } from "@/components/firm/UnifiedClientHubView";
 import { SpecializedCsCaCopilotView } from "@/components/firm/SpecializedCsCaCopilotView";
 import { ChallanDscWorkspaceView } from "@/components/firm/ChallanDscWorkspaceView";
 import { ExecutiveBoardDossierView } from "@/components/firm/ExecutiveBoardDossierView";
+import { StatutoryDueDiligenceView } from "@/components/firm/StatutoryDueDiligenceView";
 import { useTheme } from "@/context/ThemeContext";
 
 interface FirmWorkspaceViewProps {
@@ -188,6 +189,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           subtitle: "Section 177 Pack & Joint Sign-Off",
           icon: Award,
         },
+        {
+          id: "due-diligence",
+          label: "M&A Due Diligence",
+          subtitle: "100-Point Audit & Sec 441",
+          icon: Scale,
+        },
       ],
     },
     {
@@ -295,6 +302,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Board & Audit Dossier",
           subtitle: "Section 177 Pack & Joint Sign-Off",
           icon: Award,
+        },
+        {
+          id: "due-diligence",
+          label: "M&A Due Diligence",
+          subtitle: "100-Point Audit & Sec 441",
+          icon: Scale,
         },
       ],
     },
@@ -614,17 +627,17 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               {/* Quick Launch AI Copilot Button */}
               <button
                 onClick={() => setActiveTab("ai-copilot")}
-                className="px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
                 style={
                   activeTab === "ai-copilot"
                     ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
-                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
                 }
                 title="Specialized AI Copilot for CS & CA"
               >
                 <Sparkles
                   className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: activeTab === "ai-copilot" ? (isDark ? "#d97706" : "#fbbf24") : "#d97706" }}
+                  style={{ color: activeTab === "ai-copilot" ? (isDark ? "#b45309" : "#fbbf24") : "#d97706" }}
                 />
                 <span style={{ color: activeTab === "ai-copilot" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
                   AI Copilot
@@ -634,17 +647,17 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               {/* Quick Launch DSC & Challans Button */}
               <button
                 onClick={() => setActiveTab("dsc-challans")}
-                className="px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
                 style={
                   activeTab === "dsc-challans"
                     ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
-                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
                 }
                 title="Class 3 DSC Crypto Token & Statutory E-Challans"
               >
                 <KeyRound
                   className="w-3.5 h-3.5 shrink-0"
-                  style={{ color: activeTab === "dsc-challans" ? (isDark ? "#0284c7" : "#38bdf8") : "#2563eb" }}
+                  style={{ color: activeTab === "dsc-challans" ? (isDark ? "#0369a1" : "#38bdf8") : "#0284c7" }}
                 />
                 <span style={{ color: activeTab === "dsc-challans" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
                   DSC &amp; Challans
@@ -654,11 +667,11 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               {/* Quick Launch Board Dossier Button */}
               <button
                 onClick={() => setActiveTab("board-dossier")}
-                className="px-3.5 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
                 style={
                   activeTab === "board-dossier"
                     ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
-                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
                 }
                 title="Executive Board & Audit Committee Dossier Exporter (Section 177)"
               >
@@ -668,6 +681,26 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 />
                 <span style={{ color: activeTab === "board-dossier" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
                   Board Dossier
+                </span>
+              </button>
+
+              {/* Quick Launch Statutory Due Diligence Button */}
+              <button
+                onClick={() => setActiveTab("due-diligence")}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                style={
+                  activeTab === "due-diligence"
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                }
+                title="100-Point Statutory Due Diligence & M&A Compliance Health Scorecard"
+              >
+                <Scale
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: activeTab === "due-diligence" ? (isDark ? "#4338ca" : "#818cf8") : "#4f46e5" }}
+                />
+                <span style={{ color: activeTab === "due-diligence" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  Due Diligence
                 </span>
               </button>
             </div>
@@ -1090,6 +1123,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                   authorizedCapital: 50000000,
                   paidUpCapital: 25000000,
                   turnover: 48500000,
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW: 100-Point Statutory Due Diligence & M&A Compliance Health Scorecard */}
+          {activeTab === "due-diligence" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <StatutoryDueDiligenceView
+                firmName={firm.name}
+                csName={firm.founderName || "CS Rajesh Sharma (FCS-8921, CP-10293)"}
+                caName="CA Ramanathan Iyer (M.No 054921, FRN-018241N)"
+                defaultClient={{
+                  name: "CyberCorp Technologies Pvt Ltd",
+                  cin: "U72200DL2022PTC394812",
+                  pan: "AAECS1234F",
+                  gstin: "07AAECS1234F1Z8",
                 }}
               />
             </div>

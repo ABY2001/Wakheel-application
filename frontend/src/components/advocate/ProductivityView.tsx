@@ -57,6 +57,12 @@ export function ProductivityView({
   const [currentTab, setCurrentTab] = useState<string>(activeModule);
   const [activeTaskFilter, setActiveTaskFilter] = useState<"all" | "urgent" | "causelist">("all");
 
+  useEffect(() => {
+    if (activeModule) {
+      setCurrentTab(activeModule);
+    }
+  }, [activeModule]);
+
   // Live state from Backend
   const [notes, setNotes] = useState<CaseNoteItem[]>([]);
   const [causeList, setCauseList] = useState<CauseListItem[]>([]);
@@ -195,6 +201,8 @@ export function ProductivityView({
     { id: "practice-ai", label: "Practice with AI", icon: GraduationCap },
   ];
 
+  const effectiveTab = (activeModule && tabs.some((t) => t.id === activeModule)) ? activeModule : currentTab;
+
   const handleTabChange = (id: string) => {
     setCurrentTab(id);
     if (onSelectModule) onSelectModule(id);
@@ -226,7 +234,7 @@ export function ProductivityView({
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = currentTab === tab.id;
+            const isActive = effectiveTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -246,7 +254,7 @@ export function ProductivityView({
       </div>
 
       {/* VIEW: Notes */}
-      {currentTab === "notes" && (
+      {effectiveTab === "notes" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
             <div>
@@ -356,19 +364,19 @@ export function ProductivityView({
       )}
 
       {/* VIEW: Calendar - Chamber Deadlines Calendar (LetGetIn Structure) */}
-      {currentTab === "calendar" && (
+      {effectiveTab === "calendar" && (
         <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[700px]">
           <ChamberCalendarView advocateName={advocateName} />
         </div>
       )}
 
       {/* VIEW: Appointments */}
-      {currentTab === "appointments" && (
+      {effectiveTab === "appointments" && (
         <AdvocateConsultationsView />
       )}
 
       {/* VIEW: Taskmite */}
-      {currentTab === "taskmite" && (
+      {effectiveTab === "taskmite" && (
         <TaskMiteView
           portalType="advocate"
           advocateName={advocateName}
@@ -377,7 +385,7 @@ export function ProductivityView({
       )}
 
       {/* VIEW: Time Sheet */}
-      {currentTab === "time-sheet" && (
+      {effectiveTab === "time-sheet" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
@@ -424,7 +432,7 @@ export function ProductivityView({
       )}
 
       {/* VIEW: Case Tracker */}
-      {currentTab === "case-tracker" && (
+      {effectiveTab === "case-tracker" && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -700,7 +708,7 @@ export function ProductivityView({
       )}
 
       {/* VIEW: Practice with AI - Milestone 3 Interactive Courtroom Voice Simulator */}
-      {currentTab === "practice-ai" && (
+      {effectiveTab === "practice-ai" && (
         <CourtroomVoiceSimulatorView advocateName={advocateName} />
       )}
     </div>

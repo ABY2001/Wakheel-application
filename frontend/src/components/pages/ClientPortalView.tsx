@@ -880,7 +880,7 @@ export function ClientPortalView() {
           icon: BarChart3,
         },
         {
-          id: "ai-reports",
+          id: "reports",
           label: "AI Reports",
           subtitle: "Automated case & compliance reports",
           whatItDoes: "Generates downloadable AI summary reports of your active matters and filings.",
@@ -992,7 +992,7 @@ export function ClientPortalView() {
     "auditor-ca",
   ].includes(activeTab);
 
-  const isAnalytics = ["ai-analytics", "ai-reports"].includes(activeTab);
+  const isAnalytics = ["ai-analytics", "reports", "ai-reports"].includes(activeTab);
 
   // Helper to resolve assigned advocate for the active matter
   const getAssignedAdvocate = (matterTitle: string) => {
@@ -1169,7 +1169,7 @@ export function ClientPortalView() {
 
   const reportsNavItems = [
     { id: "ai-analytics", label: "AI Analytics", icon: BarChart3 },
-    { id: "ai-reports", label: "AI Reports", icon: FileSpreadsheet },
+    { id: "reports", label: "AI Reports", icon: FileSpreadsheet },
   ];
 
   const hasAnyMatches =
@@ -3303,11 +3303,17 @@ export function ClientPortalView() {
           )}
 
           {isBusiness && (
-            <BusinessView />
+            <BusinessView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+            />
           )}
 
           {isAnalytics && (
-            <AnalyticsView />
+            <AnalyticsView
+              activeModule={activeTab}
+              onSelectModule={(m) => setActiveTab(m)}
+            />
           )}
 
           {/* ============================================================== */}

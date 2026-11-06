@@ -1018,9 +1018,11 @@ export function BusinessView({
     },
   ];
 
+  const effectiveTab = (activeModule && tabs.some((t) => t.id === activeModule)) ? activeModule : currentTab;
+
   // Helper to get active list of service items based on current tab
   const getActiveServices = (): ServiceItem[] => {
-    switch (currentTab) {
+    switch (effectiveTab) {
       case "business-registration":
         return businessRegistrationServices;
       case "tax-compliance":
@@ -1097,7 +1099,7 @@ export function BusinessView({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = currentTab === tab.id;
+            const isActive = effectiveTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -1133,7 +1135,7 @@ export function BusinessView({
       )}
 
       {/* View 1 to 5: Tab Content with Sub-Category Pills and Service Cards */}
-      {currentTab !== "auditor-ca" && (
+      {effectiveTab !== "auditor-ca" && (
         <div className="space-y-5">
           {/* Controls: Search + Sub-category filter pills */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -1233,7 +1235,7 @@ export function BusinessView({
       {/* =========================================================================
           6. AUDITOR AND CA SERVICES TAB: The 11 Services & "How We Can Help" Table
       ========================================================================= */}
-      {currentTab === "auditor-ca" && (
+      {effectiveTab === "auditor-ca" && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
             <div>

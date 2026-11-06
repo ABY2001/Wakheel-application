@@ -68,7 +68,8 @@ export function AnalyticsView({
 
   useEffect(() => {
     if (activeModule) {
-      setCurrentTab(activeModule);
+      const normalized = activeModule === "ai-reports" ? "reports" : activeModule;
+      setCurrentTab(normalized);
     }
   }, [activeModule]);
 
@@ -208,6 +209,9 @@ Digitally certified and generated via Wakheel Practice Intelligence.
     { id: "leads", label: "Lead Intake CRM", icon: UserCheck, count: incomingLeads.length },
   ];
 
+  const normalizedActive = activeModule === "ai-reports" ? "reports" : activeModule;
+  const effectiveTab = (normalizedActive && tabs.some((t) => t.id === normalizedActive)) ? normalizedActive : currentTab;
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Toast Alert */}
@@ -253,7 +257,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
           <div className="flex items-center gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = currentTab === tab.id;
+              const isActive = effectiveTab === tab.id;
               return (
                 <button
                   key={tab.id}
@@ -281,7 +285,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
       {/* ============================================================== */}
       {/* VIEW: BENCH ANALYTICS                                          */}
       {/* ============================================================== */}
-      {currentTab === "ai-analytics" && (
+      {effectiveTab === "ai-analytics" && (
         <div className="space-y-6">
           {/* 4 Practice Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -409,7 +413,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
       {/* ============================================================== */}
       {/* VIEW: CHAMBER REPORTS & EXPORTS                                */}
       {/* ============================================================== */}
-      {currentTab === "reports" && (
+      {effectiveTab === "reports" && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800 gap-3">
             <div>
@@ -478,7 +482,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
       {/* ============================================================== */}
       {/* VIEW: LEAD INTAKE CRM                                          */}
       {/* ============================================================== */}
-      {currentTab === "leads" && (
+      {effectiveTab === "leads" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
             <div>

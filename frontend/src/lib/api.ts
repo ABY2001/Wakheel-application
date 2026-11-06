@@ -487,6 +487,7 @@ export const citizenApi = {
       fileName?: string;
       fileSize?: string;
       fileType?: string;
+      fileUrl?: string;
       size?: string;
       pages?: number;
       details?: string;

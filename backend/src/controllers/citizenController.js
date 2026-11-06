@@ -1440,6 +1440,7 @@ const normalizeDocument = (doc) => {
     hash,
     sha256Hash: hash,
     details: d.details || d.remarks || "Secure vault document",
+    fileUrl: d.fileUrl || "",
     filingStatus: d.filingStatus || d.status || "Ready in Vault",
     status: d.status || d.filingStatus || "Ready in Vault",
     advocateName: d.advocateName || "Adv. Meera Krishnan",
@@ -1519,6 +1520,7 @@ export const uploadDocument = async (req, res) => {
       pages,
       details,
       isSigned,
+      fileUrl,
     } = req.body;
 
     const finalName = fileName || name || title || "Document.pdf";
@@ -1547,6 +1549,7 @@ export const uploadDocument = async (req, res) => {
       matterId: matterId || "mat_wpc_19482",
       fileSize: fileSize || size || "1.5 MB",
       size: fileSize || size || "1.5 MB",
+      fileUrl: fileUrl || "",
       pages: pages ? Number(pages) : 4,
       details: details || "Uploaded securely to citizen document vault.",
       isSigned: isSigned !== undefined ? isSigned : true,

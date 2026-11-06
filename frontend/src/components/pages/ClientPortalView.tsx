@@ -17,6 +17,7 @@ import {
   Bot,
   FolderLock,
   Stamp,
+  File,
   FileText,
   Layers,
   PenTool,
@@ -218,7 +219,32 @@ export function ClientPortalView() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploadDocTitle, setUploadDocTitle] = useState("");
   const [uploadDocCategory, setUploadDocCategory] = useState("Court Petition / Writ");
+  const [uploadDocFile, setUploadDocFile] = useState<File | null>(null);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [isDraggingPortalFile, setIsDraggingPortalFile] = useState(false);
+  const portalFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePortalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadDocFile(file);
+      if (!uploadDocTitle.trim()) {
+        setUploadDocTitle(file.name);
+      }
+    }
+  };
+
+  const handlePortalDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingPortalFile(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      setUploadDocFile(file);
+      if (!uploadDocTitle.trim()) {
+        setUploadDocTitle(file.name);
+      }
+    }
+  };
 
   // ============================================================================
   // AI LEGAL COPILOT STATE & HANDLERS (Navbar Modes, Plus Menu, Suites)
@@ -537,18 +563,52 @@ export function ClientPortalView() {
 
   const handleUploadDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadDocTitle.trim()) return;
+    const finalTitle = uploadDocTitle.trim() || (uploadDocFile ? uploadDocFile.name : "");
+    if (!finalTitle && !uploadDocFile) return;
+
     setIsUploadingDoc(true);
     const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+
+    let fileDataUrl = "";
+    let computedHash = "";
+    const realSize = uploadDocFile ? `${(uploadDocFile.size / (1024 * 1024)).toFixed(2)} MB` : "1.2 MB";
+    const finalFileName = uploadDocFile ? uploadDocFile.name : `${finalTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Attested.pdf`;
+
+    if (uploadDocFile) {
+      try {
+        fileDataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => resolve("");
+          reader.readAsDataURL(uploadDocFile);
+        });
+
+        if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
+          const arrayBuffer = await uploadDocFile.arrayBuffer();
+          const hashBuffer = await window.crypto.subtle.digest("SHA-256", arrayBuffer);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          computedHash = "sha256:" + hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+        }
+      } catch (err) {
+        console.warn("Error reading portal file:", err);
+      }
+    }
+
     try {
       await citizenApi.uploadDocument(token, {
-        title: uploadDocTitle,
+        title: finalTitle,
         category: uploadDocCategory,
-        fileName: `${uploadDocTitle.replace(/[^a-zA-Z0-9]/g, "_")}_Attested.pdf`,
-        fileSize: "1.2 MB",
-        fileType: "application/pdf",
+        fileName: finalFileName,
+        name: finalFileName,
+        fileSize: realSize,
+        size: realSize,
+        fileType: uploadDocFile?.type || "application/pdf",
+        fileUrl: fileDataUrl,
+        details: `Uploaded via citizen command center. ${computedHash ? `Integrity Hash: ${computedHash.slice(0, 18)}...` : ""}`,
       });
       setUploadDocTitle("");
+      setUploadDocFile(null);
+      if (portalFileInputRef.current) portalFileInputRef.current.value = "";
       setUploadModalOpen(false);
       await loadCitizenData();
     } catch (err) {
@@ -3489,14 +3549,99 @@ export function ClientPortalView() {
       {/* Upload Document Modal */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-              <h3 className="text-sm font-bold text-black dark:text-white">Upload to Encrypted Vault</h3>
-              <button onClick={() => setUploadModalOpen(false)} className="cursor-pointer">
-                <X className="w-4 h-4 text-zinc-400" />
+              <div className="flex items-center gap-2">
+                <UploadCloud className="w-5 h-5 text-black dark:text-white" />
+                <h3 className="text-sm font-bold text-black dark:text-white">Upload to Encrypted Vault</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setUploadModalOpen(false);
+                  setUploadDocFile(null);
+                  if (portalFileInputRef.current) portalFileInputRef.current.value = "";
+                }}
+                className="cursor-pointer"
+              >
+                <X className="w-4 h-4 text-zinc-400 hover:text-black dark:hover:text-white" />
               </button>
             </div>
             <form onSubmit={handleUploadDocument} className="space-y-3 text-xs">
+              {/* HIDDEN FILE INPUT */}
+              <input
+                type="file"
+                ref={portalFileInputRef}
+                onChange={handlePortalFileChange}
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                className="hidden"
+              />
+
+              {/* FILE PICKER / DRAG & DROP BOX */}
+              <div>
+                <label className="font-bold block mb-1">
+                  Document File {uploadDocFile && <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">(Ready)</span>}
+                </label>
+
+                {uploadDocFile ? (
+                  <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
+                        <File className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-0.5 truncate">
+                        <span className="font-bold text-black dark:text-white block truncate text-xs">
+                          {uploadDocFile.name}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-mono block">
+                          {(uploadDocFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for AES-256
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => portalFileInputRef.current?.click()}
+                        className="px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-[10px] font-semibold hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
+                      >
+                        Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUploadDocFile(null);
+                          if (portalFileInputRef.current) portalFileInputRef.current.value = "";
+                        }}
+                        className="p-1 rounded-lg text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                        title="Remove file"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => portalFileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDraggingPortalFile(true);
+                    }}
+                    onDragLeave={() => setIsDraggingPortalFile(false)}
+                    onDrop={handlePortalDrop}
+                    className={`p-4 rounded-xl border border-dashed text-center space-y-1 cursor-pointer transition-colors ${
+                      isDraggingPortalFile
+                        ? "border-black dark:border-white bg-zinc-100 dark:bg-zinc-800"
+                        : "border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 hover:border-black dark:hover:border-white"
+                    }`}
+                  >
+                    <Upload className="w-5 h-5 mx-auto text-zinc-400" />
+                    <span className="text-zinc-700 dark:text-zinc-300 block font-bold text-xs">
+                      <span className="underline">Click to browse</span> or drag and drop
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono block">PDF, DOCX, JPG, PNG up to 25MB</span>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="font-bold block mb-1">Document Title</label>
                 <input
@@ -3508,6 +3653,7 @@ export function ClientPortalView() {
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>
+
               <div>
                 <label className="font-bold block mb-1">Category</label>
                 <select
@@ -3522,25 +3668,35 @@ export function ClientPortalView() {
                   <option>Statutory Demand Notice</option>
                 </select>
               </div>
-              <div className="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 text-center space-y-1">
-                <Upload className="w-5 h-5 mx-auto text-zinc-400" />
-                <span className="text-zinc-500 block font-medium">Select PDF or Document scan</span>
-                <span className="text-[10px] text-zinc-400">PDF, JPG, PNG up to 25MB</span>
-              </div>
+
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setUploadModalOpen(false)}
+                  onClick={() => {
+                    setUploadModalOpen(false);
+                    setUploadDocFile(null);
+                    if (portalFileInputRef.current) portalFileInputRef.current.value = "";
+                  }}
                   className="px-4 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploadingDoc || !uploadDocTitle.trim()}
-                  className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold disabled:opacity-50 cursor-pointer"
+                  disabled={isUploadingDoc || (!uploadDocFile && !uploadDocTitle.trim())}
+                  className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold disabled:opacity-50 cursor-pointer flex items-center gap-2"
                 >
-                  {isUploadingDoc ? "Uploading..." : "Save to Vault"}
+                  {isUploadingDoc ? (
+                    <>
+                      <div className="w-3 h-3 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin" />
+                      <span>Encrypting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>Save to Vault</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

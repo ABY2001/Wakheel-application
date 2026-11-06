@@ -32,6 +32,7 @@ import { PromoView } from "@/components/advocate/PromoView";
 import { CorporateSuiteView } from "@/components/advocate/CorporateSuiteView";
 import TemplatesLibraryView from "@/components/client/TemplatesLibraryView";
 import JudgementsLibraryView from "@/components/client/JudgementsLibraryView";
+import { ScanTranslateView } from "@/components/common/ScanTranslateView";
 import ScrutinyDefectClearingView from "@/components/advocate/ScrutinyDefectClearingView";
 import { CourtCauselistRadarView } from "@/components/advocate/CourtCauselistRadarView";
 import { AdvocateTrustBillingView } from "@/components/advocate/AdvocateTrustBillingView";
@@ -60,6 +61,7 @@ import {
   FileEdit,
   Globe,
   Languages,
+  ScanText,
   Search,
   BookOpen,
   Bot,
@@ -594,6 +596,13 @@ export function AdvocateWorkspaceView() {
           subtitle: "256-bit encrypted file vault",
           whatItDoes: "Stores certified true copies, scanned case bundles, and privileged work product.",
           icon: FolderLock,
+        },
+        {
+          id: "scan-translate",
+          label: "Scan/Translate (OCR)",
+          subtitle: "Make scans searchable & certified translation",
+          whatItDoes: "Turn scanned revenue deeds & court copies into searchable text with High Court Rule 32 translation.",
+          icon: Languages,
         },
         {
           id: "scrutiny-efiling",
@@ -1975,7 +1984,16 @@ export function AdvocateWorkspaceView() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("scan-translate")}
+                        className="px-3 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <ScanText className="w-3.5 h-3.5" />
+                        <span>Document OCR &amp; Translation Studio</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -3142,6 +3160,13 @@ export function AdvocateWorkspaceView() {
               barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
+          )}
+
+          {/* ============================================================== */}
+          {/* VIEW: Scan / Translate Suite (OCR & Certified Translation)      */}
+          {/* ============================================================== */}
+          {(activeTab === "scan-translate" || activeTab === "ocr-translate") && (
+            <ScanTranslateView isAdvocate={true} />
           )}
 
           {/* ============================================================== */}

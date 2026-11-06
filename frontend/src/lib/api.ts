@@ -2721,6 +2721,22 @@ export const advocateApi = {
 // 10. AI LEGAL COPILOT SUITE API (Milestone 3)
 // ============================================================================
 export const copilotApi = {
+  async ocr(data: {
+    fileName?: string;
+    fileType?: string;
+    fileUrl?: string;
+    fileData?: string;
+    language?: string;
+    documentType?: string;
+  }) {
+    const res = await fetch(`${API_BASE_URL}/copilot/ocr`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
   async translate(data: {
     text: string;
     sourceLang?: "ml" | "en";

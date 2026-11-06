@@ -70,7 +70,9 @@ import {
   RefreshCw,
   Newspaper,
   UploadCloud,
+  ScanText,
 } from "lucide-react";
+import { ScanTranslateView } from "@/components/common/ScanTranslateView";
 import { LegalProblemSubmission } from "@/components/client/LegalProblemSubmission";
 import { MyLegalMattersView } from "@/components/client/MyLegalMattersView";
 import { ClientDocumentsView } from "@/components/client/ClientDocumentsView";
@@ -958,17 +960,23 @@ export function ClientPortalView() {
         },
         {
           id: "translate",
-          label: "AI Translate",
-          whatItDoes: "Translate Malayalam/Tamil/Hindi documents into certified English.",
+          label: "Scan/Translate",
+          whatItDoes: "Make scans searchable with OCR and translate regional legal documents.",
           icon: Languages,
         },
       ],
     },
   ];
 
+  const isScanTranslate =
+    activeTab === "translate" ||
+    activeTab === "scan-translate" ||
+    activeTab === "ocr-translate";
+
   const isCopilot =
-    activeTab === "ai-copilot" ||
-    ["draft", "translate", "summary", "research", "ask-ai"].includes(activeTab);
+    !isScanTranslate &&
+    (activeTab === "ai-copilot" ||
+    ["draft", "summary", "research", "ask-ai"].includes(activeTab));
 
   const isProductivity = [
     "notes",
@@ -1465,18 +1473,17 @@ export function ClientPortalView() {
                       {matchesSidebarSearch("Translate", ["languages", "malayalam", "vernacular", "documents"]) && (
                         <button
                           onClick={() => {
-                            setActiveTab("ai-copilot");
-                            setCopilotMode("Translate");
+                            setActiveTab("translate");
                           }}
                           className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
-                            activeTab === "ai-copilot" && copilotMode === "Translate"
+                            activeTab === "translate" || (activeTab === "ai-copilot" && copilotMode === "Translate")
                               ? "bg-zinc-200 dark:bg-zinc-800 font-bold text-black dark:text-white"
                               : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                           }`}
                         >
                           <span className="font-mono text-[10px] font-bold text-zinc-400 dark:text-zinc-500 shrink-0">ii.</span>
                           <Languages className="w-3.5 h-3.5 shrink-0" />
-                          <span className="text-xs">Translate</span>
+                          <span className="text-xs">Scan/Translate</span>
                         </button>
                       )}
                     </div>
@@ -2536,6 +2543,13 @@ export function ClientPortalView() {
           )}
 
           {/* ============================================================== */}
+          {/* VIEW: Scan / Translate Suite (OCR & Certified Translation)      */}
+          {/* ============================================================== */}
+          {isScanTranslate && (
+            <ScanTranslateView isAdvocate={false} />
+          )}
+
+          {/* ============================================================== */}
           {/* VIEW: Wakheel AI Legal Copilot (Navbar Modes + Chatbot Console) */}
           {/* ============================================================== */}
           {isCopilot && (
@@ -2601,7 +2615,16 @@ export function ClientPortalView() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("translate")}
+                        className="px-3 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <ScanText className="w-3.5 h-3.5" />
+                        <span>Document OCR &amp; Translation Studio</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => {

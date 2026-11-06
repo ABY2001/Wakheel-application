@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  extractDocumentOcr,
   translateLegalDocument,
   summarizeJudgment,
   draftPleading,
@@ -21,7 +22,8 @@ import {
 
 const router = express.Router();
 
-// 1. Malayalam <-> English High Court Translation Suite
+// 1. Malayalam <-> English High Court Translation Suite & OCR Engine
+router.post("/ocr", extractDocumentOcr);
 router.post("/translate", translateLegalDocument);
 
 // 2. High Court Precedent & Judgment Summarizer

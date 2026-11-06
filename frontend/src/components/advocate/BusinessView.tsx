@@ -871,6 +871,168 @@ export function BusinessView({
   // 5. COMPANY SECRETARY SERVICES (Full Breakdown)
   // =========================================================================
   const companySecretaryServices: ServiceItem[] = [
+    // 1. Annual Statutory Filings
+    {
+      id: "annual-mca-filing",
+      name: "Annual MCA Filing (Form AOC-4 & MGT-7/7A)",
+      category: "company-secretary",
+      subCategory: "Annual Statutory Filings",
+      timeline: "3–5 Working Days",
+      regulator: "MCA21 • Sec 92 & 137 Companies Act 2013",
+      description: "Preparation and certified e-filing of audited Financial Statements (AOC-4 / AOC-4 XBRL) and Annual Return (MGT-7/MGT-7A) with ROC, including Director's Report compliance, MGT-8 certification, and penalty avoidance.",
+      documents: [
+        "Audited Financial Statements with Auditor's Report & Notes",
+        "Signed Board's Report with Annexures & MGT-9 Extract",
+        "Notice of Annual General Meeting (AGM) and Member List",
+      ],
+      deliverables: [
+        "Filed Form AOC-4 & MGT-7 with MCA Challan Receipt (SRN)",
+        "Secretarial Certification on Annual Return (Form MGT-8)",
+        "AGM Proceedings & Statutory Minute Dossier",
+      ],
+    },
+    // 2. Director Governance & Compliance
+    {
+      id: "dir-3-kyc",
+      name: "Director KYC & DIN Compliance (DIR-3 KYC)",
+      category: "company-secretary",
+      subCategory: "Director Governance & Compliance",
+      timeline: "1–2 Working Days",
+      regulator: "MCA21 • Rule 12A Companies Rules",
+      description: "Mandatory annual verification of Director Identification Numbers (DIN) via e-Form DIR-3 KYC with digital signature (DSC) or OTP-based Web-KYC to keep DIN active and prevent ₹5,000 late deactivation penalties.",
+      documents: [
+        "Self-attested PAN and Aadhaar Card of Director",
+        "Passport (mandatory for foreign nationals / overseas directors)",
+        "Active Class 3 Digital Signature Certificate (DSC)",
+        "Current residential address proof (Utility bill / Bank Statement)",
+      ],
+      deliverables: [
+        "Approved MCA DIR-3 KYC SRN Acknowledgment",
+        "Active DIN Status Certificate on MCA Portal",
+        "Director Master Data Verification Pack",
+      ],
+    },
+    {
+      id: "director-appointment-resignation",
+      name: "Appointment & Resignation of Directors (DIR-12)",
+      category: "company-secretary",
+      subCategory: "Director Governance & Compliance",
+      timeline: "2–4 Working Days",
+      regulator: "MCA21 • Sec 152, 168 & 170 Companies Act 2013",
+      description: "Statutory secretarial processing for induction of Additional/Independent Directors or formal resignation, drafting Form DIR-2 consent, DIR-8 non-disqualification, MBP-1 disclosure, and e-filing DIR-12 with ROC.",
+      documents: [
+        "Consent to act as Director (Form DIR-2)",
+        "Non-disqualification Declaration (Form DIR-8)",
+        "Formal Resignation Letter with proof of delivery",
+        "Certified True Copy of Board Resolution",
+      ],
+      deliverables: [
+        "Filed Form DIR-12 with MCA Approval Receipt",
+        "Updated Register of Directors & KMP (Sec 170)",
+        "Official MCA Signatory Details Snapshot",
+      ],
+    },
+    // 3. Corporate Structuring & Amendments
+    {
+      id: "registered-office-change",
+      name: "Change in Registered Office Address (INC-22)",
+      category: "company-secretary",
+      subCategory: "Corporate Structuring & Amendments",
+      timeline: "3–6 Working Days (Local) / 30 Days (Inter-State)",
+      regulator: "MCA21 • Sec 12 Companies Act 2013",
+      description: "Secretarial handling of shifting company registered office within local limits, outside local limits under same ROC, or inter-state shifting with Regional Director (RD) approval and public notice publication.",
+      documents: [
+        "Proof of registered office address (Electricity bill / Property tax receipt <= 2 months old)",
+        "Notarized NOC from property owner",
+        "Registered Rent / Lease Agreement",
+        "Certified Board / Special Resolution",
+      ],
+      deliverables: [
+        "Filed Form INC-22 with MCA Approval Receipt",
+        "Updated Master Data Certificate of Registered Office",
+        "Statutory letterheads & seal amendment guidance",
+      ],
+    },
+    {
+      id: "increase-authorized-capital",
+      name: "Increase in Authorized Share Capital (Form SH-7)",
+      category: "company-secretary",
+      subCategory: "Capital Restructuring",
+      timeline: "4–7 Working Days",
+      regulator: "MCA21 • Sec 61 & 64 Companies Act 2013",
+      description: "Drafting alteration to Memorandum of Association (MOA Capital Clause V), convening EGM for ordinary/special resolution, computing MCA ROC fees and state stamp duty, and e-filing Form SH-7 and MGT-14.",
+      documents: [
+        "Existing MOA & AOA copies",
+        "Proposed new capital structure breakdown",
+        "Notice & Explanatory Statement for EGM",
+        "Passed Ordinary Resolution of Shareholders",
+      ],
+      deliverables: [
+        "Filed Form SH-7 & MGT-14 with MCA SRN Receipt",
+        "Amended Memorandum of Association (MOA)",
+        "Updated MCA Master Data showing enhanced Authorized Capital",
+      ],
+    },
+    {
+      id: "charge-management",
+      name: "Creation, Modification & Satisfaction of Charges (CHG-1 / CHG-4)",
+      category: "company-secretary",
+      subCategory: "Banking & Debt Governance",
+      timeline: "3–5 Working Days",
+      regulator: "MCA21 • Sec 77, 78 & 82 Companies Act 2013",
+      description: "Statutory filing of charges on company assets/receivables for bank term loans, working capital facilities, or mortgage creation on Form CHG-1, and filing formal Charge Satisfaction on CHG-4 upon loan closure with Bank NOC.",
+      documents: [
+        "Sanction Letter & Loan Agreement with Hypothecation/Mortgage Deed",
+        "Bank No Dues Certificate / Satisfaction Letter (for CHG-4)",
+        "Board Resolution under Section 179(3)",
+        "Property / Asset schedule subject to charge",
+      ],
+      deliverables: [
+        "Official Certificate of Registration of Charge (Form CHG-2)",
+        "Certificate of Satisfaction of Charge (Form CHG-5)",
+        "Updated Register of Charges (Section 85)",
+      ],
+    },
+    {
+      id: "strike-off-stk2",
+      name: "Strike-Off & Closure of Defunct Company (Form STK-2)",
+      category: "company-secretary",
+      subCategory: "Corporate Structuring & Amendments",
+      timeline: "60–90 Working Days",
+      regulator: "MCA21 • Section 248 Companies Act 2013",
+      description: "Fast-track exit and striking off the name of defunct, non-operational, or dormant companies without prolonged liquidation, including indemnity bond drafting (STK-3), affidavit on STK-4, CA-certified statement of assets & liabilities, and ROC notice management.",
+      documents: [
+        "Statement of Accounts certified by CA (<= 30 days old showing zero assets & liabilities)",
+        "Indemnity Bond on Non-Judicial Stamp Paper by all Directors (Form STK-3)",
+        "Affidavits on Form STK-4 by all Directors",
+        "Bank account closure certificate & PAN surrender receipt",
+      ],
+      deliverables: [
+        "Filed Form STK-2 with MCA Challan Receipt",
+        "ROC Public Notice in Official Gazette (Form STK-5 / STK-6)",
+        "Final Notice of Striking Off and Dissolution (Form STK-7)",
+      ],
+    },
+    {
+      id: "beneficial-ownership-ben2",
+      name: "Significant Beneficial Ownership Compliance (BEN-2)",
+      category: "company-secretary",
+      subCategory: "Statutory Registers & Anti-Money Laundering",
+      timeline: "5–7 Working Days",
+      regulator: "MCA21 • Section 90 & SBO Rules 2018",
+      description: "Identification and legal declaration of natural persons holding 10%+ ultimate beneficial economic interest or voting rights in corporate shareholders, serving notice on BEN-4, receiving BEN-1, and filing return on Form BEN-2 with ROC.",
+      documents: [
+        "Declaration from Significant Beneficial Owner (Form BEN-1)",
+        "Shareholding pattern and structural entity tree",
+        "Ultimate natural owner passport/PAN verification",
+      ],
+      deliverables: [
+        "Filed Form BEN-2 with MCA Acknowledgment",
+        "Maintained Statutory Register of Significant Beneficial Owners (Form BEN-3)",
+        "SBO Corporate Governance Compliance Memo",
+      ],
+    },
+    // 4. Board & Meeting Governance
     {
       id: "board-advisor",
       name: "Board Advisory & Secretarial Standards",

@@ -79,37 +79,6 @@
     "createdAt": "2026-10-21T04:39:55.960Z"
   },
   {
-    "_id": "mat_1792557164182",
-    "advocateId": "adv_1",
-    "citizenId": "default_citizen",
-    "caseNumber": "WP(C) 4921/2026",
-    "caseTitle": "Vanguard Infrastructure v. NHAI",
-    "matterTitle": "Vanguard Infrastructure v. NHAI",
-    "matterType": "Writ Petition (Civil)",
-    "courtForum": "High Court of Delhi",
-    "courtHall": "Court Hall 2A",
-    "advocateName": "Adv. Meera Krishnan",
-    "assignedAdvocate": "Adv. Meera Krishnan",
-    "status": "Admitted",
-    "stage": "Active Proceedings",
-    "filingDate": "2026-10-21",
-    "nextHearingDate": "2026-11-04T04:32:43.968Z",
-    "cnrNumber": "DLHC010049212026",
-    "statutoryActs": [
-      "Article 226 of the Constitution of India"
-    ],
-    "timeline": [
-      {
-        "date": "21 Oct 2026",
-        "title": "Docket Imported into Advocate Chamber Tracker",
-        "remarks": "CNR DLHC010049212026 successfully synced with e-Courts NJDG repository.",
-        "stage": "Completed"
-      }
-    ],
-    "orders": [],
-    "createdAt": "2026-10-21T04:32:44.184Z"
-  },
-  {
     "_id": "mat_1792554544298",
     "citizenId": "default_citizen",
     "caseNumber": "WP(C) 88204/2026",

@@ -271,10 +271,11 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
             Array.isArray(mattersRes.matters) &&
             mattersRes.matters.length > 0
           ) {
-            const names = mattersRes.matters.map(
-              (m: any) => `${m.caseNumber} — ${m.title || m.matterTitle}`
+            const names: string[] = mattersRes.matters.map(
+              (m: any) => `${m.caseNumber} — ${m.title || m.matterTitle || m.caseTitle}`
             );
-            setMattersList(names);
+            const uniqueNames: string[] = Array.from(new Set<string>(names));
+            setMattersList(uniqueNames);
           }
           if (
             filingsRes?.success &&
@@ -497,8 +498,8 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
               onChange={(e) => setSelectedMatter(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs sm:text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
             >
-              {mattersList.map((m) => (
-                <option key={m} value={m}>
+              {Array.from(new Set(mattersList)).map((m, idx) => (
+                <option key={`${m}-${idx}`} value={m}>
                   {m}
                 </option>
               ))}

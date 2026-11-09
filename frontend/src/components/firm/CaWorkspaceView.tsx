@@ -45,6 +45,10 @@ import {
 } from "lucide-react";
 import caApiDefault, { caApi as caApiNamed } from "@/lib/caApi";
 const caApi = caApiNamed || caApiDefault || ({} as any);
+import {
+  StatutoryComplianceCertificateModal,
+  StatutoryCertificateData,
+} from "./StatutoryComplianceCertificateModal";
 
 export interface IncomeTaxReturnItem {
   id: string;
@@ -172,6 +176,8 @@ export function CaWorkspaceView({
   const [newReconModalOpen, setNewReconModalOpen] = useState(false);
   const [selectedAuditForUdin, setSelectedAuditForUdin] = useState<TaxAuditItem | null>(null);
   const [udinModalOpen, setUdinModalOpen] = useState(false);
+  const [certModalOpen, setCertModalOpen] = useState(false);
+  const [certData, setCertData] = useState<StatutoryCertificateData | null>(null);
   const [selectedItrForDetails, setSelectedItrForDetails] = useState<IncomeTaxReturnItem | null>(null);
   const [gstItcMatcherOpen, setGstItcMatcherOpen] = useState(false);
 
@@ -1504,6 +1510,43 @@ export function CaWorkspaceView({
               </button>
               <button
                 onClick={() => {
+                  setCertData({
+                    caseNumber: `ITR-3CD-${selectedAuditForUdin.pan}`,
+                    title: `Form 3CD Tax Audit & CARO Review — ${selectedAuditForUdin.clientName}`,
+                    courtOrAuthority: "Income Tax Department (CPC Bengaluru & NFAC) • ICAI UDIN Registry",
+                    category: "ca",
+                    clientName: selectedAuditForUdin.clientName,
+                    clientCinOrPan: `PAN: ${selectedAuditForUdin.pan}`,
+                    clientGstin: "32AABCI9812G1Z2",
+                    assignedProfessional: "CA Ramanathan Iyer, FCA",
+                    professionalRole: "Statutory Tax Auditor • Fellow Chartered Accountant (ICAI)",
+                    membershipNumber: "ICAI M.No 240189 • FRN 019482C",
+                    firmName: "Wakheel Multi-Disciplinary Practice LLP",
+                    udinOrSrn: selectedAuditForUdin.udin,
+                    filingDate: `AY ${selectedAuditForUdin.assessmentYear}`,
+                    status: "OFFICIALLY FILED",
+                    statutoryActs: [
+                      "Income Tax Act, 1961 (Section 44AB & Form 3CD)",
+                      "Section 43B(h) (MSME 45-day Timely Payment Disallowance)",
+                      "Section 40A(3) (Cash Disallowance) & Section 40(a)(ia) (TDS Non-Deduction)",
+                      "CARO 2020 & Companies Act, 2013 (Section 143)",
+                    ],
+                    complianceSummary: [
+                      `All ${selectedAuditForUdin.clausesReviewed || 44} statutory clauses under Form 3CD reviewed with 100% verified compliance.`,
+                      `Section 43B(h) vendor ledger verified against MSME Udyam status; zero disallowed interest.`,
+                      `Form 3CD electronic XML generated and stamped with Class 3 DSC Token on Income Tax Portal.`,
+                      `18-digit Unique Document Identification Number (${selectedAuditForUdin.udin}) authenticated on ICAI registry.`,
+                    ],
+                  });
+                  setCertModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-full border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors flex items-center gap-1.5"
+              >
+                <FileBadge className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Formal Certificate (A4/PDF)</span>
+              </button>
+              <button
+                onClick={() => {
                   window.print();
                 }}
                 className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer flex items-center gap-1.5"
@@ -2200,6 +2243,18 @@ export function CaWorkspaceView({
           </div>
         </div>
       )}
+
+      {/* =========================================================================
+          PRIORITY 6: EXPORTABLE HIGH-FIDELITY STATUTORY COMPLIANCE CERTIFICATE MODAL
+      ========================================================================= */}
+      <StatutoryComplianceCertificateModal
+        isOpen={certModalOpen}
+        onClose={() => {
+          setCertModalOpen(false);
+          setCertData(null);
+        }}
+        data={certData}
+      />
 
     </div>
   );

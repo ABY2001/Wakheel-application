@@ -1013,6 +1013,58 @@ export const addMatterTimelineMilestone = async (req, res) => {
   }
 };
 
+// @desc    Update matter docket details, stages, status, and UDIN/SRN tokens
+// @route   PUT /api/citizen/matters/:id
+// @access  Private
+export const updateMatter = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (shouldUseDevStore()) {
+      const updated = devStore.updateMatter(id, updateData);
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "Matter docket not found" });
+      }
+      return res.json({
+        success: true,
+        message: "Matter docket updated successfully",
+        matter: normalizeMatterForClient(updated),
+        mode: "dummy_data",
+      });
+    }
+
+    let matter = null;
+    try {
+      matter = await Matter.findById(id);
+    } catch {
+      // not a valid ObjectId
+    }
+    if (!matter) {
+      matter = await Matter.findOne({
+        $or: [{ caseNumber: id }, { cnrNumber: id }, { _id: id }],
+      });
+    }
+    if (!matter) {
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    Object.assign(matter, updateData);
+    matter.updatedAt = new Date();
+    await matter.save();
+
+    res.json({
+      success: true,
+      message: "Matter docket updated successfully",
+      matter: normalizeMatterForClient(matter),
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("updateMatter error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ============================================================================
 // 4. ADVOCATE DIRECTORY CONTROLLERS ("Discover Advocates")
 // ============================================================================

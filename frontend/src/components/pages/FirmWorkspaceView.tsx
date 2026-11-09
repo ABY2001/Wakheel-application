@@ -42,6 +42,7 @@ import {
   Award,
   Mail,
   ShieldAlert,
+  Inbox,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -59,6 +60,7 @@ import { ExecutiveBoardDossierView } from "@/components/firm/ExecutiveBoardDossi
 import { StatutoryDueDiligenceView } from "@/components/firm/StatutoryDueDiligenceView";
 import { StatutoryNoticeMailroomView } from "@/components/firm/StatutoryNoticeMailroomView";
 import { MdpFirmGovernanceView } from "@/components/firm/MdpFirmGovernanceView";
+import { ClientMandatesManagerView } from "@/components/firm/ClientMandatesManagerView";
 import { useTheme } from "@/context/ThemeContext";
 
 interface FirmWorkspaceViewProps {
@@ -121,6 +123,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "Dashboard",
           subtitle: "Corporate compliance & executive board",
           icon: LayoutDashboard,
+        },
+        {
+          id: "client-mandates",
+          label: "Inbound Client Mandates",
+          subtitle: "Client dockets, milestones & UDIN/SRN",
+          icon: Inbox,
         },
         {
           id: "roc-filings",
@@ -260,6 +268,12 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
     {
       category: "TAXATION & ITR FILING",
       items: [
+        {
+          id: "client-mandates",
+          label: "Inbound Client Mandates",
+          subtitle: "Client dockets, milestones & UDIN/SRN",
+          icon: Inbox,
+        },
         {
           id: "ca-income-tax",
           label: "Income Tax & ITR",
@@ -652,6 +666,26 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 {practiceMode === "ca" ? "ICAI Verified • FRN-018241N" : "ICSI Verified"}
               </span>
 
+              {/* Quick Launch Inbound Client Mandates Button (Priority 1 & 2) */}
+              <button
+                onClick={() => setActiveTab("client-mandates")}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-xs"
+                style={
+                  activeTab === "client-mandates"
+                    ? (isDark ? { backgroundColor: "#ffffff", color: "#000000", borderColor: "#ffffff" } : { backgroundColor: "#000000", color: "#ffffff", borderColor: "#000000" })
+                    : (isDark ? { backgroundColor: "#18181b", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#18181b", borderColor: "#d4d4d8" })
+                }
+                title="Inbound Client Mandates & Milestone Advancement Queue"
+              >
+                <Inbox
+                  className="w-3.5 h-3.5 shrink-0"
+                  style={{ color: activeTab === "client-mandates" ? (isDark ? "#059669" : "#34d399") : "#10b981" }}
+                />
+                <span style={{ color: activeTab === "client-mandates" ? (isDark ? "#000000" : "#ffffff") : (isDark ? "#f4f4f5" : "#18181b") }}>
+                  Inbound Mandates
+                </span>
+              </button>
+
               {/* Quick Launch AI Copilot Button */}
               <button
                 onClick={() => setActiveTab("ai-copilot")}
@@ -1035,6 +1069,17 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* VIEW: Inbound Client Mandates & Filings Queue (Priority 1 & 2) */}
+          {activeTab === "client-mandates" && (
+            <div className="w-full 2xl:max-w-[1550px] mx-auto">
+              <ClientMandatesManagerView
+                firmName={firm.name}
+                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
+                practiceMode={practiceMode}
+              />
             </div>
           )}
 

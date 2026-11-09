@@ -1342,12 +1342,13 @@ export function BusinessView({
         if (relevant.length > 0) {
           const formatted = relevant.map((m: any, idx: number) => {
             const isCompleted = (m.status || "").toLowerCase().includes("complete") || (m.status || "").toLowerCase().includes("disposed");
-            const stages = [
+            const currentStageIndex = typeof m.stageIndex === "number" ? m.stageIndex : (isCompleted ? 4 : 2);
+            const stages = (m.stages && Array.isArray(m.stages) && m.stages.length === 5) ? m.stages : [
               { name: "Docket Initiated & Vault Stamped", date: m.filingDate || "Filing Date", done: true },
-              { name: "Technical Scrutiny & Computation", date: "In Progress", done: true },
-              { name: "Client Sign-Off & Four-Eyes Review", date: "Partner Review", done: isCompleted },
-              { name: "UDIN / MCA21 Portal E-Filing", date: "Portal Submission", done: isCompleted },
-              { name: "Official Acknowledgment Released", date: isCompleted ? "Downloaded" : "Pending", done: isCompleted },
+              { name: "Technical Scrutiny & Computation", date: currentStageIndex >= 1 ? "Complete" : "In Progress", done: currentStageIndex >= 1 },
+              { name: "Client Sign-Off & Four-Eyes Review", date: currentStageIndex >= 2 ? "Approved" : "Partner Review", done: currentStageIndex >= 2 },
+              { name: "UDIN / MCA21 Portal E-Filing", date: currentStageIndex >= 3 ? "Submitted" : "Portal Submission", done: currentStageIndex >= 3 },
+              { name: "Official Acknowledgment Released", date: currentStageIndex >= 4 ? "Downloaded" : "Pending", done: currentStageIndex >= 4 },
             ];
             return {
               id: m.id || m._id || `docket-${idx}`,
@@ -1357,13 +1358,13 @@ export function BusinessView({
               assignedAdvocate: m.assignedAdvocate || m.advocateName || "CA Ramanathan Iyer & CS Rajesh Sharma",
               status: m.status || "In Technical Scrutiny",
               filingDate: m.filingDate || new Date().toISOString().split("T")[0],
-              stageIndex: isCompleted ? 4 : 2,
+              stageIndex: currentStageIndex,
               stages,
-              documents: [
+              documents: (m.documents && Array.isArray(m.documents) && m.documents.length > 0) ? m.documents : [
                 { name: "Supporting_Statutory_Dossier.pdf", size: "2.4 MB", hash: "sha256:8899aabbccddeeff" },
               ],
-              udinOrSrn: (m.caseNumber || "").startsWith("ITR") ? "UDIN: 2640192A00098124" : "SRN: ROC-2026-90124",
-              feePaid: "Retainer Verified",
+              udinOrSrn: m.udinOrSrn || ((m.caseNumber || "").startsWith("ITR") ? "UDIN: 2640192A00098124" : "SRN: ROC-2026-90124"),
+              feePaid: m.feePaid || "Retainer Verified",
             };
           });
 

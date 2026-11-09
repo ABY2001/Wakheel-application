@@ -82,6 +82,17 @@ const matterSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    stageIndex: {
+      type: Number,
+      default: 0,
+    },
+    stages: [{ type: mongoose.Schema.Types.Mixed }],
+    documents: [{ type: mongoose.Schema.Types.Mixed }],
+    queries: [{ type: mongoose.Schema.Types.Mixed }],
+    udinOrSrn: { type: String },
+    partnerNotes: { type: String },
+    clientPanOrCin: { type: String },
+    category: { type: String },
   },
   {
     timestamps: true,

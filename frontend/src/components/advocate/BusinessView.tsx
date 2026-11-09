@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Sparkles,
   AlertCircle,
+  AlertTriangle,
   HelpCircle,
   Globe,
   Award,
@@ -37,6 +38,7 @@ import {
   Eye,
   Copy,
   FileBadge,
+  MessageSquare,
 } from "lucide-react";
 import { citizenApi, csApi } from "@/lib/api";
 import caApi from "@/lib/caApi";
@@ -45,6 +47,10 @@ import {
   StatutoryComplianceCertificateModal,
   StatutoryCertificateData,
 } from "@/components/firm/StatutoryComplianceCertificateModal";
+import {
+  InDocketQueryThreadModal,
+  InDocketQueryItem,
+} from "@/components/firm/InDocketQueryThreadModal";
 
 interface BusinessViewProps {
   activeModule?: string;
@@ -95,6 +101,8 @@ export function BusinessView({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [certificateModalOpen, setCertificateModalOpen] = useState<boolean>(false);
   const [activeCertificateData, setActiveCertificateData] = useState<StatutoryCertificateData | null>(null);
+  const [queryModalDocket, setQueryModalDocket] = useState<any | null>(null);
+  const [queryModalOpen, setQueryModalOpen] = useState<boolean>(false);
 
   const handleOpenCertificate = (docket: any) => {
     if (!docket) return;
@@ -1362,6 +1370,71 @@ export function BusinessView({
           ],
           udinOrSrn: "UDIN: 2640192A00018921",
           feePaid: "₹ 24,000 (Tax Audit & Corporate Return)",
+          queries: [
+            {
+              id: "qry-ca-101",
+              type: "CLARIFICATION",
+              title: "Section 43B(h) Clause 22 Vendor Status Confirmation",
+              description: "Please confirm whether invoice INV-2025/902 from TechFab Solutions (MSME Micro) was settled prior to 31-Mar-2026 or if statutory interest has been computed under MSMED Act Section 16.",
+              requestedDocumentName: "Bank_Advice_Debit_Confirmation.pdf",
+              status: "RESOLVED",
+              raisedBy: {
+                name: "CA Ramanathan Iyer (FCA 40192)",
+                role: "Statutory Tax Auditor",
+                date: "30 Oct 2026",
+              },
+              clientResponse: {
+                notes: "Payment of ₹1,45,000 discharged via RTGS on 12-Mar-2026. Official UTR transaction slip attached.",
+                submittedAt: "01 Nov 2026",
+                attachments: [
+                  {
+                    id: "att-1",
+                    name: "RTGS_Advice_TechFab_Settlement.pdf",
+                    size: "480 KB",
+                    hash: "sha256:77bb19280011eeff11223344",
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        {
+          id: "seed-cs-2",
+          caseNumber: "SRN-MCA-2026/910245",
+          title: "Appointment of Independent Director (Form DIR-12) — Zenith FinTech Ltd",
+          court: "MCA21 • Registrar of Companies (ROC Delhi)",
+          assignedAdvocate: "CS Rajesh Sharma (FCS 9214)",
+          status: "Requisition Pending Response",
+          filingDate: "2026-11-02",
+          stageIndex: 1,
+          stages: [
+            { name: "Docket Initiated & Vault Stamped", date: "02 Nov 2026", done: true },
+            { name: "Technical Scrutiny & DIN Verification", date: "04 Nov 2026", done: true },
+            { name: "Board Resolution & CTC Sign-Off", date: "Pending Sign-Off", done: false },
+            { name: "MCA21 V3 Portal E-Filing", date: "Pending", done: false },
+            { name: "Official ROC SRN Challan Issued", date: "Pending", done: false },
+          ],
+          documents: [
+            { name: "Consent_Letter_Form_DIR2.pdf", size: "450 KB", hash: "sha256:ee881294fa0018aa" },
+            { name: "Declaration_Form_DIR8.pdf", size: "380 KB", hash: "sha256:cc551100bb443322" },
+          ],
+          udinOrSrn: "SRN: Pending Pre-Scrutiny",
+          feePaid: "₹ 6,000 (ROC Statutory Fee + Professional Charges)",
+          queries: [
+            {
+              id: "qry-cs-201",
+              type: "DOCUMENT_REUPLOAD",
+              title: "Form DIR-2 Consent Letter & Updated Residential Address Proof",
+              description: "The DIN verification indicates the Director's residential address in Aadhaar was updated recently. Please upload a self-attested proof of updated residential address (Utility bill, Bank Statement, or Passport copy) for Form DIR-12 attachment.",
+              requestedDocumentName: "Self_Attested_Address_Proof_DIR2.pdf",
+              status: "OPEN",
+              raisedBy: {
+                name: "CS Rajesh Sharma (FCS 9214)",
+                role: "Practicing Company Secretary",
+                date: "04 Nov 2026",
+              },
+            },
+          ],
         },
       ];
 
@@ -1413,6 +1486,7 @@ export function BusinessView({
               ],
               udinOrSrn: m.udinOrSrn || ((m.caseNumber || "").startsWith("ITR") ? "UDIN: 2640192A00098124" : "SRN: ROC-2026-90124"),
               feePaid: m.feePaid || "Retainer Verified",
+              queries: m.queries || [],
             };
           });
 
@@ -2111,6 +2185,30 @@ This document serves as the official client acknowledgment copy generated by Wak
                       </div>
                     </div>
 
+                    {/* Priority 4: Requisition Alert Banner (if open queries exist) */}
+                    {docket.queries && docket.queries.some((q: any) => q.status === "OPEN") && (
+                      <div
+                        onClick={() => {
+                          setQueryModalDocket(docket);
+                          setQueryModalOpen(true);
+                        }}
+                        className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 flex items-center justify-between gap-3 text-xs cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shadow-xs"
+                      >
+                        <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span className="font-bold">
+                            {docket.queries.filter((q: any) => q.status === "OPEN").length} Requisition Requires Action:
+                          </span>
+                          <span className="truncate text-zinc-600 dark:text-zinc-400">
+                            {docket.queries.find((q: any) => q.status === "OPEN")?.title}
+                          </span>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-black font-extrabold text-[11px] shrink-0">
+                          Respond &amp; Re-Upload →
+                        </span>
+                      </div>
+                    )}
+
                     {/* Docket Title & Details */}
                     <div>
                       <h4 className="text-sm font-bold text-black dark:text-white">
@@ -2222,6 +2320,25 @@ This document serves as the official client acknowledgment copy generated by Wak
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Audit Trail &amp; Regulatory Record</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setQueryModalDocket(docket);
+                          setQueryModalOpen(true);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+                          (docket.queries?.filter((q: any) => q.status === "OPEN").length || 0) > 0
+                            ? "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 hover:bg-amber-100"
+                            : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                        }`}
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+                        <span>
+                          Requisitions &amp; Re-Upload{" "}
+                          {docket.queries && docket.queries.length > 0
+                            ? `(${docket.queries.filter((q: any) => q.status === "OPEN").length} action required)`
+                            : ""}
+                        </span>
                       </button>
                       <button
                         onClick={() => handleOpenCertificate(docket)}
@@ -2690,6 +2807,21 @@ This document serves as the official client acknowledgment copy generated by Wak
                   Close
                 </button>
                 <button
+                  onClick={() => {
+                    setQueryModalDocket(selectedDocketDetail);
+                    setQueryModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 text-xs font-bold hover:bg-amber-100 cursor-pointer shadow-xs"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+                  <span>
+                    Requisitions &amp; Re-Upload{" "}
+                    {selectedDocketDetail?.queries && selectedDocketDetail.queries.length > 0
+                      ? `(${selectedDocketDetail.queries.filter((q: any) => q.status === "OPEN").length} action required)`
+                      : ""}
+                  </span>
+                </button>
+                <button
                   onClick={() => handleOpenCertificate(selectedDocketDetail)}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 cursor-pointer shadow-xs"
                 >
@@ -2712,6 +2844,41 @@ This document serves as the official client acknowledgment copy generated by Wak
           setActiveCertificateData(null);
         }}
         data={activeCertificateData}
+      />
+
+      {/* =========================================================================
+          PRIORITY 4: REAL-TIME IN-DOCKET QUERY RESOLUTION & DOCUMENT RE-UPLOAD LOOP
+      ========================================================================= */}
+      <InDocketQueryThreadModal
+        isOpen={queryModalOpen}
+        onClose={() => {
+          setQueryModalOpen(false);
+          setQueryModalDocket(null);
+        }}
+        viewerMode="client"
+        docket={queryModalDocket}
+        onQueriesUpdated={(updatedQueries, newDocs) => {
+          if (!queryModalDocket) return;
+          const updatedDockets = activeDockets.map((d) => {
+            if (d.id === queryModalDocket.id) {
+              const docs = newDocs && newDocs.length > 0 ? [...d.documents, ...newDocs] : d.documents;
+              return { ...d, queries: updatedQueries, documents: docs };
+            }
+            return d;
+          });
+          setActiveDockets(updatedDockets);
+          if (queryModalDocket) {
+            setQueryModalDocket((prev: any) =>
+              prev
+                ? {
+                    ...prev,
+                    queries: updatedQueries,
+                    documents: newDocs && newDocs.length > 0 ? [...prev.documents, ...newDocs] : prev.documents,
+                  }
+                : null
+            );
+          }
+        }}
       />
     </div>
   );

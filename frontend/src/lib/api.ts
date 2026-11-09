@@ -389,6 +389,30 @@ export const citizenApi = {
     return await res.json();
   },
 
+  async addMatterQuery(token: string, matterId: string, queryData: any) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters/${encodeURIComponent(matterId)}/queries`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(queryData),
+    });
+    return await res.json();
+  },
+
+  async resolveMatterQuery(token: string, matterId: string, queryId: string, responseData: any) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters/${encodeURIComponent(matterId)}/queries/${encodeURIComponent(queryId)}/resolve`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(responseData),
+    });
+    return await res.json();
+  },
+
   // 4. Discover Advocates Directory
   async getAdvocates(params?: { specialization?: string; court?: string; search?: string }) {
     const query = new URLSearchParams(params as any).toString();

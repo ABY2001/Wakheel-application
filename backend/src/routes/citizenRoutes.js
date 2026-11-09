@@ -15,6 +15,8 @@ import {
   createMatter,
   updateMatter,
   addMatterTimelineMilestone,
+  addMatterQuery,
+  resolveMatterQuery,
   getAdvocatesDirectory,
   bookConsultation,
   getConsultations,
@@ -85,6 +87,8 @@ router.route("/grievances/:id/match").post(protect, matchAdvocateForGrievance);
 // 3. Matters & Case Tracking
 router.route("/matters").get(protect, getMatters).post(protect, createMatter);
 router.route("/matters/:id").put(protect, updateMatter);
+router.route("/matters/:id/queries").post(protect, addMatterQuery);
+router.route("/matters/:id/queries/:queryId/resolve").put(protect, resolveMatterQuery);
 router.route("/matters/track/:cnr").get(protect, trackCaseByCnr);
 router.route("/matters/track").post(protect, trackCaseByCnr);
 router.route("/matters/detail/:id").get(protect, getMatterById);

@@ -1719,6 +1719,82 @@ export const devStore = {
     return newMatter;
   },
 
+  addMatterQuery(matterId, queryData) {
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const index = matters.findIndex(
+      (m) => m._id === matterId || (m.caseNumber && m.caseNumber.toLowerCase() === matterId.toLowerCase())
+    );
+    if (index === -1) return null;
+
+    if (!matters[index].queries) {
+      matters[index].queries = [];
+    }
+
+    const newQuery = {
+      id: "qry_" + Date.now().toString(),
+      type: queryData.type || "CLARIFICATION",
+      title: queryData.title,
+      description: queryData.description || "",
+      requestedDocumentName: queryData.requestedDocumentName || null,
+      status: queryData.status || "OPEN",
+      raisedBy: {
+        name: queryData.raisedBy?.name || "Practicing Professional",
+        role: queryData.raisedBy?.role || "Engagement Lead",
+        date: queryData.raisedBy?.date || new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    matters[index].queries.unshift(newQuery);
+    matters[index].updatedAt = new Date().toISOString();
+    writeFile("dev_matters.json", matters);
+    return { matter: matters[index], query: newQuery };
+  },
+
+  resolveMatterQuery(matterId, queryId, responseData) {
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const index = matters.findIndex(
+      (m) => m._id === matterId || (m.caseNumber && m.caseNumber.toLowerCase() === matterId.toLowerCase())
+    );
+    if (index === -1) return null;
+
+    if (!matters[index].queries) matters[index].queries = [];
+    const qIndex = matters[index].queries.findIndex(
+      (q) => q.id === queryId || q._id === queryId
+    );
+    if (qIndex === -1) return null;
+
+    const currentQ = matters[index].queries[qIndex];
+    currentQ.status = responseData.status || "RESOLVED";
+    currentQ.clientResponse = {
+      notes: responseData.notes || "",
+      submittedAt: new Date().toISOString(),
+      attachments: responseData.attachments || [],
+    };
+    currentQ.resolvedAt = new Date().toISOString();
+    currentQ.resolutionNotes = responseData.resolutionNotes || responseData.notes || "";
+    currentQ.updatedAt = new Date().toISOString();
+
+    if (responseData.attachments && Array.isArray(responseData.attachments) && responseData.attachments.length > 0) {
+      if (!matters[index].documents) matters[index].documents = [];
+      for (const att of responseData.attachments) {
+        matters[index].documents.push({
+          name: att.name,
+          size: att.size || "1.0 MB",
+          hash: att.hash || "sha256:verified_reupload",
+          uploadedAt: new Date().toISOString(),
+          source: "query_reupload",
+          queryId: queryId,
+        });
+      }
+    }
+
+    matters[index].updatedAt = new Date().toISOString();
+    writeFile("dev_matters.json", matters);
+    return { matter: matters[index], query: currentQ };
+  },
+
   // --- Consultations ---
   getConsultations(userId) {
     const list = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);

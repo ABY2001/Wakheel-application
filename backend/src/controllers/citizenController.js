@@ -680,6 +680,15 @@ const normalizeMatterForClient = (m) => {
     timeline,
     totalFeesBilled: doc.totalFeesBilled || 0,
     feesPaid: doc.feesPaid || 0,
+    stageIndex: typeof doc.stageIndex === "number" ? doc.stageIndex : undefined,
+    stages: doc.stages || undefined,
+    documents: doc.documents || undefined,
+    queries: doc.queries || undefined,
+    udinOrSrn: doc.udinOrSrn || undefined,
+    feePaid: doc.feePaid || undefined,
+    partnerNotes: doc.partnerNotes || undefined,
+    clientPanOrCin: doc.clientPanOrCin || undefined,
+    category: doc.category || undefined,
   };
 };
 
@@ -1061,6 +1070,161 @@ export const updateMatter = async (req, res) => {
     });
   } catch (error) {
     console.error("updateMatter error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Add query / requisition to matter docket
+// @route   POST /api/citizen/matters/:id/queries
+// @access  Private
+export const addMatterQuery = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const queryData = req.body;
+
+    if (!queryData.title) {
+      return res.status(400).json({ success: false, message: "Query title is required" });
+    }
+
+    if (shouldUseDevStore()) {
+      const result = devStore.addMatterQuery(id, queryData);
+      if (!result) {
+        return res.status(404).json({ success: false, message: "Matter not found" });
+      }
+      return res.json({
+        success: true,
+        message: "Query raised successfully on docket",
+        matter: normalizeMatterForClient(result.matter),
+        query: result.query,
+        mode: "dummy_data",
+      });
+    }
+
+    let matter = null;
+    try {
+      matter = await Matter.findById(id);
+    } catch {
+      // not a valid ObjectId
+    }
+    if (!matter) {
+      matter = await Matter.findOne({
+        $or: [{ caseNumber: id }, { cnrNumber: id }, { _id: id }],
+      });
+    }
+    if (!matter) {
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    if (!matter.queries) matter.queries = [];
+    const newQuery = {
+      id: "qry_" + Date.now().toString(),
+      type: queryData.type || "CLARIFICATION",
+      title: queryData.title,
+      description: queryData.description || "",
+      requestedDocumentName: queryData.requestedDocumentName || null,
+      status: queryData.status || "OPEN",
+      raisedBy: {
+        name: queryData.raisedBy?.name || "Practicing Professional",
+        role: queryData.raisedBy?.role || "Engagement Lead",
+        date: queryData.raisedBy?.date || new Date().toISOString(),
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    matter.queries.unshift(newQuery);
+    matter.updatedAt = new Date();
+    await matter.save();
+
+    res.json({
+      success: true,
+      message: "Query raised successfully on docket",
+      matter: normalizeMatterForClient(matter),
+      query: newQuery,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("addMatterQuery error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Resolve or respond to query on matter docket (with re-uploaded files)
+// @route   PUT /api/citizen/matters/:id/queries/:queryId/resolve
+// @access  Private
+export const resolveMatterQuery = async (req, res) => {
+  try {
+    const { id, queryId } = req.params;
+    const responseData = req.body;
+
+    if (shouldUseDevStore()) {
+      const result = devStore.resolveMatterQuery(id, queryId, responseData);
+      if (!result) {
+        return res.status(404).json({ success: false, message: "Matter or query not found" });
+      }
+      return res.json({
+        success: true,
+        message: "Query response submitted and documents re-uploaded",
+        matter: normalizeMatterForClient(result.matter),
+        query: result.query,
+        mode: "dummy_data",
+      });
+    }
+
+    let matter = null;
+    try {
+      matter = await Matter.findById(id);
+    } catch {}
+    if (!matter) {
+      matter = await Matter.findOne({
+        $or: [{ caseNumber: id }, { cnrNumber: id }, { _id: id }],
+      });
+    }
+    if (!matter) {
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    if (!matter.queries) matter.queries = [];
+    const qIndex = matter.queries.findIndex((q) => q.id === queryId || q._id?.toString() === queryId);
+    if (qIndex === -1) {
+      return res.status(404).json({ success: false, message: "Query not found on docket" });
+    }
+
+    matter.queries[qIndex].status = responseData.status || "RESOLVED";
+    matter.queries[qIndex].clientResponse = {
+      notes: responseData.notes || "",
+      submittedAt: new Date().toISOString(),
+      attachments: responseData.attachments || [],
+    };
+    matter.queries[qIndex].resolvedAt = new Date().toISOString();
+    matter.queries[qIndex].resolutionNotes = responseData.resolutionNotes || responseData.notes || "";
+    matter.queries[qIndex].updatedAt = new Date();
+
+    if (responseData.attachments && Array.isArray(responseData.attachments) && responseData.attachments.length > 0) {
+      if (!matter.documents) matter.documents = [];
+      for (const att of responseData.attachments) {
+        matter.documents.push({
+          name: att.name,
+          size: att.size || "1.0 MB",
+          hash: att.hash || "sha256:verified_reupload",
+          uploadedAt: new Date(),
+          source: "query_reupload",
+          queryId: queryId,
+        });
+      }
+    }
+
+    matter.updatedAt = new Date();
+    await matter.save();
+
+    res.json({
+      success: true,
+      message: "Query response submitted and documents re-uploaded",
+      matter: normalizeMatterForClient(matter),
+      query: matter.queries[qIndex],
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("resolveMatterQuery error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

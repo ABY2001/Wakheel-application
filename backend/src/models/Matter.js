@@ -89,6 +89,7 @@ const matterSchema = new mongoose.Schema(
     stages: [{ type: mongoose.Schema.Types.Mixed }],
     documents: [{ type: mongoose.Schema.Types.Mixed }],
     queries: [{ type: mongoose.Schema.Types.Mixed }],
+    clientAuthorization: { type: mongoose.Schema.Types.Mixed },
     udinOrSrn: { type: String },
     partnerNotes: { type: String },
     clientPanOrCin: { type: String },

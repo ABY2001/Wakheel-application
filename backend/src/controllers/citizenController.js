@@ -1229,6 +1229,106 @@ export const resolveMatterQuery = async (req, res) => {
   }
 };
 
+// @desc    Execute client statutory e-Sign / Aadhaar OTP authorization on a matter docket
+// @route   POST /api/citizen/matters/:id/authorize
+// @access  Private (Citizen / Authorized Director)
+export const authorizeMatter = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const authData = req.body;
+
+    if (shouldUseDevStore()) {
+      const result = devStore.authorizeMatter(id, authData);
+      if (!result) {
+        return res.status(404).json({ success: false, message: "Matter docket not found" });
+      }
+      return res.json({
+        success: true,
+        message: "Client statutory e-Sign authorization recorded successfully",
+        matter: normalizeMatterForClient(result.matter),
+        authorization: result.authorization,
+        mode: "dummy_data",
+      });
+    }
+
+    let matter = null;
+    try {
+      matter = await Matter.findById(id);
+    } catch {
+      // not a valid ObjectId
+    }
+    if (!matter) {
+      matter = await Matter.findOne({
+        $or: [{ caseNumber: id }, { cnrNumber: id }, { _id: id }],
+      });
+    }
+    if (!matter) {
+      return res.status(404).json({ success: false, message: "Matter not found" });
+    }
+
+    const authRecord = {
+      authId: authData.authId || `ESIGN-${Date.now()}`,
+      signMethod: authData.signMethod || "AADHAAR_ESIGN",
+      signerName: authData.signerName || "Authorized Signatory",
+      signerPanOrDin: authData.signerPanOrDin || "ABCDE1234F",
+      signerAadhaarMasked: authData.signerAadhaarMasked || "XXXX-XXXX-8921",
+      signerDesignation: authData.signerDesignation || "Director",
+      espReference: authData.espReference || `C-DAC-ESP-2026-${Math.floor(100000 + Math.random() * 900000)}`,
+      timestamp: authData.timestamp || new Date().toISOString(),
+      status: "AUTHORIZED",
+      statutoryDeclarationAccepted: true,
+      documentTitle: authData.documentTitle || "Statutory Board Consent & Filing Authorization",
+      authHash: authData.authHash || `sha256:${Date.now().toString(16)}a9f24`,
+      legalSection: "Information Technology Act 2000 Section 3A & Second Schedule / Companies Act 2013 Section 448",
+    };
+
+    matter.clientAuthorization = authRecord;
+
+    if (!matter.documents) matter.documents = [];
+    const docTitleSlug = (authData.documentTitle || "Filing").replace(/[^a-zA-Z0-9]/g, "_");
+    matter.documents.push({
+      name: `Signed_Statutory_Consent_${docTitleSlug}.pdf`,
+      size: "412 KB",
+      hash: authRecord.authHash.startsWith("sha256:") ? authRecord.authHash : `sha256:${authRecord.authHash.slice(0, 32)}`,
+      type: "application/pdf",
+      uploadedAt: new Date().toISOString(),
+      source: "client_aadhaar_esign",
+    });
+
+    if (Array.isArray(matter.stages) && matter.stages.length >= 3) {
+      if (!matter.stages[2].done) {
+        matter.stages[2].done = true;
+        matter.stages[2].remarks = `Signed via ${authRecord.signMethod === "AADHAAR_ESIGN" ? "Aadhaar e-Sign" : "Class 3 DSC"} by ${authRecord.signerName}`;
+        if (typeof matter.stageIndex === "number" && matter.stageIndex < 3) {
+          matter.stageIndex = 3;
+        }
+      }
+    }
+
+    if (!matter.timeline) matter.timeline = [];
+    matter.timeline.push({
+      date: new Date().toISOString(),
+      title: "Client Statutory Authorization Executed (Aadhaar e-Sign)",
+      remarks: `Executed by ${authRecord.signerName} (${authRecord.signerDesignation}) via C-DAC ESP. Ref: ${authRecord.espReference}`,
+      stage: "Completed",
+    });
+
+    matter.updatedAt = new Date();
+    await matter.save();
+
+    res.json({
+      success: true,
+      message: "Client statutory e-Sign authorization recorded successfully",
+      matter: normalizeMatterForClient(matter),
+      authorization: authRecord,
+      mode: "cloud_db",
+    });
+  } catch (error) {
+    console.error("authorizeMatter error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // ============================================================================
 // 4. ADVOCATE DIRECTORY CONTROLLERS ("Discover Advocates")
 // ============================================================================

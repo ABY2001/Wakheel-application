@@ -413,6 +413,18 @@ export const citizenApi = {
     return await res.json();
   },
 
+  async authorizeMatter(token: string, matterId: string, authData: any) {
+    const res = await fetch(`${API_BASE_URL}/citizen/matters/${encodeURIComponent(matterId)}/authorize`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(authData),
+    });
+    return await res.json();
+  },
+
   // 4. Discover Advocates Directory
   async getAdvocates(params?: { specialization?: string; court?: string; search?: string }) {
     const query = new URLSearchParams(params as any).toString();

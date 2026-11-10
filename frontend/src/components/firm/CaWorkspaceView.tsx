@@ -149,14 +149,12 @@ interface CaWorkspaceViewProps {
   firmName?: string;
   caName?: string;
   initialTab?: "income-tax" | "gst" | "tax-audit" | "financial-recon";
-  onSwitchToCs?: () => void;
 }
 
 export function CaWorkspaceView({
   firmName = "Apex Tax Advisors & Chartered Accountants LLP",
   caName = "CA Ramanathan Iyer & Partners",
   initialTab = "income-tax",
-  onSwitchToCs,
 }: CaWorkspaceViewProps) {
   const [activeTab, setActiveTab] = useState<"income-tax" | "gst" | "tax-audit" | "financial-recon">(initialTab);
   const [loading, setLoading] = useState(false);
@@ -347,15 +345,6 @@ export function CaWorkspaceView({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {onSwitchToCs && (
-              <button
-                onClick={onSwitchToCs}
-                className="px-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-900 dark:text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs"
-              >
-                <Building2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
-                <span>Switch to CS Practice (MCA/ROC)</span>
-              </button>
-            )}
             <button
               onClick={() => {
                 if (activeTab === "income-tax") setNewItrModalOpen(true);

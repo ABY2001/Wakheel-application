@@ -263,13 +263,11 @@ const DEFAULT_MANDATES: ClientMandateItem[] = [
 interface ClientMandatesManagerViewProps {
   firmName?: string;
   practitionerName?: string;
-  practiceMode?: "cs" | "ca";
 }
 
 export function ClientMandatesManagerView({
   firmName = "Apex Law & Corporate Partners LLP",
   practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
-  practiceMode = "cs",
 }: ClientMandatesManagerViewProps) {
   const [mandates, setMandates] = useState<ClientMandateItem[]>(DEFAULT_MANDATES);
   const [loading, setLoading] = useState<boolean>(false);

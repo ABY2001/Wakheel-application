@@ -71,26 +71,16 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [practiceMode, setPracticeModeState] = useState<"cs" | "ca">("cs");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [newFilingModalOpen, setNewFilingModalOpen] = useState(false);
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const setPracticeMode = (mode: "cs" | "ca") => {
-    setPracticeModeState(mode);
-    try {
-      localStorage.setItem("wakheel_practice_mode", mode);
-    } catch {
-      // ignore
-    }
-  };
-
   // Active Firm State
   const [firm, setFirm] = useState<any>({
     name: "Apex Law & Corporate Partners LLP",
-    founderName: "CS Rajesh Sharma & Adv. Vikram Mehra",
+    founderName: "CS Rajesh Sharma & CA Ramanathan Iyer",
     headquarters: "New Delhi, India",
     registrationCin: "LLPIN-AAR-4192 / D/1942/2012",
     industry: "Corporate Law, Secretarial Governance & Litigation",
@@ -104,24 +94,20 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
       if (stored) {
         setFirm(JSON.parse(stored));
       }
-      const savedMode = localStorage.getItem("wakheel_practice_mode");
-      if (savedMode === "ca" || savedMode === "cs") {
-        setPracticeModeState(savedMode);
-      }
     } catch {
       // ignore
     }
   }, []);
 
-  // Menu Categories for Company Secretary & Corporate Firm
+  // Unified Menu Sections: Clearly partitioned by statutory entity & domain
   const menuSections = [
     {
-      category: "CORE COMPLIANCE",
+      category: "CORE COMPLIANCE & OPERATIONS",
       items: [
         {
           id: "dashboard",
           label: "Dashboard",
-          subtitle: "Corporate compliance & executive board",
+          subtitle: "Corporate compliance & executive overview",
           icon: LayoutDashboard,
         },
         {
@@ -131,16 +117,22 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           icon: Inbox,
         },
         {
-          id: "roc-filings",
-          label: "ROC & MCA Filings",
-          subtitle: "AOC-4, MGT-7, DIR-3 KYC & e-forms",
-          icon: FileCheck,
+          id: "compliance-calendar",
+          label: "Compliance & Tax Calendar",
+          subtitle: "Statutory deadlines, MCA & ITR timeline",
+          icon: Calendar,
         },
         {
-          id: "compliance-calendar",
-          label: "Compliance Calendar",
-          subtitle: "Statutory deadlines & ROC timeline",
-          icon: Calendar,
+          id: "dsc-challans",
+          label: "Class 3 DSC & Challans",
+          subtitle: "USB Crypto Token & Statutory Payments",
+          icon: KeyRound,
+        },
+        {
+          id: "corporate-entities",
+          label: "Managed Entities",
+          subtitle: "Client companies & LLP register",
+          icon: Building2,
         },
         {
           id: "my-hub",
@@ -151,26 +143,20 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
         {
           id: "taskmite",
           label: "Task Mite & Notes",
-          subtitle: "Secretarial notes & task delegation",
+          subtitle: "Checklists & task delegation",
           icon: CheckCircle2,
-        },
-        {
-          id: "corporate-entities",
-          label: "Managed Entities",
-          subtitle: "Client companies & LLP register",
-          icon: Building2,
-        },
-        {
-          id: "dsc-challans",
-          label: "Class 3 DSC & Challans",
-          subtitle: "USB Crypto Token & ROC Payments",
-          icon: KeyRound,
         },
       ],
     },
     {
-      category: "SECRETARIAL & GOVERNANCE",
+      category: "COMPANY SECRETARY (ICSI • MCA21 & ROC)",
       items: [
+        {
+          id: "roc-filings",
+          label: "ROC & MCA Filings",
+          subtitle: "AOC-4, MGT-7, DIR-3 KYC & e-forms",
+          icon: FileCheck,
+        },
         {
           id: "board-meetings",
           label: "Board & AGMs",
@@ -195,6 +181,40 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           subtitle: "Members, directors & charges (Sec 88)",
           icon: Layers,
         },
+      ],
+    },
+    {
+      category: "CHARTERED ACCOUNTANT (ICAI • TAX & AUDIT)",
+      items: [
+        {
+          id: "ca-income-tax",
+          label: "Income Tax & ITR",
+          subtitle: "ITR 1-7, AIS/26AS & Advance Tax",
+          icon: Calculator,
+        },
+        {
+          id: "ca-gst",
+          label: "GST Compliance",
+          subtitle: "GSTR-1, 3B, 9 & 2B Matcher",
+          icon: Percent,
+        },
+        {
+          id: "ca-tax-audit",
+          label: "Tax Audit & Form 3CD",
+          subtitle: "Sec 44AB 44 Clauses & 1-Click UDIN",
+          icon: ShieldCheck,
+        },
+        {
+          id: "ca-financial-recon",
+          label: "Schedule III & BS Recon",
+          subtitle: "Dual Depr (Rule 5 vs Sch II) & Ind AS 12",
+          icon: Layers,
+        },
+      ],
+    },
+    {
+      category: "JOINT ATTESTATION & GOVERNANCE",
+      items: [
         {
           id: "board-dossier",
           label: "Board & Audit Dossier",
@@ -205,28 +225,6 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           id: "due-diligence",
           label: "M&A Due Diligence",
           subtitle: "100-Point Audit & Sec 441",
-          icon: Scale,
-        },
-      ],
-    },
-    {
-      category: "INTELLIGENT STATUTORY ADVISORY",
-      items: [
-        {
-          id: "ai-copilot",
-          label: "CS AI Copilot",
-          subtitle: "Sec 186 Drafter, Secretarial AI & MCA",
-          icon: Sparkles,
-        },
-      ],
-    },
-    {
-      category: "LEGAL & ADVOCACY GATEWAY",
-      items: [
-        {
-          id: "retainer-advocates",
-          label: "Advocate Network",
-          subtitle: "Litigation counsel & court appearance",
           icon: Scale,
         },
         {
@@ -240,6 +238,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           label: "MDP Governance & Locks",
           subtitle: "Role Partitioning & Code Locks",
           icon: ShieldAlert,
+        },
+      ],
+    },
+    {
+      category: "INTELLIGENT ADVISORY & ADVOCACY",
+      items: [
+        {
+          id: "ai-copilot",
+          label: "Statutory AI Copilot",
+          subtitle: "Sec 186, Clause 43B(h) & GST Replier",
+          icon: Sparkles,
+        },
+        {
+          id: "retainer-advocates",
+          label: "Advocate Network",
+          subtitle: "High Court & NCLT litigation counsel",
+          icon: Scale,
         },
         {
           id: "contracts",
@@ -256,148 +271,14 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
         {
           id: "billing",
           label: "Client Invoices",
-          subtitle: "Secretarial retainers & MCA challans",
+          subtitle: "Secretarial retainers & tax fee notes",
           icon: Receipt,
         },
       ],
     },
   ];
 
-  // Menu Categories for Chartered Accountant Firm
-  const caMenuSections = [
-    {
-      category: "TAXATION & ITR FILING",
-      items: [
-        {
-          id: "client-mandates",
-          label: "Inbound Client Mandates",
-          subtitle: "Client dockets, milestones & UDIN/SRN",
-          icon: Inbox,
-        },
-        {
-          id: "ca-income-tax",
-          label: "Income Tax & ITR",
-          subtitle: "ITR 1-7, AIS/26AS & Advance Tax",
-          icon: Calculator,
-        },
-        {
-          id: "ca-gst",
-          label: "GST Compliance",
-          subtitle: "GSTR-1, 3B, 9 & 2B Matcher",
-          icon: Percent,
-        },
-        {
-          id: "compliance-calendar",
-          label: "Tax Calendar",
-          subtitle: "Statutory deadlines & tax timeline",
-          icon: Calendar,
-        },
-        {
-          id: "my-hub",
-          label: "My Hub",
-          subtitle: "Tax team command center",
-          icon: Users,
-        },
-        {
-          id: "taskmite",
-          label: "Audit Notes & Mite",
-          subtitle: "Audit checklists & workpapers",
-          icon: CheckCircle2,
-        },
-        {
-          id: "dsc-challans",
-          label: "Class 3 DSC & Challans",
-          subtitle: "USB Crypto Token & Tax Payments",
-          icon: KeyRound,
-        },
-      ],
-    },
-    {
-      category: "AUDIT & ATTESTATION",
-      items: [
-        {
-          id: "ca-tax-audit",
-          label: "Tax Audit & 3CD",
-          subtitle: "Sec 44AB 44 Clauses & 1-Click UDIN",
-          icon: ShieldCheck,
-        },
-        {
-          id: "ca-financial-recon",
-          label: "Schedule III & BS Recon",
-          subtitle: "Dual Depr (Rule 5 vs Sch II) & Ind AS 12",
-          icon: Layers,
-        },
-        {
-          id: "board-dossier",
-          label: "Board & Audit Dossier",
-          subtitle: "Section 177 Pack & Joint Sign-Off",
-          icon: Award,
-        },
-        {
-          id: "due-diligence",
-          label: "M&A Due Diligence",
-          subtitle: "100-Point Audit & Sec 441",
-          icon: Scale,
-        },
-      ],
-    },
-    {
-      category: "INTELLIGENT STATUTORY ADVISORY",
-      items: [
-        {
-          id: "ai-copilot",
-          label: "CA AI Copilot",
-          subtitle: "Clause 43B(h) MSME & GST Replier",
-          icon: Sparkles,
-        },
-      ],
-    },
-    {
-      category: "LEGAL & ADVOCACY GATEWAY",
-      items: [
-        {
-          id: "corporate-entities",
-          label: "Assessee Clients",
-          subtitle: "Corporate entities & LLP portfolio",
-          icon: Building2,
-        },
-        {
-          id: "retainer-advocates",
-          label: "Advocate Network",
-          subtitle: "High Court & ITAT litigation counsel",
-          icon: Scale,
-        },
-        {
-          id: "notice-mailroom",
-          label: "SCN & Notice Mailroom",
-          subtitle: "Limitation Clocks & SCN Rebuttal",
-          icon: Mail,
-        },
-        {
-          id: "mdp-governance",
-          label: "MDP Governance & Locks",
-          subtitle: "Role Partitioning & Code Locks",
-          icon: ShieldAlert,
-        },
-        {
-          id: "vault",
-          label: "Attestation Vault",
-          subtitle: "Signed 3CD packs & balance sheets",
-          icon: FolderLock,
-        },
-        {
-          id: "billing",
-          label: "Client Invoices",
-          subtitle: "Tax retainers & audit fee notes",
-          icon: Receipt,
-        },
-      ],
-    },
-  ];
-
-  const activeSections = practiceMode === "ca" ? caMenuSections : menuSections;
-
-  const filteredSections = activeSections
+  const filteredSections = menuSections
     .map((section) => ({
       ...section,
       items: section.items.filter(
@@ -449,62 +330,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             </button>
           </div>
 
-          {/* Practice Mode Switcher Pill */}
+          {/* Statutory Accreditation Status */}
           {sidebarOpen ? (
-            <div className="flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 mb-3">
-              <button
-                onClick={() => {
-                  setPracticeMode("cs");
-                  if (activeTab.startsWith("ca-")) setActiveTab("dashboard");
-                }}
-                className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                  practiceMode === "cs"
-                    ? "bg-black text-white dark:bg-white dark:text-black shadow-xs"
-                    : "text-zinc-500 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                CS Practice
-              </button>
-              <button
-                onClick={() => {
-                  setPracticeMode("ca");
-                  if (
-                    activeTab === "dashboard" ||
-                    activeTab === "roc-filings" ||
-                    activeTab === "board-meetings" ||
-                    activeTab === "resolutions" ||
-                    activeTab === "secretarial-audit" ||
-                    activeTab === "statutory-registers"
-                  ) {
-                    setActiveTab("ca-income-tax");
-                  }
-                }}
-                className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                  practiceMode === "ca"
-                    ? "bg-red-700 text-white shadow-xs"
-                    : "text-zinc-500 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                CA Practice
-              </button>
+            <div className="mb-3 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono font-bold text-zinc-600 dark:text-zinc-400">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="tracking-tight">ICSI &amp; ICAI ACCREDITED</span>
+              </span>
+              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">MDP OS</span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1 mb-3">
-              <button
-                onClick={() => {
-                  setPracticeMode(practiceMode === "cs" ? "ca" : "cs");
-                  if (practiceMode === "cs") setActiveTab("ca-income-tax");
-                  else setActiveTab("dashboard");
-                }}
-                className={`w-10 h-7 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center justify-center cursor-pointer ${
-                  practiceMode === "ca"
-                    ? "bg-red-700 text-white"
-                    : "bg-black text-white dark:bg-white dark:text-black"
-                }`}
-                title={`Current: ${practiceMode.toUpperCase()} Practice. Click to toggle.`}
+              <div
+                className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[9px] font-mono font-bold flex items-center justify-center text-zinc-600 dark:text-zinc-300"
+                title="ICSI &amp; ICAI Accredited Multi-Disciplinary Practice"
               >
-                {practiceMode.toUpperCase()}
-              </button>
+                MDP
+              </div>
             </div>
           )}
 
@@ -567,20 +409,16 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
         <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
           <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 ${
-                practiceMode === "ca"
-                  ? "bg-red-700 text-white"
-                  : "bg-black text-white dark:bg-white dark:text-black"
-              }`}>
-                {practiceMode.toUpperCase()}
+              <div className="w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 bg-black text-white dark:bg-white dark:text-black">
+                MDP
               </div>
               {sidebarOpen && (
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-black dark:text-white truncate">
-                    {firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                    {firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
                   </span>
                   <span className="text-[10px] text-zinc-500 truncate">
-                    {practiceMode === "ca" ? "Chartered Accountant" : "Company Secretary"} • {firm.name}
+                    Corporate Secretarial &amp; Statutory Tax • {firm.name}
                   </span>
                 </div>
               )}
@@ -603,68 +441,33 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 Welcome back, <span className="underline decoration-1 underline-offset-4">{firm.founderName}</span>
               </h1>
 
-              {/* HIGHLY VISIBLE PRACTICE MODE SWITCHER PILL IN TOP HEADER */}
-              <div
-                className="flex items-center p-0.5 rounded-full border shadow-xs"
-                style={
-                  isDark
-                    ? { backgroundColor: "#18181b", borderColor: "#27272a" }
-                    : { backgroundColor: "#f4f4f5", borderColor: "#e4e4e7" }
-                }
-              >
-                <button
-                  onClick={() => {
-                    setPracticeMode("cs");
-                    if (activeTab.startsWith("ca-")) setActiveTab("dashboard");
-                  }}
-                  className="px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              {/* Dual Verified Accreditation Badges for CS & CA */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold flex items-center gap-1.5"
                   style={
-                    practiceMode === "cs"
-                      ? (isDark ? { backgroundColor: "#ffffff", color: "#000000" } : { backgroundColor: "#000000", color: "#ffffff" })
-                      : { color: isDark ? "#a1a1aa" : "#52525b" }
+                    isDark
+                      ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" }
+                      : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#d4d4d8" }
                   }
-                  title="Switch to Company Secretary Practice"
+                  title="Governed under the Company Secretaries Act, 1980"
                 >
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>CS Practice</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setPracticeMode("ca");
-                    if (
-                      activeTab === "dashboard" ||
-                      activeTab === "roc-filings" ||
-                      activeTab === "board-meetings" ||
-                      activeTab === "resolutions" ||
-                      activeTab === "secretarial-audit" ||
-                      activeTab === "statutory-registers"
-                    ) {
-                      setActiveTab("ca-income-tax");
-                    }
-                  }}
-                  className="px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span>ICSI FCS-9482</span>
+                </span>
+                <span
+                  className="px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold flex items-center gap-1.5"
                   style={
-                    practiceMode === "ca"
-                      ? { backgroundColor: "#b91c1c", color: "#ffffff" }
-                      : { color: isDark ? "#a1a1aa" : "#52525b" }
+                    isDark
+                      ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" }
+                      : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#d4d4d8" }
                   }
-                  title="Switch to Chartered Accountant Practice"
+                  title="Governed under the Chartered Accountants Act, 1949"
                 >
-                  <Calculator className="w-3.5 h-3.5" />
-                  <span>CA Practice</span>
-                </button>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span>ICAI FRN-018241N</span>
+                </span>
               </div>
-
-              <span
-                className="px-2.5 py-1 rounded-full border text-[10px] font-mono font-black"
-                style={
-                  practiceMode === "ca"
-                    ? (isDark ? { backgroundColor: "#450a0a", color: "#fecaca", borderColor: "#991b1b" } : { backgroundColor: "#fee2e2", color: "#991b1b", borderColor: "#fca5a5" })
-                    : (isDark ? { backgroundColor: "#27272a", color: "#f4f4f5", borderColor: "#3f3f46" } : { backgroundColor: "#f4f4f5", color: "#09090b", borderColor: "#d4d4d8" })
-                }
-              >
-                {practiceMode === "ca" ? "ICAI Verified • FRN-018241N" : "ICSI Verified"}
-              </span>
 
               {/* Quick Launch Inbound Client Mandates Button (Priority 1 & 2) */}
               <button
@@ -820,7 +623,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               className="px-3.5 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <PhoneCall className="w-3.5 h-3.5" />
-              <span>{practiceMode === "ca" ? "Tax Helpdesk" : "ROC Hotline"}</span>
+              <span>Statutory Hotline</span>
             </button>
 
             <button
@@ -832,23 +635,23 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-black dark:bg-white" />
             </button>
 
-            {practiceMode === "ca" ? (
-              <button
-                onClick={() => setActiveTab("ca-income-tax")}
-                className="px-4 py-2 rounded-full bg-red-700 hover:bg-red-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ New ITR / Form 3CD</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => setNewFilingModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ New MCA Filing</span>
-              </button>
-            )}
+            <button
+              onClick={() => setNewFilingModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 bg-white dark:bg-zinc-900 text-black dark:text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              title="New MCA21 e-Form Filing (AOC-4, MGT-7, DIR-3 KYC)"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ MCA Filing</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("ca-income-tax")}
+              className="px-3.5 py-1.5 rounded-full bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              title="New Income Tax Return (ITR 1-7) or Form 3CD Tax Audit"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ ITR / Form 3CD</span>
+            </button>
           </div>
         </header>
 
@@ -881,36 +684,65 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                 })}
               </div>
 
-              {/* Practice Switcher Alert Card: Switch to CA Practice */}
-              <div className="p-5 rounded-3xl bg-zinc-950 dark:bg-zinc-900 border-2 border-red-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-red-700 flex items-center justify-center font-bold text-white shrink-0 shadow-sm">
-                    CA
-                  </div>
-                  <div>
+              {/* Dual-Profession Statutory Overview: ICSI CS & ICAI CA Wings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-white">
-                        Chartered Accountant (CA) Practice Workspace
-                      </h4>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-red-600 text-white">
-                        ICAI VERIFIED
-                      </span>
+                      <Building2 className="w-4 h-4 text-black dark:text-white" />
+                      <h4 className="text-sm font-bold text-black dark:text-white">Company Secretary Practice (ICSI)</h4>
                     </div>
-                    <p className="text-xs text-zinc-300 mt-0.5">
-                      Manage Income Tax (ITR 1-7), GST Compliance (GSTR-1/3B/9), Section 44AB Form 3CD Tax Audit &amp; 1-Click UDIN generator.
-                    </p>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      MCA21 &amp; ROC
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500">
+                    AOC-4, MGT-7, DIR-3 KYC e-forms, Section 173 Board &amp; AGM minutes, Section 204 Secretarial Audit, and Section 88 Statutory Registers.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => setActiveTab("roc-filings")}
+                      className="px-3 py-1 rounded-lg text-xs font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-black dark:text-white transition-all cursor-pointer"
+                    >
+                      ROC Filings →
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("board-meetings")}
+                      className="px-3 py-1 rounded-lg text-xs font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-black dark:text-white transition-all cursor-pointer"
+                    >
+                      Board Meetings →
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setPracticeMode("ca");
-                    setActiveTab("ca-income-tax");
-                  }}
-                  className="px-5 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider transition-all shrink-0 cursor-pointer shadow-md flex items-center gap-2"
-                >
-                  <Calculator className="w-3.5 h-3.5" />
-                  <span>Switch to CA Mode →</span>
-                </button>
+
+                <div className="p-5 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-black dark:text-white" />
+                      <h4 className="text-sm font-bold text-black dark:text-white">Chartered Accountant Practice (ICAI)</h4>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                      TAX &amp; AUDIT
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500">
+                    Income Tax (ITR 1-7), GST Compliance (GSTR-1/3B/9), Section 44AB Form 3CD 44-clause Tax Audit &amp; dual depreciation reconciliation.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => setActiveTab("ca-income-tax")}
+                      className="px-3 py-1 rounded-lg text-xs font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-black dark:text-white transition-all cursor-pointer"
+                    >
+                      Income Tax &amp; ITR →
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("ca-tax-audit")}
+                      className="px-3 py-1 rounded-lg text-xs font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-black dark:text-white transition-all cursor-pointer"
+                    >
+                      Form 3CD Audit →
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Action Banner: Connect to Advocates */}
@@ -1078,7 +910,6 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               <ClientMandatesManagerView
                 firmName={firm.name}
                 practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
-                practiceMode={practiceMode}
               />
             </div>
           )}
@@ -1171,7 +1002,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <CaWorkspaceView
                 firmName={firm.name}
-                caName={firm.founderName || "CA Ramanathan Iyer"}
+                caName="CA Ramanathan Iyer &amp; Partners"
                 initialTab={
                   activeTab === "ca-gst"
                     ? "gst"
@@ -1181,10 +1012,6 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                     ? "financial-recon"
                     : "income-tax"
                 }
-                onSwitchToCs={() => {
-                  setPracticeMode("cs");
-                  setActiveTab("dashboard");
-                }}
               />
             </div>
           )}
@@ -1194,7 +1021,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <SpecializedCsCaCopilotView
                 firmName={firm.name}
-                practitionerName={firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
                 defaultClient={{
                   name: "CyberCorp Technologies Pvt Ltd",
                   cin: "U72200DL2022PTC394812",
@@ -1211,7 +1038,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <ChallanDscWorkspaceView
                 firmName={firm.name}
-                practitionerName={firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
                 defaultClient={{
                   name: "CyberCorp Technologies Pvt Ltd",
                   cin: "U72200DL2022PTC394812",
@@ -1227,7 +1054,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <ExecutiveBoardDossierView
                 firmName={firm.name}
-                practitionerName={firm.founderName || (practiceMode === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma")}
+                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
                 defaultClient={{
                   name: "CyberCorp Technologies Pvt Ltd",
                   cin: "U72200DL2022PTC394812",

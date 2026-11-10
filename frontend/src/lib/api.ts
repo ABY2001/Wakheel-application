@@ -14,11 +14,30 @@ export interface AuthResponse {
     email: string;
     role: UserRole;
     accountType?: AccountCategory;
+    barCouncilId?: string;
+    firmName?: string;
+    teamSize?: string;
+    firmRegistration?: string;
+    icsiNumber?: string;
+    icaiNumber?: string;
+    phone?: string;
     verifyMethod?: string;
     isVerified?: boolean;
     firm?: any;
   };
 }
+
+// Utility to distinguish genuine network offline errors from active server HTTP rejections (400, 401, 403)
+export const isNetworkOfflineError = (err: any): boolean => {
+  if (!err) return false;
+  return (
+    err.name === "TypeError" ||
+    err.message?.includes("Failed to fetch") ||
+    err.message?.includes("NetworkError") ||
+    err.message?.includes("fetch failed") ||
+    err.message?.includes("network")
+  );
+};
 
 export const authApi = {
   // Register a new citizen or professional (advocate, law firm, CS, CA)
@@ -52,6 +71,9 @@ export const authApi = {
       }
       return result;
     } catch (err: any) {
+      if (!isNetworkOfflineError(err)) {
+        throw err;
+      }
       console.warn("authApi.register fallback to offline/demo provisioning:", err.message);
       return {
         success: true,
@@ -88,6 +110,9 @@ export const authApi = {
       }
       return result;
     } catch (err: any) {
+      if (!isNetworkOfflineError(err)) {
+        throw err;
+      }
       console.warn("authApi.login fallback to offline/demo auth:", err.message);
       const role = data.role || (data.email.toLowerCase().includes("adv") ? "advocate" : "client");
       const name =
@@ -127,6 +152,9 @@ export const authApi = {
       }
       return result;
     } catch (err: any) {
+      if (!isNetworkOfflineError(err)) {
+        throw err;
+      }
       console.warn("authApi.getMe fallback to offline session:", err.message);
       const isAdv = token.includes("adv");
       return {
@@ -161,6 +189,9 @@ export const authApi = {
       }
       return result;
     } catch (err: any) {
+      if (!isNetworkOfflineError(err)) {
+        throw err;
+      }
       console.warn("sendWhatsAppOtp fallback to dev mock OTP:", err.message);
       return {
         success: true,
@@ -189,6 +220,9 @@ export const authApi = {
       }
       return result;
     } catch (err: any) {
+      if (!isNetworkOfflineError(err)) {
+        throw err;
+      }
       console.warn("verifyWhatsAppOtp fallback to dev mock verification:", err.message);
       if (data.otp === "123456" || data.otp.length === 6) {
         const cleanDigits = data.phone.replace(/[^0-9]/g, "");

@@ -30,10 +30,12 @@
     "_id": "dev_1791778298749",
     "fullName": "Adv. Sarah Jenkins",
     "email": "advocate@wakheel.com",
-    "password": "$2a$10$iGwdCTmPlGbNBAgygFuqbubwdXc8ZstCZYiYbqORsI3r4T5srEkwC",
+    "password": "$2a$10$I/oizILeNvW77aLfPz1KIeyL7MJNfsx8ydXxVpSzvHSVhKlRMd0mO",
     "role": "advocate",
+    "accountType": "independent_advocate",
+    "barCouncilId": "K/001429/2012",
     "verifyMethod": "email",
-    "isVerified": false,
+    "isVerified": true,
     "createdAt": "2026-10-12T04:11:38.749Z"
   },
   {
@@ -137,12 +139,39 @@
   },
   {
     "_id": "dev_1792990203118",
-    "fullName": "citizen",
+    "fullName": "Gopakumar Nambiar",
     "email": "citizen@inworth.law",
-    "password": "$2a$10$7Cn1IHWWmiA3Os1Otzv7XekOx51YD7iPUk2WpcLBobmMCqFp0V8NS",
+    "password": "$2a$10$I/oizILeNvW77aLfPz1KIeyL7MJNfsx8ydXxVpSzvHSVhKlRMd0mO",
     "role": "client",
+    "accountType": "citizen",
     "verifyMethod": "email",
-    "isVerified": false,
+    "isVerified": true,
     "createdAt": "2026-10-26T04:50:03.119Z"
+  },
+  {
+    "_id": "dev_1794286057656",
+    "fullName": "CS Rajesh Sharma",
+    "email": "cs@inworth.law",
+    "password": "$2a$10$I/oizILeNvW77aLfPz1KIeyL7MJNfsx8ydXxVpSzvHSVhKlRMd0mO",
+    "role": "cs",
+    "accountType": "cs",
+    "firmName": "Apex Law & Corporate Partners LLP",
+    "icsiNumber": "FCS-9482",
+    "verifyMethod": "email",
+    "isVerified": true,
+    "createdAt": "2026-11-10T04:47:37.656Z"
+  },
+  {
+    "_id": "dev_1794286057657",
+    "fullName": "CA Ramanathan Iyer",
+    "email": "ca@inworth.law",
+    "password": "$2a$10$I/oizILeNvW77aLfPz1KIeyL7MJNfsx8ydXxVpSzvHSVhKlRMd0mO",
+    "role": "ca",
+    "accountType": "ca",
+    "firmName": "Apex Tax Advisors & Chartered Accountants LLP",
+    "icaiNumber": "FRN-018241N",
+    "verifyMethod": "email",
+    "isVerified": true,
+    "createdAt": "2026-11-10T04:47:37.657Z"
   }
 ]

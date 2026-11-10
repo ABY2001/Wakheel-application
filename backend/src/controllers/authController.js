@@ -178,7 +178,7 @@ export const loginUser = async (req, res) => {
     if (getIsMongoConnected()) {
       user = await User.findOne({ email: normalizedEmail });
       if (!user) {
-        // Auto-provision in dev so testing login with any email works seamlessly
+        // Auto-provision in dev so testing login with any new email works seamlessly
         user = await User.create({
           fullName: normalizedEmail.split("@")[0],
           email: normalizedEmail,
@@ -186,14 +186,30 @@ export const loginUser = async (req, res) => {
           role: requestedRole || "advocate",
           verifyMethod: "email",
         });
-      } else if (requestedRole && user.role !== requestedRole) {
-        user.role = requestedRole;
-        await user.save();
+      } else {
+        // Verify password using bcrypt match
+        let isMatch = false;
+        if (user.matchPassword) {
+          isMatch = await user.matchPassword(cleanPassword);
+        }
+        if (!isMatch && cleanPassword === "password123") {
+          isMatch = true; // Standard dev test password override
+        }
+        if (!isMatch) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid email or password. Please verify your credentials.",
+          });
+        }
+        if (requestedRole && user.role !== requestedRole) {
+          user.role = requestedRole;
+          await user.save();
+        }
       }
     } else {
       user = devStore.findUserByEmail(normalizedEmail);
       if (!user) {
-        // Auto-provision in devStore so testing login with any email works seamlessly
+        // Auto-provision in devStore so testing login with any new email works seamlessly
         user = await devStore.createUser({
           fullName: normalizedEmail.split("@")[0],
           email: normalizedEmail,
@@ -201,8 +217,24 @@ export const loginUser = async (req, res) => {
           role: requestedRole || "advocate",
           verifyMethod: "email",
         });
-      } else if (requestedRole && user.role !== requestedRole) {
-        user = devStore.updateUserRole(normalizedEmail, requestedRole) || user;
+      } else {
+        // Verify password using devStore bcrypt match
+        let isMatch = false;
+        if (user.password) {
+          isMatch = await devStore.matchPassword(cleanPassword, user.password);
+        }
+        if (!isMatch && cleanPassword === "password123") {
+          isMatch = true; // Standard dev test password override
+        }
+        if (!isMatch) {
+          return res.status(401).json({
+            success: false,
+            message: "Invalid email or password. Please verify your credentials.",
+          });
+        }
+        if (requestedRole && user.role !== requestedRole) {
+          user = devStore.updateUserRole(normalizedEmail, requestedRole) || user;
+        }
       }
     }
 
@@ -244,6 +276,14 @@ export const loginUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        accountType: user.accountType || (user.role === "advocate" ? "independent_advocate" : user.role === "cs" ? "cs" : user.role === "ca" ? "ca" : "citizen"),
+        barCouncilId: user.barCouncilId || "",
+        firmName: user.firmName || "",
+        teamSize: user.teamSize || "",
+        firmRegistration: user.firmRegistration || "",
+        icsiNumber: user.icsiNumber || "",
+        icaiNumber: user.icaiNumber || "",
+        phone: user.phone || "",
         verifyMethod: user.verifyMethod,
         isVerified: user.isVerified,
       },
@@ -262,9 +302,28 @@ export const loginUser = async (req, res) => {
 // @access  Private (Bearer Token Protected)
 export const getMe = async (req, res) => {
   try {
+    const u = req.user;
+    if (!u) {
+      return res.status(401).json({ success: false, message: "User not authenticated" });
+    }
     res.json({
       success: true,
-      user: req.user,
+      user: {
+        id: u._id || u.id,
+        fullName: u.fullName,
+        email: u.email,
+        role: u.role,
+        accountType: u.accountType,
+        barCouncilId: u.barCouncilId || u.barCouncilNumber || "",
+        firmName: u.firmName || "",
+        teamSize: u.teamSize || "",
+        firmRegistration: u.firmRegistration || "",
+        icsiNumber: u.icsiNumber || "",
+        icaiNumber: u.icaiNumber || "",
+        phone: u.phone || "",
+        verifyMethod: u.verifyMethod,
+        isVerified: u.isVerified,
+      },
     });
   } catch (error) {
     console.error("GetMe Error:", error);
@@ -324,10 +383,18 @@ export const verifyWhatsAppOtp = async (req, res) => {
     const cleanPhone = phone.replace(/[^0-9+]/g, "");
     const storedRecord = otpStore.get(cleanPhone);
 
+    if (storedRecord && storedRecord.expiresAt && Date.now() > storedRecord.expiresAt && otp.trim() !== "123456") {
+      otpStore.delete(cleanPhone);
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired. Please request a new OTP.",
+      });
+    }
+
     const isValid = otp.trim() === "123456" || (storedRecord && storedRecord.otp === otp.trim());
 
     if (!isValid) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP code" });
+      return res.status(400).json({ success: false, message: "Invalid 6-digit verification code. Please check and try again." });
     }
 
     const assignedRole = ["advocate", "client", "citizen", "cs", "ca"].includes(role)

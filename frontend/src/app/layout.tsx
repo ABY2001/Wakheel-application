@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -29,7 +30,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${playfair.variable} ${jakarta.variable} h-full antialiased`}>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-200">
         <ThemeProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

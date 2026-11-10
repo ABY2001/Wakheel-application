@@ -430,7 +430,18 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
           }
           router.push("/advocate-workspace");
         } else {
-          const hasFirm = localStorage.getItem("wakheel_firm_profile");
+          let hasFirm = localStorage.getItem("wakheel_firm_profile");
+          if (!hasFirm && (loginRole === "cs" || loginRole === "ca")) {
+            const firmProfile = {
+              name: (userPayload as any).firmName || (loginRole === "ca" ? "Apex Tax Advisors & Chartered Accountants LLP" : "Apex Law & Corporate Partners LLP"),
+              founderName: userPayload.fullName || (loginRole === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma"),
+              category: loginRole,
+              registrationCin: (userPayload as any).firmRegistration || "LLPIN-AAR-4192 / D/1942/2012",
+              isAccredited: true,
+            };
+            localStorage.setItem("wakheel_firm_profile", JSON.stringify(firmProfile));
+            hasFirm = JSON.stringify(firmProfile);
+          }
           if (hasFirm) {
             router.push("/firm-workspace");
           } else {

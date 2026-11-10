@@ -172,7 +172,18 @@ export function WhatsAppOtpLoginView() {
           }
           router.push("/advocate-workspace");
         } else if (role === "cs" || role === "ca") {
-          const hasFirm = localStorage.getItem("wakheel_firm_profile");
+          let hasFirm = localStorage.getItem("wakheel_firm_profile");
+          if (!hasFirm) {
+            const firmProfile = {
+              name: (userPayload as any).firmName || (role === "ca" ? "Apex Tax Advisors & Chartered Accountants LLP" : "Apex Law & Corporate Partners LLP"),
+              founderName: userPayload.fullName || (role === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma"),
+              category: role,
+              registrationCin: (userPayload as any).firmRegistration || "LLPIN-AAR-4192 / D/1942/2012",
+              isAccredited: true,
+            };
+            localStorage.setItem("wakheel_firm_profile", JSON.stringify(firmProfile));
+            hasFirm = JSON.stringify(firmProfile);
+          }
           if (hasFirm) {
             router.push("/firm-workspace");
           } else {

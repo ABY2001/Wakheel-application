@@ -74,20 +74,7 @@ export const authApi = {
       if (!isNetworkOfflineError(err)) {
         throw err;
       }
-      console.warn("authApi.register fallback to offline/demo provisioning:", err.message);
-      return {
-        success: true,
-        message: "Account provisioned successfully (Demo Session)",
-        token: data.role === "advocate" ? "adv_token" : "dev_token",
-        user: {
-          id: "user_" + Date.now(),
-          fullName: data.fullName,
-          email: data.email,
-          role: data.role,
-          accountType: data.accountType || (data.role === "advocate" ? "independent_advocate" : "citizen"),
-          isVerified: true,
-        },
-      };
+      throw new Error("Unable to connect to the authentication server. Please ensure the backend is running.");
     }
   },
 
@@ -113,25 +100,7 @@ export const authApi = {
       if (!isNetworkOfflineError(err)) {
         throw err;
       }
-      console.warn("authApi.login fallback to offline/demo auth:", err.message);
-      const role = data.role || (data.email.toLowerCase().includes("adv") ? "advocate" : "client");
-      const name =
-        role === "advocate"
-          ? "Adv. Meera Krishnan"
-          : data.email.split("@")[0] || "Gopakumar Nambiar";
-      return {
-        success: true,
-        message: "Logged in successfully (Demo Session)",
-        token: role === "advocate" ? "adv_token" : "dev_token",
-        user: {
-          id: role === "advocate" ? "adv_1" : "default_citizen",
-          fullName: name,
-          email: data.email,
-          role: role,
-          accountType: role === "advocate" ? "independent_advocate" : "citizen",
-          isVerified: true,
-        },
-      };
+      throw new Error("Unable to connect to the authentication server. Please ensure the backend is running.");
     }
   },
 
@@ -155,19 +124,7 @@ export const authApi = {
       if (!isNetworkOfflineError(err)) {
         throw err;
       }
-      console.warn("authApi.getMe fallback to offline session:", err.message);
-      const isAdv = token.includes("adv");
-      return {
-        success: true,
-        user: {
-          id: isAdv ? "adv_1" : "default_citizen",
-          fullName: isAdv ? "Adv. Meera Krishnan" : "Gopakumar Nambiar",
-          email: isAdv ? "meera.krishnan@wakheel.law" : "gopakumar@test.com",
-          role: isAdv ? "advocate" : "client",
-          accountType: isAdv ? "independent_advocate" : "citizen",
-          isVerified: true,
-        },
-      };
+      throw new Error("Unable to connect to the authentication server to retrieve user profile.");
     }
   },
 
@@ -175,7 +132,7 @@ export const authApi = {
   async sendWhatsAppOtp(data: {
     phone: string;
     role?: UserRole;
-  }): Promise<{ success: boolean; message: string; devOtp?: string }> {
+  }): Promise<{ success: boolean; message: string; otp?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
         method: "POST",
@@ -192,12 +149,7 @@ export const authApi = {
       if (!isNetworkOfflineError(err)) {
         throw err;
       }
-      console.warn("sendWhatsAppOtp fallback to dev mock OTP:", err.message);
-      return {
-        success: true,
-        message: "Code sent via WhatsApp",
-        devOtp: "123456",
-      };
+      throw new Error("Unable to connect to the authentication server to send WhatsApp OTP.");
     }
   },
 
@@ -223,23 +175,7 @@ export const authApi = {
       if (!isNetworkOfflineError(err)) {
         throw err;
       }
-      console.warn("verifyWhatsAppOtp fallback to dev mock verification:", err.message);
-      if (data.otp === "123456" || data.otp.length === 6) {
-        const cleanDigits = data.phone.replace(/[^0-9]/g, "");
-        return {
-          success: true,
-          token: "dev_wa_token_" + Date.now(),
-          user: {
-            id: "wa_" + Date.now(),
-            fullName: `Counsel (${cleanDigits.slice(-4) || "Advocate"})`,
-            email: `${cleanDigits || "user"}@whatsapp.wakheel.law`,
-            role: data.role || "advocate",
-            verifyMethod: "whatsapp",
-            isVerified: true,
-          },
-        };
-      }
-      throw err;
+      throw new Error("Unable to connect to the authentication server to verify WhatsApp OTP.");
     }
   },
 };

@@ -178,63 +178,41 @@ export const loginUser = async (req, res) => {
     if (getIsMongoConnected()) {
       user = await User.findOne({ email: normalizedEmail });
       if (!user) {
-        // Auto-provision in dev so testing login with any new email works seamlessly
-        user = await User.create({
-          fullName: normalizedEmail.split("@")[0],
-          email: normalizedEmail,
-          password: cleanPassword,
-          role: requestedRole || "advocate",
-          verifyMethod: "email",
+        return res.status(401).json({
+          success: false,
+          message: "No account found with this email. Please check your credentials or register an account.",
         });
-      } else {
-        // Verify password using bcrypt match
-        let isMatch = false;
-        if (user.matchPassword) {
-          isMatch = await user.matchPassword(cleanPassword);
-        }
-        if (!isMatch && cleanPassword === "password123") {
-          isMatch = true; // Standard dev test password override
-        }
-        if (!isMatch) {
-          return res.status(401).json({
-            success: false,
-            message: "Invalid email or password. Please verify your credentials.",
-          });
-        }
-        if (requestedRole && user.role !== requestedRole) {
-          user.role = requestedRole;
-          await user.save();
-        }
+      }
+      // Strictly verify password using bcrypt match
+      const isMatch = await user.matchPassword(cleanPassword);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid email or password. Please verify your credentials.",
+        });
+      }
+      if (requestedRole && user.role !== requestedRole) {
+        user.role = requestedRole;
+        await user.save();
       }
     } else {
       user = devStore.findUserByEmail(normalizedEmail);
       if (!user) {
-        // Auto-provision in devStore so testing login with any new email works seamlessly
-        user = await devStore.createUser({
-          fullName: normalizedEmail.split("@")[0],
-          email: normalizedEmail,
-          password: cleanPassword,
-          role: requestedRole || "advocate",
-          verifyMethod: "email",
+        return res.status(401).json({
+          success: false,
+          message: "No account found with this email. Please check your credentials or register an account.",
         });
-      } else {
-        // Verify password using devStore bcrypt match
-        let isMatch = false;
-        if (user.password) {
-          isMatch = await devStore.matchPassword(cleanPassword, user.password);
-        }
-        if (!isMatch && cleanPassword === "password123") {
-          isMatch = true; // Standard dev test password override
-        }
-        if (!isMatch) {
-          return res.status(401).json({
-            success: false,
-            message: "Invalid email or password. Please verify your credentials.",
-          });
-        }
-        if (requestedRole && user.role !== requestedRole) {
-          user = devStore.updateUserRole(normalizedEmail, requestedRole) || user;
-        }
+      }
+      // Strictly verify password using devStore bcrypt match
+      const isMatch = await devStore.matchPassword(cleanPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid email or password. Please verify your credentials.",
+        });
+      }
+      if (requestedRole && user.role !== requestedRole) {
+        user = devStore.updateUserRole(normalizedEmail, requestedRole) || user;
       }
     }
 
@@ -348,7 +326,8 @@ export const sendWhatsAppOtp = async (req, res) => {
     }
 
     const cleanPhone = phone.replace(/[^0-9+]/g, "");
-    const otp = "123456"; // Default dev OTP code
+    // Dynamically generate random 6-digit OTP code
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore.set(cleanPhone, {
       otp,
       role: ["advocate", "client", "citizen", "cs", "ca"].includes(role)
@@ -362,7 +341,7 @@ export const sendWhatsAppOtp = async (req, res) => {
     res.json({
       success: true,
       message: `OTP sent to ${cleanPhone} via WhatsApp`,
-      devOtp: otp,
+      otp, // return OTP in response for client delivery
     });
   } catch (error) {
     console.error("Send OTP Error:", error);
@@ -383,7 +362,7 @@ export const verifyWhatsAppOtp = async (req, res) => {
     const cleanPhone = phone.replace(/[^0-9+]/g, "");
     const storedRecord = otpStore.get(cleanPhone);
 
-    if (storedRecord && storedRecord.expiresAt && Date.now() > storedRecord.expiresAt && otp.trim() !== "123456") {
+    if (storedRecord && storedRecord.expiresAt && Date.now() > storedRecord.expiresAt) {
       otpStore.delete(cleanPhone);
       return res.status(400).json({
         success: false,
@@ -391,7 +370,7 @@ export const verifyWhatsAppOtp = async (req, res) => {
       });
     }
 
-    const isValid = otp.trim() === "123456" || (storedRecord && storedRecord.otp === otp.trim());
+    const isValid = Boolean(storedRecord && storedRecord.otp === otp.trim());
 
     if (!isValid) {
       return res.status(400).json({ success: false, message: "Invalid 6-digit verification code. Please check and try again." });

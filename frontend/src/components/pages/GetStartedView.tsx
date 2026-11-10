@@ -1437,34 +1437,6 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
               )}
             </div>
           )}
-
-          {/* Test Accounts Shortcut */}
-          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 space-y-1">
-            <span className="font-bold text-black dark:text-white block mb-0.5">
-              Quick Dev Test Credentials:
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[10px]">
-              <div>
-                <span className="font-semibold text-black dark:text-white">Citizen:</span>{" "}
-                <code className="font-mono text-zinc-700 dark:text-zinc-300">citizen@inworth.law</code>
-              </div>
-              <div>
-                <span className="font-semibold text-black dark:text-white">Advocate:</span>{" "}
-                <code className="font-mono text-zinc-700 dark:text-zinc-300">advocate@wakheel.com</code>
-              </div>
-              <div>
-                <span className="font-semibold text-black dark:text-white">CS Firm:</span>{" "}
-                <code className="font-mono text-zinc-700 dark:text-zinc-300">cs@inworth.law</code>
-              </div>
-              <div>
-                <span className="font-semibold text-black dark:text-white">CA Practice:</span>{" "}
-                <code className="font-mono text-zinc-700 dark:text-zinc-300">ca@inworth.law</code>
-              </div>
-            </div>
-            <div className="text-[10px] text-zinc-400 pt-0.5">
-              Default password: <code className="font-mono text-black dark:text-white font-bold">password123</code>
-            </div>
-          </div>
         </div>
 
         {/* Footer info */}

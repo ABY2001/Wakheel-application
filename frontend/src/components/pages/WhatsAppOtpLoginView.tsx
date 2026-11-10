@@ -25,26 +25,24 @@ export function WhatsAppOtpLoginView() {
   const router = useRouter();
 
   // Step 1: "phone" (enter number & role) | Step 2: "otp" (verify 6-digit code)
-  const [step, setStep] = useState<"phone" | "otp">("otp");
+  const [step, setStep] = useState<"phone" | "otp">("phone");
   const [tier, setTier] = useState<"citizen" | "professional">("citizen");
   const [professionalCategory, setProfessionalCategory] = useState<
     "advocate" | "law_firm" | "cs" | "ca"
   >("advocate");
   const [role, setRole] = useState<UserRole>("client");
   const [countryCode, setCountryCode] = useState("+91");
-  const [phone, setPhone] = useState("12354 86935");
+  const [phone, setPhone] = useState("");
 
   // 6-digit OTP array
-  const [otp, setOtp] = useState<string[]>(["1", "2", "3", "4", "5", "6"]);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // States
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [successBanner, setSuccessBanner] = useState(
-    "We sent a 6-digit verification code to your WhatsApp."
-  );
+  const [successBanner, setSuccessBanner] = useState("");
   const [countdown, setCountdown] = useState(45);
   const [canResend, setCanResend] = useState(false);
 

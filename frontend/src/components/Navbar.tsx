@@ -18,7 +18,7 @@ export function Navbar({
   onOpenAuth,
   isLoggedIn = false,
   userRole = "client",
-  userName = "Alex Morgan",
+  userName = "",
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
@@ -91,7 +91,7 @@ export function Navbar({
                     {userRole === "advocate" ? <Scale className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-xs font-semibold text-black dark:text-white leading-none">{userName}</span>
+                    <span className="text-xs font-semibold text-black dark:text-white leading-none">{userName || "My Account"}</span>
                     <span className="text-[10px] text-zinc-500 dark:text-zinc-400 capitalize leading-tight font-medium">
                       {userRole === "advocate" ? "Advocate Workspace" : "Citizen Portal"}
                     </span>

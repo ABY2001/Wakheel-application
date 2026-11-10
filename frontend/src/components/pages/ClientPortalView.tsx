@@ -121,13 +121,14 @@ export function ClientPortalView() {
   const [newMatterModalOpen, setNewMatterModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const EMPTY_CITIZEN_PROFILE: CitizenProfileData = {
-    fullName: "Citizen User",
+    username: "",
+    fullName: "",
     fatherOrSpouseName: "",
     age: "",
     dob: "",
     occupation: "",
     residentialAddress: "",
-    district: "Ernakulam",
+    district: "",
     state: "Kerala",
     pincode: "",
     mobileNumber: "",
@@ -157,31 +158,61 @@ export function ClientPortalView() {
       const savedUserStr = localStorage.getItem("wakheel_user");
       const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
       const saved = localStorage.getItem("wakheel_citizen_profile");
+      const isFirstSignup = localStorage.getItem("wakheel_citizen_first_signup") === "true";
+      const isProfileDone = localStorage.getItem("wakheel_citizen_profile_completed") === "true";
+
       if (saved) {
         setCitizenProfile({ ...EMPTY_CITIZEN_PROFILE, ...JSON.parse(saved) });
       } else if (savedUser) {
+        const initialName = savedUser.fullName || savedUser.name || "";
+        const initialUsername = savedUser.username || (savedUser.email ? savedUser.email.split("@")[0] : "");
         setCitizenProfile({
           ...EMPTY_CITIZEN_PROFILE,
-          fullName: savedUser.name || savedUser.fullName || "Citizen User",
+          fullName: initialName,
+          username: initialUsername,
           email: savedUser.email || "",
           mobileNumber: savedUser.phone || savedUser.mobileNumber || "",
         });
       }
+
+      // Automatically show the profile form after creating an account or if incomplete
+      if (isFirstSignup || (!isProfileDone && !saved)) {
+        setCitizenProfileModalOpen(true);
+      }
     } catch {}
   }, []);
 
-  const handleSaveCitizenProfile = (updated: CitizenProfileData) => {
+  const handleSaveCitizenProfile = async (updated: CitizenProfileData) => {
     setCitizenProfile(updated);
     try {
       localStorage.setItem("wakheel_citizen_profile", JSON.stringify(updated));
-    } catch {}
+      localStorage.setItem("wakheel_citizen_profile_completed", "true");
+      localStorage.removeItem("wakheel_citizen_first_signup");
+
+      // Sync updated name and username into wakheel_user
+      const savedUserStr = localStorage.getItem("wakheel_user");
+      if (savedUserStr) {
+        const userObj = JSON.parse(savedUserStr);
+        userObj.fullName = updated.fullName;
+        userObj.name = updated.fullName;
+        if (updated.username) userObj.username = updated.username;
+        localStorage.setItem("wakheel_user", JSON.stringify(userObj));
+      }
+
+      const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : "";
+      if (token) {
+        await citizenApi.updateProfile(token, updated);
+      }
+    } catch (e) {
+      console.warn("Failed to sync citizen profile:", e);
+    }
   };
 
   // Language toggle (EN | മലയാളം)
   const [lang, setLang] = useState<"en" | "ml">("en");
 
   // Active Matter Switcher state
-  const [selectedMatter, setSelectedMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+  const [selectedMatter, setSelectedMatter] = useState("");
   const [advocatePopoverOpen, setAdvocatePopoverOpen] = useState(false);
 
   // Collapsible Submenu States
@@ -336,10 +367,10 @@ export function ClientPortalView() {
   const [isSummarizingJudgment, setIsSummarizingJudgment] = useState(false);
 
   const [draftingTemplate, setDraftingTemplate] = useState("wp_interim_stay_affidavit");
-  const [draftingClientName, setDraftingClientName] = useState("Gopakumar Nambiar");
-  const [draftingRespondentName, setDraftingRespondentName] = useState("Kerala State Electricity Board & Anr.");
-  const [draftingCaseNumber, setDraftingCaseNumber] = useState("WP(C) 19482/2024");
-  const [draftingSubject, setDraftingSubject] = useState("Interim Stay against 110kV Transmission Line Re-alignment over Private Plantation Land");
+  const [draftingClientName, setDraftingClientName] = useState("");
+  const [draftingRespondentName, setDraftingRespondentName] = useState("");
+  const [draftingCaseNumber, setDraftingCaseNumber] = useState("");
+  const [draftingSubject, setDraftingSubject] = useState("");
   const [draftedResult, setDraftedResult] = useState<any | null>(null);
   const [isDrafting, setIsDrafting] = useState(false);
   const [copiedBadge, setCopiedBadge] = useState<string | null>(null);
@@ -533,8 +564,10 @@ export function ClientPortalView() {
       setMatters(mattersList);
       if (mattersList.length > 0) {
         setTrackedMatter(mattersList[0]);
+        setSelectedMatter(mattersList[0].matterTitle || mattersList[0].caseNumber || "");
       } else {
         setTrackedMatter(null);
+        setSelectedMatter("");
       }
       setConsultations(Array.isArray(consultRes?.consultations) ? consultRes.consultations : []);
       setDocuments(Array.isArray(docsRes?.documents) ? docsRes.documents : []);
@@ -1038,6 +1071,18 @@ export function ClientPortalView() {
 
   // Helper to resolve assigned advocate for the active matter
   const getAssignedAdvocate = (matterTitle: string) => {
+    if (!matterTitle || matters.length === 0) {
+      return {
+        name: "No Counsel Assigned",
+        enrolment: "Bar Council of Kerala",
+        chamber: "Chamber Registry Intake",
+        specialization: "Awaiting Case Filing",
+        avatarText: "--",
+        status: "No Active Case",
+        verified: false,
+      };
+    }
+
     const found = matters.find(
       (m) =>
         (m.matterTitle && m.matterTitle.toLowerCase().includes(matterTitle.toLowerCase().slice(0, 15))) ||
@@ -1058,42 +1103,6 @@ export function ClientPortalView() {
       };
     }
 
-    if (matterTitle.toLowerCase().includes("19482") || matterTitle.toLowerCase().includes("kseb")) {
-      return {
-        name: "Adv. Meera Krishnan",
-        enrolment: "K/001429/2012",
-        chamber: "High Court of Kerala (Court Hall 2A)",
-        specialization: "Senior Counsel • Constitutional & Writs",
-        avatarText: "MK",
-        status: "Active Representation",
-        verified: true,
-      };
-    }
-
-    if (matterTitle.toLowerCase().includes("nclt") || matterTitle.toLowerCase().includes("malabar")) {
-      return {
-        name: "Adv. Rajesh V. Varma",
-        enrolment: "K/002194/2015",
-        chamber: "NCLT Kochi Bench & Commercial Court",
-        specialization: "Corporate & Insolvency Counsel",
-        avatarText: "RV",
-        status: "Active Representation",
-        verified: true,
-      };
-    }
-
-    if (matterTitle.toLowerCase().includes("412") || matterTitle.toLowerCase().includes("varghese")) {
-      return {
-        name: "Adv. Rajesh V. Varma",
-        enrolment: "K/002194/2015",
-        chamber: "Sub Court, Ernakulam",
-        specialization: "Civil & Land Title Dispute Counsel",
-        avatarText: "RV",
-        status: "Active Representation",
-        verified: true,
-      };
-    }
-
     if (matterTitle === "new") {
       return {
         name: "Counsel Matching Pending",
@@ -1107,11 +1116,11 @@ export function ClientPortalView() {
     }
 
     return {
-      name: "Adv. Meera Krishnan",
-      enrolment: "K/001429/2012",
+      name: "Assigned Counsel",
+      enrolment: "Bar Council of Kerala",
       chamber: "High Court of Kerala (Ernakulam)",
-      specialization: "Senior Counsel • High Court Writs",
-      avatarText: "MK",
+      specialization: "Legal Advisory & Writs",
+      avatarText: "LC",
       status: "Active Representation",
       verified: true,
     };
@@ -1126,23 +1135,7 @@ export function ClientPortalView() {
             ? `${m.caseNumber} — ${((m.matterTitle || m.title || "").split("—")[1] || (m.matterTitle || m.title || "")).slice(0, 16).trim()}...`
             : m.matterTitle,
         }))
-      : [
-          {
-            id: "mat_wpc_19482",
-            title: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-            shortTitle: "WP(C) 19482/2024 — Gopakumar ...",
-          },
-          {
-            id: "mat_nclt_041",
-            title: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-            shortTitle: "ARB/NCLT/KOCHI/2024/041 — Malabar ...",
-          },
-          {
-            id: "mat_os_412",
-            title: "OS 412/2023 — Gopakumar v. Varghese Builders",
-            shortTitle: "OS 412/2023 — Gopakumar v. Varghese ...",
-          },
-        ];
+      : [];
 
   const assignedAdvocate = getAssignedAdvocate(selectedMatter);
 
@@ -1262,17 +1255,25 @@ export function ClientPortalView() {
                     .join("")
                     .substring(0, 2)
                     .toUpperCase()
-                : "GN"}
+                : citizenProfile.username
+                ? citizenProfile.username.substring(0, 2).toUpperCase()
+                : "CU"}
             </div>
             <div className="flex flex-col truncate flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-black dark:text-white truncate group-hover:underline">
-                  {citizenProfile.fullName}
+                  {citizenProfile.fullName || (citizenProfile.username ? `@${citizenProfile.username}` : "My Citizen Account")}
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="DigiLocker Verified" />
+                {citizenProfile.isDigiLockerVerified ? (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="DigiLocker Verified" />
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-zinc-400 shrink-0" title="KYC Pending" />
+                )}
               </div>
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
-                {citizenProfile.district}, {citizenProfile.state}
+                {citizenProfile.district || citizenProfile.state
+                  ? `${citizenProfile.district || ""}${citizenProfile.district && citizenProfile.state ? ", " : ""}${citizenProfile.state || ""}`
+                  : "Complete Profile"}
               </span>
             </div>
           </button>
@@ -1892,6 +1893,9 @@ export function ClientPortalView() {
                     }}
                     className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white max-w-[140px] sm:max-w-[210px] md:max-w-none truncate"
                   >
+                    {availableMatters.length === 0 && (
+                      <option value="">No Active Matters</option>
+                    )}
                     {availableMatters.map((m, mIdx) => (
                       <option key={`${m.id || m.title}_${mIdx}`} value={m.title}>
                         {m.shortTitle || m.title}
@@ -2066,15 +2070,17 @@ export function ClientPortalView() {
                       .join("")
                       .substring(0, 2)
                       .toUpperCase()
-                  : "GN"}
+                  : citizenProfile.username
+                  ? citizenProfile.username.substring(0, 2).toUpperCase()
+                  : "CU"}
               </div>
               <div className="hidden md:flex flex-col text-left">
                 <span className="text-xs font-bold text-black dark:text-white leading-tight group-hover:underline">
-                  {citizenProfile.fullName}
+                  {citizenProfile.fullName || (citizenProfile.username ? `@${citizenProfile.username}` : "Citizen User")}
                 </span>
                 <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                  <span>Citizen</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span>{citizenProfile.username ? `@${citizenProfile.username}` : "Citizen"}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${citizenProfile.isDigiLockerVerified ? "bg-emerald-500" : "bg-zinc-400"}`} />
                 </span>
               </div>
             </button>
@@ -2104,7 +2110,7 @@ export function ClientPortalView() {
           {activeTab === "dashboard" && (
             <div className="max-w-7xl mx-auto space-y-6">
               
-              {/* Hero Banner: Namaskaram, Gopakumar */}
+              {/* Hero Banner */}
               <div className="p-8 rounded-3xl bg-black text-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-300">
                   <ShieldCheck className="w-3.5 h-3.5 text-white" />
@@ -2114,8 +2120,8 @@ export function ClientPortalView() {
                 <div className="space-y-1">
                   <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
                     {lang === "ml"
-                      ? `നമസ്കാരം, ${citizenProfile.fullName ? citizenProfile.fullName.split(" ")[0] : "പൗരൻ"}`
-                      : `Namaskaram, ${citizenProfile.fullName ? citizenProfile.fullName.split(" ")[0] : "Citizen"}`}
+                      ? `നമസ്കാരം, ${citizenProfile.fullName ? citizenProfile.fullName.split(" ")[0] : citizenProfile.username ? `@${citizenProfile.username}` : "പൗരൻ"}`
+                      : `Namaskaram, ${citizenProfile.fullName ? citizenProfile.fullName.split(" ")[0] : citizenProfile.username ? `@${citizenProfile.username}` : "Citizen"}`}
                   </h2>
                   <p className="text-sm text-zinc-300 max-w-2xl leading-relaxed">
                     Submit new legal grievances, track active court matters before the High Court of Kerala or Subordinate Courts, and consult with verified advocates without complicated legal jargon.
@@ -3329,7 +3335,7 @@ export function ClientPortalView() {
             <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
               <ChamberCalendarView
                 isClientView={true}
-                advocateName={citizenProfile.fullName || "Gopakumar Nambiar"}
+                advocateName={citizenProfile.fullName || (citizenProfile.username ? `@${citizenProfile.username}` : "Citizen Legal Calendar")}
               />
             </div>
           )}
@@ -3341,7 +3347,7 @@ export function ClientPortalView() {
             <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
               <TaskMiteView
                 portalType="citizen"
-                advocateName={citizenProfile.fullName || "Gopakumar Nambiar"}
+                advocateName={citizenProfile.fullName || (citizenProfile.username ? `@${citizenProfile.username}` : "Citizen Action Checklist")}
                 onSelectModule={(m) => setActiveTab(m)}
               />
             </div>

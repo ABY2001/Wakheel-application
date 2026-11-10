@@ -1620,9 +1620,12 @@ export const devStore = {
         };
       } else {
         const user = this.getUserById(userId);
+        const userFullName = user?.fullName || user?.name || "";
+        const userUsername = user?.username || (user?.email ? user.email.split("@")[0] : "");
         profile = {
           userId,
-          fullName: user?.name || "Citizen User",
+          username: userUsername,
+          fullName: userFullName,
           email: user?.email || "",
           phone: user?.phone || "",
           alternatePhone: "",
@@ -1657,15 +1660,27 @@ export const devStore = {
   updateCitizenProfile(userId, updates) {
     const profiles = readFile("dev_citizen_profiles.json", []);
     const idx = profiles.findIndex((p) => p.userId === userId);
+    let updated;
     if (idx !== -1) {
       profiles[idx] = { ...profiles[idx], ...updates };
       writeFile("dev_citizen_profiles.json", profiles);
-      return profiles[idx];
+      updated = profiles[idx];
+    } else {
+      const newProfile = { userId, ...updates };
+      profiles.push(newProfile);
+      writeFile("dev_citizen_profiles.json", profiles);
+      updated = newProfile;
     }
-    const newProfile = { userId, ...updates };
-    profiles.push(newProfile);
-    writeFile("dev_citizen_profiles.json", profiles);
-    return newProfile;
+    if (updates.fullName || updates.username) {
+      const users = this.getUsers();
+      const uIdx = users.findIndex((u) => u._id === userId || u.id === userId);
+      if (uIdx !== -1) {
+        if (updates.fullName) users[uIdx].fullName = updates.fullName;
+        if (updates.username) users[uIdx].username = updates.username;
+        writeFile("dev_users.json", users);
+      }
+    }
+    return updated;
   },
 
   // --- Grievances / Legal Problem Intake ---

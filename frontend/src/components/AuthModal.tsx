@@ -93,6 +93,28 @@ export function AuthModal({
           }
           router.push("/advocate-workspace");
         } else {
+          try {
+            if (email || fullName) {
+              const cleanUsername = (email ? email.split("@")[0] : "").toLowerCase().replace(/[^a-zA-Z0-9._-]/g, "");
+              localStorage.setItem(
+                "wakheel_user",
+                JSON.stringify({
+                  email: email.trim(),
+                  fullName: (fullName || cleanUsername).trim(),
+                  username: cleanUsername,
+                  role: "client",
+                  accountType: "citizen",
+                })
+              );
+            }
+            if (mode === "signup") {
+              localStorage.setItem("wakheel_citizen_first_signup", "true");
+              localStorage.removeItem("wakheel_citizen_profile_completed");
+              localStorage.removeItem("wakheel_citizen_profile");
+            }
+          } catch {
+            // ignore
+          }
           router.push("/client-portal");
         }
       }, 800);

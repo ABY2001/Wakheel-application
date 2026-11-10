@@ -18,6 +18,7 @@ export const registerUser = async (req, res) => {
   try {
     const {
       fullName,
+      username,
       email,
       password,
       role,
@@ -47,9 +48,11 @@ export const registerUser = async (req, res) => {
     if (accountType === "client" || accountType === "citizen") cleanRole = "citizen";
 
     const cleanName = (fullName || normalizedEmail.split("@")[0]).trim();
+    const cleanUsername = (username || normalizedEmail.split("@")[0]).toLowerCase().trim().replace(/[^a-zA-Z0-9._-]/g, "");
     let user;
 
     const extraFields = {
+      username: cleanUsername,
       accountType: accountType || (cleanRole === "advocate" ? "independent_advocate" : cleanRole === "cs" ? "cs" : cleanRole === "ca" ? "ca" : "citizen"),
       barCouncilId: (barCouncilId || "").trim(),
       firmName: (firmName || "").trim(),
@@ -122,6 +125,34 @@ export const registerUser = async (req, res) => {
       }
     }
 
+    if (user.role === "citizen" || user.role === "client") {
+      const citizenProfileData = {
+        userId: user._id,
+        username: cleanUsername,
+        fullName: cleanName,
+        email: normalizedEmail,
+        phone: user.phone || "",
+        address: { street: "", city: "", district: "", state: "Kerala", pincode: "" },
+        preferredLanguage: "en",
+        emergencyContact: { name: "", relationship: "", phone: "" },
+        kycVerified: false,
+        notificationPreferences: { whatsapp: true, email: true, inApp: true, courtHearingAlerts: true },
+      };
+      if (getIsMongoConnected()) {
+        try {
+          await CitizenProfile.findOneAndUpdate(
+            { userId: user._id },
+            { $set: citizenProfileData },
+            { upsert: true, new: true }
+          );
+        } catch (e) {
+          console.warn("Could not upsert CitizenProfile in Mongo:", e.message);
+        }
+      } else {
+        devStore.updateCitizenProfile(user._id, citizenProfileData);
+      }
+    }
+
     console.log(`✅ User registered/updated: ${user.email} (${user.role}) [${extraFields.accountType}]`);
     const token = generateToken(user._id, user.role);
 
@@ -132,6 +163,7 @@ export const registerUser = async (req, res) => {
       user: {
         id: user._id,
         fullName: user.fullName,
+        username: cleanUsername,
         email: user.email,
         role: user.role,
         accountType: user.accountType || extraFields.accountType,

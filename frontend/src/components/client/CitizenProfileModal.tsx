@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   ShieldCheck,
@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 export interface CitizenProfileData {
+  username?: string;
   fullName: string;
   fatherOrSpouseName: string;
   age: string;
@@ -54,7 +55,8 @@ export interface CitizenProfileData {
 }
 
 export const DEFAULT_CITIZEN_PROFILE: CitizenProfileData = {
-  fullName: "Citizen User",
+  username: "",
+  fullName: "",
   fatherOrSpouseName: "",
   age: "",
   dob: "",
@@ -102,6 +104,15 @@ export default function CitizenProfileModal({
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [refreshingKyc, setRefreshingKyc] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (profile) {
+      setFormData((prev) => ({
+        ...prev,
+        ...profile,
+      }));
+    }
+  }, [profile, isOpen]);
+
   if (!isOpen) return null;
 
   const handleInputChange = (field: keyof CitizenProfileData, value: any) => {
@@ -133,11 +144,14 @@ export default function CitizenProfileModal({
   const initials = formData.fullName
     ? formData.fullName
         .split(" ")
+        .filter(Boolean)
         .map((n) => n[0])
         .join("")
         .substring(0, 2)
         .toUpperCase()
-    : "GN";
+    : formData.username
+    ? formData.username.substring(0, 2).toUpperCase()
+    : "CU";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto">
@@ -163,24 +177,43 @@ export default function CitizenProfileModal({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">
-                  {formData.fullName}
+                  {formData.fullName || (formData.username ? `@${formData.username}` : "Complete Citizen Profile")}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>DigiLocker KYC Verified</span>
-                </span>
+                {formData.username && formData.fullName && (
+                  <span className="font-mono text-xs text-zinc-500 font-bold bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+                    @{formData.username}
+                  </span>
+                )}
+                {formData.isDigiLockerVerified ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>DigiLocker KYC Verified</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1">
+                    <span>KYC Pending</span>
+                  </span>
+                )}
               </div>
 
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex flex-wrap items-center gap-2 font-mono">
-                <span>{formData.district}, {formData.state}</span>
-                <span>•</span>
-                <span>Aadhaar: {formData.aadhaarMasked}</span>
-                <span>•</span>
-                <span className="text-zinc-700 dark:text-zinc-300 font-semibold">{formData.occupation}</span>
+                {formData.district && <span>{formData.district}, {formData.state}</span>}
+                {formData.aadhaarMasked && (
+                  <>
+                    <span>•</span>
+                    <span>Aadhaar: {formData.aadhaarMasked}</span>
+                  </>
+                )}
+                {formData.occupation && (
+                  <>
+                    <span>•</span>
+                    <span className="text-zinc-700 dark:text-zinc-300 font-semibold">{formData.occupation}</span>
+                  </>
+                )}
               </p>
 
               <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
-                Active Matter: WP(C) 19482/2024 • Retained Counsel: {formData.retainedAdvocateName}
+                {formData.retainedAdvocateName ? `Retained Counsel: ${formData.retainedAdvocateName}` : "Citizen Legal Services Account"}
               </p>
             </div>
           </div>
@@ -290,6 +323,26 @@ export default function CitizenProfileModal({
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span>Username / Handle</span>
+                    <span className="text-[10px] font-normal text-zinc-500">Unique identifier</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400">@</span>
+                    <input
+                      type="text"
+                      value={formData.username || ""}
+                      onChange={(e) => handleInputChange("username", e.target.value.replace(/[^a-zA-Z0-9._-]/g, "").toLowerCase())}
+                      placeholder="e.g. rahul_sharma"
+                      className="w-full pl-8 pr-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    />
+                  </div>
+                  <span className="text-[10px] text-zinc-500">
+                    Your unique username for portal sign-in, case updates, and lawyer consultations.
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-black dark:text-white">
                     Full Legal Name (as per Aadhaar / Passport)
                   </label>
@@ -297,7 +350,8 @@ export default function CitizenProfileModal({
                     type="text"
                     value={formData.fullName}
                     onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
                   <span className="text-[10px] text-zinc-500">
                     Used for e-filing Vakalatnamas, court summons, and verified affidavits.

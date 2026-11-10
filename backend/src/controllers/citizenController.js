@@ -67,16 +67,54 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const { fullName, phone, alternatePhone, address, preferredLanguage, emergencyContact, notificationPreferences } = req.body;
+    const {
+      fullName,
+      username,
+      fatherOrSpouseName,
+      age,
+      dob,
+      occupation,
+      phone,
+      mobileNumber,
+      alternatePhone,
+      address,
+      residentialAddress,
+      district,
+      state,
+      pincode,
+      panNumber,
+      aadhaarMasked,
+      isDigiLockerVerified,
+      emergencyContact,
+      emergencyContactName,
+      emergencyContactPhone,
+      preferredLanguage,
+      notificationPreferences,
+    } = req.body;
 
     if (shouldUseDevStore()) {
+      const cleanUsername = username ? username.toLowerCase().trim().replace(/[^a-zA-Z0-9._-]/g, "") : undefined;
       const profile = devStore.updateCitizenProfile(userId, {
         ...(fullName && { fullName }),
-        ...(phone && { phone }),
+        ...(cleanUsername && { username: cleanUsername }),
+        ...(fatherOrSpouseName && { fatherOrSpouseName }),
+        ...(age && { age }),
+        ...(dob && { dob }),
+        ...(occupation && { occupation }),
+        ...((phone || mobileNumber) && { phone: phone || mobileNumber, mobileNumber: phone || mobileNumber }),
         ...(alternatePhone !== undefined && { alternatePhone }),
         ...(address && { address }),
-        ...(preferredLanguage && { preferredLanguage }),
+        ...(residentialAddress && { residentialAddress }),
+        ...(district && { district }),
+        ...(state && { state }),
+        ...(pincode && { pincode }),
+        ...(panNumber && { panNumber }),
+        ...(aadhaarMasked && { aadhaarMasked }),
+        ...(isDigiLockerVerified !== undefined && { isDigiLockerVerified }),
         ...(emergencyContact && { emergencyContact }),
+        ...(emergencyContactName && { emergencyContactName }),
+        ...(emergencyContactPhone && { emergencyContactPhone }),
+        ...(preferredLanguage && { preferredLanguage }),
         ...(notificationPreferences && { notificationPreferences }),
       });
       return res.json({ success: true, message: "Profile updated successfully", profile, mode: "dummy_data" });

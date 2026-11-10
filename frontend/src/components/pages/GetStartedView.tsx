@@ -49,6 +49,7 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
 
   // Base Form Credentials
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -106,8 +107,11 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
     setIsSubmitting(true);
 
     try {
+      const cleanUsername = (username.trim() || email.split("@")[0]).toLowerCase().replace(/[^a-zA-Z0-9._-]/g, "");
+
       const res = await authApi.register({
         fullName: fullName.trim(),
+        username: cleanUsername,
         email: email.trim(),
         password: password.trim(),
         role: "client",
@@ -117,6 +121,7 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
       const userPayload = res.user || {
         id: "citizen_" + Date.now(),
         fullName: fullName.trim(),
+        username: cleanUsername,
         email: email.trim(),
         role: "client",
         accountType: "citizen",
@@ -127,6 +132,11 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
         "wakheel_user",
         JSON.stringify({ ...userPayload, role: "client", accountType: "citizen" })
       );
+
+      // Trigger automatic profile completion modal on first login
+      localStorage.setItem("wakheel_citizen_first_signup", "true");
+      localStorage.removeItem("wakheel_citizen_profile_completed");
+      localStorage.removeItem("wakheel_citizen_profile");
 
       setTimeout(() => {
         setIsSubmitting(false);
@@ -625,21 +635,40 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                     <span className="font-bold text-black dark:text-white">Citizen Account:</span> Fast, regular sign up with email and password to track cases, book consultations, and review documents.
                   </div>
 
-                  {/* Full Name */}
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Rahul Sharma"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
+                  {/* Full Name & Username */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                        Full Name
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="e.g. Rahul Sharma"
+                          className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
+                        <span>Username / Handle</span>
+                        <span className="text-[10px] font-normal text-zinc-500">Unique ID</span>
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400">@</span>
+                        <input
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, "").toLowerCase())}
+                          placeholder="e.g. rahul_sharma"
+                          className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-8 pr-4 py-3 text-xs font-mono text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
+                        />
+                      </div>
                     </div>
                   </div>
 

@@ -43,6 +43,7 @@ export const authApi = {
   // Register a new citizen or professional (advocate, law firm, CS, CA)
   async register(data: {
     fullName: string;
+    username?: string;
     email: string;
     password: string;
     role: UserRole;

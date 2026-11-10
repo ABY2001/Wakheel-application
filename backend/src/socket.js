@@ -351,6 +351,17 @@ export const initWebSocketServer = (httpServer) => {
             break;
           }
 
+          case "subscribe_matters": {
+            ws.send(
+              JSON.stringify({
+                type: "subscribed_matters_ack",
+                success: true,
+                timestamp: new Date().toISOString(),
+              })
+            );
+            break;
+          }
+
           default:
             break;
         }
@@ -439,4 +450,49 @@ export const broadcastMessageToUser = (userId, payload) => {
   }
 
   return false;
+};
+
+/**
+ * Broadcast payload to all open WebSocket client connections across portals
+ * @param {object|string} payload
+ */
+export const broadcastToAll = (payload) => {
+  if (!wssInstance) return false;
+  const rawData = typeof payload === "string" ? payload : JSON.stringify(payload);
+  let count = 0;
+  wssInstance.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(rawData);
+      count++;
+    }
+  });
+  return count > 0;
+};
+
+/**
+ * Broadcast a real-time statutory / corporate compliance event across chambers, clients, and partners
+ * @param {"MATTER_STAGE_UPDATED" | "MATTER_QUERY_UPDATED" | "MATTER_AUTHORIZED" | "MATTER_CHALLAN_PAID"} eventType
+ * @param {object} matterData - Full or partial matter docket object
+ * @param {object} [meta] - Context metadata (actor, action, note, etc.)
+ */
+export const broadcastMatterEvent = (eventType, matterData, meta = {}) => {
+  const matterId = matterData?._id || matterData?.id || meta?.matterId;
+  const payload = {
+    type: eventType,
+    matterId,
+    matter: matterData,
+    meta: {
+      ...meta,
+      timestamp: new Date().toISOString(),
+    },
+  };
+
+  // If specific target user provided, ensure they receive it directly
+  if (meta?.recipientId) {
+    broadcastMessageToUser(meta.recipientId, payload);
+  }
+
+  // Broadcast to all active clients (Firm dashboards, Citizen portals, Multi-party rooms)
+  broadcastToAll(payload);
+  return payload;
 };

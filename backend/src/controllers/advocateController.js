@@ -17,7 +17,7 @@ import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
-import { broadcastMessageToUser } from "../socket.js";
+import { broadcastMessageToUser, broadcastMatterEvent } from "../socket.js";
 
 const shouldUseDevStore = () => {
   return process.env.USE_DUMMY_DATA === "true" || !getIsMongoConnected();
@@ -1688,6 +1688,20 @@ export const addTrustTransaction = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
     const newTx = devStore.addTrustTransaction({ ...req.body, advocateId });
+    try {
+      broadcastMatterEvent("MATTER_CHALLAN_PAID", null, {
+        action: "CHALLAN_PAID_AND_TRUST_DISBURSED",
+        transaction: newTx,
+        matterId: newTx?.matterId || req.body?.matterId,
+        amount: newTx?.amount,
+        voucherNumber: newTx?.referenceNumber || newTx?.voucherNumber,
+        category: newTx?.subCategory || newTx?.category,
+        settlementMode: newTx?.settlementMode,
+        clientName: newTx?.clientName || req.body?.clientName,
+      });
+    } catch (wsErr) {
+      console.warn("WebSocket broadcast warning in addTrustTransaction:", wsErr.message);
+    }
     res.status(201).json({
       success: true,
       message: "Client trust transaction recorded in segregated escrow ledger",

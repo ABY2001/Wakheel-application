@@ -42,6 +42,7 @@ import {
   Loader2,
   MessageSquare,
   Landmark,
+  Activity,
 } from "lucide-react";
 import { citizenApi, csApi } from "@/lib/api";
 import caApi from "@/lib/caApi";
@@ -58,6 +59,7 @@ import {
   StatutoryClientAuthorizationModal,
   ClientAuthorizationRecord,
 } from "./StatutoryClientAuthorizationModal";
+import { useMatterWebSocket, MatterWebSocketEvent } from "@/hooks/useMatterWebSocket";
 
 export interface ClientMandateItem {
   id: string;
@@ -288,6 +290,230 @@ export function ClientMandatesManagerView({
   const [challanModalOpen, setChallanModalOpen] = useState<boolean>(false);
   const [authModalDocket, setAuthModalDocket] = useState<ClientMandateItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+
+  // Real-time WebSocket Push Toast State
+  const [liveWsToast, setLiveWsToast] = useState<{
+    id: string;
+    type: "stage" | "query" | "auth" | "challan";
+    title: string;
+    message: string;
+    badge: string;
+    timestamp: string;
+  } | null>(null);
+
+  // Hook into live matter WebSocket events
+  const { isConnected: isWsConnected } = useMatterWebSocket({
+    role: "advocate",
+    userId: "adv_1",
+    onAuthorized: (event: MatterWebSocketEvent) => {
+      const matterId = event.matterId;
+      const caseNumber = event.meta?.caseNumber;
+      const auth = event.meta?.authorization;
+
+      setMandates((prev) =>
+        prev.map((m) => {
+          if (m.id === matterId || m.caseNumber === caseNumber) {
+            const updatedStages = [...m.stages];
+            if (updatedStages[2]) {
+              updatedStages[2] = {
+                ...updatedStages[2],
+                done: true,
+                remarks: `Signed via ${auth?.signMethod === "AADHAAR_ESIGN" ? "Aadhaar e-Sign" : "Class 3 DSC"} by ${auth?.signerName || "Client"}`,
+              };
+            }
+            const newStageIndex = m.stageIndex < 3 ? 3 : m.stageIndex;
+            return {
+              ...m,
+              clientAuthorization: auth || m.clientAuthorization,
+              stageIndex: newStageIndex,
+              stages: updatedStages,
+              status: "Client Statutory Authorization Stamped",
+            };
+          }
+          return m;
+        })
+      );
+
+      if (selectedMandateDetail && (selectedMandateDetail.id === matterId || selectedMandateDetail.caseNumber === caseNumber)) {
+        setSelectedMandateDetail((prev) => {
+          if (!prev) return null;
+          const updatedStages = [...prev.stages];
+          if (updatedStages[2]) {
+            updatedStages[2] = {
+              ...updatedStages[2],
+              done: true,
+              remarks: `Signed via ${auth?.signMethod === "AADHAAR_ESIGN" ? "Aadhaar e-Sign" : "Class 3 DSC"} by ${auth?.signerName || "Client"}`,
+            };
+          }
+          return {
+            ...prev,
+            clientAuthorization: auth || prev.clientAuthorization,
+            stageIndex: prev.stageIndex < 3 ? 3 : prev.stageIndex,
+            stages: updatedStages,
+            status: "Client Statutory Authorization Stamped",
+          };
+        });
+      }
+
+      setLiveWsToast({
+        id: `toast-${Date.now()}`,
+        type: "auth",
+        title: "Client Statutory Authorization Received",
+        message: `${event.meta?.signerName || "Authorized Signatory"} executed ${event.meta?.signMethod === "AADHAAR_ESIGN" ? "Aadhaar e-Sign" : "Class 3 DSC"} on ${event.matter?.title || caseNumber || "Docket"} (Ref: ${event.meta?.espReference || "C-DAC"})`,
+        badge: "E-SIGN VERIFIED",
+        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      });
+    },
+    onQueryUpdated: (event: MatterWebSocketEvent) => {
+      const matterId = event.matterId;
+      const caseNumber = event.meta?.caseNumber;
+      const query = event.meta?.query;
+      const isResolved = event.meta?.action === "QUERY_RESOLVED";
+
+      setMandates((prev) =>
+        prev.map((m) => {
+          if (m.id === matterId || m.caseNumber === caseNumber) {
+            const existing = m.queries || [];
+            let updated = [...existing];
+            if (query) {
+              const qIdx = updated.findIndex((q) => q.id === query.id);
+              if (qIdx >= 0) {
+                updated[qIdx] = query;
+              } else {
+                updated.unshift(query);
+              }
+            }
+            return {
+              ...m,
+              queries: updated,
+            };
+          }
+          return m;
+        })
+      );
+
+      if (selectedMandateDetail && (selectedMandateDetail.id === matterId || selectedMandateDetail.caseNumber === caseNumber)) {
+        setSelectedMandateDetail((prev) => {
+          if (!prev) return null;
+          const existing = prev.queries || [];
+          let updated = [...existing];
+          if (query) {
+            const qIdx = updated.findIndex((q) => q.id === query.id);
+            if (qIdx >= 0) {
+              updated[qIdx] = query;
+            } else {
+              updated.unshift(query);
+            }
+          }
+          return { ...prev, queries: updated };
+        });
+      }
+
+      if (queryModalDocket && (queryModalDocket.id === matterId || queryModalDocket.caseNumber === caseNumber)) {
+        setQueryModalDocket((prev) => {
+          if (!prev) return null;
+          const existing = prev.queries || [];
+          let updated = [...existing];
+          if (query) {
+            const qIdx = updated.findIndex((q) => q.id === query.id);
+            if (qIdx >= 0) {
+              updated[qIdx] = query;
+            } else {
+              updated.unshift(query);
+            }
+          }
+          return { ...prev, queries: updated };
+        });
+      }
+
+      setLiveWsToast({
+        id: `toast-${Date.now()}`,
+        type: "query",
+        title: isResolved ? "Client Requisition Response Submitted" : "In-Docket Requisition Updated",
+        message: `${event.meta?.title || "Requisition"} on ${caseNumber || "Docket"}`,
+        badge: isResolved ? "DOCS RE-UPLOADED" : "REQUISITION PENDING",
+        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      });
+    },
+    onStageUpdated: (event: MatterWebSocketEvent) => {
+      const updatedMatter = event.matter;
+      const matterId = event.matterId || updatedMatter?.id || updatedMatter?._id;
+      const caseNumber = event.meta?.caseNumber || updatedMatter?.caseNumber;
+
+      setMandates((prev) =>
+        prev.map((m) => {
+          if (m.id === matterId || m.caseNumber === caseNumber) {
+            return {
+              ...m,
+              stageIndex: typeof updatedMatter?.stageIndex === "number" ? updatedMatter.stageIndex : m.stageIndex,
+              status: updatedMatter?.status || event.meta?.status || m.status,
+              udinOrSrn: updatedMatter?.udinOrSrn || m.udinOrSrn,
+              stages: updatedMatter?.stages || m.stages,
+            };
+          }
+          return m;
+        })
+      );
+
+      if (selectedMandateDetail && (selectedMandateDetail.id === matterId || selectedMandateDetail.caseNumber === caseNumber)) {
+        setSelectedMandateDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                stageIndex: typeof updatedMatter?.stageIndex === "number" ? updatedMatter.stageIndex : prev.stageIndex,
+                status: updatedMatter?.status || event.meta?.status || prev.status,
+                udinOrSrn: updatedMatter?.udinOrSrn || prev.udinOrSrn,
+                stages: updatedMatter?.stages || prev.stages,
+              }
+            : null
+        );
+      }
+
+      setLiveWsToast({
+        id: `toast-${Date.now()}`,
+        type: "stage",
+        title: "Mandate Milestone Synchronized",
+        message: `${updatedMatter?.title || event.meta?.title || "Mandate"} updated to ${event.meta?.status || "advanced milestone"}`,
+        badge: "STAGE ADVANCE",
+        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      });
+    },
+    onChallanPaid: (event: MatterWebSocketEvent) => {
+      const matterId = event.matterId;
+      const voucher = event.meta?.voucherNumber;
+      const amount = event.meta?.amount;
+
+      setMandates((prev) =>
+        prev.map((m) => {
+          if (m.id === matterId || (voucher && m.trustDisbursement?.voucherNo === voucher)) {
+            return {
+              ...m,
+              feePaid: `₹ ${amount?.toLocaleString("en-IN") || "Settled"} (Pure Agent Statutory Disbursement)`,
+            };
+          }
+          return m;
+        })
+      );
+
+      setLiveWsToast({
+        id: `toast-${Date.now()}`,
+        type: "challan",
+        title: "Statutory Challan Disbursed",
+        message: `₹${amount?.toLocaleString("en-IN") || ""} booked under Pure Agent Voucher #${voucher || "VCH-2026"}`,
+        badge: "DISBURSED",
+        timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      });
+    },
+  });
+
+  // Auto-dismiss live toast after 6 seconds
+  useEffect(() => {
+    if (!liveWsToast) return;
+    const timer = setTimeout(() => {
+      setLiveWsToast(null);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [liveWsToast]);
 
   const handleOpenCertificate = (mandate: ClientMandateItem) => {
     setActiveCertificateData({
@@ -685,6 +911,26 @@ This document serves as the official client acknowledgment copy generated by Wak
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            <div
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-mono font-semibold transition-colors ${
+                isWsConnected
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                  : "border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-500"
+              }`}
+              title={
+                isWsConnected
+                  ? "WebSocket Connected: Inbound client authorizations, dockets, and requisitions streaming live"
+                  : "Connecting to live WebSocket push gateway..."
+              }
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isWsConnected ? "bg-emerald-500 animate-pulse" : "bg-zinc-400"
+                }`}
+              />
+              <span>{isWsConnected ? "Live Gateway Active" : "Connecting..."}</span>
+            </div>
+
             <button
               onClick={loadMandates}
               disabled={loading}
@@ -1578,6 +1824,52 @@ This document serves as the official client acknowledgment copy generated by Wak
           }
         }}
       />
+
+      {/* =========================================================================
+          TASK A: REAL-TIME WEBSOCKET PUSH FLOATING TOAST NOTIFICATION
+      ========================================================================= */}
+      {liveWsToast && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className="p-4 rounded-2xl bg-white dark:bg-black text-black dark:text-white border-2 border-black dark:border-white shadow-2xl flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0 mt-0.5">
+                {liveWsToast.type === "auth" ? (
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                ) : liveWsToast.type === "query" ? (
+                  <MessageSquare className="w-5 h-5 text-amber-500" />
+                ) : liveWsToast.type === "challan" ? (
+                  <Receipt className="w-5 h-5 text-blue-500" />
+                ) : (
+                  <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                )}
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-extrabold uppercase tracking-wider">
+                    {liveWsToast.badge}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400">
+                    {liveWsToast.timestamp}
+                  </span>
+                </div>
+                <h4 className="text-xs font-bold leading-tight text-black dark:text-white">
+                  {liveWsToast.title}
+                </h4>
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                  {liveWsToast.message}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setLiveWsToast(null)}
+              className="text-zinc-400 hover:text-black dark:hover:text-white shrink-0 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              title="Dismiss Notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

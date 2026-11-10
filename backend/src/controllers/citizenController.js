@@ -17,7 +17,7 @@ import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
-import { broadcastMessageToUser } from "../socket.js";
+import { broadcastMessageToUser, broadcastMatterEvent } from "../socket.js";
 
 // Check if dummy data mode is requested or if MongoDB is offline
 const shouldUseDevStore = () => {
@@ -1035,10 +1035,22 @@ export const updateMatter = async (req, res) => {
       if (!updated) {
         return res.status(404).json({ success: false, message: "Matter docket not found" });
       }
+      const normalized = normalizeMatterForClient(updated);
+      try {
+        broadcastMatterEvent("MATTER_STAGE_UPDATED", normalized, {
+          action: "STAGE_OR_STATUS_UPDATED",
+          stageIndex: normalized.stageIndex,
+          status: normalized.status,
+          caseNumber: normalized.caseNumber,
+          title: normalized.title,
+        });
+      } catch (wsErr) {
+        console.warn("WebSocket broadcast warning in updateMatter (devStore):", wsErr.message);
+      }
       return res.json({
         success: true,
         message: "Matter docket updated successfully",
-        matter: normalizeMatterForClient(updated),
+        matter: normalized,
         mode: "dummy_data",
       });
     }
@@ -1062,10 +1074,23 @@ export const updateMatter = async (req, res) => {
     matter.updatedAt = new Date();
     await matter.save();
 
+    const normalized = normalizeMatterForClient(matter);
+    try {
+      broadcastMatterEvent("MATTER_STAGE_UPDATED", normalized, {
+        action: "STAGE_OR_STATUS_UPDATED",
+        stageIndex: normalized.stageIndex,
+        status: normalized.status,
+        caseNumber: normalized.caseNumber,
+        title: normalized.title,
+      });
+    } catch (wsErr) {
+      console.warn("WebSocket broadcast warning in updateMatter (cloud_db):", wsErr.message);
+    }
+
     res.json({
       success: true,
       message: "Matter docket updated successfully",
-      matter: normalizeMatterForClient(matter),
+      matter: normalized,
       mode: "cloud_db",
     });
   } catch (error) {
@@ -1091,10 +1116,25 @@ export const addMatterQuery = async (req, res) => {
       if (!result) {
         return res.status(404).json({ success: false, message: "Matter not found" });
       }
+      const normalized = normalizeMatterForClient(result.matter);
+      try {
+        broadcastMatterEvent("MATTER_QUERY_UPDATED", normalized, {
+          action: "QUERY_RAISED",
+          query: result.query,
+          queryId: result.query?.id,
+          title: queryData.title,
+          authorRole: queryData.authorRole || queryData.raisedBy?.role || "Engagement Lead",
+          authorName: queryData.authorName || queryData.raisedBy?.name || "Practicing Professional",
+          category: queryData.category || queryData.type || "CLARIFICATION",
+          caseNumber: normalized.caseNumber,
+        });
+      } catch (wsErr) {
+        console.warn("WebSocket broadcast warning in addMatterQuery (devStore):", wsErr.message);
+      }
       return res.json({
         success: true,
         message: "Query raised successfully on docket",
-        matter: normalizeMatterForClient(result.matter),
+        matter: normalized,
         query: result.query,
         mode: "dummy_data",
       });
@@ -1135,10 +1175,26 @@ export const addMatterQuery = async (req, res) => {
     matter.updatedAt = new Date();
     await matter.save();
 
+    const normalized = normalizeMatterForClient(matter);
+    try {
+      broadcastMatterEvent("MATTER_QUERY_UPDATED", normalized, {
+        action: "QUERY_RAISED",
+        query: newQuery,
+        queryId: newQuery?.id,
+        title: queryData.title,
+        authorRole: queryData.authorRole || queryData.raisedBy?.role || "Engagement Lead",
+        authorName: queryData.authorName || queryData.raisedBy?.name || "Practicing Professional",
+        category: queryData.category || queryData.type || "CLARIFICATION",
+        caseNumber: normalized.caseNumber,
+      });
+    } catch (wsErr) {
+      console.warn("WebSocket broadcast warning in addMatterQuery (cloud_db):", wsErr.message);
+    }
+
     res.json({
       success: true,
       message: "Query raised successfully on docket",
-      matter: normalizeMatterForClient(matter),
+      matter: normalized,
       query: newQuery,
       mode: "cloud_db",
     });
@@ -1161,10 +1217,24 @@ export const resolveMatterQuery = async (req, res) => {
       if (!result) {
         return res.status(404).json({ success: false, message: "Matter or query not found" });
       }
+      const normalized = normalizeMatterForClient(result.matter);
+      try {
+        broadcastMatterEvent("MATTER_QUERY_UPDATED", normalized, {
+          action: "QUERY_RESOLVED",
+          query: result.query,
+          queryId: queryId,
+          status: responseData.status || "RESOLVED",
+          resolutionNotes: responseData.notes || responseData.resolutionNotes || "",
+          attachmentsCount: (responseData.attachments || []).length,
+          caseNumber: normalized.caseNumber,
+        });
+      } catch (wsErr) {
+        console.warn("WebSocket broadcast warning in resolveMatterQuery (devStore):", wsErr.message);
+      }
       return res.json({
         success: true,
         message: "Query response submitted and documents re-uploaded",
-        matter: normalizeMatterForClient(result.matter),
+        matter: normalized,
         query: result.query,
         mode: "dummy_data",
       });
@@ -1216,10 +1286,25 @@ export const resolveMatterQuery = async (req, res) => {
     matter.updatedAt = new Date();
     await matter.save();
 
+    const normalized = normalizeMatterForClient(matter);
+    try {
+      broadcastMatterEvent("MATTER_QUERY_UPDATED", normalized, {
+        action: "QUERY_RESOLVED",
+        query: matter.queries[qIndex],
+        queryId: queryId,
+        status: responseData.status || "RESOLVED",
+        resolutionNotes: responseData.notes || responseData.resolutionNotes || "",
+        attachmentsCount: (responseData.attachments || []).length,
+        caseNumber: normalized.caseNumber,
+      });
+    } catch (wsErr) {
+      console.warn("WebSocket broadcast warning in resolveMatterQuery (cloud_db):", wsErr.message);
+    }
+
     res.json({
       success: true,
       message: "Query response submitted and documents re-uploaded",
-      matter: normalizeMatterForClient(matter),
+      matter: normalized,
       query: matter.queries[qIndex],
       mode: "cloud_db",
     });
@@ -1242,10 +1327,25 @@ export const authorizeMatter = async (req, res) => {
       if (!result) {
         return res.status(404).json({ success: false, message: "Matter docket not found" });
       }
+      const normalized = normalizeMatterForClient(result.matter);
+      try {
+        broadcastMatterEvent("MATTER_AUTHORIZED", normalized, {
+          action: "STATUTORY_AUTHORIZATION_EXECUTED",
+          authorization: result.authorization,
+          signerName: result.authorization?.signerName,
+          signerDesignation: result.authorization?.signerDesignation,
+          signMethod: result.authorization?.signMethod,
+          espReference: result.authorization?.espReference,
+          caseNumber: normalized.caseNumber,
+          title: normalized.title,
+        });
+      } catch (wsErr) {
+        console.warn("WebSocket broadcast warning in authorizeMatter (devStore):", wsErr.message);
+      }
       return res.json({
         success: true,
         message: "Client statutory e-Sign authorization recorded successfully",
-        matter: normalizeMatterForClient(result.matter),
+        matter: normalized,
         authorization: result.authorization,
         mode: "dummy_data",
       });
@@ -1316,10 +1416,26 @@ export const authorizeMatter = async (req, res) => {
     matter.updatedAt = new Date();
     await matter.save();
 
+    const normalized = normalizeMatterForClient(matter);
+    try {
+      broadcastMatterEvent("MATTER_AUTHORIZED", normalized, {
+        action: "STATUTORY_AUTHORIZATION_EXECUTED",
+        authorization: authRecord,
+        signerName: authRecord.signerName,
+        signerDesignation: authRecord.signerDesignation,
+        signMethod: authRecord.signMethod,
+        espReference: authRecord.espReference,
+        caseNumber: normalized.caseNumber,
+        title: normalized.title,
+      });
+    } catch (wsErr) {
+      console.warn("WebSocket broadcast warning in authorizeMatter (cloud_db):", wsErr.message);
+    }
+
     res.json({
       success: true,
       message: "Client statutory e-Sign authorization recorded successfully",
-      matter: normalizeMatterForClient(matter),
+      matter: normalized,
       authorization: authRecord,
       mode: "cloud_db",
     });

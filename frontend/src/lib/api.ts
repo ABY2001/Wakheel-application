@@ -1241,6 +1241,15 @@ export interface TrustTransactionItem {
   date: string;
   status: string;
   createdAt?: string;
+  statutoryDetails?: {
+    portal?: string;
+    formName?: string;
+    cinOrSrn?: string;
+    bsrCode?: string;
+    challanSerialNumber?: string;
+    treatment?: "reimbursable_out_of_pocket" | "escrow_deduction" | string;
+    voucherNo?: string;
+  };
 }
 
 export interface ChamberExpenseItem {

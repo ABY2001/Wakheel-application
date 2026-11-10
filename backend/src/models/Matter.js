@@ -90,6 +90,7 @@ const matterSchema = new mongoose.Schema(
     documents: [{ type: mongoose.Schema.Types.Mixed }],
     queries: [{ type: mongoose.Schema.Types.Mixed }],
     clientAuthorization: { type: mongoose.Schema.Types.Mixed },
+    trustDisbursement: { type: mongoose.Schema.Types.Mixed },
     udinOrSrn: { type: String },
     partnerNotes: { type: String },
     clientPanOrCin: { type: String },

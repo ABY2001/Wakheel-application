@@ -24,9 +24,13 @@ import {
   Lock,
   Landmark,
   Coins,
+  ArrowUpRight,
+  Wallet,
+  FileSpreadsheet,
+  Layers,
 } from "lucide-react";
 import { challanDscApi, StatutoryChallanItem } from "@/lib/challanDscApi";
-import { citizenApi } from "@/lib/api";
+import { citizenApi, advocateApi } from "@/lib/api";
 
 export type PortalType = "MCA21" | "CBDT_INCOME_TAX" | "GSTN";
 
@@ -84,6 +88,19 @@ export function StatutoryChallanPaymentSimulatorModal({
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [paymentStep, setPaymentStep] = useState<"CONFIGURE" | "PROCESSING" | "RECEIPT">("CONFIGURE");
   const [paidChallanRecord, setPaidChallanRecord] = useState<StatutoryChallanItem | null>(null);
+
+  // Task C: Firm Trust & Disbursement Accounting Treatment State
+  const [accountingTreatment, setAccountingTreatment] = useState<
+    "reimbursable_out_of_pocket" | "escrow_deduction"
+  >("reimbursable_out_of_pocket");
+  const [recordedVoucher, setRecordedVoucher] = useState<{
+    voucherNo: string;
+    treatment: "reimbursable_out_of_pocket" | "escrow_deduction";
+    amount: number;
+    ledgerDebit: string;
+    ledgerCredit: string;
+    invoiceRef?: string;
+  } | null>(null);
 
   // Copy feedback
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -228,6 +245,83 @@ export function StatutoryChallanPaymentSimulatorModal({
 
       setPaidChallanRecord(paidChallan);
 
+      // Generate Task C Accounting Voucher Reference
+      const voucherNo = `VCH-${selectedPortal.slice(0, 3)}-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      // Token for API calls
+      const token = typeof window !== "undefined"
+        ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
+
+      // 1. Post to Firm Trust / Escrow Accounting (BCI Rule 24 / ICAI Escrow)
+      const trustTxData: any = {
+        type: "disbursement",
+        clientName: docket.clientName || "Inworth Technologies Pvt Ltd",
+        citizenId: docket.clientCinOrPan || "client_inworth",
+        matterTitle: `${docket.caseNumber} — ${docket.title}`,
+        matterId: docket.id,
+        amount: totalPayable,
+        purpose: `Statutory Government Fee: ${selectedPortal} ${formName} (${identifier})`,
+        referenceNumber: identifier,
+        verifiedBy: docket.assignedAdvocate || "CS Meera Krishnan & CA Ramanathan Iyer",
+        date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        status: "cleared",
+        statutoryDetails: {
+          portal: selectedPortal,
+          formName,
+          cinOrSrn: identifier,
+          bsrCode,
+          challanSerialNumber: `${randomCin}`,
+          treatment: accountingTreatment,
+          voucherNo,
+        },
+      };
+
+      try {
+        await advocateApi.addTrustTransaction(trustTxData, token);
+      } catch (txErr) {
+        console.warn("addTrustTransaction non-fatal:", txErr);
+      }
+
+      // 2. If Reimbursable Out-of-Pocket, record in Firm Invoicing / Pure Agent Ledger
+      let invoiceRefNumber = "";
+      if (accountingTreatment === "reimbursable_out_of_pocket") {
+        invoiceRefNumber = `INV-STAT-${Date.now().toString().slice(-5)}`;
+        try {
+          await advocateApi.createInvoice({
+            clientName: docket.clientName || "Inworth Technologies Pvt Ltd",
+            matterTitle: `${docket.caseNumber} — ${docket.title}`,
+            items: [
+              {
+                description: `Statutory Government Fee Reimbursement: ${selectedPortal} ${formName} (${identifier}) [Pure Agent Rule 33]`,
+                amount: totalPayable,
+              },
+            ],
+            subtotal: totalPayable,
+            gstRate: 0,
+            gstAmount: 0,
+            totalAmount: totalPayable,
+            status: "unpaid",
+            dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
+            paymentMethod: "Pending Client Reimbursement",
+          }, token);
+        } catch (invErr) {
+          console.warn("createInvoice non-fatal:", invErr);
+        }
+      }
+
+      const voucherRecord = {
+        voucherNo,
+        treatment: accountingTreatment,
+        amount: totalPayable,
+        ledgerDebit: accountingTreatment === "escrow_deduction"
+          ? `Client Segregated Trust Escrow A/c (${docket.clientName || "Inworth Technologies"})`
+          : `Client Reimbursable Disbursement Receivable (GST Rule 33 Pure Agent)`,
+        ledgerCredit: `Treasury Clearing A/c (${tenderedBank} • BSR ${bsrCode})`,
+        invoiceRef: invoiceRefNumber || undefined,
+      };
+      setRecordedVoucher(voucherRecord);
+
       // Create new document to attach to docket vault
       const newDocketDoc = {
         name: `Official_${selectedPortal}_Challan_Receipt_${identifier.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
@@ -243,14 +337,23 @@ export function StatutoryChallanPaymentSimulatorModal({
         onChallanPaid(paidChallan, newDocketDoc);
       }
 
-      // Update backend matter fee status
-      const token = typeof window !== "undefined"
-        ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
-
+      // Update backend matter fee status & trust disbursement
       await citizenApi.updateMatter(token, docket.id, {
         feePaid: `₹ ${totalPayable.toLocaleString("en-IN")} Discharged via ${selectedPortal} (${identifier})`,
         status: "Statutory Fee Discharged & Officially Stamped",
+        trustDisbursement: {
+          voucherNo,
+          treatment: accountingTreatment,
+          amount: totalPayable,
+          portal: selectedPortal,
+          formName,
+          cinOrSrn: identifier,
+          bsrCode,
+          challanSerialNumber: `${randomCin}`,
+          disbursedAt: timestamp,
+          invoiceRef: invoiceRefNumber || null,
+          status: "RECORDED_IN_TRUST_LEDGER",
+        },
       }).catch((e) => console.warn("updateMatter non-fatal:", e));
 
       setPaymentStep("RECEIPT");
@@ -551,6 +654,67 @@ Note: This receipt serves as valid proof of statutory remittance under Section 4
                 </div>
               </div>
 
+              {/* Task C: Firm Trust & Disbursement Accounting Treatment */}
+              <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                  <span className="font-bold text-xs uppercase tracking-wider text-black dark:text-white flex items-center gap-1.5">
+                    <Landmark className="w-4 h-4 text-indigo-500" />
+                    <span>Firm Trust &amp; Disbursement Accounting Treatment</span>
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-semibold">
+                    BCI Rule 24 • GST Rule 33 Pure Agent
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setAccountingTreatment("reimbursable_out_of_pocket")}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      accountingTreatment === "reimbursable_out_of_pocket"
+                        ? "border-black dark:border-white bg-white dark:bg-black text-black dark:text-white shadow-xs"
+                        : "border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-500 hover:border-zinc-400"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Reimbursable Out-of-Pocket Advance</span>
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-bold">
+                        Pure Agent
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      Firm advances statutory remittance; automatically books as an out-of-pocket disbursement line-item on the client ledger (0% GST per Rule 33).
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAccountingTreatment("escrow_deduction")}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      accountingTreatment === "escrow_deduction"
+                        ? "border-black dark:border-white bg-white dark:bg-black text-black dark:text-white shadow-xs"
+                        : "border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-500 hover:border-zinc-400"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <Wallet className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Client Trust Escrow Deduction</span>
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">
+                        BCI Rule 24
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      Debited directly from client&apos;s segregated retainer escrow account in State Bank of India Client Escrow A/c 98210041289.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-zinc-200 dark:border-zinc-800">
                 <span className="text-[11px] font-mono text-zinc-500">
@@ -741,6 +905,54 @@ Note: This receipt serves as valid proof of statutory remittance under Section 4
                   </div>
                 </div>
               </div>
+
+              {/* Task C: Statutory Accounting Voucher & Ledger Entry Card */}
+              {recordedVoucher && (
+                <div className="p-5 rounded-3xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="font-bold text-xs uppercase tracking-wider text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                      <Landmark className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <span>Firm Trust Accounting &amp; Disbursement Voucher Stamped</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200">
+                      {recordedVoucher.voucherNo}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-white dark:bg-black border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">Accounting Treatment</span>
+                      <p className="font-bold text-black dark:text-white">
+                        {recordedVoucher.treatment === "escrow_deduction"
+                          ? "Client Retainer Escrow Deduction"
+                          : "Reimbursable Out-of-Pocket Statutory Advance"}
+                      </p>
+                      <p className="text-[11px] text-zinc-500">
+                        {recordedVoucher.treatment === "escrow_deduction"
+                          ? "Debited under BCI Rule 24 / ICAI Escrow Standards"
+                          : "Pure Agent Disbursement (GST Rule 33 • 0% Tax)"}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white dark:bg-black border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-bold">General Ledger Debit / Credit</span>
+                      <p className="font-mono text-[11px] text-black dark:text-white truncate">
+                        <strong>DR:</strong> {recordedVoucher.ledgerDebit}
+                      </p>
+                      <p className="font-mono text-[11px] text-zinc-500 truncate">
+                        <strong>CR:</strong> {recordedVoucher.ledgerCredit}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] font-mono text-zinc-500 pt-1 border-t border-indigo-100 dark:border-indigo-900/50">
+                    <span>Synchronized with Firm ERP &amp; Segregated Trust Escrow Register</span>
+                    <span className="text-indigo-700 dark:text-indigo-300 font-bold">
+                      Disbursement Amount: ₹{recordedVoucher.amount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Actions Footer */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">

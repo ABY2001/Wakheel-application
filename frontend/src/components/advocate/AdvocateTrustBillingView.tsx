@@ -72,6 +72,7 @@ export function AdvocateTrustBillingView({
   const [invoices, setInvoices] = useState<AdvocateInvoice[]>([]);
   const [trustTransactions, setTrustTransactions] = useState<TrustTransactionItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [escrowFilter, setEscrowFilter] = useState<"all" | "deposit" | "statutory" | "court" | "drawdown">("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -380,6 +381,28 @@ export function AdvocateTrustBillingView({
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const trustEscrowBalance = totalTrustDeposits - totalTrustDisbursements;
+
+  // Task C: Helper to identify CA/CS and Corporate statutory government disbursements
+  const isStatutoryTransaction = (t: TrustTransactionItem) => {
+    const p = (t.purpose || "").toLowerCase();
+    const r = (t.referenceNumber || "").toUpperCase();
+    return (
+      t.statutoryDetails != null ||
+      p.includes("statutory") ||
+      p.includes("bharatkosh") ||
+      p.includes("mca21") ||
+      p.includes("gst") ||
+      p.includes("itns") ||
+      r.startsWith("SRN") ||
+      r.startsWith("CPIN") ||
+      r.startsWith("ITNS") ||
+      r.startsWith("CIN")
+    );
+  };
+
+  const statutoryDisbursementsTotal = trustTransactions
+    .filter((t) => isStatutoryTransaction(t))
+    .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const totalUnbilledFees = billableLogs
     .filter((l) => l.status === "unbilled")
@@ -702,46 +725,57 @@ export function AdvocateTrustBillingView({
           </div>
         </div>
 
-        {/* 4 KPI Metrics Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-900">
-          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+        {/* 5 KPI Metrics Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-900">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
             <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block">
               Total Client Escrow
             </span>
-            <div className="text-2xl font-black text-black dark:text-white">
+            <div className="text-xl sm:text-2xl font-black text-black dark:text-white">
               ₹{trustEscrowBalance.toLocaleString("en-IN")}
             </div>
-            <span className="text-[11px] text-zinc-500">Across 4 client retainers &amp; court deposits</span>
+            <span className="text-[11px] text-zinc-500">Across client retainers &amp; court deposits</span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
             <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block">
               Unbilled Appearance Hours
             </span>
-            <div className="text-2xl font-black text-black dark:text-white">
+            <div className="text-xl sm:text-2xl font-black text-black dark:text-white">
               ₹{totalUnbilledFees.toLocaleString("en-IN")}
             </div>
             <span className="text-[11px] text-zinc-500">3 unbilled session logs ready to invoice</span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
             <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block">
               Billed Tax Invoices
             </span>
-            <div className="text-2xl font-black text-black dark:text-white">
+            <div className="text-xl sm:text-2xl font-black text-black dark:text-white">
               ₹{totalBilledInvoices.toLocaleString("en-IN")}
             </div>
             <span className="text-[11px] text-zinc-500">With 18% GST (SAC 9982) breakdown</span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
             <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block">
               Section 194J TDS Claimed
             </span>
-            <div className="text-2xl font-black text-black dark:text-white">
+            <div className="text-xl sm:text-2xl font-black text-black dark:text-white">
               ₹{(totalCollectedInvoices * 0.1).toLocaleString("en-IN")}
             </div>
             <span className="text-[11px] text-zinc-500">Form 26AS / AIS Traces Verified</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block flex items-center justify-between">
+              <span>Statutory Disbursements</span>
+              <span className="text-[9px] px-1 py-0.2 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-bold">Pure Agent</span>
+            </span>
+            <div className="text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400">
+              ₹{statutoryDisbursementsTotal.toLocaleString("en-IN")}
+            </div>
+            <span className="text-[11px] text-zinc-500">BharatKosh, ITNS &amp; PMT-06 Out-of-Pocket</span>
           </div>
         </div>
 
@@ -824,35 +858,97 @@ export function AdvocateTrustBillingView({
       {activeTab === "escrow" && (
         <div className="space-y-5">
           {/* Action Row & Filter */}
-          <div className="p-4 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 flex-1 max-w-md">
-              <div className="relative w-full">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder="Search escrow ledger by client, matter, or UTR ref..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
-                />
+          <div className="p-4 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-1 max-w-md">
+                <div className="relative w-full">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text-zinc-400" />
+                  <input
+                    type="text"
+                    placeholder="Search escrow ledger by client, matter, or UTR / CIN ref..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setShowDisburseModal(true)}
+                  className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5 text-[#6B1728]" />
+                  <span>Court Registry Disbursal</span>
+                </button>
+
+                <button
+                  onClick={() => setShowDrawdownModal(true)}
+                  className="px-3.5 py-2 rounded-xl border border-[#6B1728]/40 bg-[#6B1728]/10 text-xs font-bold text-[#6B1728] dark:text-[#ff94a8] hover:bg-[#6B1728]/20 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>Rule 28 Fee Drawdown</span>
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Task C: Escrow Sub-Category Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-zinc-100 dark:border-zinc-900 text-xs">
               <button
-                onClick={() => setShowDisburseModal(true)}
-                className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition cursor-pointer flex items-center gap-1.5"
+                type="button"
+                onClick={() => setEscrowFilter("all")}
+                className={`px-3 py-1 rounded-xl font-bold text-[11px] transition cursor-pointer ${
+                  escrowFilter === "all"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
               >
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#6B1728]" />
-                <span>Court Registry Disbursal</span>
+                All Records ({trustTransactions.length})
               </button>
-
               <button
-                onClick={() => setShowDrawdownModal(true)}
-                className="px-3.5 py-2 rounded-xl border border-[#6B1728]/40 bg-[#6B1728]/10 text-xs font-bold text-[#6B1728] dark:text-[#ff94a8] hover:bg-[#6B1728]/20 transition cursor-pointer flex items-center gap-1.5"
+                type="button"
+                onClick={() => setEscrowFilter("statutory")}
+                className={`px-3 py-1 rounded-xl font-bold text-[11px] transition cursor-pointer flex items-center gap-1 ${
+                  escrowFilter === "statutory"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
+                }`}
               >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span>Rule 28 Fee Drawdown</span>
+                <Landmark className="w-3 h-3" />
+                <span>Statutory Challans ({trustTransactions.filter((t) => isStatutoryTransaction(t)).length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEscrowFilter("deposit")}
+                className={`px-3 py-1 rounded-xl font-bold text-[11px] transition cursor-pointer ${
+                  escrowFilter === "deposit"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                Client Deposits ({trustTransactions.filter((t) => t.type === "deposit").length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setEscrowFilter("court")}
+                className={`px-3 py-1 rounded-xl font-bold text-[11px] transition cursor-pointer ${
+                  escrowFilter === "court"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                Court Disbursals ({trustTransactions.filter((t) => t.type === "disbursement" && !isStatutoryTransaction(t)).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setEscrowFilter("drawdown")}
+                className={`px-3 py-1 rounded-xl font-bold text-[11px] transition cursor-pointer ${
+                  escrowFilter === "drawdown"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                }`}
+              >
+                Fee Drawdowns ({trustTransactions.filter((t) => t.type === "drawdown").length})
               </button>
             </div>
           </div>
@@ -889,17 +985,24 @@ export function AdvocateTrustBillingView({
                   {trustTransactions
                     .filter((t) => {
                       const q = searchQuery.toLowerCase();
-                      return (
+                      const matchesQuery =
                         !q ||
                         t.clientName.toLowerCase().includes(q) ||
                         t.matterTitle.toLowerCase().includes(q) ||
                         t.purpose.toLowerCase().includes(q) ||
-                        t.referenceNumber.toLowerCase().includes(q)
-                      );
+                        t.referenceNumber.toLowerCase().includes(q);
+                      if (!matchesQuery) return false;
+
+                      if (escrowFilter === "deposit") return t.type === "deposit";
+                      if (escrowFilter === "statutory") return isStatutoryTransaction(t);
+                      if (escrowFilter === "court") return t.type === "disbursement" && !isStatutoryTransaction(t);
+                      if (escrowFilter === "drawdown") return t.type === "drawdown";
+                      return true;
                     })
                     .map((item) => {
                       const isDeposit = item.type === "deposit";
                       const isDrawdown = item.type === "drawdown";
+                      const isStatutory = isStatutoryTransaction(item);
 
                       return (
                         <tr key={item._id} className="hover:bg-zinc-50 dark:hover:bg-zinc-950 transition">
@@ -925,9 +1028,31 @@ export function AdvocateTrustBillingView({
                             <span className="text-zinc-700 dark:text-zinc-300 block font-medium">
                               {item.purpose}
                             </span>
-                            <span className="text-[10px] text-zinc-400">
-                              Verified by: {item.verifiedBy || advocateName}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-zinc-400 mt-0.5">
+                              <span>Verified by: {item.verifiedBy || advocateName}</span>
+                              {item.statutoryDetails && (
+                                <>
+                                  <span>•</span>
+                                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
+                                    {item.statutoryDetails.portal} • BSR: {item.statutoryDetails.bsrCode}
+                                  </span>
+                                  {item.statutoryDetails.voucherNo && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="font-mono text-zinc-500">
+                                        Voucher: {item.statutoryDetails.voucherNo}
+                                      </span>
+                                    </>
+                                  )}
+                                  <span>•</span>
+                                  <span className="px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-900 font-semibold text-zinc-600 dark:text-zinc-400">
+                                    {item.statutoryDetails.treatment === "reimbursable_out_of_pocket"
+                                      ? "Pure Agent (GST Rule 33)"
+                                      : "Escrow Retainer Debit"}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </td>
 
                           <td className="py-3.5 px-4">
@@ -937,7 +1062,13 @@ export function AdvocateTrustBillingView({
                                 Client Deposit
                               </span>
                             )}
-                            {item.type === "disbursement" && (
+                            {item.type === "disbursement" && isStatutory && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-300">
+                                <Landmark className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                                Statutory Govt Challan
+                              </span>
+                            )}
+                            {item.type === "disbursement" && !isStatutory && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
                                 <ArrowUpRight className="w-3 h-3 text-zinc-500" />
                                 Court Disbursal

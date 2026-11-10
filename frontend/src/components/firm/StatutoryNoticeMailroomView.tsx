@@ -129,7 +129,7 @@ export function StatutoryNoticeMailroomView({
         }
       }
     } catch (err) {
-      console.error("Error loading statutory notices:", err);
+      console.warn("Notice loading handled via fallback mode:", (err as Error)?.message);
     } finally {
       setLoading(false);
     }

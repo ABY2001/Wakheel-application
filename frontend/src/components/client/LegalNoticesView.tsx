@@ -60,7 +60,7 @@ interface LegalNoticesViewProps {
 }
 
 export const LegalNoticesView: React.FC<LegalNoticesViewProps> = ({
-  token = "dev_token",
+  token = "",
 }) => {
   const [notices, setNotices] = useState<LegalNoticeItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -87,7 +87,7 @@ export const LegalNoticesView: React.FC<LegalNoticesViewProps> = ({
   const [noticeType, setNoticeType] = useState<string>("Cheque Bounce Demand (Sec 138 NI Act)");
   const [recipientName, setRecipientName] = useState<string>("");
   const [recipientAddress, setRecipientAddress] = useState<string>("");
-  const [senderName, setSenderName] = useState<string>("Gopakumar Nambiar");
+  const [senderName, setSenderName] = useState<string>("");
   const [advocateName, setAdvocateName] = useState<string>("Adv. Meera Krishnan");
   const [claimAmount, setClaimAmount] = useState<string>("");
   const [statutoryNoticeDays, setStatutoryNoticeDays] = useState<number>(15);
@@ -99,15 +99,38 @@ export const LegalNoticesView: React.FC<LegalNoticesViewProps> = ({
   const [customTitle, setCustomTitle] = useState<string>("");
   const [draftContent, setDraftContent] = useState<string>("");
 
+  useEffect(() => {
+    try {
+      const savedUserStr = localStorage.getItem("wakheel_user");
+      if (savedUserStr) {
+        const u = JSON.parse(savedUserStr);
+        if (u?.name) setSenderName(u.name);
+      }
+    } catch {}
+  }, []);
+
   const fetchNotices = async () => {
+    const activeToken =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || ""
+        : "");
     try {
       setLoading(true);
-      const res = await citizenApi.getLegalNotices(token);
-      if (res && res.notices) {
+      if (!activeToken) {
+        setNotices([]);
+        setLoading(false);
+        return;
+      }
+      const res = await citizenApi.getLegalNotices(activeToken);
+      if (res && Array.isArray(res.notices)) {
         setNotices(res.notices);
+      } else {
+        setNotices([]);
       }
     } catch (err) {
       console.error("Failed to load legal notices:", err);
+      setNotices([]);
     } finally {
       setLoading(false);
     }

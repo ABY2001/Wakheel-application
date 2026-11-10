@@ -1590,33 +1590,64 @@ export const devStore = {
     const profiles = readFile("dev_citizen_profiles.json", []);
     let profile = profiles.find((p) => p.userId === userId);
     if (!profile) {
-      profile = {
-        userId,
-        fullName: "Gopakumar Nambiar",
-        email: "gopakumar@test.com",
-        phone: "+91 94471 28400",
-        alternatePhone: "+91 484 231456",
-        address: {
-          street: "Flat 4B, Silver Heights, Panampilly Nagar",
-          city: "Kochi",
-          district: "Ernakulam",
-          state: "Kerala",
-          pincode: "682036",
-        },
-        preferredLanguage: "en",
-        emergencyContact: {
-          name: "Suresh Nambiar",
-          relationship: "Brother",
-          phone: "+91 98460 11223",
-        },
-        kycVerified: true,
-        notificationPreferences: {
-          whatsapp: true,
-          email: true,
-          inApp: true,
-          courtHearingAlerts: true,
-        },
-      };
+      if (userId === "default_citizen") {
+        profile = {
+          userId: "default_citizen",
+          fullName: "Gopakumar Nambiar",
+          email: "gopakumar@test.com",
+          phone: "+91 94471 28400",
+          alternatePhone: "+91 484 231456",
+          address: {
+            street: "Flat 4B, Silver Heights, Panampilly Nagar",
+            city: "Kochi",
+            district: "Ernakulam",
+            state: "Kerala",
+            pincode: "682036",
+          },
+          preferredLanguage: "en",
+          emergencyContact: {
+            name: "Suresh Nambiar",
+            relationship: "Brother",
+            phone: "+91 98460 11223",
+          },
+          kycVerified: true,
+          notificationPreferences: {
+            whatsapp: true,
+            email: true,
+            inApp: true,
+            courtHearingAlerts: true,
+          },
+        };
+      } else {
+        const user = this.getUserById(userId);
+        profile = {
+          userId,
+          fullName: user?.name || "Citizen User",
+          email: user?.email || "",
+          phone: user?.phone || "",
+          alternatePhone: "",
+          address: {
+            street: "",
+            city: "",
+            district: "",
+            state: "Kerala",
+            pincode: "",
+          },
+          preferredLanguage: "en",
+          emergencyContact: {
+            name: "",
+            relationship: "",
+            phone: "",
+          },
+          kycVerified: false,
+          notificationPreferences: {
+            whatsapp: true,
+            email: true,
+            inApp: true,
+            courtHearingAlerts: true,
+          },
+        };
+      }
       profiles.push(profile);
       writeFile("dev_citizen_profiles.json", profiles);
     }
@@ -1640,7 +1671,9 @@ export const devStore = {
   // --- Grievances / Legal Problem Intake ---
   getGrievances(userId) {
     const grvs = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
-    return grvs;
+    if (!userId) return [];
+    if (userId === "default_citizen") return grvs;
+    return grvs.filter((g) => g.citizenId === userId || g.userId === userId);
   },
 
   getGrievanceById(id) {
@@ -1729,7 +1762,12 @@ export const devStore = {
 
   // --- Matters ---
   getMatters(userId) {
-    return readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    if (!userId) return [];
+    if (userId === "default_citizen") return matters;
+    return matters.filter(
+      (m) => m.citizenId === userId || m.userId === userId || m.clientId === userId
+    );
   },
 
   getMatterById(id) {
@@ -1910,8 +1948,10 @@ export const devStore = {
   // --- Consultations ---
   getConsultations(userId) {
     const list = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
+    if (!userId) return [];
+    if (userId === "default_citizen") return list;
     return list.filter(
-      (c) => !userId || c.citizenId === userId || userId === "default_citizen"
+      (c) => c.citizenId === userId || c.userId === userId
     );
   },
 
@@ -1987,10 +2027,12 @@ export const devStore = {
   // --- Documents & Vault ---
   getDocuments(userId, filter = {}) {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
-    return docs.filter((d) => {
-      if (userId && d.citizenId && d.citizenId !== userId && userId !== "default_citizen") {
-        return false;
-      }
+    if (!userId) return [];
+    const userDocs =
+      userId === "default_citizen"
+        ? docs
+        : docs.filter((d) => d.citizenId === userId || d.userId === userId);
+    return userDocs.filter((d) => {
       if (filter.subType && filter.subType !== "all") {
         if (filter.subType === "contracts" && d.category !== "Contract" && d.subType !== "contracts") return false;
         if (filter.subType === "certified-true-copies" && d.category !== "CTC" && d.subType !== "certified-true-copies") return false;
@@ -2083,7 +2125,12 @@ export const devStore = {
   // --- Legal Notices ---
   getNotices(userId) {
     const notices = readFile("dev_notices.json", DEFAULT_NOTICES);
-    return notices.map((n) => {
+    if (!userId) return [];
+    const userNotices =
+      userId === "default_citizen"
+        ? notices
+        : notices.filter((n) => n.citizenId === userId || n.userId === userId);
+    return userNotices.map((n) => {
       const dispatch = n.dispatchDate ? new Date(n.dispatchDate).getTime() : Date.now();
       const elapsedDays = Math.max(0, Math.floor((Date.now() - dispatch) / (1000 * 60 * 60 * 24)));
       const statutory = Number(n.statutoryNoticeDays) || 15;
@@ -2587,10 +2634,12 @@ export const devStore = {
   },
 
   // --- Two-Way Realtime Synchronization Engine ---
-  getCitizenInvoices(citizenId = "default_citizen") {
+  getCitizenInvoices(citizenId) {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
+    if (!citizenId) return [];
+    if (citizenId === "default_citizen") return invoices;
     return invoices.filter(
-      (inv) => inv.citizenId === citizenId || citizenId === "default_citizen"
+      (inv) => inv.citizenId === citizenId || inv.userId === citizenId
     );
   },
 

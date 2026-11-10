@@ -14,7 +14,7 @@
     "fullName": "gggg",
     "email": "abyworkmail123@gmail.com",
     "password": "$2a$10$eb2U7hOcHBlJ6vehAXFKKe5y37Zwqzhh12G7fgQ.ZqQmMUbJzjeem",
-    "role": "cs",
+    "role": "advocate",
     "verifyMethod": "email",
     "isVerified": false,
     "createdAt": "2026-10-12T04:07:31.046Z",
@@ -173,5 +173,22 @@
     "verifyMethod": "email",
     "isVerified": true,
     "createdAt": "2026-11-10T04:47:37.657Z"
+  },
+  {
+    "_id": "dev_1794308888714",
+    "fullName": "test",
+    "email": "test@123",
+    "password": "$2a$10$6ViXmP6QSzAsUTifHoc/iu.ZERy02poSM9TdjKAlPIMpsKhvGbZMi",
+    "role": "citizen",
+    "verifyMethod": "email",
+    "isVerified": false,
+    "accountType": "citizen",
+    "barCouncilId": "",
+    "firmName": "",
+    "teamSize": "",
+    "firmRegistration": "",
+    "icsiNumber": "",
+    "icaiNumber": "",
+    "createdAt": "2026-11-10T11:08:08.715Z"
   }
 ]

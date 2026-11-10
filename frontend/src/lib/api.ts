@@ -1429,10 +1429,17 @@ export const advocateApi = {
   },
 
   async getMatterDetails(id: string, token?: string) {
-    const res = await fetch(`${API_BASE_URL}/advocate/matters/${id}`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/matters/${id}`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err: any) {
+      console.warn("advocateApi.getMatterDetails fallback:", err?.message || err);
+    }
+    return { success: false, message: "Matter not found" };
   },
 
   async trackCase(token?: string, cnrOrQuery?: string): Promise<{ success: boolean; isLinkedToUser?: boolean; source?: string; matter?: any; canImportToDocket?: boolean; message?: string }> {

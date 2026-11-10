@@ -141,7 +141,8 @@ export function MyLegalMattersView({
   onNavigateTab,
   initialShowCnrTracker = false,
 }: MyLegalMattersViewProps = {}) {
-  const [matters, setMatters] = useState<LegalMatter[]>(DEFAULT_MATTERS);
+  const [matters, setMatters] = useState<LegalMatter[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedMatterDetail, setSelectedMatterDetail] = useState<LegalMatter | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -160,13 +161,19 @@ export function MyLegalMattersView({
   // Sync matters from backend API on mount
   useEffect(() => {
     const fetchMatters = async () => {
+      setIsLoading(true);
       const token =
         typeof window !== "undefined"
-          ? localStorage.getItem("wakheel_token") || "dev_token"
-          : "dev_token";
+          ? localStorage.getItem("wakheel_token") || ""
+          : "";
       try {
+        if (!token) {
+          setMatters([]);
+          setIsLoading(false);
+          return;
+        }
         const res = await citizenApi.getMatters(token);
-        if (res?.success && Array.isArray(res.matters) && res.matters.length > 0) {
+        if (res?.success && Array.isArray(res.matters)) {
           const normalized: LegalMatter[] = res.matters.map((m: any) => ({
             id: m.id || m._id,
             caseNumber: m.caseNumber || "WP(C) 19482/2024",
@@ -174,17 +181,22 @@ export function MyLegalMattersView({
             court: m.court || m.courtForum || "High Court of Kerala",
             assignedAdvocate: m.assignedAdvocate || m.advocateName || "Adv. Meera Krishnan",
             nextHearing: m.nextHearing || (m.nextHearingDate ? `${new Date(m.nextHearingDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${m.courtHall || "Court Hall 2A"})` : "Listed for hearing"),
-            filingDate: m.filingDate || (m.createdAt ? m.createdAt.split("T")[0] : "2024-06-14"),
+            filingDate: m.filingDate || (m.createdAt ? m.createdAt.split("T")[0] : new Date().toISOString().split("T")[0]),
             status: m.status === "active" ? "Admitted" : m.status === "notice_issued" ? "Notice Issued" : (m.status || "Admitted"),
-            cnrNumber: m.cnrNumber || "KLHC01-019482-2024",
+            cnrNumber: m.cnrNumber || "",
             courtHall: m.courtHall || "Court Hall 2A",
-            statutoryActs: m.statutoryActs || ["Article 226 of the Constitution of India"],
+            statutoryActs: m.statutoryActs || [],
             timeline: m.timeline || [],
           }));
           setMatters(normalized);
+        } else {
+          setMatters([]);
         }
       } catch (err) {
-        console.warn("Could not fetch matters from backend, using default dockets:", err);
+        console.warn("Could not fetch matters from backend:", err);
+        setMatters([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchMatters();
@@ -205,8 +217,8 @@ export function MyLegalMattersView({
 
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || ""
+        : "";
 
     try {
       const res = await citizenApi.trackCase(token, query);
@@ -493,7 +505,46 @@ export function MyLegalMattersView({
 
       {/* Matters Stack matching exact card layout */}
       <div className="space-y-4 sm:space-y-5">
-        {filteredMatters.length === 0 ? (
+        {isLoading ? (
+          <div className="p-12 text-center rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3 bg-white dark:bg-black">
+            <div className="w-8 h-8 border-2 border-zinc-300 border-t-black dark:border-zinc-700 dark:border-t-white rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-zinc-500 font-medium">Checking active court dockets &amp; e-Courts filings...</p>
+          </div>
+        ) : matters.length === 0 ? (
+          <div className="p-10 sm:p-14 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 space-y-4 bg-white dark:bg-black">
+            <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto text-black dark:text-white">
+              <Scale className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-black dark:text-white">
+                No Active Legal Matters Yet
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto leading-relaxed">
+                You do not have any court proceedings linked to your account. Track an ongoing matter via its 16-digit CNR number or book a consultation with an advocate to file a new matter.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCnrTracker(true)}
+                className="px-4 py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-2 cursor-pointer hover:opacity-90 shadow-xs"
+              >
+                <Activity className="w-4 h-4" />
+                <span>Track Case via 16-Digit CNR</span>
+              </button>
+              {onOpenConsultation && (
+                <button
+                  type="button"
+                  onClick={onOpenConsultation}
+                  className="px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white font-bold text-xs flex items-center gap-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Book Legal Consultation</span>
+                </button>
+              )}
+            </div>
+          </div>
+        ) : filteredMatters.length === 0 ? (
           <div className="p-12 text-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 space-y-3 bg-white dark:bg-black">
             <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto text-black dark:text-white">
               <Scale className="w-6 h-6" />

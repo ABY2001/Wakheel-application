@@ -26,10 +26,13 @@
     "cgstAmount": 1080,
     "sgstAmount": 1080,
     "totalAmount": 14160,
-    "status": "unpaid",
+    "status": "paid",
     "dueDate": "2026-11-05T09:53:10.253Z",
     "paymentMethod": "UPI",
-    "createdAt": "2026-10-21T09:53:10.253Z"
+    "createdAt": "2026-10-21T09:53:10.253Z",
+    "paidAt": "2026-11-06T04:59:43.855Z",
+    "transactionId": "UPI/2026/23104843",
+    "receiptNumber": "REC-2026/005"
   },
   {
     "_id": "inv_2026_041",

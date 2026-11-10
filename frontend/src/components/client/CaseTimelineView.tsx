@@ -277,9 +277,9 @@ export function CaseTimelineView({
   initialMatter,
   onOpenBookingModal,
 }: CaseTimelineViewProps) {
-  const [mattersList, setMattersList] = useState<MatterOption[]>(AVAILABLE_MATTERS);
-  const [selectedMatterKey, setSelectedMatterKey] = useState<string>("mat_wpc_19482");
-  const [milestones, setMilestones] = useState<TimelineMilestone[]>(DEFAULT_MILESTONES);
+  const [mattersList, setMattersList] = useState<MatterOption[]>([]);
+  const [selectedMatterKey, setSelectedMatterKey] = useState<string>("");
+  const [milestones, setMilestones] = useState<TimelineMilestone[]>([]);
   const [statusFilter, setStatusFilter] = useState<"all" | "Scheduled" | "Completed">("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [isSubmittingMilestone, setIsSubmittingMilestone] = useState(false);
@@ -292,15 +292,22 @@ export function CaseTimelineView({
   const [newStatus, setNewStatus] = useState<"Scheduled" | "Completed">("Scheduled");
 
   const currentMatter =
-    mattersList.find((m) => m.id === selectedMatterKey) || mattersList[0];
+    mattersList.find((m) => m.id === selectedMatterKey) || mattersList[0] || null;
 
   const loadMattersAndTimeline = async () => {
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || ""
+        : "";
     try {
       setIsLoadingTimeline(true);
+      if (!token) {
+        setMattersList([]);
+        setSelectedMatterKey("");
+        setMilestones([]);
+        setIsLoadingTimeline(false);
+        return;
+      }
       const res = await citizenApi.getMatters(token);
       if (res?.success && Array.isArray(res.matters) && res.matters.length > 0) {
         const mappedMatters: MatterOption[] = res.matters.map((m: any) => ({
@@ -338,10 +345,19 @@ export function CaseTimelineView({
             targetMatter.counsel
           );
           setMilestones(mappedEvents);
+        } else {
+          setMilestones([]);
         }
+      } else {
+        setMattersList([]);
+        setSelectedMatterKey("");
+        setMilestones([]);
       }
     } catch (err) {
-      console.warn("Could not load matters from API, using default timeline:", err);
+      console.warn("Could not load matters from API:", err);
+      setMattersList([]);
+      setSelectedMatterKey("");
+      setMilestones([]);
     } finally {
       setIsLoadingTimeline(false);
     }
@@ -443,105 +459,128 @@ export function CaseTimelineView({
             Case Timeline &amp; Next Steps
           </h2>
           <p className="text-xs sm:text-sm text-zinc-500">
-            Milestones, court orders, and next actions for {currentMatter.title}
+            {currentMatter ? `Milestones, court orders, and next actions for ${currentMatter.title}` : "Milestones, court orders, and scheduled hearing dates"}
           </p>
         </div>
 
         {/* Action Controls: Matter Selector & Add Button */}
-        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-          <div className="relative">
-            <select
-              value={selectedMatterKey}
-              onChange={(e) => handleSelectMatter(e.target.value)}
-              aria-label="Select matter for timeline"
-              className="px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer pr-8"
-            >
-              {mattersList.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title}
-                </option>
-              ))}
-            </select>
-          </div>
+        {mattersList.length > 0 && (
+          <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+            <div className="relative">
+              <select
+                value={selectedMatterKey}
+                onChange={(e) => handleSelectMatter(e.target.value)}
+                aria-label="Select matter for timeline"
+                className="px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer pr-8"
+              >
+                {mattersList.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.title}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => loadMattersAndTimeline()}
-            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 cursor-pointer"
-            title="Refresh Case Timeline from Court Registry"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoadingTimeline ? "animate-spin" : ""}`} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setAddModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-2 shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Milestone</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Filter Tabs: All, Scheduled, Completed */}
-      <div className="flex items-center gap-2 pb-1 overflow-x-auto text-xs font-semibold">
-        {(
-          [
-            { key: "all", label: "All Milestones" },
-            { key: "Scheduled", label: "Scheduled (Upcoming)" },
-            { key: "Completed", label: "Completed Orders & Filings" },
-          ] as const
-        ).map((tab) => {
-          const isActive = statusFilter === tab.key;
-          return (
             <button
-              key={tab.key}
               type="button"
-              onClick={() => setStatusFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                isActive
-                  ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                  : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-              }`}
+              onClick={() => loadMattersAndTimeline()}
+              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 cursor-pointer"
+              title="Refresh Case Timeline from Court Registry"
             >
-              {tab.label}
+              <RefreshCw className={`w-4 h-4 ${isLoadingTimeline ? "animate-spin" : ""}`} />
             </button>
-          );
-        })}
+
+            <button
+              type="button"
+              onClick={() => setAddModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-2 shadow-xs hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Milestone</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* ===================================================================== */}
-      {/* TIMELINE CONTAINER & VERTICAL LINE (Matching exact user screenshot)  */}
-      {/* ===================================================================== */}
-      <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-2 sm:before:left-3 before:top-4 before:bottom-4 before:w-0.5 before:bg-zinc-200 dark:before:bg-zinc-800">
-        {filteredMilestones.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black space-y-2">
-            <Clock className="w-8 h-8 mx-auto text-zinc-400" />
-            <h4 className="text-sm font-bold text-black dark:text-white">
-              No milestones found for this filter
-            </h4>
-            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-              There are no {statusFilter.toLowerCase()} events logged for {currentMatter.title}. Click &quot;Add Milestone&quot; to schedule one.
+      {isLoadingTimeline ? (
+        <div className="p-12 text-center rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3 bg-white dark:bg-black">
+          <div className="w-8 h-8 border-2 border-zinc-300 border-t-black dark:border-zinc-700 dark:border-t-white rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-zinc-500 font-medium">Checking court milestones from registry...</p>
+        </div>
+      ) : mattersList.length === 0 ? (
+        <div className="p-12 sm:p-16 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 space-y-4 bg-white dark:bg-black">
+          <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto text-black dark:text-white">
+            <Clock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-black dark:text-white">
+              No Active Case Timelines
+            </h3>
+            <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto leading-relaxed">
+              There are no court proceedings or hearing schedules logged on your timeline. Track an active docket via CNR number or file a petition to view real-time hearing dates, bench orders, and stage progression.
             </p>
           </div>
-        ) : (
-          filteredMilestones.map((item) => {
-            const isCompleted = item.status === "Completed";
-            return (
-              <div key={item.id} className="relative group">
-                {/* Timeline Node Dot on the vertical line */}
-                <div
-                  className={`absolute -left-6 sm:-left-8 top-5 w-4 h-4 rounded-full border-2 transition-transform group-hover:scale-110 flex items-center justify-center ${
-                    isCompleted
-                      ? "border-black dark:border-white bg-black dark:bg-white"
-                      : "border-black dark:border-white bg-white dark:bg-black"
+        </div>
+      ) : (
+        <>
+          {/* Filter Tabs: All, Scheduled, Completed */}
+          <div className="flex items-center gap-2 pb-1 overflow-x-auto text-xs font-semibold">
+            {(
+              [
+                { key: "all", label: "All Milestones" },
+                { key: "Scheduled", label: "Scheduled (Upcoming)" },
+                { key: "Completed", label: "Completed Orders & Filings" },
+              ] as const
+            ).map((tab) => {
+              const isActive = statusFilter === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.key)}
+                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                      : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
                   }`}
                 >
-                  {isCompleted && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-black" />
-                  )}
-                </div>
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ===================================================================== */}
+          {/* TIMELINE CONTAINER & VERTICAL LINE (Matching exact user screenshot)  */}
+          {/* ===================================================================== */}
+          <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-2 sm:before:left-3 before:top-4 before:bottom-4 before:w-0.5 before:bg-zinc-200 dark:before:bg-zinc-800">
+            {filteredMilestones.length === 0 ? (
+              <div className="p-12 text-center rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black space-y-2">
+                <Clock className="w-8 h-8 mx-auto text-zinc-400" />
+                <h4 className="text-sm font-bold text-black dark:text-white">
+                  No milestones found for this filter
+                </h4>
+                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                  There are no {statusFilter.toLowerCase()} events logged for {currentMatter?.title || "this matter"}. Click &quot;Add Milestone&quot; to schedule one.
+                </p>
+              </div>
+            ) : (
+              filteredMilestones.map((item) => {
+                const isCompleted = item.status === "Completed";
+                return (
+                  <div key={item.id} className="relative group">
+                    {/* Timeline Node Dot on the vertical line */}
+                    <div
+                      className={`absolute -left-6 sm:-left-8 top-5 w-4 h-4 rounded-full border-2 transition-transform group-hover:scale-110 flex items-center justify-center ${
+                        isCompleted
+                          ? "border-black dark:border-white bg-black dark:bg-white"
+                          : "border-black dark:border-white bg-white dark:bg-black"
+                      }`}
+                    >
+                      {isCompleted && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-black" />
+                      )}
+                    </div>
 
                 {/* Milestone Card (Matching screenshot layout, typography & our zinc palette) */}
                 <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-5 sm:p-6 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all space-y-3">
@@ -616,6 +655,8 @@ export function CaseTimelineView({
           })
         )}
       </div>
+      </>
+      )}
 
       {/* ===================================================================== */}
       {/* ADD MILESTONE MODAL (Strictly monochrome zinc palette)                */}
@@ -647,7 +688,7 @@ export function CaseTimelineView({
                 <input
                   type="text"
                   disabled
-                  value={currentMatter.fullTitle}
+                  value={currentMatter?.fullTitle || ""}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono text-zinc-500"
                 />
               </div>

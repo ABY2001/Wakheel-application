@@ -120,14 +120,52 @@ export function ClientPortalView() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [newMatterModalOpen, setNewMatterModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const EMPTY_CITIZEN_PROFILE: CitizenProfileData = {
+    fullName: "Citizen User",
+    fatherOrSpouseName: "",
+    age: "",
+    dob: "",
+    occupation: "",
+    residentialAddress: "",
+    district: "Ernakulam",
+    state: "Kerala",
+    pincode: "",
+    mobileNumber: "",
+    email: "",
+    panNumber: "",
+    aadhaarMasked: "",
+    isDigiLockerVerified: false,
+    digiLockerVerifiedDate: "",
+    emergencyContactName: "",
+    emergencyContactRelation: "",
+    emergencyContactPhone: "",
+    secondaryEmergencyName: "",
+    secondaryEmergencyPhone: "",
+    enableEmergencySosAlerts: false,
+    retainedAdvocateName: "",
+    retainedAdvocatePhone: "",
+    preferredLanguage: "en",
+    notificationChannel: "all",
+    primaryCourtJurisdiction: "Kerala (High Court of Kerala)",
+  };
+
   const [citizenProfileModalOpen, setCitizenProfileModalOpen] = useState(false);
-  const [citizenProfile, setCitizenProfile] = useState<CitizenProfileData>(DEFAULT_CITIZEN_PROFILE);
+  const [citizenProfile, setCitizenProfile] = useState<CitizenProfileData>(EMPTY_CITIZEN_PROFILE);
 
   useEffect(() => {
     try {
+      const savedUserStr = localStorage.getItem("wakheel_user");
+      const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
       const saved = localStorage.getItem("wakheel_citizen_profile");
       if (saved) {
-        setCitizenProfile({ ...DEFAULT_CITIZEN_PROFILE, ...JSON.parse(saved) });
+        setCitizenProfile({ ...EMPTY_CITIZEN_PROFILE, ...JSON.parse(saved) });
+      } else if (savedUser) {
+        setCitizenProfile({
+          ...EMPTY_CITIZEN_PROFILE,
+          fullName: savedUser.name || savedUser.fullName || "Citizen User",
+          email: savedUser.email || "",
+          mobileNumber: savedUser.phone || savedUser.mobileNumber || "",
+        });
       }
     } catch {}
   }, []);
@@ -472,7 +510,16 @@ export function ClientPortalView() {
 
   const loadCitizenData = async () => {
     setIsLoadingData(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : "";
+    if (!token) {
+      setMatters([]);
+      setConsultations([]);
+      setDocuments([]);
+      setLegalNotices([]);
+      setInvoices([]);
+      setIsLoadingData(false);
+      return;
+    }
     try {
       const [mattersRes, consultRes, docsRes, noticesRes, invRes] = await Promise.all([
         citizenApi.getMatters(token).catch(() => ({ matters: [] })),
@@ -482,22 +529,17 @@ export function ClientPortalView() {
         citizenApi.getInvoices(token).catch(() => ({ invoices: [] })),
       ]);
 
-      if (mattersRes && mattersRes.matters && mattersRes.matters.length > 0) {
-        setMatters(mattersRes.matters);
-        setTrackedMatter(mattersRes.matters[0]);
+      const mattersList = Array.isArray(mattersRes?.matters) ? mattersRes.matters : [];
+      setMatters(mattersList);
+      if (mattersList.length > 0) {
+        setTrackedMatter(mattersList[0]);
+      } else {
+        setTrackedMatter(null);
       }
-      if (consultRes && consultRes.consultations) {
-        setConsultations(consultRes.consultations);
-      }
-      if (docsRes && docsRes.documents) {
-        setDocuments(docsRes.documents);
-      }
-      if (noticesRes && noticesRes.notices) {
-        setLegalNotices(noticesRes.notices);
-      }
-      if (invRes && invRes.invoices) {
-        setInvoices(invRes.invoices);
-      }
+      setConsultations(Array.isArray(consultRes?.consultations) ? consultRes.consultations : []);
+      setDocuments(Array.isArray(docsRes?.documents) ? docsRes.documents : []);
+      setLegalNotices(Array.isArray(noticesRes?.notices) ? noticesRes.notices : []);
+      setInvoices(Array.isArray(invRes?.invoices) ? invRes.invoices : []);
     } catch (err) {
       console.warn("Failed to load citizen data:", err);
     } finally {
@@ -506,7 +548,7 @@ export function ClientPortalView() {
   };
 
   const handlePayInvoice = async (invoiceId: string) => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : "";
     try {
       setPayingInvoiceId(invoiceId);
       const res = await citizenApi.payInvoice(token, invoiceId, "UPI");
@@ -529,7 +571,7 @@ export function ClientPortalView() {
     if (!dashAiInput.trim()) return;
     setIsDashAiLoading(true);
     setDashAiAnswer(null);
-    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : "";
     try {
       const res = await citizenApi.askAi(token, dashAiInput, lang);
       if (res && res.answer) {
@@ -546,7 +588,7 @@ export function ClientPortalView() {
     if (e) e.preventDefault();
     if (!trackerCnr.trim()) return;
     setIsTrackingLoading(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : "";
     try {
       const res = await citizenApi.getMatterByCnr(token, trackerCnr.trim());
       if (res && res.matter) {
@@ -569,7 +611,7 @@ export function ClientPortalView() {
     if (!finalTitle && !uploadDocFile) return;
 
     setIsUploadingDoc(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : "";
 
     let fileDataUrl = "";
     let computedHash = "";
@@ -2071,7 +2113,9 @@ export function ClientPortalView() {
 
                 <div className="space-y-1">
                   <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-                    {lang === "ml" ? "നമസ്കാരം, ഗോപകുമാർ" : "Namaskaram, Gopakumar"}
+                    {lang === "ml"
+                      ? `നമസ്കാരം, ${citizenProfile.fullName ? citizenProfile.fullName.split(" ")[0] : "പൗരൻ"}`
+                      : `Namaskaram, ${citizenProfile.fullName ? citizenProfile.fullName.split(" ")[0] : "Citizen"}`}
                   </h2>
                   <p className="text-sm text-zinc-300 max-w-2xl leading-relaxed">
                     Submit new legal grievances, track active court matters before the High Court of Kerala or Subordinate Courts, and consult with verified advocates without complicated legal jargon.
@@ -2111,7 +2155,7 @@ export function ClientPortalView() {
                     </span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-black dark:text-white">
-                        {matters.length > 0 ? matters.length : 2}
+                        {matters.length}
                       </span>
                       <span className="text-xs text-zinc-500 font-medium">Kerala High Court</span>
                     </div>
@@ -2132,7 +2176,7 @@ export function ClientPortalView() {
                     </span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-black dark:text-white">
-                        {consultations.filter((c) => c.status === "scheduled").length || 2}
+                        {consultations.filter((c) => c.status === "scheduled").length}
                       </span>
                       <span className="text-xs text-zinc-500 font-medium">Video &amp; Chamber</span>
                     </div>
@@ -2153,7 +2197,7 @@ export function ClientPortalView() {
                     </span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-black dark:text-white">
-                        {documents.length > 0 ? documents.length : 4}
+                        {documents.length}
                       </span>
                       <span className="text-xs text-zinc-500 font-medium">256-bit Encrypted</span>
                     </div>
@@ -2174,7 +2218,7 @@ export function ClientPortalView() {
                     </span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-black dark:text-white">
-                        {legalNotices.length > 0 ? legalNotices.length : 2}
+                        {legalNotices.length}
                       </span>
                       <span className="text-xs text-zinc-500 font-medium">Active Timelines</span>
                     </div>
@@ -2252,8 +2296,19 @@ export function ClientPortalView() {
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-black rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                      Loading active matters from Kerala court registry...
+                    <div className="p-8 text-center rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3">
+                      <Scale className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700" />
+                      <h4 className="text-sm font-bold text-black dark:text-white">No active legal matters</h4>
+                      <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                        You do not have any court matters on your docket yet. Track an active case by CNR or submit a new grievance to get started.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab("case-tracking")}
+                        className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90 inline-flex items-center gap-1.5"
+                      >
+                        <Activity className="w-3.5 h-3.5" />
+                        <span>Track Case by CNR</span>
+                      </button>
                     </div>
                   )}
 
@@ -2427,7 +2482,7 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {(activeTab === "consultations" || activeTab === "appointments") && (
             <ConsultationsManagementView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
               onOpenBookingModal={() => {
                 setSelectedAdvocate(mockAdvocates[0]);
                 setBookingDefaultTab("booking");
@@ -2441,7 +2496,7 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {(activeTab === "inbox" || activeTab === "messages" || activeTab === "notifications") && (
             <SecureInboxView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
               initialMode={activeTab === "messages" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultationModal={() => {
                 setSelectedAdvocate(mockAdvocates[0]);
@@ -2456,7 +2511,7 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {activeTab === "legal-notices" && (
             <LegalNoticesView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
             />
           )}
 
@@ -3353,7 +3408,7 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {activeTab === "payments-and-invoice" && (
             <InvoicesAndPaymentsView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
               onInvoicePaid={loadCitizenData}
             />
           )}

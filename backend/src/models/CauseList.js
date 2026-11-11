@@ -15,23 +15,23 @@ const causeListSchema = new mongoose.Schema(
     courtName: {
       type: String,
       required: true,
-      default: "High Court of Kerala (Ernakulam)",
+      default: "Court Forum Pending",
     },
     courtHall: {
       type: String,
-      required: true, // e.g. "Court Hall 2A"
+      required: true,
     },
     bench: {
       type: String,
-      required: true, // e.g. "Division Bench (Chief Justice & Justice K. Babu)"
+      required: true,
     },
     itemNumber: {
       type: Number,
-      required: true, // e.g. 14
+      required: true,
     },
     caseNumber: {
       type: String,
-      required: true, // e.g. "WP(C) 19482/2024"
+      required: true,
     },
     cnrNumber: {
       type: String,
@@ -61,7 +61,7 @@ const causeListSchema = new mongoose.Schema(
     },
     boardRemarks: {
       type: String,
-      default: "Listed as Item #14 in daily causelist",
+      default: "Listed in daily causelist",
     },
   },
   { timestamps: true }

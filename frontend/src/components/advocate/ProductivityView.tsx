@@ -52,7 +52,7 @@ interface ProductivityViewProps {
 export function ProductivityView({
   activeModule = "notes",
   onSelectModule,
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "",
 }: ProductivityViewProps) {
   const [currentTab, setCurrentTab] = useState<string>(activeModule);
   const [activeTaskFilter, setActiveTaskFilter] = useState<"all" | "urgent" | "causelist">("all");
@@ -77,7 +77,7 @@ export function ProductivityView({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Case Tracker Live State
-  const [trackerCnr, setTrackerCnr] = useState("DLHC010049212026");
+  const [trackerCnr, setTrackerCnr] = useState("");
   const [trackerCaseQuery, setTrackerCaseQuery] = useState("");
   const [trackerLoading, setTrackerLoading] = useState(false);
   const [trackerResult, setTrackerResult] = useState<any>(null);
@@ -93,9 +93,14 @@ export function ProductivityView({
       const res = await advocateApi.trackCase(undefined, q);
       if (res && res.success && res.matter) {
         setTrackerResult(res);
+      } else {
+        setTrackerResult(null);
+        setTrackerFeedback(res?.message || "No matching case found for this CNR or case number.");
       }
     } catch (err: any) {
       console.warn("Tracker lookup failed:", err);
+      setTrackerResult(null);
+      setTrackerFeedback(err?.message || "Unable to lookup case details.");
     } finally {
       setTrackerLoading(false);
     }
@@ -144,15 +149,13 @@ export function ProductivityView({
     async function loadData() {
       try {
         setLoading(true);
-        const [notesRes, clRes, trackerRes] = await Promise.all([
+        const [notesRes, clRes] = await Promise.all([
           advocateApi.getCaseNotes(),
           advocateApi.getCauseList(),
-          advocateApi.trackCase(undefined, "DLHC010049212026"),
         ]);
         if (isMounted) {
-          if (notesRes.success && notesRes.notes) setNotes(notesRes.notes);
-          if (clRes.success && clRes.causeList) setCauseList(clRes.causeList);
-          if (trackerRes && trackerRes.success && trackerRes.matter) setTrackerResult(trackerRes);
+          if (notesRes.success) setNotes(notesRes.notes || []);
+          if (clRes.success) setCauseList(clRes.causeList || []);
         }
       } catch (err) {
         console.error("Error loading productivity data:", err);
@@ -281,7 +284,7 @@ export function ProductivityView({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="Memo Title (e.g. Valsamma v. KSEB Analysis)"
+                  placeholder="Memo Title"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   className="px-3 py-2 rounded-xl text-xs bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
@@ -462,7 +465,7 @@ export function ProductivityView({
               />
               <input
                 type="text"
-                placeholder="Case Type &amp; Number (e.g. WP(C) 1024/2026)"
+                placeholder="Case Type & Number"
                 value={trackerCaseQuery}
                 onChange={(e) => setTrackerCaseQuery(e.target.value)}
                 className="px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden"
@@ -485,42 +488,18 @@ export function ProductivityView({
                 )}
               </button>
             </form>
-
-            {/* Sample CNR Chips for Quick Testing */}
-            <div className="flex items-center flex-wrap gap-2 pt-1 text-[11px] text-zinc-500">
-              <span className="font-semibold text-black dark:text-white">Sample Dockets:</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setTrackerCnr("DLHC010049212026");
-                  handleTrackDocket("DLHC010049212026");
-                }}
-                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
-              >
-                DLHC010049212026 (Delhi HC)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setTrackerCnr("KLHC010194822024");
-                  handleTrackDocket("KLHC010194822024");
-                }}
-                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
-              >
-                KLHC010194822024 (Kerala HC)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setTrackerCnr("KLER020084122024");
-                  handleTrackDocket("KLER020084122024");
-                }}
-                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-mono hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
-              >
-                KLER020084122024 (Sub Court)
-              </button>
-            </div>
           </div>
+
+          {!trackerLoading && !trackerResult?.matter && !trackerFeedback && (
+            <div className="p-6 rounded-2xl bg-white dark:bg-black border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-1.5">
+              <p className="text-xs font-semibold text-black dark:text-white">
+                No case loaded in tracker
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                Enter a 16-digit CNR number or case number from your active matters to inspect live status, hearing dates, and order history.
+              </p>
+            </div>
+          )}
 
           {/* Toast Notification */}
           {trackerFeedback && (
@@ -583,34 +562,36 @@ export function ProductivityView({
                 <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">COURT &amp; BENCH</span>
                   <span className="font-bold text-black dark:text-white block">
-                    {trackerResult.matter.courtHall || "Court Hall 2A"}
+                    {trackerResult.matter.courtHall || "Pending Assignment"}
                   </span>
                   <span className="text-[11px] text-zinc-400 block line-clamp-1">
-                    {trackerResult.matter.bench || "Division Bench"}
+                    {trackerResult.matter.bench || "Bench Pending"}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">NEXT HEARING DATE</span>
                   <span className="font-bold text-black dark:text-white block">
-                    {trackerResult.matter.nextHearing || "Today, 12 Oct 2026 (Item 14)"}
+                    {trackerResult.matter.nextHearing || "Not Scheduled"}
                   </span>
                   <span className="text-[11px] text-zinc-400 block">
-                    Cause List #{trackerResult.matter.causeListItemNumber || 14}
+                    {trackerResult.matter.causeListItemNumber
+                      ? `Cause List #${trackerResult.matter.causeListItemNumber}`
+                      : "Cause list item pending"}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">STAGE OF CASE</span>
                   <span className="font-bold text-black dark:text-white block">
-                    {trackerResult.matter.stage || trackerResult.matter.status || "Admitted"}
+                    {trackerResult.matter.stage || trackerResult.matter.status || "Filed"}
                   </span>
                   <span className="text-[11px] text-zinc-400 block">
-                    Filing: {trackerResult.matter.filingDate || "2026-06-14"}
+                    Filing: {trackerResult.matter.filingDate || "Pending"}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <span className="text-zinc-500 text-[10px] block font-semibold uppercase tracking-wider">COUNSEL ON RECORD</span>
                   <span className="font-bold text-black dark:text-white block">
-                    {trackerResult.matter.assignedAdvocate || "Adv. Sarah Jenkins"}
+                    {trackerResult.matter.assignedAdvocate || advocateName || "Unassigned"}
                   </span>
                   <span className="text-[11px] text-zinc-400 block">Lead Arguing Counsel</span>
                 </div>

@@ -313,7 +313,7 @@ export function ClientPortalView() {
   const [isDashAiLoading, setIsDashAiLoading] = useState(false);
 
   // Case Tracker CNR search state
-  const [trackerCnr, setTrackerCnr] = useState("KLHC01-019482-2024");
+  const [trackerCnr, setTrackerCnr] = useState("");
   const [trackedMatter, setTrackedMatter] = useState<any | null>(null);
   const [isTrackingLoading, setIsTrackingLoading] = useState(false);
 

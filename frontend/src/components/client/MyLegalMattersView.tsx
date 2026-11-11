@@ -39,94 +39,7 @@ export interface LegalMatter {
   }>;
 }
 
-const DEFAULT_MATTERS: LegalMatter[] = [
-  {
-    id: "mat-01",
-    caseNumber: "WP(C) 19482/2024",
-    title: "Gopakumar Nambiar v. Kerala State Electricity Board & Ors.",
-    court: "High Court of Kerala (Ernakulam Bench)",
-    assignedAdvocate: "Adv. Meera Krishnan",
-    nextHearing: "20-Nov-2024 (Bench 4B)",
-    filingDate: "2024-06-14",
-    status: "Admitted",
-    cnrNumber: "KLHC01-019482-2024",
-    courtHall: "Court Hall 2A (Division Bench)",
-    statutoryActs: [
-      "Indian Telegraph Act, 1885 (Section 10 & 16)",
-      "Electricity Act, 2003",
-      "Article 226 of the Constitution of India",
-    ],
-    timeline: [
-      {
-        date: "14-Jun-2024",
-        title: "Writ Petition E-Filing Completed",
-        remarks: "Verified true copy grounds submitted with High Court Registry",
-        stage: "Completed",
-      },
-      {
-        date: "22-Oct-2024",
-        title: "Notice Before Admission Issued",
-        remarks: "Division bench directed standing counsel to file counter-affidavit within 10 days",
-        stage: "Completed",
-      },
-      {
-        date: "26-Oct-2024",
-        title: "Counter-Affidavit Filed by KSEB Executive Engineer",
-        remarks: "Board contends route was surveyed as per gazette scheme",
-        stage: "Completed",
-      },
-      {
-        date: "16-Oct-2026",
-        title: "Interim Stay Extended by Division Bench",
-        remarks: "High Court Bench 2A granted 3-week extension on interim injunction against tree felling.",
-        stage: "Interim Relief Active",
-      },
-      {
-        date: "20-Nov-2024",
-        title: "Final Hearing Listed",
-        remarks: "Listed before Bench 4B for conclusive adjudication on Section 16 compliance",
-        stage: "Upcoming",
-      },
-    ],
-  },
-  {
-    id: "mat-02",
-    caseNumber: "ARB/NCLT/KOCHI/2024/041",
-    title: "Malabar Infotech Solutions v. Coastal Logistics Services Ltd",
-    court: "National Company Law Tribunal (Kochi Bench)",
-    assignedAdvocate: "Adv. Meera Krishnan",
-    nextHearing: "20-Nov-2024 (Bench 4B)",
-    filingDate: "2024-08-01",
-    status: "Pre Filing",
-    cnrNumber: "KLNCLT-000041-2024",
-    courtHall: "Court Hall 1 (NCLT)",
-    statutoryActs: [
-      "Insolvency and Bankruptcy Code, 2016 (Section 9)",
-      "Arbitration and Conciliation Act, 1996 (Section 11)",
-      "Commercial Courts Act, 2015 (Pre-Institution Mediation)",
-    ],
-    timeline: [
-      {
-        date: "01-Aug-2024",
-        title: "Section 8 Demand Notice Delivered",
-        remarks: "Statutory 10-day notice served via registered post acknowledgment due",
-        stage: "Completed",
-      },
-      {
-        date: "15-Aug-2024",
-        title: "NCLT Section 9 Company Petition Drafted",
-        remarks: "Financial and operational debt ledger reconciliation finalized",
-        stage: "Completed",
-      },
-      {
-        date: "20-Nov-2024",
-        title: "First Listing Before NCLT Division Bench",
-        remarks: "Listed for preliminary admission and appointment of Interim Resolution Professional",
-        stage: "Upcoming",
-      },
-    ],
-  },
-];
+const DEFAULT_MATTERS: LegalMatter[] = [];
 
 interface MyLegalMattersViewProps {
   onSelectMatter?: (matterTitle: string) => void;
@@ -150,6 +63,7 @@ export function MyLegalMattersView({
   const [customCnr, setCustomCnr] = useState("");
   const [isSearchingCnr, setIsSearchingCnr] = useState(false);
   const [liveTrackedResult, setLiveTrackedResult] = useState<any | null>(null);
+  const [cnrFeedback, setCnrFeedback] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
   // Create New Petition / Matter Modal State
@@ -192,8 +106,8 @@ export function MyLegalMattersView({
     setIsCreatingMatter(true);
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
     const chosenAdv = registeredAdvocates.find(
       (a) => (a.id || a._id || a.userId) === newPetitionAdvocateId
     );
@@ -256,15 +170,15 @@ export function MyLegalMattersView({
         if (res?.success && Array.isArray(res.matters)) {
           const normalized: LegalMatter[] = res.matters.map((m: any) => ({
             id: m.id || m._id,
-            caseNumber: m.caseNumber || "WP(C) 19482/2024",
+            caseNumber: m.caseNumber || "Pending Case No.",
             title: m.title || m.matterTitle || "Legal Matter",
-            court: m.court || m.courtForum || "High Court of Kerala",
-            assignedAdvocate: m.assignedAdvocate || m.advocateName || "Adv. Meera Krishnan",
-            nextHearing: m.nextHearing || (m.nextHearingDate ? `${new Date(m.nextHearingDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${m.courtHall || "Court Hall 2A"})` : "Listed for hearing"),
+            court: m.court || m.courtForum || "Court Forum Pending",
+            assignedAdvocate: m.assignedAdvocate || m.advocateName || "Pending Counsel Assignment",
+            nextHearing: m.nextHearing || (m.nextHearingDate ? `${new Date(m.nextHearingDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${m.courtHall || "Bench Pending"})` : "Not Scheduled"),
             filingDate: m.filingDate || (m.createdAt ? m.createdAt.split("T")[0] : new Date().toISOString().split("T")[0]),
-            status: m.status === "active" ? "Admitted" : m.status === "notice_issued" ? "Notice Issued" : (m.status || "Admitted"),
+            status: m.status === "active" ? "Admitted" : m.status === "notice_issued" ? "Notice Issued" : (m.status || "Pre Filing"),
             cnrNumber: m.cnrNumber || "",
-            courtHall: m.courtHall || "Court Hall 2A",
+            courtHall: m.courtHall || "Pending",
             statutoryActs: m.statutoryActs || [],
             timeline: m.timeline || [],
           }));
@@ -294,19 +208,23 @@ export function MyLegalMattersView({
     if (!query) return;
     setIsSearchingCnr(true);
     setLiveTrackedResult(null);
+    setCnrFeedback(null);
 
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || ""
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
         : "";
 
     try {
       const res = await citizenApi.trackCase(token, query);
       if (res?.success && res.matter) {
         setLiveTrackedResult(res);
+      } else {
+        setCnrFeedback(res?.message || "No matching case found for this CNR or case number.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Live CNR tracking error:", err);
+      setCnrFeedback(err?.message || "Unable to lookup case details.");
     } finally {
       setIsSearchingCnr(false);
     }
@@ -316,8 +234,8 @@ export function MyLegalMattersView({
     setIsImporting(true);
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
 
     try {
       const res = await citizenApi.createMatter(token, {
@@ -338,7 +256,7 @@ export function MyLegalMattersView({
           caseNumber: res.matter.caseNumber,
           title: res.matter.matterTitle || res.matter.title,
           court: res.matter.courtForum || res.matter.court,
-          assignedAdvocate: res.matter.assignedAdvocate || res.matter.advocateName || "Adv. Meera Krishnan",
+          assignedAdvocate: res.matter.assignedAdvocate || res.matter.advocateName || "Pending Counsel Assignment",
           nextHearing: res.matter.nextHearing || "Listed for hearing",
           filingDate: res.matter.filingDate || new Date().toISOString().split("T")[0],
           status: res.matter.status || "Admitted",
@@ -430,7 +348,7 @@ export function MyLegalMattersView({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleTrackCnr();
                 }}
-                placeholder="Enter 16-Digit CNR Number (e.g. KLHC01-019482-2024 or KLER02-000412-2023)..."
+                placeholder="Enter 16-Digit CNR Number or Case Number..."
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs font-mono text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
               />
             </div>
@@ -459,6 +377,7 @@ export function MyLegalMattersView({
                   setCustomCnr("");
                   setSearchQuery("");
                   setLiveTrackedResult(null);
+                  setCnrFeedback(null);
                 }}
                 className="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
               >
@@ -466,6 +385,12 @@ export function MyLegalMattersView({
               </button>
             )}
           </div>
+
+          {cnrFeedback && (
+            <div className="p-3.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400">
+              {cnrFeedback}
+            </div>
+          )}
 
           {/* Live eCourts Docket Result Card */}
           {liveTrackedResult && liveTrackedResult.matter && (

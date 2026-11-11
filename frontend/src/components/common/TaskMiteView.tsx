@@ -86,7 +86,7 @@ interface TaskMiteViewProps {
 export function TaskMiteView({
   portalType = "advocate",
   onSelectModule,
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "",
 }: TaskMiteViewProps) {
   // Tools Secondary Drawer Navigation State
   const [activeTool, setActiveTool] = useState<"tasks" | "notes">("tasks");
@@ -103,10 +103,20 @@ export function TaskMiteView({
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [notesList, setNotesList] = useState<ChamberNote[]>([]);
 
-  // Fetch initial data from backend with fallback
+  // Fetch initial data from backend
   useEffect(() => {
     let isMounted = true;
     async function loadTaskMiteData() {
+      const hasToken =
+        typeof window !== "undefined" &&
+        Boolean(localStorage.getItem("wakheel_token") || localStorage.getItem("token"));
+      if (!hasToken) {
+        if (isMounted) {
+          setTasks([]);
+          setNotesList([]);
+        }
+        return;
+      }
       try {
         if (portalType === "citizen") {
           const [tRes, nRes] = await Promise.allSettled([
@@ -114,11 +124,15 @@ export function TaskMiteView({
             citizenApi.getCitizenTaskMiteNotes(),
           ]);
           if (!isMounted) return;
-          if (tRes.status === "fulfilled" && tRes.value?.success && Array.isArray(tRes.value.tasks) && tRes.value.tasks.length > 0) {
+          if (tRes.status === "fulfilled" && tRes.value?.success && Array.isArray(tRes.value.tasks)) {
             setTasks(tRes.value.tasks);
+          } else {
+            setTasks([]);
           }
-          if (nRes.status === "fulfilled" && nRes.value?.success && Array.isArray(nRes.value.notes) && nRes.value.notes.length > 0) {
+          if (nRes.status === "fulfilled" && nRes.value?.success && Array.isArray(nRes.value.notes)) {
             setNotesList(nRes.value.notes);
+          } else {
+            setNotesList([]);
           }
         } else {
           const [tRes, nRes] = await Promise.allSettled([
@@ -126,15 +140,19 @@ export function TaskMiteView({
             advocateApi.getTaskMiteNotes(),
           ]);
           if (!isMounted) return;
-          if (tRes.status === "fulfilled" && tRes.value?.success && Array.isArray(tRes.value.tasks) && tRes.value.tasks.length > 0) {
+          if (tRes.status === "fulfilled" && tRes.value?.success && Array.isArray(tRes.value.tasks)) {
             setTasks(tRes.value.tasks);
+          } else {
+            setTasks([]);
           }
-          if (nRes.status === "fulfilled" && nRes.value?.success && Array.isArray(nRes.value.notes) && nRes.value.notes.length > 0) {
+          if (nRes.status === "fulfilled" && nRes.value?.success && Array.isArray(nRes.value.notes)) {
             setNotesList(nRes.value.notes);
+          } else {
+            setNotesList([]);
           }
         }
       } catch (err) {
-        console.warn("Failed to fetch Task Mite data, using fallback:", err);
+        console.warn("Failed to fetch Task Mite data:", err);
       }
     }
     loadTaskMiteData();
@@ -153,11 +171,11 @@ export function TaskMiteView({
   // Add Task Modal State
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newCaseMatter, setNewCaseMatter] = useState("WP(C) 19482/2024");
+  const [newCaseMatter, setNewCaseMatter] = useState("");
   const [newType, setNewType] = useState<TaskType>("Court Filing");
   const [newDueDate, setNewDueDate] = useState("Today");
-  const [newPriority, setNewPriority] = useState<TaskPriority>("urgent");
-  const [newAssigneeName, setNewAssigneeName] = useState("Adv. Rajiv Malhotra");
+  const [newPriority, setNewPriority] = useState<TaskPriority>("medium");
+  const [newAssigneeName, setNewAssigneeName] = useState("");
   const [newNotes, setNewNotes] = useState("");
 
   // Notes UI State (Two-Pane Notes Studio)
@@ -318,14 +336,16 @@ export function TaskMiteView({
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const initials = newAssigneeName
+    const resolvedAssignee = newAssigneeName.trim() || advocateName || "Unassigned";
+    const initials = resolvedAssignee
       .replace("Adv.", "")
       .trim()
       .split(" ")
+      .filter(Boolean)
       .map((p) => p[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2) || "CH";
+      .slice(0, 2) || "U";
 
     const newTask: TaskItem = {
       id: `task-${Date.now()}`,
@@ -337,7 +357,7 @@ export function TaskMiteView({
       priority: newPriority,
       isDueUrgent: newPriority === "urgent" || newDueDate.toLowerCase().includes("today"),
       assignee: {
-        name: newAssigneeName,
+        name: resolvedAssignee,
         avatarInitials: initials,
       },
       notes: newNotes.trim() || undefined,
@@ -1584,7 +1604,7 @@ export function TaskMiteView({
                     type="text"
                     value={newCaseMatter}
                     onChange={(e) => setNewCaseMatter(e.target.value)}
-                    placeholder="e.g. WP(C) 19482/2024"
+                    placeholder="e.g. Case No. or Matter Ref"
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
                 </div>
@@ -1648,7 +1668,7 @@ export function TaskMiteView({
                   type="text"
                   value={newAssigneeName}
                   onChange={(e) => setNewAssigneeName(e.target.value)}
-                  placeholder="Adv. Rajiv Malhotra"
+                  placeholder="Assign to counsel or team member"
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1661,7 +1681,7 @@ export function TaskMiteView({
                   rows={2}
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
-                  placeholder="e.g. Ensure Annexure P-1 to P-8 are verified before registry closing"
+                  placeholder="Add optional task instructions or notes"
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1718,52 +1738,52 @@ export function TaskMiteView({
                 <label className="block text-[11px] font-mono uppercase font-bold text-zinc-500 mb-1">
                   Note Title *
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={noteTitle}
-                  onChange={(e) => setNoteTitle(e.target.value)}
-                  placeholder="e.g. Division Bench Precedents on Section 16 Telegraph Act"
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-mono uppercase font-bold text-zinc-500 mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={noteCategory}
-                    onChange={(e) =>
-                      setNoteCategory(
-                        e.target.value as
-                          | "hearing_memo"
-                          | "precedent_notes"
-                          | "client_instructions"
-                          | "statute_draft"
-                      )
-                    }
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
-                  >
-                    <option value="hearing_memo">Hearing Memo</option>
-                    <option value="precedent_notes">Precedent Research</option>
-                    <option value="client_instructions">Client Instructions</option>
-                    <option value="statute_draft">Statutory Draft</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono uppercase font-bold text-zinc-500 mb-1">
-                    Tags (comma separated)
-                  </label>
                   <input
                     type="text"
-                    value={noteTags}
-                    onChange={(e) => setNoteTags(e.target.value)}
-                    placeholder="High Court, Telegraph, Stay"
+                    required
+                    value={noteTitle}
+                    onChange={(e) => setNoteTitle(e.target.value)}
+                    placeholder="e.g. Hearing Notes or Research Summary"
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase font-bold text-zinc-500 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={noteCategory}
+                      onChange={(e) =>
+                        setNoteCategory(
+                          e.target.value as
+                            | "hearing_memo"
+                            | "precedent_notes"
+                            | "client_instructions"
+                            | "statute_draft"
+                        )
+                      }
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
+                    >
+                      <option value="hearing_memo">Hearing Memo</option>
+                      <option value="precedent_notes">Precedent Research</option>
+                      <option value="client_instructions">Client Instructions</option>
+                      <option value="statute_draft">Statutory Draft</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase font-bold text-zinc-500 mb-1">
+                      Tags (comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={noteTags}
+                      onChange={(e) => setNoteTags(e.target.value)}
+                      placeholder="e.g. Research, Hearing, Stay"
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    />
                 </div>
               </div>
 

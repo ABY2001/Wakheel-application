@@ -202,15 +202,20 @@ export const addCauseListItem = async (req, res) => {
 
 export const updateCauseListItem = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     const { id } = req.params;
 
     if (shouldUseDevStore()) {
-      const updated = devStore.updateCauseListItem(id, req.body);
+      const updated = devStore.updateCauseListItem(id, req.body, advocateId);
       if (!updated) return res.status(404).json({ success: false, message: "Cause list item not found" });
       return res.json({ success: true, item: updated, mode: "dummy_data" });
     }
 
-    const updated = await CauseList.findByIdAndUpdate(id, { $set: req.body }, { new: true });
+    const updated = await CauseList.findOneAndUpdate(
+      { _id: id, advocateId },
+      { $set: req.body },
+      { new: true }
+    );
     if (!updated) return res.status(404).json({ success: false, message: "Cause list item not found" });
     res.json({ success: true, item: updated, mode: "cloud_db" });
   } catch (error) {
@@ -268,7 +273,7 @@ export const getMatterDetails = async (req, res) => {
 export const trackCaseByCnr = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const cnr = req.params.cnr || req.body?.cnr || req.query?.cnr;
+    const cnr = req.params?.cnr || req.body?.cnr || req.query?.cnr;
     const caseNumber = req.body?.caseNumber || req.query?.caseNumber || "";
 
     if (!cnr && !caseNumber) {
@@ -279,19 +284,24 @@ export const trackCaseByCnr = async (req, res) => {
     }
 
     const cleanCnr = (cnr || "").trim().toUpperCase();
+    const normQuery = cleanCnr.replace(/[^A-Z0-9]/g, "");
+    const normCaseQuery = (caseNumber || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 
     if (shouldUseDevStore()) {
       const advocateMatters = devStore.getAdvocateMatters(advocateId);
-      const existing = advocateMatters.find(
-        (m) =>
-          (cleanCnr && m.cnrNumber && m.cnrNumber.toUpperCase().includes(cleanCnr)) ||
-          (cleanCnr && m.caseNumber && m.caseNumber.toUpperCase().includes(cleanCnr)) ||
-          (caseNumber && m.caseNumber && m.caseNumber.toUpperCase().includes(caseNumber.toUpperCase()))
-      );
+      const existing = advocateMatters.find((m) => {
+        const mCnr = (m.cnrNumber || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const mCase = (m.caseNumber || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        return (
+          (normQuery && ((mCnr && mCnr.includes(normQuery)) || (mCase && mCase.includes(normQuery)))) ||
+          (normCaseQuery && mCase && mCase.includes(normCaseQuery))
+        );
+      });
 
       if (existing) {
         return res.json({
           success: true,
+          found: true,
           isLinkedToUser: true,
           source: "advocate_docket",
           matter: existing,
@@ -302,8 +312,21 @@ export const trackCaseByCnr = async (req, res) => {
       }
 
       const liveCase = resolveECourtsLiveCnr(cleanCnr, caseNumber);
+      if (!liveCase) {
+        return res.json({
+          success: true,
+          found: false,
+          isLinkedToUser: false,
+          source: "none",
+          matter: null,
+          canImportToDocket: false,
+          message: `No active docket matched "${cleanCnr || caseNumber}" in your chamber matters.`,
+          mode: "dummy_data",
+        });
+      }
       return res.json({
         success: true,
+        found: true,
         isLinkedToUser: false,
         source: "ecourts_njdg_live",
         matter: liveCase,
@@ -317,11 +340,12 @@ export const trackCaseByCnr = async (req, res) => {
     const query = { advocateId };
     const orConditions = [];
     if (cleanCnr) {
-      orConditions.push({ cnrNumber: cleanCnr });
-      orConditions.push({ caseNumber: cleanCnr });
+      const escapedRegex = new RegExp(`^${cleanCnr.replace(/[-/\s]/g, "[-/\\s]?")}$`, "i");
+      orConditions.push({ cnrNumber: escapedRegex });
+      orConditions.push({ caseNumber: escapedRegex });
     }
     if (caseNumber) {
-      orConditions.push({ caseNumber });
+      orConditions.push({ caseNumber: new RegExp(caseNumber.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i") });
     }
     if (orConditions.length > 0) query.$or = orConditions;
 
@@ -329,6 +353,7 @@ export const trackCaseByCnr = async (req, res) => {
     if (existing) {
       return res.json({
         success: true,
+        found: true,
         isLinkedToUser: true,
         source: "advocate_docket",
         matter: existing,
@@ -339,8 +364,21 @@ export const trackCaseByCnr = async (req, res) => {
     }
 
     const liveCase = resolveECourtsLiveCnr(cleanCnr, caseNumber);
+    if (!liveCase) {
+      return res.json({
+        success: true,
+        found: false,
+        isLinkedToUser: false,
+        source: "none",
+        matter: null,
+        canImportToDocket: false,
+        message: `No active docket matched "${cleanCnr || caseNumber}" in your chamber matters.`,
+        mode: "cloud_db",
+      });
+    }
     res.json({
       success: true,
+      found: true,
       isLinkedToUser: false,
       source: "ecourts_njdg_live",
       matter: liveCase,
@@ -376,32 +414,33 @@ export const createMatter = async (req, res) => {
       causeListItemNumber,
     } = req.body;
 
-    const finalCaseNumber = caseNumber || `WP(C) ${Math.floor(10000 + Math.random() * 90000)}/2026`;
+    const finalCaseNumber = (caseNumber || "").trim() || `MATTER-${Date.now().toString().slice(-6)}`;
     const finalTitle = title || matterTitle || `${finalCaseNumber} Legal Matter`;
-    const finalCourt = court || courtForum || "High Court of Kerala (Ernakulam Bench)";
+    const finalCourt = court || courtForum || "Court Forum Pending";
+    const resolvedAdvName = req.user?.fullName || req.body?.advocateName || "Counsel on Record";
 
     const matterData = {
       advocateId,
-      citizenId: "default_citizen",
+      citizenId: req.body?.citizenId || undefined,
       caseNumber: finalCaseNumber,
       caseTitle: finalTitle,
       matterTitle: finalTitle,
-      matterType: finalCaseNumber.includes("WP") ? "Writ Petition (Civil)" : "Civil Suit",
+      matterType: req.body?.matterType || (finalCaseNumber.includes("WP") ? "Writ Petition (Civil)" : "Legal Matter"),
       courtForum: finalCourt,
-      courtHall: courtHall || "Court Hall 2A",
-      advocateName: req.user?.fullName || "Adv. Meera Krishnan",
-      assignedAdvocate: req.user?.fullName || "Adv. Meera Krishnan",
+      courtHall: courtHall || "",
+      advocateName: resolvedAdvName,
+      assignedAdvocate: resolvedAdvName,
       status: status || "Admitted",
       stage: "Active Proceedings",
       filingDate: filingDate || new Date().toISOString().split("T")[0],
-      nextHearingDate: nextHearingDate || new Date(Date.now() + 14 * 86400000).toISOString(),
-      cnrNumber: cnrNumber || `KLHC01${String(Math.floor(100000 + Math.random() * 900000))}2026`,
-      statutoryActs: statutoryActs || ["Article 226 of the Constitution of India"],
+      nextHearingDate: nextHearingDate || undefined,
+      cnrNumber: (cnrNumber || "").trim(),
+      statutoryActs: statutoryActs || [],
       timeline: [
         {
           date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-          title: "Docket Imported into Advocate Chamber Tracker",
-          remarks: `CNR ${cnrNumber || finalCaseNumber} successfully synced with e-Courts NJDG repository.`,
+          title: "Docket Created in Case Tracker",
+          remarks: `Matter ${finalCaseNumber} recorded in chamber pipeline.`,
           stage: "Completed",
         },
       ],
@@ -415,13 +454,16 @@ export const createMatter = async (req, res) => {
       if (addToCauseList) {
         devStore.addCauseListItem({
           advocateId,
-          itemNumber: causeListItemNumber || 14,
+          itemNumber: causeListItemNumber || 1,
           caseNumber: finalCaseNumber,
-          courtHall: courtHall || "Court Hall 2A",
-          bench: "Division Bench",
+          courtName: finalCourt,
+          courtHall: courtHall || "Court Hall",
+          bench: req.body?.bench || "Presiding Bench",
+          petitioner: req.body?.petitioner || finalTitle,
+          respondent: req.body?.respondent || "Respondents",
           parties: finalTitle,
           stage: "Interim Relief / Final Arguments",
-          status: "upcoming",
+          status: "listed",
           date: new Date().toISOString().split("T")[0],
         });
       }
@@ -439,14 +481,15 @@ export const createMatter = async (req, res) => {
     if (addToCauseList) {
       await CauseList.create({
         advocateId,
-        itemNumber: causeListItemNumber || 14,
+        itemNumber: causeListItemNumber || 1,
         caseNumber: finalCaseNumber,
-        courtHall: courtHall || "Court Hall 2A",
-        bench: "Division Bench",
-        parties: finalTitle,
+        courtName: finalCourt,
+        courtHall: courtHall || "Court Hall",
+        bench: req.body?.bench || "Presiding Bench",
+        petitioner: req.body?.petitioner || finalTitle,
+        respondent: req.body?.respondent || "Respondents",
         stage: "Interim Relief / Final Arguments",
-        status: "upcoming",
-        date: new Date().toISOString().split("T")[0],
+        status: "listed",
       });
     }
 
@@ -2394,7 +2437,11 @@ export const updateCandidateStatus = async (req, res) => {
 export const getCauselistRadar = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const radar = devStore.getCauselistRadar(advocateId);
+    const meta = {
+      advocateName: req.user?.fullName || "",
+      enrollmentNumber: req.user?.barCouncilNumber || req.user?.barCouncilId || "",
+    };
+    const radar = devStore.getCauselistRadar(advocateId, meta);
     res.json(radar);
   } catch (error) {
     console.error("getCauselistRadar error:", error);
@@ -2404,7 +2451,11 @@ export const getCauselistRadar = async (req, res) => {
 
 export const generatePassoverSlip = async (req, res) => {
   try {
-    const result = devStore.generatePassoverSlip(req.body);
+    const result = devStore.generatePassoverSlip({
+      ...req.body,
+      seniorCounselName: req.body?.seniorCounselName || req.user?.fullName || "Counsel on Record",
+      enrollmentNumber: req.body?.enrollmentNumber || req.user?.barCouncilNumber || req.user?.barCouncilId || "",
+    });
     res.json(result);
   } catch (error) {
     console.error("generatePassoverSlip error:", error);
@@ -2424,7 +2475,10 @@ export const reassignCauselistItem = async (req, res) => {
 
 export const dispatchClientHearingUpdate = async (req, res) => {
   try {
-    const result = devStore.dispatchClientHearingUpdate(req.body);
+    const result = devStore.dispatchClientHearingUpdate({
+      ...req.body,
+      seniorCounselName: req.body?.seniorCounselName || req.user?.fullName || "Counsel on Record",
+    });
     res.json(result);
   } catch (error) {
     console.error("dispatchClientHearingUpdate error:", error);
@@ -2773,8 +2827,8 @@ export const getTaskMiteTasks = async (req, res) => {
       return res.json({ success: true, tasks, notes, mode: "dummy_data" });
     }
     const [tasks, notes] = await Promise.all([
-      TaskMiteTask.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
-      TaskMiteNote.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ isPinned: -1, createdAt: -1 }),
+      TaskMiteTask.find({ userId: advocateId }).sort({ createdAt: -1 }),
+      TaskMiteNote.find({ userId: advocateId }).sort({ isPinned: -1, createdAt: -1 }),
     ]);
     res.json({
       success: true,
@@ -2812,13 +2866,14 @@ export const createTaskMiteTask = async (req, res) => {
 
 export const updateTaskMiteTask = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     if (shouldUseDevStore()) {
-      const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+      const task = devStore.updateTaskMiteTask(req.params.id, req.body, advocateId);
       if (!task) return res.status(404).json({ success: false, message: "Task not found" });
       return res.json({ success: true, task });
     }
     const task = await TaskMiteTask.findOneAndUpdate(
-      { $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
+      { userId: advocateId, $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -2832,11 +2887,13 @@ export const updateTaskMiteTask = async (req, res) => {
 
 export const deleteTaskMiteTask = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     if (shouldUseDevStore()) {
-      devStore.deleteTaskMiteTask(req.params.id);
+      devStore.deleteTaskMiteTask(req.params.id, advocateId);
       return res.json({ success: true, message: "Task deleted" });
     }
     await TaskMiteTask.deleteOne({
+      userId: advocateId,
       $or: [{ taskId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Task deleted" });
@@ -2854,7 +2911,7 @@ export const getTaskMiteNotes = async (req, res) => {
       return res.json({ success: true, notes, mode: "dummy_data" });
     }
     const notes = await TaskMiteNote.find({
-      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+      userId: advocateId,
     }).sort({ isPinned: -1, createdAt: -1 });
     res.json({
       success: true,
@@ -2891,15 +2948,16 @@ export const createTaskMiteNote = async (req, res) => {
 
 export const updateTaskMiteNote = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     if (shouldUseDevStore()) {
-      const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+      const updated = devStore.updateTaskMiteNote(req.params.id, req.body, advocateId);
       if (!updated) {
         return res.status(404).json({ success: false, message: "Note not found" });
       }
       return res.json({ success: true, note: updated });
     }
     const updated = await TaskMiteNote.findOneAndUpdate(
-      { $or: [{ noteId: req.params.id }, { _id: req.params.id }] },
+      { userId: advocateId, $or: [{ noteId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -2918,11 +2976,13 @@ export const updateTaskMiteNote = async (req, res) => {
 
 export const deleteTaskMiteNote = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     if (shouldUseDevStore()) {
-      devStore.deleteTaskMiteNote(req.params.id);
+      devStore.deleteTaskMiteNote(req.params.id, advocateId);
       return res.json({ success: true, message: "Note deleted" });
     }
     await TaskMiteNote.deleteOne({
+      userId: advocateId,
       $or: [{ noteId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Note deleted" });

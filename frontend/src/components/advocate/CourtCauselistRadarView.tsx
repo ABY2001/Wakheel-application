@@ -99,8 +99,8 @@ interface CourtHallLiveStatus {
 }
 
 export function CourtCauselistRadarView({
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/001429/2012",
+  advocateName = "",
+  barCouncilNumber = "",
   token,
 }: CourtCauselistRadarViewProps) {
   // Navigation tabs
@@ -120,123 +120,23 @@ export function CourtCauselistRadarView({
   const [liveAutoSync, setLiveAutoSync] = useState(true);
   const [lastSyncSecondsAgo, setLastSyncSecondsAgo] = useState(0);
 
-  // Digital Court Halls Atrium Board State
-  const [courtHalls, setCourtHalls] = useState<CourtHallLiveStatus[]>([
-    {
-      hallId: "hall-1a",
-      hallName: "Court Hall 1A",
-      courtName: "High Court of Kerala (Ernakulam)",
-      benchName: "Chief Justice's Court (Division Bench)",
-      coram: "Hon'ble The Chief Justice & Justice K. V. Jayakumar",
-      currentItem: 42,
-      totalItems: 85,
-      sessionStatus: "arguing",
-      statusText: "Item #42 In Progress • Public Interest Litigations",
-      speedMinPerItem: 6,
-      chamberMattersCount: 0,
-    },
-    {
-      hallId: "hall-2a",
-      hallName: "Court Hall 2A",
-      courtName: "High Court of Kerala (Ernakulam)",
-      benchName: "Division Bench 2A (Writ Appeals & Civil Writs)",
-      coram: "Hon'ble Mr. Justice Murali Purushothaman & Justice Jobin Sebastian",
-      currentItem: 14,
-      totalItems: 62,
-      sessionStatus: "arguing",
-      statusText: "Item #14 Argued • Writ Petitions for Admission",
-      speedMinPerItem: 5,
-      chamberMattersCount: 1,
-      activeMatter: {
-        caseNumber: "WP(C) 19482/2024",
-        itemNumber: 18,
-        petitioner: "Gopakumar Nambiar",
-      },
-    },
-    {
-      hallId: "hall-3b",
-      hallName: "Court Hall 3B",
-      courtName: "High Court of Kerala (Ernakulam)",
-      benchName: "Single Bench (Criminal Jurisdiction)",
-      coram: "Hon'ble Mr. Justice Bechu Kurian Thomas",
-      currentItem: 28,
-      totalItems: 54,
-      sessionStatus: "arguing",
-      statusText: "Item #28 Bail Arguments • Senior PP on legs",
-      speedMinPerItem: 4,
-      chamberMattersCount: 1,
-      activeMatter: {
-        caseNumber: "Bail Appl. 8920/2026",
-        itemNumber: 29,
-        petitioner: "Muhammed Shafi",
-      },
-    },
-    {
-      hallId: "hall-4a",
-      hallName: "Court Hall 4A",
-      courtName: "High Court of Kerala (Ernakulam)",
-      benchName: "Single Bench (Land & Local Self-Gov)",
-      coram: "Hon'ble Mr. Justice Devan Ramachandran",
-      currentItem: 65,
-      totalItems: 90,
-      sessionStatus: "passover_call",
-      statusText: "Pass-over Matters Being Taken Up • 2nd Call",
-      speedMinPerItem: 3,
-      chamberMattersCount: 0,
-    },
-    {
-      hallId: "hall-5c",
-      hallName: "Court Hall 5C",
-      courtName: "High Court of Kerala (Ernakulam)",
-      benchName: "Division Bench (Commercial & Arbitration)",
-      coram: "Hon'ble Mr. Justice P. B. Suresh Kumar & Justice C. S. Sudha",
-      currentItem: 8,
-      totalItems: 35,
-      sessionStatus: "arguing",
-      statusText: "Item #08 Regular Hearing • Final Arguments",
-      speedMinPerItem: 12,
-      chamberMattersCount: 0,
-    },
-    {
-      hallId: "nclt-1",
-      hallName: "NCLT Hall 1",
-      courtName: "National Company Law Tribunal (Kochi Bench)",
-      benchName: "Division Bench (Judicial & Technical Member)",
-      coram: "Hon'ble Judicial Member & Hon'ble Technical Member",
-      currentItem: 3,
-      totalItems: 22,
-      sessionStatus: "arguing",
-      statusText: "Item #03 Section 7 IBC Petition Hearing",
-      speedMinPerItem: 10,
-      chamberMattersCount: 1,
-      activeMatter: {
-        caseNumber: "ARB/NCLT/KOCHI/2024/041",
-        itemNumber: 8,
-        petitioner: "Apex Logistics Ltd",
-      },
-    },
-  ]);
+  // Digital Court Halls Atrium Board State (populated dynamically from chamber causelist)
+  const [courtHalls, setCourtHalls] = useState<CourtHallLiveStatus[]>([]);
 
   // Modals state
   const [activePassoverItem, setActivePassoverItem] = useState<CauselistItem | null>(null);
-  const [passoverReason, setPassoverReason] = useState(
-    "Senior Counsel Adv. Meera Krishnan is currently on legs before Hon'ble Division Bench 2A in WP(C) 19482/2024."
-  );
-  const [passoverUntil, setPassoverUntil] = useState("12:00 PM / 2nd Call");
+  const [passoverReason, setPassoverReason] = useState("");
+  const [passoverUntil, setPassoverUntil] = useState("2nd Call");
   const [passoverSlipResult, setPassoverSlipResult] = useState<any | null>(null);
 
   const [activeReassignItem, setActiveReassignItem] = useState<CauselistItem | null>(null);
-  const [selectedAssociate, setSelectedAssociate] = useState("Adv. Rahul Deshmukh");
-  const [briefingNotes, setBriefingNotes] = useState(
-    "Instructed to seek 3-week adjournment for rejoinder; maintain ad-interim status quo."
-  );
+  const [selectedAssociate, setSelectedAssociate] = useState("");
+  const [briefingNotes, setBriefingNotes] = useState("");
 
   const [activeNotifyItem, setActiveNotifyItem] = useState<CauselistItem | null>(null);
   const [hearingOutcome, setHearingOutcome] = useState("Ad-Interim Stay Granted (4 Weeks)");
-  const [benchDictationNote, setBenchDictationNote] = useState(
-    "Interim stay granted restraining line drawing under Section 10(d) Telegraph Act. Status quo ordered."
-  );
-  const [nextListingDate, setNextListingDate] = useState("18.11.2024");
+  const [benchDictationNote, setBenchDictationNote] = useState("");
+  const [nextListingDate, setNextListingDate] = useState("");
   const [dispatchSuccessMsg, setDispatchSuccessMsg] = useState<string | null>(null);
   const [copiedEnglishMsg, setCopiedEnglishMsg] = useState(false);
   const [copiedMalayalamMsg, setCopiedMalayalamMsg] = useState(false);
@@ -249,159 +149,56 @@ export function CourtCauselistRadarView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Default Mock Items Fallback
-  const defaultItems: CauselistItem[] = [
-    {
-      _id: "cl_101",
-      caseNumber: "WP(C) 19482/2024",
-      cnrNumber: "KLHC01-019482-2024",
-      itemNumber: 18,
-      approxTime: "10:45 AM",
-      courtName: "High Court of Kerala (Ernakulam)",
-      courtComplex: "High Court Complex, Marine Drive, Kochi",
-      courtHall: "Court Hall 2A",
-      bench: "Division Bench 2A (Coram: Purushothaman & Sebastian, JJ.)",
-      petitioner: "Gopakumar Nambiar",
-      respondent: "Kerala State Electricity Board & Anr.",
-      appearanceFor: "Petitioner",
-      clientPhone: "+91 94471 28930",
-      stage: "Notice Before Admission / Ad-Interim Stay",
-      status: "listed",
-      callingStatus: "Court Hall 2A: Currently on Item #14 (4 Items Away)",
-      boardRemarks:
-        "Listed for urgent interim stay against 66kV transmission route without Section 16(1) Telegraph Act referral",
-    },
-    {
-      _id: "cl_102",
-      caseNumber: "Bail Appl. 8920/2026",
-      cnrNumber: "KLHC01-008920-2026",
-      itemNumber: 29,
-      approxTime: "11:10 AM",
-      courtName: "High Court of Kerala (Ernakulam)",
-      courtComplex: "High Court Complex, Marine Drive, Kochi",
-      courtHall: "Court Hall 3B",
-      bench: "Single Bench (Criminal) - Justice Bechu Kurian Thomas",
-      petitioner: "Muhammed Shafi",
-      respondent: "State of Kerala & Sub Inspector of Police",
-      appearanceFor: "Petitioner / Accused No. 1",
-      clientPhone: "+91 98472 11980",
-      stage: "Bail Application under Section 483 BNSS (439 CrPC)",
-      status: "listed",
-      callingStatus: "Court Hall 3B: Currently on Item #28 (1 Item Away - NEXT UP!)",
-      boardRemarks: "Commercial quantity NDPS threshold dispute. Rigors of Sec 37 contested.",
-    },
-    {
-      _id: "cl_103",
-      caseNumber: "ARB/NCLT/KOCHI/2024/041",
-      cnrNumber: "KLNC01-000041-2024",
-      itemNumber: 8,
-      approxTime: "11:00 AM",
-      courtName: "National Company Law Tribunal (NCLT Kochi Bench)",
-      courtComplex: "NCLT Complex, Kakkanad, Kochi (14 km from High Court)",
-      courtHall: "NCLT Hall 1",
-      bench: "Judicial Member & Technical Member",
-      petitioner: "Apex Logistics Ltd",
-      respondent: "Marine Exports Pvt Ltd",
-      appearanceFor: "Petitioner",
-      clientPhone: "+91 98460 44120",
-      stage: "Section 9 Commercial Injunction Application",
-      status: "listed",
-      callingStatus: "NCLT Hall 1: Currently on Item #03 (5 Items Away)",
-      boardRemarks: "Final arguments on preservation of maritime assets & appointment of receiver",
-    },
-    {
-      _id: "cl_104",
-      caseNumber: "CC 412/2023",
-      cnrNumber: "KLER02-000412-2023",
-      itemNumber: 19,
-      approxTime: "11:30 AM",
-      courtName: "Judicial First Class Magistrate Court-II, Kochi",
-      courtComplex: "Kochi District Court Complex, Ernakulam",
-      courtHall: "Court Hall 1",
-      bench: "Judicial First Class Magistrate-II",
-      petitioner: "Apex Logistics Ltd",
-      respondent: "Royal Traders",
-      appearanceFor: "Complainant",
-      clientPhone: "+91 98460 44120",
-      stage: "Section 138 NI Act Accused Appearance & Deemed Service Verification",
-      status: "listed",
-      callingStatus: "JFCM-II: Morning Call in Progress",
-      boardRemarks: "Returned notice with postal endorsement 'Door Locked' under scrutiny",
-    },
-  ];
-
-  const defaultConflicts: ScheduleConflict[] = [
-    {
-      id: "conf_multi_venue",
-      severity: "critical",
-      severityLabel: "Critical Multi-Venue Conflict (14 km Transit)",
-      distanceWarning:
-        "High Court Marine Drive vs NCLT Kakkanad (14 km transit • ~45 mins in peak Kochi traffic)",
-      timeA: "10:45 AM",
-      timeB: "11:00 AM",
-      itemA: {
-        id: "cl_101",
-        caseNumber: "WP(C) 19482/2024",
-        courtHall: "Court Hall 2A",
-        courtName: "High Court of Kerala",
-        itemNumber: 18,
-        bench: "Division Bench 2A",
-      },
-      itemB: {
-        id: "cl_103",
-        caseNumber: "ARB/NCLT/KOCHI/2024/041",
-        courtHall: "NCLT Hall 1",
-        courtName: "NCLT Kochi Bench",
-        itemNumber: 8,
-        bench: "Division Bench",
-      },
-      recommendation:
-        "Adv. Meera Krishnan cannot physically appear in both Court Hall 2A (High Court) and NCLT Hall 1 (Kakkanad) simultaneously. Advise delegating ARB/NCLT/KOCHI/2024/041 to chamber junior Adv. Rahul Deshmukh or submitting an urgent Passover Memo.",
-    },
-    {
-      id: "conf_hc_internal",
-      severity: "warning",
-      severityLabel: "High Court Simultaneous Bench Call Warning",
-      distanceWarning: "Court Hall 2A (Item #18) vs Court Hall 3B (Item #29) calling concurrently",
-      timeA: "10:45 AM",
-      timeB: "11:10 AM",
-      itemA: {
-        id: "cl_101",
-        caseNumber: "WP(C) 19482/2024",
-        courtHall: "Court Hall 2A",
-        courtName: "High Court of Kerala",
-        itemNumber: 18,
-        bench: "Division Bench 2A",
-      },
-      itemB: {
-        id: "cl_102",
-        caseNumber: "Bail Appl. 8920/2026",
-        courtHall: "Court Hall 3B",
-        courtName: "High Court of Kerala",
-        itemNumber: 29,
-        bench: "Single Bench (Criminal)",
-      },
-      recommendation:
-        "Court Hall 3B is only 1 item away (Item #28 running). Request Court Master in Court Hall 3B for a 2nd call passover while finishing arguments in Court Hall 2A.",
-    },
-  ];
-
   // Fetch Radar Data
   const loadRadarData = async () => {
     try {
       setLoading(true);
       const res = await advocateApi.getCauselistRadar(token);
-      if (res && res.success && res.items && res.items.length > 0) {
-        setItems(res.items);
-        setConflicts(res.conflicts || []);
-      } else {
-        setItems(defaultItems);
-        setConflicts(defaultConflicts);
+      const loadedItems: CauselistItem[] =
+        res && res.success && Array.isArray(res.items) ? res.items : [];
+      const loadedConflicts: ScheduleConflict[] =
+        res && res.success && Array.isArray(res.conflicts) ? res.conflicts : [];
+
+      setItems(loadedItems);
+      setConflicts(loadedConflicts);
+
+      const hallMap = new Map<string, CourtHallLiveStatus>();
+      for (const item of loadedItems) {
+        const hallName = item.courtHall || "Court Hall Pending";
+        const courtName = item.courtName || "Court Forum Pending";
+        const key = `${courtName.toLowerCase()}::${hallName.toLowerCase()}`;
+        const existing = hallMap.get(key);
+        const itemNum = Number(item.itemNumber) || 1;
+        if (!existing) {
+          hallMap.set(key, {
+            hallId: key,
+            hallName,
+            courtName,
+            benchName: item.bench || "Bench Pending",
+            coram: item.bench || "Coram Pending",
+            currentItem: itemNum,
+            totalItems: itemNum,
+            sessionStatus: "arguing",
+            statusText: item.callingStatus || item.boardRemarks || `Item #${itemNum} Listed`,
+            speedMinPerItem: 5,
+            chamberMattersCount: 1,
+            activeMatter: {
+              caseNumber: item.caseNumber,
+              itemNumber: itemNum,
+              petitioner: item.petitioner || "Party",
+            },
+          });
+        } else {
+          existing.chamberMattersCount += 1;
+          existing.totalItems = Math.max(existing.totalItems, itemNum);
+        }
       }
+      setCourtHalls(Array.from(hallMap.values()));
     } catch (err) {
-      console.warn("Failed to load causelist radar from backend, loading defaults:", err);
-      setItems(defaultItems);
-      setConflicts(defaultConflicts);
+      console.warn("Failed to load causelist radar from backend:", err);
+      setItems([]);
+      setConflicts([]);
+      setCourtHalls([]);
     } finally {
       setLoading(false);
       setLastSyncSecondsAgo(0);
@@ -471,47 +268,37 @@ export function CourtCauselistRadarView({
     };
   };
 
-  // Advance Court Hall 2A item simulation
-  const handleAdvanceHall2A = (amount: number = 1) => {
+  // Advance Court Hall item simulation
+  const handleAdvanceHall = (hallId: string, amount: number = 1) => {
+    const targetHall = courtHalls.find((h) => h.hallId === hallId) || courtHalls[0];
+    if (!targetHall) return;
+    const nextNum = Math.max(1, targetHall.currentItem + amount);
     setCourtHalls((prev) =>
       prev.map((hall) => {
-        if (hall.hallId === "hall-2a") {
-          const nextItem = Math.max(1, hall.currentItem + amount);
-          let newStatus = hall.statusText;
-          if (nextItem === 18) {
-            newStatus = "🚨 NOW CALLING ITEM #18: WP(C) 19482/2024 (Adv. Meera Krishnan on legs)";
-          } else if (nextItem > 18) {
-            newStatus = `Item #${nextItem} In Progress • Post-WP(C) Calling`;
-          } else {
-            newStatus = `Item #${nextItem} Argued • Advancing towards Item #18`;
+        if (hall.hallId === targetHall.hallId) {
+          const activeNum = hall.activeMatter?.itemNumber;
+          let newStatus = `Item #${nextNum} In Progress`;
+          if (activeNum && nextNum === activeNum) {
+            newStatus = `Now calling Item #${nextNum}: ${hall.activeMatter?.caseNumber || "Your Matter"}`;
+          } else if (activeNum && nextNum < activeNum) {
+            newStatus = `Item #${nextNum} Argued • Advancing towards Item #${activeNum}`;
           }
           return {
             ...hall,
-            currentItem: nextItem,
+            currentItem: nextNum,
             statusText: newStatus,
           };
         }
         return hall;
       })
     );
-    showToast(`Court Hall 2A advanced. New running item: #${courtHalls.find((h) => h.hallId === "hall-2a")?.currentItem! + amount}`);
+    showToast(`${targetHall.hallName} advanced. Running item: #${nextNum}`);
   };
 
   // Reset Simulation
   const handleResetSimulation = () => {
-    setCourtHalls((prev) =>
-      prev.map((hall) => {
-        if (hall.hallId === "hall-2a") {
-          return {
-            ...hall,
-            currentItem: 14,
-            statusText: "Item #14 Argued • Writ Petitions for Admission",
-          };
-        }
-        return hall;
-      })
-    );
-    showToast("Court Hall display board counters reset to baseline.");
+    loadRadarData();
+    showToast("Court Hall display board synced to live backend status.");
   };
 
   // Submit Passover Request
@@ -591,7 +378,7 @@ export function CourtCauselistRadarView({
           itemId: activeNotifyItem._id,
           caseNumber: activeNotifyItem.caseNumber,
           clientName: activeNotifyItem.petitioner || "Client",
-          clientPhone: activeNotifyItem.clientPhone || "+91 94471 28930",
+          clientPhone: activeNotifyItem.clientPhone || "",
           courtOutcome: hearingOutcome,
           nextHearingDate: nextListingDate,
           benchRemarks: benchDictationNote,
@@ -645,8 +432,17 @@ export function CourtCauselistRadarView({
     return matchesSearch && matchesCourt && matchesStatus;
   });
 
-  // Identify current hall 2A item
-  const hall2ACurrent = courtHalls.find((h) => h.hallId === "hall-2a")?.currentItem || 14;
+  const nextListedItem = items[0] || null;
+  const primaryHall = nextListedItem
+    ? courtHalls.find(
+        (h) => h.hallName.toLowerCase() === (nextListedItem.courtHall || "").toLowerCase()
+      ) ||
+      courtHalls[0] ||
+      null
+    : courtHalls[0] || null;
+  const nextProximity = nextListedItem
+    ? getProximityInfo(nextListedItem.courtHall, nextListedItem.itemNumber)
+    : null;
 
   return (
     <div className="space-y-6 pb-12 font-sans">
@@ -669,20 +465,24 @@ export function CourtCauselistRadarView({
               <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
                 Courtroom Logistics • High Court Display Board
               </span>
-              <span className="text-zinc-300 dark:text-zinc-700">•</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a8] border border-[#6B1728]/30">
-                Roll: {barCouncilNumber}
-              </span>
+              {barCouncilNumber && (
+                <>
+                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a8] border border-[#6B1728]/30">
+                    Roll: {barCouncilNumber}
+                  </span>
+                </>
+              )}
               <span className="text-zinc-300 dark:text-zinc-700">•</span>
               <span className="text-[10px] font-mono text-zinc-400">
                 Synced {lastSyncSecondsAgo}s ago
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-black dark:text-white flex items-center gap-2.5">
-              <span>High Court Daily Display Board &amp; Causelist Radar</span>
+              <span>Daily Display Board &amp; Causelist Radar</span>
             </h2>
             <p className="text-xs text-zinc-500 max-w-3xl">
-              Live electronic causelist &amp; atrium display board sync across High Court Division Benches, Single Benches, and NCLT.
+              Live electronic causelist &amp; atrium display board sync across your chamber&apos;s listed courts and tribunals.
               Calculates distance to your listed matters, warns of concurrent court appearances, and automates Rule 52 passover memos.
             </p>
           </div>
@@ -696,7 +496,7 @@ export function CourtCauselistRadarView({
                   ? "bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a8] border-[#6B1728]/40"
                   : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800"
               }`}
-              title="Toggle automatic 15-second registry feed sync"
+              title="Toggle automatic registry feed sync"
             >
               <Radio className={`w-3.5 h-3.5 ${liveAutoSync ? "animate-pulse text-[#6B1728]" : ""}`} />
               <span>{liveAutoSync ? "Live Feed (Active)" : "Live Feed (Paused)"}</span>
@@ -720,9 +520,13 @@ export function CourtCauselistRadarView({
               Today&apos;s Chamber Listings
             </span>
             <div className="text-2xl font-black text-black dark:text-white">
-              {items.length} Matters
+              {items.length} {items.length === 1 ? "Matter" : "Matters"}
             </div>
-            <span className="text-[11px] text-zinc-500">Across 3 High Court Halls &amp; NCLT</span>
+            <span className="text-[11px] text-zinc-500">
+              {items.length === 0
+                ? "No hearings scheduled"
+                : `Across ${courtHalls.length} Active Hall${courtHalls.length === 1 ? "" : "s"}`}
+            </span>
           </div>
 
           <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-[#6B1728]/30 space-y-1 relative overflow-hidden">
@@ -732,13 +536,26 @@ export function CourtCauselistRadarView({
               Proximity Alert: Next Matter
             </span>
             <div className="text-lg font-bold text-black dark:text-white truncate">
-              Court Hall 2A (Item #18)
+              {nextListedItem
+                ? `${nextListedItem.courtHall || "Court Hall"} (Item #${nextListedItem.itemNumber})`
+                : "No Active Alerts"}
             </div>
             <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">
-              {18 - hall2ACurrent <= 0 ? (
-                <strong className="text-[#6B1728] font-bold">Currently Arguing on Dais!</strong>
+              {nextListedItem ? (
+                nextProximity && primaryHall ? (
+                  nextProximity.diff <= 0 ? (
+                    <strong className="text-[#6B1728] font-bold">Currently Arguing on Dais!</strong>
+                  ) : (
+                    <>
+                      Hall on #{primaryHall.currentItem} •{" "}
+                      <strong className="text-black dark:text-white">{nextProximity.diff} Items Away</strong> (~{nextProximity.estMinutes}m)
+                    </>
+                  )
+                ) : (
+                  "Scheduled on daily causelist"
+                )
               ) : (
-                <>Hall on #{hall2ACurrent} • <strong className="text-black dark:text-white">{18 - hall2ACurrent} Items Away</strong> (~{(18 - hall2ACurrent) * 5}m)</>
+                "No hearings scheduled today"
               )}
             </span>
           </div>
@@ -760,10 +577,10 @@ export function CourtCauselistRadarView({
               Active Digital Court Halls
             </span>
             <div className="text-2xl font-black text-black dark:text-white">
-              {courtHalls.length} Courtrooms
+              {courtHalls.length} {courtHalls.length === 1 ? "Courtroom" : "Courtrooms"}
             </div>
             <span className="text-[11px] text-zinc-500">
-              Live Atrium Screen Sync Active
+              {courtHalls.length > 0 ? "Live Atrium Screen Sync Active" : "Awaiting causelist sync"}
             </span>
           </div>
         </div>
@@ -780,7 +597,9 @@ export function CourtCauselistRadarView({
           >
             <Tv className="w-3.5 h-3.5" />
             <span>Live Court Hall Display Board</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-[#6B1728] text-white">6 Halls</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-[#6B1728] text-white">
+              {courtHalls.length} {courtHalls.length === 1 ? "Hall" : "Halls"}
+            </span>
           </button>
 
           <button
@@ -834,45 +653,57 @@ export function CourtCauselistRadarView({
       {/* ============================================================== */}
       {activeSubTab === "display-board" && (
         <div className="space-y-6">
-          {/* Simulation & Atrium Controls Bar */}
-          <div className="p-4 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-bold text-black dark:text-white flex items-center gap-1.5">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B1728]" />
-                Court Hall 2A Simulation Controls:
-              </span>
-              <span className="text-zinc-500">Test live proximity countdown &amp; item increment</span>
+          {primaryHall && (
+            <div className="p-4 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-bold text-black dark:text-white flex items-center gap-1.5">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B1728]" />
+                  {primaryHall.hallName} Display Controls:
+                </span>
+                <span className="text-zinc-500">Test live proximity countdown &amp; item increment</span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => handleAdvanceHall(primaryHall.hallId, 1)}
+                  className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5"
+                  title="Simulate Court Master advancing the board by 1 item"
+                >
+                  <span>Advance Item (+1)</span>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={() => handleAdvanceHall(primaryHall.hallId, -1)}
+                  disabled={primaryHall.currentItem <= 1}
+                  className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition disabled:opacity-40 cursor-pointer flex items-center gap-1"
+                  title="Step backward"
+                >
+                  <span>Step Back (-1)</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={handleResetSimulation}
+                  className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition cursor-pointer"
+                  title="Sync back to live backend state"
+                >
+                  Reset Board
+                </button>
+              </div>
             </div>
+          )}
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => handleAdvanceHall2A(1)}
-                className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5"
-                title="Simulate Court Master advancing the board by 1 item"
-              >
-                <span>Advance Item (+1)</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={() => handleAdvanceHall2A(-1)}
-                disabled={hall2ACurrent <= 1}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition disabled:opacity-40 cursor-pointer flex items-center gap-1"
-                title="Step backward"
-              >
-                <span>Step Back (-1)</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={handleResetSimulation}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition cursor-pointer"
-                title="Reset Court Hall 2A back to Item #14"
-              >
-                Reset to #14
-              </button>
+          {courtHalls.length === 0 && (
+            <div className="p-12 rounded-3xl bg-white dark:bg-black border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-1.5">
+              <p className="text-sm font-bold text-black dark:text-white">
+                No daily causelist hearings tracked yet
+              </p>
+              <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                Your chamber&apos;s listed court halls and live item counters will appear here once matters are scheduled on today&apos;s causelist.
+              </p>
             </div>
-          </div>
+          )}
 
           {/* 6-Grid High Court Digital Atrium Matrix */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1038,9 +869,13 @@ export function CourtCauselistRadarView({
                 className="px-3 py-2 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none cursor-pointer"
               >
                 <option value="all">All Courts &amp; Tribunals</option>
-                <option value="High Court">High Court of Kerala</option>
-                <option value="NCLT">NCLT Kochi Bench</option>
-                <option value="Magistrate">JFCM Courts</option>
+                {Array.from(new Set(items.map((item) => item.courtName).filter(Boolean))).map(
+                  (courtName) => (
+                    <option key={courtName} value={courtName}>
+                      {courtName}
+                    </option>
+                  )
+                )}
               </select>
 
               {/* Status Filter */}
@@ -1215,71 +1050,77 @@ export function CourtCauselistRadarView({
             </div>
 
             <div className="space-y-4">
-              {conflicts.map((conf) => (
-                <div
-                  key={conf.id}
-                  className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-black dark:text-white text-sm block">
-                          {conf.severityLabel}
-                        </span>
-                        <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-[#6B1728] text-white uppercase">
-                          {conf.severity}
-                        </span>
-                      </div>
-                      <p className="text-zinc-600 dark:text-zinc-400 text-xs">{conf.distanceWarning}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          const target = items.find((i) => i._id === conf.itemA.id) || items[0];
-                          setActivePassoverItem(target);
-                          setPassoverSlipResult(null);
-                        }}
-                        className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-[11px] font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
-                      >
-                        Draft Passover Memo
-                      </button>
-                      <button
-                        onClick={() => {
-                          const target = items.find((i) => i._id === conf.itemB.id) || items[1];
-                          setActiveReassignItem(target);
-                        }}
-                        className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold hover:opacity-90 cursor-pointer"
-                      >
-                        Delegate to Junior
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Comparison Box */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-                      <span className="text-[10px] text-zinc-400 font-mono block">Matter A:</span>
-                      <div className="font-bold text-black dark:text-white">{conf.itemA.caseNumber}</div>
-                      <div className="text-[11px] text-zinc-500">
-                        {conf.itemA.courtHall} • Item #{conf.itemA.itemNumber} ({conf.timeA})
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-                      <span className="text-[10px] text-zinc-400 font-mono block">Matter B:</span>
-                      <div className="font-bold text-black dark:text-white">{conf.itemB.caseNumber}</div>
-                      <div className="text-[11px] text-zinc-500">
-                        {conf.itemB.courtHall} • Item #{conf.itemB.itemNumber} ({conf.timeB})
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 italic pl-3 border-l-2 border-[#6B1728]">
-                    &ldquo;{conf.recommendation}&rdquo;
-                  </p>
+              {conflicts.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                  No schedule conflicts detected. Your current causelist listings do not overlap.
                 </div>
-              ))}
+              ) : (
+                conflicts.map((conf) => (
+                  <div
+                    key={conf.id}
+                    className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-black dark:text-white text-sm block">
+                            {conf.severityLabel}
+                          </span>
+                          <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-[#6B1728] text-white uppercase">
+                            {conf.severity}
+                          </span>
+                        </div>
+                        <p className="text-zinc-600 dark:text-zinc-400 text-xs">{conf.distanceWarning}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const target = items.find((i) => i._id === conf.itemA.id) || items[0];
+                            setActivePassoverItem(target);
+                            setPassoverSlipResult(null);
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-[11px] font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                        >
+                          Draft Passover Memo
+                        </button>
+                        <button
+                          onClick={() => {
+                            const target = items.find((i) => i._id === conf.itemB.id) || items[1];
+                            setActiveReassignItem(target);
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold hover:opacity-90 cursor-pointer"
+                        >
+                          Delegate to Junior
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Comparison Box */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
+                        <span className="text-[10px] text-zinc-400 font-mono block">Matter A:</span>
+                        <div className="font-bold text-black dark:text-white">{conf.itemA.caseNumber}</div>
+                        <div className="text-[11px] text-zinc-500">
+                          {conf.itemA.courtHall} • Item #{conf.itemA.itemNumber} ({conf.timeA})
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
+                        <span className="text-[10px] text-zinc-400 font-mono block">Matter B:</span>
+                        <div className="font-bold text-black dark:text-white">{conf.itemB.caseNumber}</div>
+                        <div className="text-[11px] text-zinc-500">
+                          {conf.itemB.courtHall} • Item #{conf.itemB.itemNumber} ({conf.timeB})
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-700 dark:text-zinc-300 italic pl-3 border-l-2 border-[#6B1728]">
+                      &ldquo;{conf.recommendation}&rdquo;
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -1294,7 +1135,7 @@ export function CourtCauselistRadarView({
             <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
               <div className="space-y-0.5">
                 <h3 className="text-sm font-bold text-black dark:text-white uppercase tracking-wider">
-                  Kerala High Court Registry Sitting Roster &amp; Gazette Archive
+                  Sitting Roster &amp; Gazette Archive
                 </h3>
                 <p className="text-xs text-zinc-500">
                   Official bench notifications, judge sitting assignments, and previous daily causelists.
@@ -1310,47 +1151,8 @@ export function CourtCauselistRadarView({
               </button>
             </div>
 
-            <div className="space-y-3">
-              {[
-                {
-                  date: "Today, 29 October 2026",
-                  type: "Daily Cause List Roster",
-                  hall: "High Court of Kerala (Full Roster)",
-                  itemsCount: "420 Listed Matters across 24 Benches",
-                },
-                {
-                  date: "Yesterday, 28 October 2026",
-                  type: "Official Sitting Notification",
-                  hall: "Special Division Bench Constitution",
-                  itemsCount: "Public Interest Litigation & Infrastructure Division",
-                },
-                {
-                  date: "Monday, 27 October 2026",
-                  type: "Motion Slip Scrutiny Gazette",
-                  hall: "High Court Registry Notice No. 41/2026",
-                  itemsCount: "Mandatory e-Verification of Vakalathnama Bar Roll Numbers",
-                },
-              ].map((arch, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 text-xs"
-                >
-                  <div className="space-y-1">
-                    <span className="font-bold text-black dark:text-white text-xs block">
-                      {arch.hall}
-                    </span>
-                    <p className="text-zinc-500 text-[11px]">{arch.itemsCount}</p>
-                    <span className="text-[10px] font-mono text-zinc-400">{arch.date}</span>
-                  </div>
-
-                  <button
-                    onClick={() => showToast(`Opening certified archive for ${arch.date}`)}
-                    className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-[11px] font-semibold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
-                  >
-                    View Gazette
-                  </button>
-                </div>
-              ))}
+            <div className="p-8 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+              No archived causelist gazettes or sitting notifications available yet.
             </div>
           </div>
         </div>
@@ -1394,7 +1196,8 @@ export function CourtCauselistRadarView({
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Counsel on Record:</span>
                   <strong className="text-black dark:text-white">
-                    {advocateName} ({barCouncilNumber})
+                    {advocateName || "Counsel on Record"}
+                    {barCouncilNumber ? ` (${barCouncilNumber})` : ""}
                   </strong>
                 </div>
               </div>
@@ -1407,6 +1210,7 @@ export function CourtCauselistRadarView({
                   rows={3}
                   value={passoverReason}
                   onChange={(e) => setPassoverReason(e.target.value)}
+                  placeholder="Enter grounds for passover or bench engagement..."
                   className="w-full p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1418,8 +1222,8 @@ export function CourtCauselistRadarView({
                   onChange={(e) => setPassoverUntil(e.target.value)}
                   className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none cursor-pointer"
                 >
-                  <option value="12:00 PM / 2nd Call">12:00 PM / 2nd Call</option>
-                  <option value="01:45 PM / Post-Lunch Session">01:45 PM / Post-Lunch Session</option>
+                  <option value="2nd Call">2nd Call</option>
+                  <option value="Post-Lunch Session">Post-Lunch Session</option>
                   <option value="Passover to end of Causelist Board">Passover to end of Causelist Board</option>
                 </select>
               </div>
@@ -1495,15 +1299,13 @@ export function CourtCauselistRadarView({
 
               <div className="space-y-1">
                 <label className="font-bold text-black dark:text-white block">Assign to Chamber Junior:</label>
-                <select
+                <input
+                  type="text"
                   value={selectedAssociate}
                   onChange={(e) => setSelectedAssociate(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none cursor-pointer"
-                >
-                  <option value="Adv. Rahul Deshmukh">Adv. Rahul Deshmukh (Appellate Junior • K/003412/2024)</option>
-                  <option value="Adv. Ananya Iyer">Adv. Ananya Iyer (Commercial Associate • K/002189/2023)</option>
-                  <option value="Adv. Vikramaditya Roy">Adv. Vikramaditya Roy (Criminal Junior • K/004521/2024)</option>
-                </select>
+                  placeholder="Enter chamber associate or counsel name"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                />
               </div>
 
               <div className="space-y-1">
@@ -1512,6 +1314,7 @@ export function CourtCauselistRadarView({
                   rows={3}
                   value={briefingNotes}
                   onChange={(e) => setBriefingNotes(e.target.value)}
+                  placeholder="Enter briefing notes or court instructions..."
                   className="w-full p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -1525,7 +1328,8 @@ export function CourtCauselistRadarView({
                 </button>
                 <button
                   onClick={handleSubmitReassign}
-                  className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 cursor-pointer"
+                  disabled={!selectedAssociate.trim()}
+                  className="px-5 py-2 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 disabled:opacity-40 cursor-pointer"
                 >
                   Confirm Delegation
                 </button>
@@ -1581,7 +1385,7 @@ export function CourtCauselistRadarView({
                     type="text"
                     value={nextListingDate}
                     onChange={(e) => setNextListingDate(e.target.value)}
-                    placeholder="e.g. 18.11.2024"
+                    placeholder="DD.MM.YYYY"
                     className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
                   />
                 </div>
@@ -1593,6 +1397,7 @@ export function CourtCauselistRadarView({
                   rows={2}
                   value={benchDictationNote}
                   onChange={(e) => setBenchDictationNote(e.target.value)}
+                  placeholder="Enter bench dictation, stay terms, or court directions..."
                   className="w-full p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -1604,7 +1409,7 @@ export function CourtCauselistRadarView({
                     Automated Client Notification Preview (WhatsApp &amp; SMS)
                   </span>
                   <span className="text-[10px] text-zinc-400">
-                    Recipient: {activeNotifyItem.petitioner} ({activeNotifyItem.clientPhone || "+91 94471 28930"})
+                    Recipient: {activeNotifyItem.petitioner} ({activeNotifyItem.clientPhone || "N/A"})
                   </span>
                 </div>
 
@@ -1614,7 +1419,7 @@ export function CourtCauselistRadarView({
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          `Namaskaram ${activeNotifyItem.petitioner}, your matter ${activeNotifyItem.caseNumber} was heard before the Hon'ble Court today. Outcome: ${hearingOutcome}. ${benchDictationNote} Next listing date: ${nextListingDate}. Warm regards, ${advocateName}.`
+                          `Namaskaram ${activeNotifyItem.petitioner}, your matter ${activeNotifyItem.caseNumber} was heard before the Hon'ble Court today. Outcome: ${hearingOutcome}. ${benchDictationNote} Next listing date: ${nextListingDate}. Warm regards, ${advocateName || "Chamber Counsel"}.`
                         );
                         setCopiedEnglishMsg(true);
                         setTimeout(() => setCopiedEnglishMsg(false), 2000);
@@ -1626,7 +1431,7 @@ export function CourtCauselistRadarView({
                     </button>
                   </div>
                   <div className="p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans text-xs">
-                    Namaskaram {activeNotifyItem.petitioner}, your matter {activeNotifyItem.caseNumber} was heard before the Hon&apos;ble Court today. Outcome: {hearingOutcome}. {benchDictationNote} Next listing date: {nextListingDate}. Warm regards, {advocateName}.
+                    Namaskaram {activeNotifyItem.petitioner}, your matter {activeNotifyItem.caseNumber} was heard before the Hon&apos;ble Court today. Outcome: {hearingOutcome}. {benchDictationNote} Next listing date: {nextListingDate}. Warm regards, {advocateName || "Chamber Counsel"}.
                   </div>
                 </div>
 
@@ -1636,7 +1441,7 @@ export function CourtCauselistRadarView({
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          `നമസ്കാരം ${activeNotifyItem.petitioner}, താങ്കളുടെ കേസ് ${activeNotifyItem.caseNumber} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു. വിധി/ഉത്തരവ്: ${hearingOutcome}. ${benchDictationNote} അടുത്ത വാദം കേൾക്കുന്ന തീയതി: ${nextListingDate}. സ്നേഹാദരങ്ങളോടെ, ${advocateName}.`
+                          `നമസ്കാരം ${activeNotifyItem.petitioner}, താങ്കളുടെ കേസ് ${activeNotifyItem.caseNumber} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു. വിധി/ഉത്തരവ്: ${hearingOutcome}. ${benchDictationNote} അടുത്ത വാദം കേൾക്കുന്ന തീയതി: ${nextListingDate}. സ്നേഹാദരങ്ങളോടെ, ${advocateName || "Chamber Counsel"}.`
                         );
                         setCopiedMalayalamMsg(true);
                         setTimeout(() => setCopiedMalayalamMsg(false), 2000);
@@ -1648,7 +1453,7 @@ export function CourtCauselistRadarView({
                     </button>
                   </div>
                   <div className="p-3 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans text-xs">
-                    നമസ്കാരം {activeNotifyItem.petitioner}, താങ്കളുടെ കേസ് {activeNotifyItem.caseNumber} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു. വിധി/ഉത്തരവ്: {hearingOutcome}. {benchDictationNote} അടുത്ത വാദം കേൾക്കുന്ന തീയതി: {nextListingDate}. സ്നേഹാദരങ്ങളോടെ, {advocateName}.
+                    നമസ്കാരം {activeNotifyItem.petitioner}, താങ്കളുടെ കേസ് {activeNotifyItem.caseNumber} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു. വിധി/ഉത്തരവ്: {hearingOutcome}. {benchDictationNote} അടുത്ത വാദം കേൾക്കുന്ന തീയതി: {nextListingDate}. സ്നേഹാദരങ്ങളോടെ, {advocateName || "Chamber Counsel"}.
                   </div>
                 </div>
               </div>

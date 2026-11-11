@@ -373,113 +373,7 @@ const DEFAULT_ADVOCATES = [
   },
 ];
 
-const DEFAULT_CAUSE_LIST = [
-  {
-    _id: "cl_101",
-    advocateId: "adv_1",
-    courtDate: new Date().toISOString(),
-    approxTime: "10:45 AM",
-    courtName: "High Court of Kerala (Ernakulam)",
-    courtComplex: "High Court Complex, Marine Drive, Kochi",
-    courtHall: "Court Hall 2A",
-    bench: "Division Bench 2A (Coram: Mustaque & Eapen, JJ.)",
-    itemNumber: 14,
-    caseNumber: "WP(C) 19482/2024",
-    cnrNumber: "KLHC01-019482-2024",
-    petitioner: "Gopakumar Nambiar",
-    clientPhone: "+91 94471 28930",
-    respondent: "Kerala State Electricity Board & Anr.",
-    appearanceFor: "Petitioner",
-    stage: "Notice Before Admission / Ad-Interim Stay",
-    status: "listed",
-    callingStatus: "Calling (Item #11 on dais)",
-    boardRemarks: "Listed for urgent interim stay against 66kV transmission route without Section 16(1) Telegraph Act referral",
-  },
-  {
-    _id: "cl_102",
-    advocateId: "adv_1",
-    courtDate: new Date().toISOString(),
-    approxTime: "11:00 AM",
-    courtName: "National Company Law Tribunal (NCLT Kochi Bench)",
-    courtComplex: "NCLT Complex, Kakkanad, Kochi (14 km from High Court)",
-    courtHall: "Court Hall 1",
-    bench: "Judicial Member & Technical Member",
-    itemNumber: 8,
-    caseNumber: "ARB/NCLT/KOCHI/2024/041",
-    cnrNumber: "KLNC01-000041-2024",
-    petitioner: "Apex Logistics Ltd",
-    clientPhone: "+91 98460 44120",
-    respondent: "Marine Exports Pvt Ltd",
-    appearanceFor: "Petitioner",
-    stage: "Section 9 Commercial Injunction Application",
-    status: "listed",
-    callingStatus: "Listed for 11:00 AM Call",
-    boardRemarks: "Final arguments on preservation of maritime assets & appointment of receiver",
-  },
-  {
-    _id: "cl_103",
-    advocateId: "adv_1",
-    courtDate: new Date().toISOString(),
-    approxTime: "11:30 AM",
-    courtName: "Judicial First Class Magistrate Court-II, Kochi",
-    courtComplex: "Kochi District Court Complex, Ernakulam",
-    courtHall: "Court Hall 1",
-    bench: "Judicial First Class Magistrate-II",
-    itemNumber: 19,
-    caseNumber: "CC 412/2023",
-    cnrNumber: "KLER02-000412-2023",
-    petitioner: "Apex Logistics Ltd",
-    clientPhone: "+91 98460 44120",
-    respondent: "Royal Traders",
-    appearanceFor: "Complainant",
-    stage: "Section 138 NI Act Accused Appearance & Deemed Service Verification",
-    status: "listed",
-    callingStatus: "Pending in 1st Call",
-    boardRemarks: "Returned notice with postal endorsement 'Door Locked' under scrutiny",
-  },
-  {
-    _id: "cl_104",
-    advocateId: "adv_1",
-    courtDate: new Date().toISOString(),
-    approxTime: "12:15 PM",
-    courtName: "High Court of Kerala (Ernakulam)",
-    courtComplex: "High Court Complex, Marine Drive, Kochi",
-    courtHall: "Court Hall 4C",
-    bench: "Single Bench (Justice V.G. Arun)",
-    itemNumber: 31,
-    caseNumber: "WP(C) 28104/2024",
-    cnrNumber: "KLHC01-028104-2024",
-    petitioner: "Dr. Sajan Roy",
-    clientPhone: "+91 94470 55182",
-    respondent: "State of Kerala & Medical Council",
-    appearanceFor: "Petitioner",
-    stage: "Writ Petition Ad-Interim Directions",
-    status: "listed",
-    callingStatus: "Scheduled for 12:15 PM",
-    boardRemarks: "Quashing of arbitrary administrative rejection order without personal hearing",
-  },
-  {
-    _id: "cl_105",
-    advocateId: "adv_1",
-    courtDate: new Date().toISOString(),
-    approxTime: "02:30 PM",
-    courtName: "Principal Sessions Court, Ernakulam",
-    courtComplex: "Sessions Court Complex, Ernakulam",
-    courtHall: "Sessions Hall 2",
-    bench: "Principal Sessions Judge",
-    itemNumber: 6,
-    caseNumber: "BA 8821/2024",
-    cnrNumber: "KLER01-008821-2024",
-    petitioner: "Dr. Radhakrishnan Menon",
-    clientPhone: "+91 94462 11902",
-    respondent: "State of Kerala (SHO Infopark PS)",
-    appearanceFor: "Petitioner",
-    stage: "Anticipatory Bail under BNSS Section 482",
-    status: "listed",
-    callingStatus: "Post-Lunch Session",
-    boardRemarks: "Pre-arrest protection in corporate breach of trust FIR; notice u/s 35(3) BNSS complied",
-  },
-];
+const DEFAULT_CAUSE_LIST = [];
 
 const DEFAULT_INVOICES = [
   {
@@ -2889,10 +2783,10 @@ export const devStore = {
   },
 
   // --- Cause List (Court Board) ---
-  getCauseList(advocateId = "adv_1") {
+  getCauseList(advocateId) {
+    if (!advocateId) return [];
     const causeList = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
-    if (!advocateId) return causeList;
-    return causeList.filter((item) => item.advocateId === advocateId || !item.advocateId);
+    return causeList.filter((item) => item.advocateId && String(item.advocateId) === String(advocateId));
   },
 
   addCauseListItem(data) {
@@ -2908,11 +2802,13 @@ export const devStore = {
     return newItem;
   },
 
-  updateCauseListItem(id, updates) {
+  updateCauseListItem(id, updates, advocateId = null) {
     const causeList = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
-    const idx = causeList.findIndex((item) => item._id === id);
+    const idx = causeList.findIndex(
+      (item) => item._id === id && (!advocateId || (item.advocateId && String(item.advocateId) === String(advocateId)))
+    );
     if (idx !== -1) {
-      causeList[idx] = { ...causeList[idx], ...updates };
+      causeList[idx] = { ...causeList[idx], ...updates, advocateId: causeList[idx].advocateId };
       writeFile("dev_causelists.json", causeList);
       return causeList[idx];
     }
@@ -5073,16 +4969,30 @@ export const devStore = {
   },
 
   // --- Smart Court Causelist Aggregator, Conflict Radar & Client Dispatcher (Milestone 5) ---
-  getCauselistRadar(advocateId = "adv_1") {
-    let causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
-    if (!causelist || causelist.length === 0) {
-      causelist = DEFAULT_CAUSE_LIST;
-      writeFile("dev_causelists.json", causelist);
+  getCauselistRadar(advocateId, meta = {}) {
+    if (!advocateId) {
+      return {
+        success: true,
+        todayDate: new Date().toLocaleDateString("en-IN", {
+          weekday: "long",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        advocateRoll: meta.enrollmentNumber || "",
+        advocateName: meta.advocateName || "Counsel on Record",
+        totalHearings: 0,
+        conflictsCount: 0,
+        items: [],
+        conflicts: [],
+      };
     }
 
+    const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
     const todayItems = causelist.filter(
-      (item) => item.advocateId === advocateId || !item.advocateId
+      (item) => item.advocateId && String(item.advocateId) === String(advocateId)
     );
+    const resolvedAdvocateName = meta.advocateName || "Counsel on Record";
 
     // Detect Conflicts
     const conflicts = [];
@@ -5098,12 +5008,12 @@ export const devStore = {
           conflicts.push({
             id: `conf_${a._id}_${b._id}`,
             severity: differentComplex ? "critical" : "warning",
-            severityLabel: differentComplex ? "Critical Multi-Venue Conflict" : "High Court Bench Hall Conflict",
+            severityLabel: differentComplex ? "Critical Multi-Venue Conflict" : "Court Bench Hall Conflict",
             distanceWarning: differentComplex
-              ? "Different Court Complexes (~14 km transit required between Marine Drive & Kakkanad)"
-              : "Different Court Halls within High Court",
-            timeA: a.approxTime || "10:45 AM",
-            timeB: b.approxTime || "11:00 AM",
+              ? `Different Court Complexes (${a.courtName || "Court A"} vs ${b.courtName || "Court B"})`
+              : "Different Court Halls within the same complex",
+            timeA: a.approxTime || "Morning Call",
+            timeB: b.approxTime || "Morning Call",
             itemA: {
               id: a._id,
               caseNumber: a.caseNumber,
@@ -5121,8 +5031,8 @@ export const devStore = {
               bench: b.bench,
             },
             recommendation: differentComplex
-              ? `Senior Counsel Adv. Meera Krishnan cannot physically appear in both Court Hall 2A (High Court) and NCLT Court Hall 1 (Kakkanad) at 10:45–11:00 AM. Recommend delegating ${b.caseNumber} to chamber associate Adv. Rahul Deshmukh or submitting an urgent High Court passover memo.`
-              : `Concurrent listing across Court Halls. Submit passover slip in ${b.courtHall} to hold matter for 2nd Call.`,
+              ? `${resolvedAdvocateName} cannot physically appear in both ${a.courtHall || "Court A"} (${a.courtName || "Venue A"}) and ${b.courtHall || "Court B"} (${b.courtName || "Venue B"}) simultaneously. Recommend delegating ${b.caseNumber} to a chamber associate or submitting a passover memo.`
+              : `Concurrent listing across Court Halls. Submit a passover slip in ${b.courtHall || "the alternate court hall"} to hold the matter for 2nd Call.`,
           });
         }
       }
@@ -5136,8 +5046,8 @@ export const devStore = {
         month: "short",
         year: "numeric",
       }),
-      advocateRoll: "K/001429/2012",
-      advocateName: "Adv. Meera Krishnan",
+      advocateRoll: meta.enrollmentNumber || "",
+      advocateName: resolvedAdvocateName,
       totalHearings: todayItems.length,
       conflictsCount: conflicts.length,
       items: todayItems,
@@ -5145,7 +5055,7 @@ export const devStore = {
     };
   },
 
-  generatePassoverSlip(data) {
+  generatePassoverSlip(data = {}) {
     const {
       itemId,
       caseNumber,
@@ -5154,23 +5064,27 @@ export const devStore = {
       bench,
       reason,
       passoverUntil = "12:00 PM / 2nd Call",
-      seniorCounselName = "Adv. Meera Krishnan",
+      seniorCounselName = "",
+      enrollmentNumber = "",
     } = data;
     const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
-    const item = causelist.find((c) => c._id === itemId || c.caseNumber === caseNumber);
+    const item = causelist.find(
+      (c) => (itemId && c._id === itemId) || (caseNumber && c.caseNumber === caseNumber)
+    );
 
+    const resolvedCaseNo = caseNumber || item?.caseNumber || "Listed Matter";
     const passoverSlip = {
       slipNumber: `PS-${Date.now().toString().slice(-6)}`,
-      courtHall: courtHall || item?.courtHall || "Court Hall 1",
-      bench: bench || item?.bench || "Division Bench",
-      itemNumber: itemNumber || item?.itemNumber || 14,
-      caseNumber: caseNumber || item?.caseNumber || "WP(C) 19482/2024",
+      courtHall: courtHall || item?.courtHall || "Court Hall",
+      bench: bench || item?.bench || "Presiding Bench",
+      itemNumber: itemNumber || item?.itemNumber || 1,
+      caseNumber: resolvedCaseNo,
       parties: `${item?.petitioner || "Petitioner"} vs ${item?.respondent || "Respondents"}`,
-      seniorCounselName,
-      enrollmentNumber: "K/001429/2012",
+      seniorCounselName: seniorCounselName || "Counsel on Record",
+      enrollmentNumber: enrollmentNumber || "",
       reason:
         reason ||
-        "Senior Counsel is currently on legs before Hon'ble Division Bench 2A in WP(C) 19482/2024.",
+        `Counsel is currently engaged before another Bench and requests a passover for ${resolvedCaseNo}.`,
       requestedTime: passoverUntil,
       dispatchedTo: "Court Master & Bench Scrutiny Officer",
       generatedAt: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
@@ -5190,21 +5104,21 @@ export const devStore = {
     };
   },
 
-  reassignCauselistItem(data) {
-    const { itemId, associateId, associateName = "Adv. Rahul Deshmukh", briefNotes = "" } = data;
+  reassignCauselistItem(data = {}) {
+    const { itemId, associateId, associateName = "Chamber Associate", briefNotes = "" } = data;
     const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
     const item = causelist.find((c) => c._id === itemId);
 
     if (item) {
       item.status = "associate_assigned";
       item.assignedAssociate = {
-        id: associateId || "cand_1",
+        id: associateId || "",
         name: associateName,
-        enrollmentNumber: "K/003412/2024",
+        enrollmentNumber: data.enrollmentNumber || "",
         assignedAt: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
         briefNotes:
           briefNotes ||
-          "Instructed to seek 3-week adjournment for rejoinder; maintain ad-interim status quo.",
+          "Appear before the Bench and seek appropriate directions.",
       };
       writeFile("dev_causelists.json", causelist);
     }
@@ -5216,36 +5130,38 @@ export const devStore = {
     };
   },
 
-  dispatchClientHearingUpdate(data) {
+  dispatchClientHearingUpdate(data = {}) {
     const {
       itemId,
-      matterId,
-      caseNumber = "WP(C) 19482/2024",
-      clientName = "Gopakumar Nambiar",
-      clientPhone = "+91 94471 28930",
-      courtOutcome = "Ad-Interim Stay Granted (4 Weeks)",
-      nextHearingDate = "18.11.2024",
-      benchRemarks = "Interim stay granted restraining line drawing under Section 10(d) Telegraph Act. Status quo ordered.",
-      seniorCounselName = "Adv. Meera Krishnan",
+      caseNumber = "",
+      clientName = "Client",
+      clientPhone = "",
+      courtOutcome = "",
+      nextHearingDate = "",
+      benchRemarks = "",
+      seniorCounselName = "Counsel on Record",
     } = data;
 
     const causelist = readFile("dev_causelists.json", DEFAULT_CAUSE_LIST);
-    const item = causelist.find((c) => c._id === itemId || c.caseNumber === caseNumber);
+    const item = causelist.find(
+      (c) => (itemId && c._id === itemId) || (caseNumber && c.caseNumber === caseNumber)
+    );
+    const resolvedCaseNo = caseNumber || item?.caseNumber || "Matter";
 
     if (item) {
-      item.status = courtOutcome.includes("Stay") ? "stay_granted" : "adjourned";
+      item.status = courtOutcome.toLowerCase().includes("stay") ? "stay_granted" : "adjourned";
       item.lastOutcome = courtOutcome;
       item.nextHearingDate = nextHearingDate;
       item.benchRemarks = benchRemarks;
       writeFile("dev_causelists.json", causelist);
     }
 
-    const englishMessage = `Namaskaram ${clientName}, your matter ${caseNumber} was heard before the Hon'ble Court today. Outcome: ${courtOutcome}. ${benchRemarks} Next listing date: ${nextHearingDate}. Warm regards, ${seniorCounselName}.`;
-    const malayalamMessage = `നമസ്കാരം ${clientName}, താങ്കളുടെ കേസ് ${caseNumber} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു. വിധി/ഉത്തരവ്: ${courtOutcome}. ${benchRemarks} അടുത്ത വാദം കേൾക്കുന്ന തീയതി: ${nextHearingDate}. സ്നേഹാദരങ്ങളോടെ, ${seniorCounselName}.`;
+    const englishMessage = `Namaskaram ${clientName}, your matter ${resolvedCaseNo} was heard before the Hon'ble Court today.${courtOutcome ? ` Outcome: ${courtOutcome}.` : ""}${benchRemarks ? ` ${benchRemarks}` : ""}${nextHearingDate ? ` Next listing date: ${nextHearingDate}.` : ""} Warm regards, ${seniorCounselName}.`;
+    const malayalamMessage = `നമസ്കാരം ${clientName}, താങ്കളുടെ കേസ് ${resolvedCaseNo} ഇന്ന് ബഹുമാനപ്പെട്ട കോടതി പരിഗണിച്ചു.${courtOutcome ? ` വിധി/ഉത്തരവ്: ${courtOutcome}.` : ""}${benchRemarks ? ` ${benchRemarks}` : ""}${nextHearingDate ? ` അടുത്ത വാദം കേൾക്കുന്ന തീയതി: ${nextHearingDate}.` : ""} സ്നേഹാദരങ്ങളോടെ, ${seniorCounselName}.`;
 
     const dispatchRecord = {
       dispatchId: `DISP-${Date.now().toString().slice(-6)}`,
-      caseNumber,
+      caseNumber: resolvedCaseNo,
       clientName,
       clientPhone,
       courtOutcome,
@@ -5465,26 +5381,29 @@ export const devStore = {
   // --- Task Mite Tasks & Chamber Notes Suite ---
   // ==========================================================================
   getTaskMiteTasks(userId) {
-    return readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
+    if (!userId) return [];
+    const tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
+    return tasks.filter((t) => t.userId && String(t.userId) === String(userId));
   },
 
   addTaskMiteTask(userId, data = {}) {
-    const tasks = this.getTaskMiteTasks(userId);
+    if (!userId) return null;
+    const tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
     const newTask = {
-      id: `task-${Date.now()}`,
-      userId,
-      title: data.title || "New Chamber Task",
+      id: data.id || `task-${Date.now()}`,
+      userId: String(userId),
+      title: data.title || "New Task",
       caseMatter: data.caseMatter || undefined,
       status: data.status || "not_started",
       type: data.type || "Court Filing",
-      dueDate: data.dueDate || "Today",
+      dueDate: data.dueDate || "Upcoming",
       dueTime: data.dueTime,
       isDueUrgent: Boolean(data.isDueUrgent),
-      priority: data.priority || "urgent",
+      priority: data.priority || "medium",
       assignee: data.assignee || {
-        name: "Adv. Rajiv Malhotra",
-        role: "Associate",
-        avatarInitials: "RM",
+        name: "Unassigned",
+        role: "Self",
+        avatarInitials: "U",
       },
       notes: data.notes || undefined,
       createdAt: new Date().toISOString(),
@@ -5494,38 +5413,57 @@ export const devStore = {
     return newTask;
   },
 
-  updateTaskMiteTask(id, updates = {}) {
+  updateTaskMiteTask(id, updates = {}, userId = null) {
     const tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
-    const index = tasks.findIndex((t) => t.id === id);
+    const index = tasks.findIndex(
+      (t) =>
+        (t.id === id || t._id === id) &&
+        (!userId || (t.userId && String(t.userId) === String(userId)))
+    );
     if (index !== -1) {
-      tasks[index] = { ...tasks[index], ...updates, updatedAt: new Date().toISOString() };
+      tasks[index] = {
+        ...tasks[index],
+        ...updates,
+        userId: tasks[index].userId,
+        updatedAt: new Date().toISOString(),
+      };
       writeFile("dev_taskmite_tasks.json", tasks);
       return tasks[index];
     }
     return null;
   },
 
-  deleteTaskMiteTask(id) {
-    let tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
-    tasks = tasks.filter((t) => t.id !== id);
-    writeFile("dev_taskmite_tasks.json", tasks);
+  deleteTaskMiteTask(id, userId = null) {
+    const tasks = readFile("dev_taskmite_tasks.json", DEFAULT_TASKMITE_TASKS);
+    const filtered = tasks.filter(
+      (t) =>
+        !(
+          (t.id === id || t._id === id) &&
+          (!userId || (t.userId && String(t.userId) === String(userId)))
+        )
+    );
+    if (filtered.length === tasks.length) return false;
+    writeFile("dev_taskmite_tasks.json", filtered);
     return true;
   },
 
   getTaskMiteNotes(userId) {
-    return readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+    if (!userId) return [];
+    const notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+    return notes.filter((n) => n.userId && String(n.userId) === String(userId));
   },
 
   addTaskMiteNote(userId, data = {}) {
-    const notes = this.getTaskMiteNotes(userId);
+    if (!userId) return null;
+    const notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
     const newNote = {
-      id: `note-${Date.now()}`,
-      userId,
-      title: data.title || "Untitled Chamber Memo",
+      id: data.id || `note-${Date.now()}`,
+      userId: String(userId),
+      title: data.title || "Untitled Note",
       category: data.category || "hearing_memo",
       categoryLabel: data.categoryLabel || "Hearing Memo",
       content: data.content || "",
-      tags: Array.isArray(data.tags) ? data.tags : ["Chamber"],
+      tags: Array.isArray(data.tags) ? data.tags : ["General"],
       updatedAt: "Just now",
       isPinned: Boolean(data.isPinned),
       createdAt: new Date().toISOString(),
@@ -5535,20 +5473,32 @@ export const devStore = {
     return newNote;
   },
 
-  deleteTaskMiteNote(id) {
-    let notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
-    notes = notes.filter((n) => n.id !== id);
-    writeFile("dev_taskmite_notes.json", notes);
+  deleteTaskMiteNote(id, userId = null) {
+    const notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+    const filtered = notes.filter(
+      (n) =>
+        !(
+          (n.id === id || n._id === id) &&
+          (!userId || (n.userId && String(n.userId) === String(userId)))
+        )
+    );
+    if (filtered.length === notes.length) return false;
+    writeFile("dev_taskmite_notes.json", filtered);
     return true;
   },
 
-  updateTaskMiteNote(id, updates = {}) {
-    let notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
-    const idx = notes.findIndex((n) => n.id === id);
+  updateTaskMiteNote(id, updates = {}, userId = null) {
+    const notes = readFile("dev_taskmite_notes.json", DEFAULT_TASKMITE_NOTES);
+    const idx = notes.findIndex(
+      (n) =>
+        (n.id === id || n._id === id) &&
+        (!userId || (n.userId && String(n.userId) === String(userId)))
+    );
     if (idx !== -1) {
       notes[idx] = {
         ...notes[idx],
         ...updates,
+        userId: notes[idx].userId,
         updatedAt: updates.updatedAt || "Just now",
         lastModified: new Date().toISOString(),
       };
@@ -8512,137 +8462,9 @@ const DEFAULT_NETWORK_RECOMMENDATIONS = [
 // ============================================================================
 // DEFAULT TASK MITE CONSTANTS
 // ============================================================================
-export const DEFAULT_TASKMITE_TASKS = [
-  {
-    id: "task-1",
-    title: "File Rejoinder Affidavit in WP(C) 19482/2024 before 04:00 PM",
-    caseMatter: "WP(C) 19482/2024",
-    status: "in_progress",
-    type: "Court Filing",
-    dueDate: "Today",
-    dueTime: "04:00 PM",
-    isDueUrgent: true,
-    priority: "urgent",
-    assignee: {
-      name: "Adv. Rajiv Malhotra",
-      role: "Senior Associate",
-      avatarInitials: "RM",
-    },
-    notes: "Ensure Section 16 Indian Telegraph Act objection annexures are sworn before Commissioner of Oaths.",
-  },
-  {
-    id: "task-2",
-    title: "Serve advance copy of Bail Application on Public Prosecutor",
-    caseMatter: "BA 4192/2026",
-    status: "not_started",
-    type: "Court Filing",
-    dueDate: "Tomorrow",
-    dueTime: "11:00 AM",
-    isDueUrgent: true,
-    priority: "high",
-    assignee: {
-      name: "Suresh Rawat",
-      role: "Chamber Clerk",
-      avatarInitials: "SR",
-    },
-    notes: "Obtain seal acknowledgement from High Court Prosecution Desk.",
-  },
-  {
-    id: "task-3",
-    title: "Prepare cross-examination questionnaire for Plaintiff Witness in OS 412/2023",
-    caseMatter: "OS 412/2023",
-    status: "in_review",
-    type: "Hearing Prep",
-    dueDate: "04 Nov 2026",
-    priority: "high",
-    assignee: {
-      name: "Adv. Sarah Jenkins",
-      role: "Senior Counsel",
-      avatarInitials: "SJ",
-    },
-    notes: "Focus on Advocate Commissioner re-survey revenue marks and western boundary easement.",
-  },
-  {
-    id: "task-4",
-    title: "Research Supreme Court citations on retrospective Section 479 BNSS application",
-    caseMatter: "Chamber Research",
-    status: "in_progress",
-    type: "Research",
-    dueDate: "06 Nov 2026",
-    priority: "medium",
-    assignee: {
-      name: "Kunal Verma",
-      role: "Paralegal",
-      avatarInitials: "KV",
-    },
-    notes: "Cross-reference recent 2024 Division Bench judgments from Bombay and Delhi High Courts.",
-  },
-  {
-    id: "task-5",
-    title: "Finalize Section 17 Interim Relief memo for NCLT Arbitral Tribunal",
-    caseMatter: "ARB/NCLT/041/2024",
-    status: "not_started",
-    type: "Drafting",
-    dueDate: "14 Nov 2026",
-    priority: "high",
-    assignee: {
-      name: "Adv. Rajesh V. Varma",
-      role: "Commercial Counsel",
-      avatarInitials: "RV",
-    },
-    notes: "Attach audited escrow ledger statements and software maintenance logs.",
-  },
-  {
-    id: "task-6",
-    title: "Draft Section 14 Eviction Notice for Alex Morgan tenancy matter",
-    caseMatter: "Tenancy 108/2026",
-    status: "completed",
-    type: "Client Notice",
-    dueDate: "14 Oct 2026",
-    priority: "medium",
-    assignee: {
-      name: "Adv. Preeti Sharma",
-      role: "Litigation Specialist",
-      avatarInitials: "PS",
-    },
-    completedAt: "14 Oct 2026",
-  },
-];
+export const DEFAULT_TASKMITE_TASKS = [];
 
-export const DEFAULT_TASKMITE_NOTES = [
-  {
-    id: "note-1",
-    title: "BNSS Section 479 Retrospective Bail Application Precedents",
-    category: "precedent_notes",
-    categoryLabel: "Precedent Research",
-    content:
-      "Supreme Court in In Re Policy Strategy for Grant of Bail observed that benevolent criminal procedure amendments apply retrospectively to pending under-trials. Check Article 20(1) protections.",
-    tags: ["BNSS", "Bail", "Article 20"],
-    updatedAt: "2 hours ago",
-    isPinned: true,
-  },
-  {
-    id: "note-2",
-    title: "WP(C) 19482/2024 — Division Bench Rejoinder Strategy Notes",
-    category: "hearing_memo",
-    categoryLabel: "Hearing Memo",
-    content:
-      "Section 16(1) of Indian Telegraph Act requires prior written notice to occupier before felling yielding trees. KSEB line survey was conducted ex-parte without revenue demarcation.",
-    tags: ["High Court", "Telegraph Act", "Stay"],
-    updatedAt: "Yesterday",
-    isPinned: true,
-  },
-  {
-    id: "note-3",
-    title: "Section 34 Arbitration Limitation — 120-Day Inflexible Ceiling",
-    category: "precedent_notes",
-    categoryLabel: "Arbitration Law",
-    content:
-      "Supreme Court in Simplex Infrastructure reiterated Section 5 of Limitation Act cannot condone delay beyond 30 days statutory extension. Outer limit is strictly 120 days.",
-    tags: ["Arbitration", "Limitation", "Commercial"],
-    updatedAt: "3 days ago",
-  },
-];
+export const DEFAULT_TASKMITE_NOTES = [];
 
 // ============================================================================
 // DEFAULT PROFILES CONSTANTS (BCI & DIGILOCKER)

@@ -3182,7 +3182,7 @@ export function AdvocateWorkspaceView() {
                         </div>
                         <div className="pt-2 flex items-center justify-between gap-2">
                           <span className="text-xs text-zinc-500 font-mono truncate">
-                            CNR: {matter.cnrNumber || "KLHC01-2024"}
+                            {matter.cnrNumber ? `CNR: ${matter.cnrNumber}` : "CNR Pending"}
                           </span>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <button

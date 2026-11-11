@@ -1071,19 +1071,19 @@ export const citizenApi = {
 
   // --- Citizen Task Mite Suite ---
   async getCitizenTaskMiteTasks(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks`, {
-      headers: { Authorization: `Bearer ${t}` },
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
     });
     return await res.json();
   },
 
   async createCitizenTaskMiteTask(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${t}`,
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
@@ -1092,11 +1092,11 @@ export const citizenApi = {
   },
 
   async updateCitizenTaskMiteTask(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks/${id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${t}`,
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
         "Content-Type": "application/json",
       },
       body: JSON.stringify(updates),
@@ -1105,28 +1105,28 @@ export const citizenApi = {
   },
 
   async deleteCitizenTaskMiteTask(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/tasks/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${t}` },
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
     });
     return await res.json();
   },
 
   async getCitizenTaskMiteNotes(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes`, {
-      headers: { Authorization: `Bearer ${t}` },
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
     });
     return await res.json();
   },
 
   async createCitizenTaskMiteNote(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${t}`,
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
@@ -1135,11 +1135,11 @@ export const citizenApi = {
   },
 
   async updateCitizenTaskMiteNote(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes/${id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${t}`,
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
         "Content-Type": "application/json",
       },
       body: JSON.stringify(updates),
@@ -1148,10 +1148,10 @@ export const citizenApi = {
   },
 
   async deleteCitizenTaskMiteNote(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/taskmite/notes/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${t}` },
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
     });
     return await res.json();
   },
@@ -1579,7 +1579,7 @@ export const advocateApi = {
     return { success: false, message: "Matter not found" };
   },
 
-  async trackCase(token?: string, cnrOrQuery?: string): Promise<{ success: boolean; isLinkedToUser?: boolean; source?: string; matter?: any; canImportToDocket?: boolean; message?: string }> {
+  async trackCase(token?: string, cnrOrQuery?: string): Promise<{ success: boolean; found?: boolean; isLinkedToUser?: boolean; source?: string; matter?: any; canImportToDocket?: boolean; message?: string }> {
     try {
       const q = encodeURIComponent(cnrOrQuery || "");
       const res = await fetch(`${API_BASE_URL}/advocate/matters/track/${q}`, {
@@ -1588,23 +1588,15 @@ export const advocateApi = {
       if (!res.ok) throw new Error("Status " + res.status);
       return await res.json();
     } catch (err: any) {
-      console.warn("advocateApi.trackCase fallback:", err?.message || err);
+      console.warn("advocateApi.trackCase error:", err?.message || err);
       return {
-        success: true,
+        success: false,
+        found: false,
         isLinkedToUser: false,
-        source: "ecourts_njdg_live",
-        canImportToDocket: true,
-        matter: {
-          cnrNumber: cnrOrQuery || "DLHC010049212026",
-          caseNumber: "WP(C) 4921/2026",
-          title: "Vanguard Infrastructure Ltd. v. NHAI & Ors.",
-          court: "High Court of Delhi (New Delhi)",
-          courtHall: "Court Hall 3 • High Court of Delhi",
-          stage: "Final Arguments & Orders",
-          nextHearing: "Today, 12 Oct 2026 (Item 14)",
-          assignedAdvocate: "Adv. Sarah Jenkins",
-          statutoryActs: ["National Highways Act, 1956", "Article 226 of the Constitution of India"],
-        },
+        source: "error",
+        canImportToDocket: false,
+        matter: null,
+        message: "Unable to query case tracker right now.",
       };
     }
   },

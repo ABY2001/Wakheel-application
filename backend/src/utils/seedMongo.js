@@ -217,7 +217,7 @@ export const seedMongoIfEmpty = async () => {
 
     // Seed Task Mite Tasks
     const taskCount = await TaskMiteTask.countDocuments();
-    if (taskCount === 0) {
+    if (taskCount === 0 && DEFAULT_TASKMITE_TASKS.length > 0) {
       console.log("🌱 Seeding MongoDB Task Mite Tasks...");
       const tDocs = DEFAULT_TASKMITE_TASKS.map((item) => ({
         taskId: item.id,
@@ -239,7 +239,7 @@ export const seedMongoIfEmpty = async () => {
 
     // Seed Task Mite Notes
     const noteCount = await TaskMiteNote.countDocuments();
-    if (noteCount === 0) {
+    if (noteCount === 0 && DEFAULT_TASKMITE_NOTES.length > 0) {
       console.log("🌱 Seeding MongoDB Task Mite Notes...");
       const noteDocs = DEFAULT_TASKMITE_NOTES.map((item) => ({
         noteId: item.id,

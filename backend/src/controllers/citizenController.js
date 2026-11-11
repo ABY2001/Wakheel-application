@@ -879,7 +879,7 @@ export const getMatterByCnr = async (req, res) => {
 // @access  Private (Citizen)
 export const trackCaseByCnr = async (req, res) => {
   try {
-    const cnr = req.params.cnr || req.body.cnr || req.query.cnr;
+    const cnr = req.params?.cnr || req.body?.cnr || req.query?.cnr;
     const userId = getUserId(req);
 
     if (!cnr) {
@@ -898,6 +898,7 @@ export const trackCaseByCnr = async (req, res) => {
       if (userMatch) {
         return res.json({
           success: true,
+          found: true,
           isLinkedToUser: true,
           source: "user_active_docket",
           matter: normalizeMatterForClient(userMatch),
@@ -915,6 +916,7 @@ export const trackCaseByCnr = async (req, res) => {
       if (userMatch) {
         return res.json({
           success: true,
+          found: true,
           isLinkedToUser: true,
           source: "user_active_docket",
           matter: normalizeMatterForClient(userMatch),
@@ -926,8 +928,20 @@ export const trackCaseByCnr = async (req, res) => {
 
     // 2. If not found in user's active dockets, query live e-Courts NJDG resolver
     const liveCase = resolveECourtsLiveCnr(cnr);
+    if (!liveCase) {
+      return res.json({
+        success: true,
+        found: false,
+        isLinkedToUser: false,
+        source: "none",
+        matter: null,
+        canImportToDocket: false,
+        message: `No active docket matched "${cnr}" in your matters.`,
+      });
+    }
     res.json({
       success: true,
+      found: true,
       isLinkedToUser: false,
       source: "ecourts_njdg_live",
       matter: liveCase,
@@ -965,11 +979,11 @@ export const createMatter = async (req, res) => {
       filingDate,
     } = req.body;
 
-    const finalCaseNumber = caseNumber || `WP(C) ${Math.floor(10000 + Math.random() * 90000)}/2026`;
+    const finalCaseNumber = (caseNumber || "").trim() || `MATTER-${Date.now().toString().slice(-6)}`;
     const finalTitle = title || matterTitle || `${finalCaseNumber} Legal Matter`;
-    const finalCourt = court || courtForum || "High Court of Kerala (Ernakulam)";
-    const finalAdvocate = assignedAdvocate || advocateName || "Adv. Meera Krishnan";
-    const finalCnr = cnrNumber || `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-2026`;
+    const finalCourt = court || courtForum || "Court Forum Pending";
+    const finalAdvocate = assignedAdvocate || advocateName || "Pending Counsel Assignment";
+    const finalCnr = (cnrNumber || "").trim();
 
     const requestedAdvName = advocateName || assignedAdvocate || "";
     const resolvedAdv = shouldUseDevStore()
@@ -989,16 +1003,16 @@ export const createMatter = async (req, res) => {
       advocateName: resolvedAdv.advocateName || finalAdvocate,
       assignedAdvocate: resolvedAdv.advocateName || finalAdvocate,
       cnrNumber: finalCnr,
-      courtHall: courtHall || "Court Hall 2A",
+      courtHall: courtHall || "Filing Counter",
       status: status || "Admitted",
       filingDate: filingDate || new Date().toISOString().split("T")[0],
-      nextHearingDate: nextHearingDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      statutoryActs: statutoryActs || ["Article 226 of the Constitution of India", "Specific Relief Act, 1963"],
+      nextHearingDate: nextHearingDate || undefined,
+      statutoryActs: statutoryActs || [],
       timeline: [
         {
           date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-          title: "Matter Registered in Wakheel Case Tracker",
-          remarks: `Matter docket opened for ${finalCaseNumber}. Standing counsel / advocate engaged.`,
+          title: "Matter Registered in Case Tracker",
+          remarks: `Matter docket opened for ${finalCaseNumber}.`,
           stage: "Completed",
         },
       ],
@@ -3434,8 +3448,8 @@ export const getCitizenTaskMiteTasks = async (req, res) => {
       return res.json({ success: true, tasks, notes, mode: "dummy_data" });
     }
     const [tasks, notes] = await Promise.all([
-      TaskMiteTask.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
-      TaskMiteNote.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ isPinned: -1, createdAt: -1 }),
+      TaskMiteTask.find({ userId }).sort({ createdAt: -1 }),
+      TaskMiteNote.find({ userId }).sort({ isPinned: -1, createdAt: -1 }),
     ]);
     res.json({
       success: true,
@@ -3473,13 +3487,14 @@ export const createCitizenTaskMiteTask = async (req, res) => {
 
 export const updateCitizenTaskMiteTask = async (req, res) => {
   try {
+    const userId = getUserId(req);
     if (shouldUseDevStore()) {
-      const task = devStore.updateTaskMiteTask(req.params.id, req.body);
+      const task = devStore.updateTaskMiteTask(req.params.id, req.body, userId);
       if (!task) return res.status(404).json({ success: false, message: "Task not found" });
       return res.json({ success: true, task });
     }
     const task = await TaskMiteTask.findOneAndUpdate(
-      { $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ taskId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -3493,11 +3508,13 @@ export const updateCitizenTaskMiteTask = async (req, res) => {
 
 export const deleteCitizenTaskMiteTask = async (req, res) => {
   try {
+    const userId = getUserId(req);
     if (shouldUseDevStore()) {
-      devStore.deleteTaskMiteTask(req.params.id);
+      devStore.deleteTaskMiteTask(req.params.id, userId);
       return res.json({ success: true, message: "Task deleted" });
     }
     await TaskMiteTask.deleteOne({
+      userId,
       $or: [{ taskId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Task deleted" });
@@ -3515,7 +3532,7 @@ export const getCitizenTaskMiteNotes = async (req, res) => {
       return res.json({ success: true, notes, mode: "dummy_data" });
     }
     const notes = await TaskMiteNote.find({
-      $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }],
+      userId,
     }).sort({ isPinned: -1, createdAt: -1 });
     res.json({
       success: true,
@@ -3552,15 +3569,16 @@ export const createCitizenTaskMiteNote = async (req, res) => {
 
 export const updateCitizenTaskMiteNote = async (req, res) => {
   try {
+    const userId = getUserId(req);
     if (shouldUseDevStore()) {
-      const updated = devStore.updateTaskMiteNote(req.params.id, req.body);
+      const updated = devStore.updateTaskMiteNote(req.params.id, req.body, userId);
       if (!updated) {
         return res.status(404).json({ success: false, message: "Note not found" });
       }
       return res.json({ success: true, note: updated });
     }
     const updated = await TaskMiteNote.findOneAndUpdate(
-      { $or: [{ noteId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ noteId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -3579,11 +3597,13 @@ export const updateCitizenTaskMiteNote = async (req, res) => {
 
 export const deleteCitizenTaskMiteNote = async (req, res) => {
   try {
+    const userId = getUserId(req);
     if (shouldUseDevStore()) {
-      devStore.deleteTaskMiteNote(req.params.id);
+      devStore.deleteTaskMiteNote(req.params.id, userId);
       return res.json({ success: true, message: "Note deleted" });
     }
     await TaskMiteNote.deleteOne({
+      userId,
       $or: [{ noteId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Note deleted" });

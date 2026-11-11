@@ -5271,31 +5271,38 @@ export const devStore = {
   // --- Professional Network & Legal Pipeline Suite ---
   // ==========================================================================
   getNetworkContacts(userId) {
-    return readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
+    if (!userId) return [];
+    const contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
+    return contacts.filter((c) => c.userId === userId);
   },
 
   addNetworkContact(userId, data = {}) {
-    const contacts = this.getNetworkContacts(userId);
+    if (!userId) return null;
+    const contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
     const newContact = {
-      id: `c-${Date.now()}`,
+      id: data.id || `c-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       userId,
-      name: data.name || "Adv. New Counsel",
+      name: data.name || "New Contact",
       degree: data.degree || "1st",
-      role: data.role || "Legal Counsel",
-      chamber: data.chamber || "Chambers of Law",
-      bench: data.bench || "High Court of Kerala",
-      location: data.location || "Kochi, Kerala",
+      role: data.role || "",
+      chamber: data.chamber || "",
+      bench: data.bench || "",
+      court: data.court || data.bench || "",
+      location: data.location || "",
       stage: data.stage || "discover",
-      practiceArea: data.practiceArea || "Constitutional Law",
-      source: data.source || "Network Recommendation",
-      mutualsCount: data.mutualsCount || Math.floor(Math.random() * 20) + 3,
-      statusQuote: data.statusQuote || "Relationship initiated via Bar Council portal",
-      lastActive: "Just now",
-      isOnline: true,
-      barEnrollment: data.barEnrollment || `BCI/${Math.floor(Math.random() * 8000) + 1000}/2023`,
-      phone: data.phone || "+91 98000 00000",
-      email: data.email || "counsel@barcouncil.org",
-      briefsCount: data.briefsCount || 0,
+      practiceArea: data.practiceArea || "",
+      source: data.source || "Direct",
+      mutualsCount: Number.isFinite(Number(data.mutualsCount)) ? Number(data.mutualsCount) : 0,
+      statusQuote: data.statusQuote || "",
+      lastActive: data.lastActive || "Just now",
+      isOnline: Boolean(data.isOnline),
+      barEnrollment: data.barEnrollment || "",
+      phone: data.phone || "",
+      email: data.email || "",
+      briefsCount: Number.isFinite(Number(data.briefsCount)) ? Number(data.briefsCount) : 0,
+      rating: Number.isFinite(Number(data.rating)) ? Number(data.rating) : 0,
+      reviewsCount: Number.isFinite(Number(data.reviewsCount)) ? Number(data.reviewsCount) : 0,
+      feeText: data.feeText || "",
       createdAt: new Date().toISOString(),
     };
     contacts.unshift(newContact);
@@ -5303,9 +5310,10 @@ export const devStore = {
     return newContact;
   },
 
-  updateNetworkContactStage(id, stage) {
+  updateNetworkContactStage(id, stage, userId) {
+    if (!userId) return null;
     const contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
-    const index = contacts.findIndex((c) => c.id === id);
+    const index = contacts.findIndex((c) => c.id === id && c.userId === userId);
     if (index !== -1) {
       contacts[index].stage = stage;
       contacts[index].updatedAt = new Date().toISOString();
@@ -5315,24 +5323,29 @@ export const devStore = {
     return null;
   },
 
-  deleteNetworkContact(id) {
-    let contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
-    contacts = contacts.filter((c) => c.id !== id);
-    writeFile("dev_network_contacts.json", contacts);
+  deleteNetworkContact(id, userId) {
+    if (!userId) return false;
+    const contacts = readFile("dev_network_contacts.json", DEFAULT_NETWORK_CONTACTS);
+    const filtered = contacts.filter((c) => !(c.id === id && c.userId === userId));
+    if (filtered.length === contacts.length) return false;
+    writeFile("dev_network_contacts.json", filtered);
     return true;
   },
 
   getNetworkActivities(userId) {
-    return readFile("dev_network_activities.json", DEFAULT_NETWORK_ACTIVITIES);
+    if (!userId) return [];
+    const activities = readFile("dev_network_activities.json", DEFAULT_NETWORK_ACTIVITIES);
+    return activities.filter((a) => a.userId === userId);
   },
 
   addNetworkActivity(userId, data = {}) {
-    const activities = this.getNetworkActivities(userId);
+    if (!userId) return null;
+    const activities = readFile("dev_network_activities.json", DEFAULT_NETWORK_ACTIVITIES);
     const newAct = {
-      id: `act-${Date.now()}`,
+      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       userId,
       type: data.type || "connected",
-      advocateName: data.advocateName || "Advocate Colleague",
+      advocateName: data.advocateName || "Contact",
       description: data.description || "updated collaboration status.",
       timestamp: "Just now",
       createdAt: new Date().toISOString(),
@@ -5343,15 +5356,18 @@ export const devStore = {
   },
 
   getNetworkFollowups(userId) {
-    return readFile("dev_network_followups.json", DEFAULT_NETWORK_FOLLOWUPS);
+    if (!userId) return [];
+    const followups = readFile("dev_network_followups.json", DEFAULT_NETWORK_FOLLOWUPS);
+    return followups.filter((f) => f.userId === userId);
   },
 
   addNetworkFollowup(userId, data = {}) {
-    const followups = this.getNetworkFollowups(userId);
+    if (!userId) return null;
+    const followups = readFile("dev_network_followups.json", DEFAULT_NETWORK_FOLLOWUPS);
     const newFu = {
-      id: `fu-${Date.now()}`,
+      id: `fu-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       userId,
-      advocateName: data.advocateName || "Advocate Colleague",
+      advocateName: data.advocateName || "Contact",
       task: data.task || "Follow up on matter",
       dueText: data.dueText || "Due Tomorrow",
       dueUrgent: Boolean(data.dueUrgent),
@@ -5363,12 +5379,15 @@ export const devStore = {
   },
 
   getNetworkRecommendations(userId) {
-    return readFile("dev_network_recommendations.json", DEFAULT_NETWORK_RECOMMENDATIONS);
+    if (!userId) return [];
+    const recs = readFile("dev_network_recommendations.json", DEFAULT_NETWORK_RECOMMENDATIONS);
+    return recs.filter((r) => r.userId === userId);
   },
 
-  toggleNetworkRecommendation(id) {
+  toggleNetworkRecommendation(id, userId) {
+    if (!userId) return null;
     const recs = readFile("dev_network_recommendations.json", DEFAULT_NETWORK_RECOMMENDATIONS);
-    const index = recs.findIndex((r) => r.id === id);
+    const index = recs.findIndex((r) => r.id === id && r.userId === userId);
     if (index !== -1) {
       recs[index].status = recs[index].status === "connect" ? "pending" : "connect";
       writeFile("dev_network_recommendations.json", recs);
@@ -8167,297 +8186,13 @@ export const DEFAULT_CALENDAR_FIXTURES = [
 // ============================================================================
 // DEFAULT PROFESSIONAL NETWORK CONSTANTS
 // ============================================================================
-export const DEFAULT_NETWORK_CONTACTS = [
-  {
-    id: "c-1",
-    name: "Senior Adv. Sneha Kulkarni",
-    degree: "2nd",
-    role: "Senior Counsel • Constitutional & Civil Writs",
-    chamber: "Kulkarni Law Chambers",
-    bench: "High Court of Kerala",
-    location: "Kochi, Kerala",
-    stage: "discover",
-    practiceArea: "Constitutional Law",
-    source: "Network Recommendation",
-    mutualsCount: 11,
-    statusQuote: "Connection invitation dispatched via Bar Council Directory",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "K/001429/2012",
-    phone: "+91 94471 28910",
-    email: "sneha.kulkarni@hcbar.in",
-    briefsCount: 0,
-  },
-  {
-    id: "c-2",
-    name: "Adv. Tariq Mansoor",
-    degree: "2nd",
-    role: "Appellate Counsel • Commercial Disputes",
-    chamber: "Mansoor & Associates",
-    bench: "Delhi High Court",
-    location: "New Delhi",
-    stage: "discover",
-    practiceArea: "Commercial Arbitration",
-    source: "Network Recommendation",
-    mutualsCount: 7,
-    statusQuote: "Profile vetted for co-counseling in cross-border tech licensing",
-    lastActive: "3w ago",
-    isOnline: false,
-    barEnrollment: "D/1092/2015",
-    phone: "+91 98110 43921",
-    email: "tariq@mansoorlaw.com",
-    briefsCount: 0,
-  },
-  {
-    id: "c-3",
-    name: "Adv. Rahul Sharma",
-    degree: "1st",
-    role: "Chamber Head • Corporate Insolvency & IBC",
-    chamber: "Sharma & Partners Law Offices",
-    bench: "NCLAT / High Court of Karnataka",
-    location: "Bengaluru, India",
-    stage: "connected",
-    practiceArea: "Corporate & Insolvency",
-    source: "Network Recommendation",
-    mutualsCount: 18,
-    statusQuote: "Connection established; reciprocal briefing agreement shared",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "KAR/2381/2014",
-    phone: "+91 98450 19283",
-    email: "rahul@sharmapartners.in",
-    briefsCount: 1,
-  },
-  {
-    id: "c-4",
-    name: "Adv. Nandita Sengupta",
-    degree: "1st",
-    role: "Managing Associate • Banking & SARFAESI",
-    chamber: "Calcutta Jurists Collective",
-    bench: "Calcutta High Court",
-    location: "Kolkata, West Bengal",
-    stage: "connected",
-    practiceArea: "Corporate & Insolvency",
-    source: "Bar Council Directory",
-    mutualsCount: 14,
-    statusQuote: "Mutual referral protocol confirmed for DRT appeals",
-    lastActive: "2w ago",
-    isOnline: true,
-    barEnrollment: "WB/892/2017",
-    phone: "+91 98301 77291",
-    email: "nandita@caljurists.com",
-    briefsCount: 1,
-  },
-  {
-    id: "c-5",
-    name: "Adv. Karan Patel",
-    degree: "1st",
-    role: "Director of Practice & Ops • Dispute Resolution",
-    chamber: "Patel & Lex Associates",
-    bench: "Bombay High Court",
-    location: "Mumbai, India",
-    stage: "contacted",
-    practiceArea: "Commercial Arbitration",
-    source: "LinkedIn Import",
-    mutualsCount: 19,
-    statusQuote: "Initial partnership message sent with joint case synopsis",
-    lastActive: "1mo ago",
-    isOnline: false,
-    barEnrollment: "MAH/4102/2013",
-    phone: "+91 98200 48190",
-    email: "karan@patellex.in",
-    briefsCount: 1,
-  },
-  {
-    id: "c-6",
-    name: "Adv. Vikramaditya Mehta",
-    degree: "1st",
-    role: "Senior Partner • IP, Trademarks & Media Rights",
-    chamber: "Mehta Legal Chambers",
-    bench: "High Court of Telangana",
-    location: "Hyderabad, India",
-    stage: "contacted",
-    practiceArea: "Intellectual Property",
-    source: "Direct Reachout",
-    mutualsCount: 14,
-    statusQuote: "Personalized intro message sent with prior judgment citations",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "TS/1984/2011",
-    phone: "+91 98490 33419",
-    email: "vikram@mehtalegal.com",
-    briefsCount: 1,
-  },
-  {
-    id: "c-7",
-    name: "Adv. Priya Sundaram",
-    degree: "1st",
-    role: "Principal Arbitration Counsel • Infra & Energy",
-    chamber: "Sundaram Arbitration Chambers",
-    bench: "Bombay High Court",
-    location: "Mumbai, India",
-    stage: "engaged",
-    practiceArea: "Commercial Arbitration",
-    source: "HC Bar Conference",
-    mutualsCount: 31,
-    statusQuote: "Positive response received: 'Would love to review rejoinder brief.'",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "MAH/1820/2010",
-    phone: "+91 98205 99401",
-    email: "priya@sundaramchambers.in",
-    briefsCount: 2,
-  },
-  {
-    id: "c-8",
-    name: "Adv. Arjun Nambiar",
-    degree: "1st",
-    role: "Senior Chamber Counsel • Public Law & Writs",
-    chamber: "Nambiar & Kurian Advocates",
-    bench: "Supreme Court of India / High Court of Kerala",
-    location: "Bengaluru / Ernakulam",
-    stage: "meeting",
-    practiceArea: "Constitutional Law",
-    source: "Direct Reachout",
-    mutualsCount: 22,
-    statusQuote: "Chamber pre-trial strategy conference scheduled for Monday 10:30 AM",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "K/001844/2007",
-    phone: "+91 94473 11820",
-    email: "arjun@nambiaradvocates.com",
-    briefsCount: 3,
-  },
-  {
-    id: "c-9",
-    name: "Senior Adv. K. Parasaran",
-    degree: "1st",
-    role: "Senior Counsel • Supreme Court Constitution Bench",
-    chamber: "Parasaran Law Chambers",
-    bench: "Supreme Court of India",
-    location: "New Delhi",
-    stage: "active",
-    practiceArea: "Constitutional Law",
-    source: "High Court Bar Assn",
-    mutualsCount: 68,
-    statusQuote: "Active Co-Counsel on WP(C) 19482/2024 Constitution Bench reference",
-    lastActive: "1d ago",
-    isOnline: true,
-    barEnrollment: "SC/00012/1980",
-    phone: "+91 98100 11200",
-    email: "chambers@parasaran.legal",
-    briefsCount: 5,
-  },
-  {
-    id: "c-10",
-    name: "Adv. Harish Salve KC",
-    degree: "1st",
-    role: "King's Counsel & Senior Advocate • Cross-Border Arbitrations",
-    chamber: "Blackstone / Salve Chambers",
-    bench: "Supreme Court / London Commercial Court",
-    location: "Mumbai / London",
-    stage: "active",
-    practiceArea: "Commercial Arbitration",
-    source: "Referral Network",
-    mutualsCount: 82,
-    statusQuote: "Designated Lead Senior on international enforcement arbitration matter",
-    lastActive: "2d ago",
-    isOnline: false,
-    barEnrollment: "MAH/00055/1982",
-    phone: "+44 20 7404 0000",
-    email: "salve.clerk@blackstonechambers.com",
-    briefsCount: 4,
-  },
-];
+export const DEFAULT_NETWORK_CONTACTS = [];
 
-export const DEFAULT_NETWORK_ACTIVITIES = [
-  {
-    id: "act-1",
-    type: "connected",
-    advocateName: "Adv. Rahul Sharma",
-    description: "accepted your connection request and reciprocal referral protocol.",
-    timestamp: "2h ago",
-  },
-  {
-    id: "act-2",
-    type: "connected",
-    advocateName: "Adv. Nandita Sengupta",
-    description: "accepted your DRT appeal co-counsel invitation.",
-    timestamp: "1d ago",
-  },
-  {
-    id: "act-3",
-    type: "transitioned",
-    advocateName: "Senior Adv. K. Parasaran",
-    description: "transitioned to Active Relationship partner for WP(C) 19482/2024.",
-    timestamp: "2d ago",
-  },
-  {
-    id: "act-4",
-    type: "brief",
-    advocateName: "Adv. Vikramaditya Mehta",
-    description: "reviewed your counter-affidavit draft and shared 3 precedent annotations.",
-    timestamp: "3d ago",
-  },
-  {
-    id: "act-5",
-    type: "meeting",
-    advocateName: "Adv. Arjun Nambiar",
-    description: "confirmed chamber briefing session for Monday 10:30 AM in Court Hall 4.",
-    timestamp: "4d ago",
-  },
-];
+export const DEFAULT_NETWORK_ACTIVITIES = [];
 
-const DEFAULT_NETWORK_FOLLOWUPS = [
-  {
-    id: "fu-1",
-    advocateName: "Adv. Vikramaditya Mehta",
-    task: "Send follow-up on rejoinder draft & annexure list",
-    dueText: "Due Tomorrow",
-    dueUrgent: true,
-  },
-  {
-    id: "fu-2",
-    advocateName: "Adv. Arjun Nambiar",
-    task: "Prepare compilation of Supreme Court citations for Bench 4",
-    dueText: "In 2 days",
-    dueUrgent: false,
-  },
-  {
-    id: "fu-3",
-    advocateName: "Senior Adv. Harish Salve KC",
-    task: "Confirm arbitral hearing timeline & procedural order 2",
-    dueText: "In 4 days",
-    dueUrgent: false,
-  },
-];
+const DEFAULT_NETWORK_FOLLOWUPS = [];
 
-const DEFAULT_NETWORK_RECOMMENDATIONS = [
-  {
-    id: "rec-1",
-    name: "Adv. Sneha Kulkarni",
-    specialty: "Constitutional & Tax • High Court of Kerala",
-    bar: "Kerala High Court Bar Association",
-    mutuals: 11,
-    status: "pending",
-  },
-  {
-    id: "rec-2",
-    name: "Adv. Rohan Deshmukh",
-    specialty: "Commercial Arbitration & IBC • NCLAT",
-    bar: "Bombay High Court Bar Association",
-    mutuals: 19,
-    status: "connect",
-  },
-  {
-    id: "rec-3",
-    name: "Adv. Vrinda Grover",
-    specialty: "Criminal Appeals & Writs • Delhi High Court",
-    bar: "Delhi High Court Bar Association",
-    mutuals: 34,
-    status: "pending",
-  },
-];
+const DEFAULT_NETWORK_RECOMMENDATIONS = [];
 
 // ============================================================================
 // DEFAULT TASK MITE CONSTANTS

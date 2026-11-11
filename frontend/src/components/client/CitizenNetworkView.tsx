@@ -92,303 +92,7 @@ export interface RecommendedSpecialist {
   status: "consult" | "inquired";
 }
 
-const INITIAL_CITIZEN_CONTACTS: CitizenContact[] = [
-  // 1. DISCOVER
-  {
-    id: "cit-1",
-    name: "Adv. Tariq Mansoor",
-    rating: 4.8,
-    reviewsCount: 76,
-    role: "Appellate Counsel • Commercial Disputes",
-    court: "Delhi High Court / Supreme Court",
-    location: "New Delhi",
-    stage: "discover",
-    practiceArea: "Commercial Arbitration",
-    source: "AI Advocate Match",
-    feeText: "₹4,000 / session",
-    statusQuote: "Matched 96% for cross-border software licensing recovery dispute",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "D/1092/2015",
-    phone: "+91 98110 43921",
-    email: "tariq@mansoorlaw.com",
-  },
-  {
-    id: "cit-2",
-    name: "Adv. Sneha Kulkarni",
-    rating: 4.9,
-    reviewsCount: 112,
-    role: "Senior Counsel • Constitutional & Civil Writs",
-    court: "High Court of Kerala",
-    location: "Kochi, Kerala",
-    stage: "discover",
-    practiceArea: "Constitutional Writs",
-    source: "Bar Council Directory",
-    feeText: "₹3,500 / session",
-    statusQuote: "Recommended for writ challenges against municipal utility acquisition",
-    lastActive: "2w ago",
-    isOnline: false,
-    barEnrollment: "K/001429/2012",
-    phone: "+91 94471 28910",
-    email: "sneha.kulkarni@hcbar.in",
-  },
-
-  // 2. SHORTLISTED
-  {
-    id: "cit-3",
-    name: "Adv. Rajiv Malhotra",
-    rating: 4.8,
-    reviewsCount: 88,
-    role: "Principal Associate • Property Encroachment & Injunctions",
-    court: "District & Sessions Court, Ernakulam",
-    location: "Kochi, Kerala",
-    stage: "shortlisted",
-    practiceArea: "Property & Tenancy",
-    source: "InWorth Verified",
-    feeText: "₹2,500 / session",
-    statusQuote: "Shortlisted for boundary re-survey sketch injunction appeal",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "D/1492/2018",
-    phone: "+91 98470 32189",
-    email: "rajiv@lexadvocates.in",
-  },
-  {
-    id: "cit-4",
-    name: "Adv. Preeti Sharma",
-    rating: 4.9,
-    reviewsCount: 134,
-    role: "Litigation & Writs Specialist • Consumer Redressal",
-    court: "Kerala State Consumer Commission",
-    location: "Trivandrum, Kerala",
-    stage: "shortlisted",
-    practiceArea: "Consumer Law",
-    source: "Direct Recommendation",
-    feeText: "₹2,000 / session",
-    statusQuote: "Saved for filing defect in goods complaint against equipment vendor",
-    lastActive: "3w ago",
-    isOnline: true,
-    barEnrollment: "K/003411/2021",
-    phone: "+91 98950 14820",
-    email: "preeti@sharmalegal.org",
-  },
-
-  // 3. INQUIRY SENT
-  {
-    id: "cit-5",
-    name: "Adv. Karan Patel",
-    rating: 4.7,
-    reviewsCount: 65,
-    role: "Director of Practice • NCLT Insolvency (IBC)",
-    court: "NCLT Kochi Bench & Commercial Tribunal",
-    location: "Kochi, Kerala",
-    stage: "inquired",
-    practiceArea: "Commercial Arbitration",
-    source: "InWorth Verified",
-    feeText: "₹3,500 / session",
-    statusQuote: "Initial matter brief dispatched regarding milestone escrow dispute",
-    lastActive: "1mo ago",
-    isOnline: false,
-    barEnrollment: "MAH/4102/2013",
-    phone: "+91 98200 48190",
-    email: "karan@patellex.in",
-  },
-  {
-    id: "cit-6",
-    name: "Adv. Vikramaditya Mehta",
-    rating: 4.9,
-    reviewsCount: 140,
-    role: "Senior Partner • Intellectual Property & Software Agreements",
-    court: "High Court Commercial Division",
-    location: "Hyderabad / Kochi",
-    stage: "inquired",
-    practiceArea: "Commercial Arbitration",
-    source: "Direct Reachout",
-    feeText: "₹4,500 / session",
-    statusQuote: "Case summary shared; awaiting preliminary legal opinion",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "TS/1984/2011",
-    phone: "+91 98490 33419",
-    email: "vikram@mehtalegal.com",
-  },
-
-  // 4. CONSULTED
-  {
-    id: "cit-7",
-    name: "Adv. Nandita Sengupta",
-    rating: 4.8,
-    reviewsCount: 92,
-    role: "Banking & Loan Recovery Counsel",
-    court: "Debts Recovery Tribunal (DRT)",
-    location: "Kochi, Kerala",
-    stage: "consulted",
-    practiceArea: "Property & Tenancy",
-    source: "AI Advocate Match",
-    feeText: "₹2,800 / session",
-    statusQuote: "Strategy conference completed; advised filing Section 17 DRT application",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "WB/892/2017",
-    phone: "+91 98301 77291",
-    email: "nandita@caljurists.com",
-  },
-  {
-    id: "cit-8",
-    name: "Adv. Arjun Nambiar",
-    rating: 4.9,
-    reviewsCount: 120,
-    role: "Chamber Counsel • Public Law & Land Acquisition",
-    court: "High Court of Kerala",
-    location: "Ernakulam, Kerala",
-    stage: "consulted",
-    practiceArea: "Constitutional Writs",
-    source: "Bar Council Directory",
-    feeText: "₹3,500 / session",
-    statusQuote: "Consultation held; recommended Division Bench rejoinder citation list",
-    lastActive: "2w ago",
-    isOnline: true,
-    barEnrollment: "K/001844/2007",
-    phone: "+91 94473 11820",
-    email: "arjun@nambiaradvocates.com",
-  },
-
-  // 5. HEARING / PROCEEDINGS SCHEDULED
-  {
-    id: "cit-9",
-    name: "Adv. Priya Nair",
-    rating: 4.9,
-    reviewsCount: 116,
-    role: "Family Law & Consumer Rights Advocate",
-    court: "District Consumer Commission, Ernakulam",
-    location: "Kollam / Ernakulam",
-    stage: "hearing",
-    practiceArea: "Consumer Law",
-    source: "InWorth Verified",
-    feeText: "₹2,000 / session",
-    statusQuote: "Notice served via speed post; opposite party version hearing on 25 Nov",
-    lastActive: "1mo ago",
-    isOnline: true,
-    barEnrollment: "K/002105/2017",
-    phone: "+91 94460 77112",
-    email: "priya.nair@barcouncilkerala.in",
-    assignedMatterNo: "CC 892/2024",
-    assignedMatterTitle: "Gopakumar v. Apex Electrical Infra Pvt Ltd",
-    nextHearingDate: "25 Nov 2026",
-  },
-  {
-    id: "cit-10",
-    name: "Adv. Rajesh V. Varma",
-    rating: 4.8,
-    reviewsCount: 98,
-    role: "Civil & Commercial Contract Specialist",
-    court: "NCLT Kochi Bench & Arbitral Tribunal",
-    location: "Trivandrum / Kochi",
-    stage: "hearing",
-    practiceArea: "Commercial Arbitration",
-    source: "Bar Council Directory",
-    feeText: "₹3,000 / session",
-    statusQuote: "Arbitration slot scheduled for Nov 18: Section 17 interim relief arguments",
-    lastActive: "1mo ago",
-    isOnline: false,
-    barEnrollment: "K/000892/2008",
-    phone: "+91 98471 66209",
-    email: "rajesh.varma@trivandrumbad.in",
-    assignedMatterNo: "ARB/NCLT/KOCHI/2024/041",
-    assignedMatterTitle: "Malabar Infotech Solutions v. Coastal Logistics",
-    nextHearingDate: "18 Nov 2026",
-  },
-
-  // 6. ACTIVE VAKALATNAMA / RETAINED
-  {
-    id: "cit-11",
-    name: "Adv. Meera Krishnan",
-    rating: 4.9,
-    reviewsCount: 168,
-    role: "Senior Counsel • High Court Writs",
-    court: "High Court of Kerala (Court Hall 2A)",
-    location: "Ernakulam, Kerala",
-    stage: "retained",
-    practiceArea: "Constitutional Writs",
-    source: "AI Advocate Match",
-    feeText: "₹3,500 / session",
-    statusQuote: "Active Stay Granted; rejoinder affidavit filed against KSEB alignment order",
-    lastActive: "3h ago",
-    isOnline: true,
-    barEnrollment: "K/001429/2012",
-    phone: "+91 94470 12849",
-    email: "meera.krishnan@keralahc.gov.in",
-    assignedMatterNo: "WP(C) 19482/2024",
-    assignedMatterTitle: "Gopakumar Nambiar v. Kerala State Electricity Board & Anr.",
-    nextHearingDate: "12 Nov 2026",
-  },
-  {
-    id: "cit-12",
-    name: "Adv. Sarah Jenkins",
-    rating: 4.9,
-    reviewsCount: 142,
-    role: "Senior Property & Tenancy Advocate",
-    court: "Principal Munsiff Court, Ernakulam",
-    location: "Kochi, Kerala",
-    stage: "retained",
-    practiceArea: "Property & Tenancy",
-    source: "InWorth Verified",
-    feeText: "₹2,500 / session",
-    statusQuote: "Pre-Trial Evidence Stage: Advocate Commissioner survey sketch verified",
-    lastActive: "1d ago",
-    isOnline: true,
-    barEnrollment: "K/001429/2012",
-    phone: "+91 98460 55431",
-    email: "sarah.jenkins@lawchambers.in",
-    assignedMatterNo: "OS 412/2023",
-    assignedMatterTitle: "Gopakumar Nambiar v. Varghese Builders & Developers",
-    nextHearingDate: "04 Nov 2026",
-  },
-  {
-    id: "cit-13",
-    name: "Senior Adv. K. Parasaran Chambers",
-    rating: 5.0,
-    reviewsCount: 240,
-    role: "Lead Senior Counsel • Constitutional References",
-    court: "Supreme Court of India",
-    location: "New Delhi",
-    stage: "retained",
-    practiceArea: "Constitutional Writs",
-    source: "Direct Recommendation",
-    feeText: "Senior Retainer",
-    statusQuote: "Vakalatnama on record for Article 226 Constitutional challenge appeal",
-    lastActive: "2d ago",
-    isOnline: true,
-    barEnrollment: "SC/00012/1980",
-    phone: "+91 98100 11200",
-    email: "chambers@parasaran.legal",
-    assignedMatterNo: "SLP(C) 28941/2026",
-    assignedMatterTitle: "Gopakumar Nambiar v. State of Kerala & Anr.",
-    nextHearingDate: "19 Dec 2026",
-  },
-  {
-    id: "cit-14",
-    name: "Adv. Rohinton Nariman",
-    rating: 5.0,
-    reviewsCount: 210,
-    role: "Arbitration Tribunal Arbitrator & Senior Counsel",
-    court: "Arbitration Tribunal, Kochi",
-    location: "New Delhi / Kochi",
-    stage: "retained",
-    practiceArea: "Commercial Arbitration",
-    source: "Bar Council Directory",
-    feeText: "Tribunal Retainer",
-    statusQuote: "Section 30 settlement draft vetted and submitted to Sole Arbitrator",
-    lastActive: "3d ago",
-    isOnline: false,
-    barEnrollment: "SC/00098/1985",
-    phone: "+91 98110 99882",
-    email: "nariman@supremecourtbar.in",
-    assignedMatterNo: "ARB/NCLT/041/2024",
-    assignedMatterTitle: "Malabar Infotech v. Coastal Logistics",
-    nextHearingDate: "18 Nov 2026",
-  },
-];
+const INITIAL_CITIZEN_CONTACTS: CitizenContact[] = [];
 
 const CITIZEN_STAGE_CONFIG: {
   id: CitizenPipelineStage;
@@ -455,99 +159,11 @@ const CITIZEN_STAGE_CONFIG: {
   },
 ];
 
-const INITIAL_CITIZEN_ACTIVITIES: RepresentationActivity[] = [
-  {
-    id: "c-act-1",
-    type: "stay",
-    advocateName: "Adv. Meera Krishnan",
-    description: "obtained daily court order extending interim stay in WP(C) 19482/2024.",
-    timestamp: "3h ago",
-  },
-  {
-    id: "c-act-2",
-    type: "filing",
-    advocateName: "Adv. Sarah Jenkins",
-    description: "filed verified Advocate Commissioner survey sketch in OS 412/2023.",
-    timestamp: "1d ago",
-  },
-  {
-    id: "c-act-3",
-    type: "filing",
-    advocateName: "Adv. Rajesh V. Varma",
-    description: "finalized Section 17 Interim Relief memo for arbitral hearing.",
-    timestamp: "2d ago",
-  },
-  {
-    id: "c-act-4",
-    type: "notice",
-    advocateName: "Adv. Priya Nair",
-    description: "confirmed delivery of registered statutory legal notice to opposite party.",
-    timestamp: "3d ago",
-  },
-  {
-    id: "c-act-5",
-    type: "vakalatnama",
-    advocateName: "Senior Adv. K. Parasaran Chambers",
-    description: "executed Vakalatnama for Constitutional Bench reference appeal.",
-    timestamp: "5d ago",
-  },
-  {
-    id: "c-act-6",
-    type: "consultation",
-    advocateName: "Adv. Arjun Nambiar",
-    description: "completed pre-trial briefing on Article 226 telegraph deviation grounds.",
-    timestamp: "38d ago",
-  },
-];
+const INITIAL_CITIZEN_ACTIVITIES: RepresentationActivity[] = [];
 
-const INITIAL_CITIZEN_FOLLOW_UPS: UpcomingHearingFollowUp[] = [
-  {
-    id: "c-fu-1",
-    advocateName: "Adv. Meera Krishnan",
-    task: "Submit revenue property receipts for Court Hall 2A hearing",
-    dueText: "Due Tomorrow",
-    dueUrgent: true,
-  },
-  {
-    id: "c-fu-2",
-    advocateName: "Adv. Sarah Jenkins",
-    task: "Pre-trial witness cross-examination briefing at Munsiff Court",
-    dueText: "In 3 days",
-  },
-  {
-    id: "c-fu-3",
-    advocateName: "Adv. Rajesh V. Varma",
-    task: "Sign affidavit of software milestone ledger exhibits",
-    dueText: "In 5 days",
-  },
-];
+const INITIAL_CITIZEN_FOLLOW_UPS: UpcomingHearingFollowUp[] = [];
 
-const INITIAL_RECOMMENDED_SPECIALISTS: RecommendedSpecialist[] = [
-  {
-    id: "rec-sp-1",
-    name: "Adv. K. Ramachandran Nair",
-    specialty: "Land Revenue & Boundary Demarcation Writs",
-    court: "High Court of Kerala",
-    experience: "26+ Years Experience",
-    status: "consult",
-  },
-  {
-    id: "rec-sp-2",
-    name: "Adv. Ananya Kurian",
-    specialty: "Consumer Finance & Defective Goods Complaints",
-    court: "Kerala State Consumer Commission",
-    experience: "11+ Years Experience",
-    status: "inquired",
-  },
-  {
-    id: "rec-sp-3",
-    name: "Adv. Gopakumar Menon",
-    specialty: "Commercial Arbitration & Injunctions",
-    court: "NCLT & Commercial Courts",
-    experience: "19+ Years Experience",
-    status: "consult",
-  },
-];
+const INITIAL_RECOMMENDED_SPECIALISTS: RecommendedSpecialist[] = [];
 
 interface CitizenNetworkViewProps {
   onOpenConsultation?: (advocate: any) => void;
@@ -560,43 +176,49 @@ export function CitizenNetworkView({
   onOpenBooking,
   onViewCaseMatter,
 }: CitizenNetworkViewProps) {
-  const [contacts, setContacts] = useState<CitizenContact[]>(INITIAL_CITIZEN_CONTACTS);
-  const [activities, setActivities] = useState<RepresentationActivity[]>(
-    INITIAL_CITIZEN_ACTIVITIES
-  );
-  const [followUps, setFollowUps] = useState<UpcomingHearingFollowUp[]>(
-    INITIAL_CITIZEN_FOLLOW_UPS
-  );
-  const [recommendations, setRecommendations] = useState<RecommendedSpecialist[]>(
-    INITIAL_RECOMMENDED_SPECIALISTS
-  );
+  const [contacts, setContacts] = useState<CitizenContact[]>([]);
+  const [activities, setActivities] = useState<RepresentationActivity[]>([]);
+  const [followUps, setFollowUps] = useState<UpcomingHearingFollowUp[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendedSpecialist[]>([]);
 
-  // Fetch initial data from backend with fallback
+  // Fetch initial data from backend
   useEffect(() => {
     let isMounted = true;
     async function loadCitizenNetworkData() {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token")
+          : null;
+      if (!token) {
+        setContacts([]);
+        setActivities([]);
+        setFollowUps([]);
+        setRecommendations([]);
+        return;
+      }
+
       try {
         const [cRes, aRes, fRes, rRes] = await Promise.allSettled([
-          citizenApi.getCitizenNetworkContacts(),
-          citizenApi.getCitizenNetworkActivities(),
-          citizenApi.getCitizenNetworkFollowups(),
-          citizenApi.getCitizenNetworkRecommendations(),
+          citizenApi.getCitizenNetworkContacts(token),
+          citizenApi.getCitizenNetworkActivities(token),
+          citizenApi.getCitizenNetworkFollowups(token),
+          citizenApi.getCitizenNetworkRecommendations(token),
         ]);
         if (!isMounted) return;
-        if (cRes.status === "fulfilled" && cRes.value?.success && Array.isArray(cRes.value.contacts) && cRes.value.contacts.length > 0) {
+        if (cRes.status === "fulfilled" && cRes.value?.success && Array.isArray(cRes.value.contacts)) {
           setContacts(cRes.value.contacts);
         }
-        if (aRes.status === "fulfilled" && aRes.value?.success && Array.isArray(aRes.value.activities) && aRes.value.activities.length > 0) {
+        if (aRes.status === "fulfilled" && aRes.value?.success && Array.isArray(aRes.value.activities)) {
           setActivities(aRes.value.activities);
         }
-        if (fRes.status === "fulfilled" && fRes.value?.success && Array.isArray(fRes.value.followups) && fRes.value.followups.length > 0) {
+        if (fRes.status === "fulfilled" && fRes.value?.success && Array.isArray(fRes.value.followups)) {
           setFollowUps(fRes.value.followups);
         }
-        if (rRes.status === "fulfilled" && rRes.value?.success && Array.isArray(rRes.value.recommendations) && rRes.value.recommendations.length > 0) {
+        if (rRes.status === "fulfilled" && rRes.value?.success && Array.isArray(rRes.value.recommendations)) {
           setRecommendations(rRes.value.recommendations);
         }
       } catch (err) {
-        console.warn("Failed to fetch citizen legal network data, using offline fallback:", err);
+        console.warn("Failed to fetch citizen legal network data:", err);
       }
     }
     loadCitizenNetworkData();
@@ -624,34 +246,58 @@ export function CitizenNetworkView({
   const [addModalInitialStage, setAddModalInitialStage] = useState<CitizenPipelineStage>("discover");
   const [newCounselName, setNewCounselName] = useState("");
   const [newCounselRole, setNewCounselRole] = useState("");
-  const [newCounselCourt, setNewCounselCourt] = useState("High Court of Kerala");
-  const [newCounselLocation, setNewCounselLocation] = useState("Kochi, Kerala");
+  const [newCounselCourt, setNewCounselCourt] = useState("");
+  const [newCounselLocation, setNewCounselLocation] = useState("");
   const [newCounselPracticeArea, setNewCounselPracticeArea] = useState("Constitutional Writs");
-  const [newCounselSource, setNewCounselSource] = useState("AI Advocate Match");
+  const [newCounselSource, setNewCounselSource] = useState("Bar Council Directory");
   const [newCounselStatusQuote, setNewCounselStatusQuote] = useState("");
+
+  const courtOptions = useMemo(() => {
+    const set = new Set<string>();
+    contacts.forEach((c) => {
+      if (c.court?.trim()) set.add(c.court.trim());
+    });
+    return Array.from(set).sort();
+  }, [contacts]);
+
+  const sourceOptions = useMemo(() => {
+    const set = new Set<string>();
+    contacts.forEach((c) => {
+      if (c.source?.trim()) set.add(c.source.trim());
+    });
+    return Array.from(set).sort();
+  }, [contacts]);
 
   // Filtering contacts
   const filteredContacts = useMemo(() => {
-    return contacts.filter((c) => {
+    const list = contacts.filter((c) => {
       const q = searchQuery.toLowerCase().trim();
       const matchSearch =
         !q ||
-        c.name.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q) ||
-        c.court.toLowerCase().includes(q) ||
-        c.location.toLowerCase().includes(q) ||
-        c.practiceArea.toLowerCase().includes(q) ||
+        (c.name || "").toLowerCase().includes(q) ||
+        (c.role || "").toLowerCase().includes(q) ||
+        (c.court || "").toLowerCase().includes(q) ||
+        (c.location || "").toLowerCase().includes(q) ||
+        (c.practiceArea || "").toLowerCase().includes(q) ||
         (c.assignedMatterNo && c.assignedMatterNo.toLowerCase().includes(q));
 
       const matchStage = selectedStage === "all" || c.stage === selectedStage;
       const matchPractice =
         selectedPracticeArea === "all" || c.practiceArea === selectedPracticeArea;
-      const matchCourt = selectedCourt === "all" || c.court.includes(selectedCourt);
+      const matchCourt = selectedCourt === "all" || (c.court || "").includes(selectedCourt);
       const matchSource = selectedSource === "all" || c.source === selectedSource;
 
       return matchSearch && matchStage && matchPractice && matchCourt && matchSource;
     });
-  }, [contacts, searchQuery, selectedStage, selectedPracticeArea, selectedCourt, selectedSource]);
+
+    if (selectedSort === "name") {
+      return [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+    if (selectedSort === "rating") {
+      return [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    return list;
+  }, [contacts, searchQuery, selectedStage, selectedPracticeArea, selectedCourt, selectedSource, selectedSort]);
 
   // Stage breakdown
   const stageCounts = useMemo(() => {
@@ -679,8 +325,8 @@ export function CitizenNetworkView({
     stageCounts.consulted + stageCounts.hearing + stageCounts.retained;
   const meetingsCount = stageCounts.consulted + stageCounts.hearing;
   const activeCount = stageCounts.retained;
-  const responseRatePct = contactedCount > 0 ? Math.round((respondedCount / contactedCount) * 100) : 78;
-  const coreConversionPct = totalNetworkCount > 0 ? Math.round((activeCount / totalNetworkCount) * 100) : 29;
+  const responseRatePct = contactedCount > 0 ? Math.round((respondedCount / contactedCount) * 100) : 0;
+  const coreConversionPct = totalNetworkCount > 0 ? Math.round((activeCount / totalNetworkCount) * 100) : 0;
 
   // Toggle recommendation status
   const handleToggleSpecialist = (id: string) => {
@@ -720,26 +366,25 @@ export function CitizenNetworkView({
     e.preventDefault();
     if (!newCounselName.trim()) return;
 
+    const optimisticId = `cit-${Date.now()}`;
     const newContact: CitizenContact = {
-      id: `cit-${Date.now()}`,
-      name: newCounselName.trim().startsWith("Adv.") || newCounselName.trim().startsWith("Senior Adv.")
-        ? newCounselName.trim()
-        : `Adv. ${newCounselName.trim()}`,
-      rating: 4.9,
-      reviewsCount: Math.floor(Math.random() * 80) + 20,
-      role: newCounselRole.trim() || "Legal Counsel • Civil & Writs",
-      court: newCounselCourt,
-      location: newCounselLocation,
+      id: optimisticId,
+      name: newCounselName.trim(),
+      rating: 0,
+      reviewsCount: 0,
+      role: newCounselRole.trim(),
+      court: newCounselCourt.trim(),
+      location: newCounselLocation.trim(),
       stage: addModalInitialStage,
       practiceArea: newCounselPracticeArea,
       source: newCounselSource,
-      feeText: "₹2,500 / session",
-      statusQuote: newCounselStatusQuote.trim() || "Inquiry initiated via InWorth Portal",
+      feeText: "",
+      statusQuote: newCounselStatusQuote.trim(),
       lastActive: "Just now",
       isOnline: true,
-      barEnrollment: `K/${Math.floor(Math.random() * 9000) + 1000}/2020`,
-      phone: "+91 94470 00000",
-      email: `${newCounselName.toLowerCase().replace(/[^a-z]/g, "")}@keralabar.in`,
+      barEnrollment: "",
+      phone: "",
+      email: "",
     };
 
     setContacts((prev) => [newContact, ...prev]);
@@ -757,11 +402,18 @@ export function CitizenNetworkView({
     // Reset and close
     setNewCounselName("");
     setNewCounselRole("");
+    setNewCounselCourt("");
+    setNewCounselLocation("");
     setNewCounselStatusQuote("");
     setIsAddModalOpen(false);
 
     try {
-      await citizenApi.createCitizenNetworkContact(newContact);
+      const res = await citizenApi.createCitizenNetworkContact(newContact);
+      if (res?.success && res?.contact?.id) {
+        setContacts((prev) =>
+          prev.map((c) => (c.id === optimisticId ? { ...c, ...res.contact, id: res.contact.id } : c))
+        );
+      }
     } catch (err) {
       console.warn("Failed to persist citizen network contact:", err);
     }
@@ -987,32 +639,32 @@ export function CitizenNetworkView({
         {/* Multi-segment bar */}
         <div className="w-full h-3 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex shadow-inner">
           <div
-            style={{ width: `${(stageCounts.discover / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.discover / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-blue-500 transition-all duration-500"
             title={`Discover: ${stageCounts.discover}`}
           />
           <div
-            style={{ width: `${(stageCounts.shortlisted / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.shortlisted / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-emerald-500 transition-all duration-500"
             title={`Connected / Shortlisted: ${stageCounts.shortlisted}`}
           />
           <div
-            style={{ width: `${(stageCounts.inquired / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.inquired / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-amber-500 transition-all duration-500"
             title={`Contacted / Inquired: ${stageCounts.inquired}`}
           />
           <div
-            style={{ width: `${(stageCounts.consulted / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.consulted / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-purple-500 transition-all duration-500"
             title={`Engaged / Consulted: ${stageCounts.consulted}`}
           />
           <div
-            style={{ width: `${(stageCounts.hearing / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.hearing / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-cyan-500 transition-all duration-500"
             title={`Meeting / Hearing: ${stageCounts.hearing}`}
           />
           <div
-            style={{ width: `${(stageCounts.retained / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.retained / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-[#6B1728] transition-all duration-500"
             title={`Active Vakalatnama: ${stageCounts.retained}`}
           />
@@ -1101,11 +753,11 @@ export function CitizenNetworkView({
               className="px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer font-medium"
             >
               <option value="all">All Locations</option>
-              <option value="Kerala">Kerala High Court</option>
-              <option value="Munsiff">Principal Munsiff, Ernakulam</option>
-              <option value="NCLT">NCLT Kochi Bench</option>
-              <option value="Consumer">District Consumer Commission</option>
-              <option value="Supreme Court">Supreme Court of India</option>
+              {courtOptions.map((court) => (
+                <option key={court} value={court}>
+                  {court}
+                </option>
+              ))}
             </select>
 
             {/* Sources */}
@@ -1115,11 +767,11 @@ export function CitizenNetworkView({
               className="px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer font-medium"
             >
               <option value="all">All Sources</option>
-              <option value="AI Advocate Match">AI Advocate Match</option>
-              <option value="InWorth Verified">InWorth Verified</option>
-              <option value="Bar Council Directory">Bar Council Directory</option>
-              <option value="Direct Recommendation">Direct Recommendation</option>
-              <option value="Direct Reachout">Direct Reachout</option>
+              {sourceOptions.map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
             </select>
 
             {/* Sort */}
@@ -1213,31 +865,41 @@ export function CitizenNetworkView({
                                 1st
                               </span>
                             </div>
-                            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-1">
-                              {contact.role}
-                            </p>
-                            <p className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5 truncate">
-                              <MapPin className="w-2.5 h-2.5 shrink-0" />
-                              <span>{contact.location}</span>
-                            </p>
+                            {contact.role && (
+                              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-1">
+                                {contact.role}
+                              </p>
+                            )}
+                            {(contact.location || contact.court) && (
+                              <p className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5 truncate">
+                                <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                <span>{contact.location || contact.court}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
 
                         {/* Source Tag & Bar Verification */}
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                            <Sparkles className="w-2.5 h-2.5 text-[#6B1728] dark:text-[#ff94a6]" />
-                            {contact.source}
-                          </span>
-                          <span className="text-[10px] text-zinc-500 font-mono">
-                            ⭐ {contact.rating} ({contact.reviewsCount})
-                          </span>
+                          {contact.source && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                              <Sparkles className="w-2.5 h-2.5 text-[#6B1728] dark:text-[#ff94a6]" />
+                              {contact.source}
+                            </span>
+                          )}
+                          {contact.rating > 0 && (
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              ⭐ {contact.rating} ({contact.reviewsCount})
+                            </span>
+                          )}
                         </div>
 
                         {/* Quote Snippet (italicized) */}
-                        <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 text-[11px] text-zinc-600 dark:text-zinc-300 italic line-clamp-2">
-                          &ldquo;{contact.statusQuote}&rdquo;
-                        </div>
+                        {contact.statusQuote && (
+                          <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 text-[11px] text-zinc-600 dark:text-zinc-300 italic line-clamp-2">
+                            &ldquo;{contact.statusQuote}&rdquo;
+                          </div>
+                        )}
 
                         {/* Bottom Row: Timestamp + View > button */}
                         <div className="flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[10px]">
@@ -1293,50 +955,67 @@ export function CitizenNetworkView({
           </div>
 
           <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-            {filteredContacts.map((c) => (
-              <div
-                key={c.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                    {c.name.replace("Senior Adv.", "").replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-extrabold text-sm text-black dark:text-white">
-                        {c.name}
-                      </h4>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                        ⭐ {c.rating}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6]">
-                        {c.stage.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="text-zinc-600 dark:text-zinc-400">
-                      {c.role} • {c.court}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 italic">
-                      &ldquo;{c.statusQuote}&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right text-[11px] font-mono text-zinc-500 hidden sm:block">
-                    <div>{c.source}</div>
-                    <div className="text-black dark:text-white font-bold">{c.feeText}</div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedContact(c)}
-                    className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
-                  >
-                    View &gt;
-                  </button>
-                </div>
+            {filteredContacts.length === 0 ? (
+              <div className="p-10 text-center space-y-2">
+                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  No contacts in your legal network yet.
+                </p>
+                <p className="text-xs text-zinc-500">
+                  Click &ldquo;+ Add Contact&rdquo; to track advocates, specialists, or consultations in your pipeline.
+                </p>
               </div>
-            ))}
+            ) : (
+              filteredContacts.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-zinc-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      {c.name.replace("Senior Adv.", "").replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-extrabold text-sm text-black dark:text-white">
+                          {c.name}
+                        </h4>
+                        {c.rating > 0 && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                            ⭐ {c.rating}
+                          </span>
+                        )}
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6]">
+                          {c.stage.toUpperCase()}
+                        </span>
+                      </div>
+                      {(c.role || c.court) && (
+                        <p className="text-zinc-600 dark:text-zinc-400">
+                          {[c.role, c.court].filter(Boolean).join(" • ")}
+                        </p>
+                      )}
+                      {c.statusQuote && (
+                        <p className="text-[11px] text-zinc-500 italic">
+                          &ldquo;{c.statusQuote}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right text-[11px] font-mono text-zinc-500 hidden sm:block">
+                      {c.source && <div>{c.source}</div>}
+                      {c.feeText && <div className="text-black dark:text-white font-bold">{c.feeText}</div>}
+                    </div>
+                    <button
+                      onClick={() => setSelectedContact(c)}
+                      className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+                    >
+                      View &gt;
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1368,27 +1047,33 @@ export function CitizenNetworkView({
           </div>
 
           <div className="space-y-3">
-            {activities.map((act) => (
-              <div
-                key={act.id}
-                className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors hover:bg-zinc-100/70 dark:hover:bg-zinc-900"
-              >
-                <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0 text-xs">
-                  <p className="text-zinc-800 dark:text-zinc-200">
-                    <span className="font-extrabold text-black dark:text-white">
-                      {act.advocateName}
-                    </span>{" "}
-                    {act.description}
-                  </p>
-                  <span className="text-[10px] font-mono text-zinc-400 block mt-1">
-                    {act.timestamp}
-                  </span>
-                </div>
+            {activities.length === 0 ? (
+              <div className="p-6 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                No network activity recorded yet.
               </div>
-            ))}
+            ) : (
+              activities.map((act) => (
+                <div
+                  key={act.id}
+                  className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors hover:bg-zinc-100/70 dark:hover:bg-zinc-900"
+                >
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-xs">
+                    <p className="text-zinc-800 dark:text-zinc-200">
+                      <span className="font-extrabold text-black dark:text-white">
+                        {act.advocateName}
+                      </span>{" "}
+                      {act.description}
+                    </p>
+                    <span className="text-[10px] font-mono text-zinc-400 block mt-1">
+                      {act.timestamp}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -1470,33 +1155,39 @@ export function CitizenNetworkView({
             </div>
 
             <div className="space-y-3">
-              {followUps.map((fu) => (
-                <div
-                  key={fu.id}
-                  className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
-                    <FileText className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-xs space-y-0.5">
-                    <h4 className="font-extrabold text-black dark:text-white truncate">
-                      {fu.advocateName}
-                    </h4>
-                    <p className="text-zinc-600 dark:text-zinc-400 text-[11px] leading-tight">
-                      {fu.task}
-                    </p>
-                    <span
-                      className={`inline-block text-[10px] font-mono font-bold pt-1 ${
-                        fu.dueUrgent
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-blue-600 dark:text-blue-400"
-                      }`}
-                    >
-                      {fu.dueText}
-                    </span>
-                  </div>
+              {followUps.length === 0 ? (
+                <div className="p-5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                  No upcoming follow-ups scheduled.
                 </div>
-              ))}
+              ) : (
+                followUps.map((fu) => (
+                  <div
+                    key={fu.id}
+                    className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <FileText className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-xs space-y-0.5">
+                      <h4 className="font-extrabold text-black dark:text-white truncate">
+                        {fu.advocateName}
+                      </h4>
+                      <p className="text-zinc-600 dark:text-zinc-400 text-[11px] leading-tight">
+                        {fu.task}
+                      </p>
+                      <span
+                        className={`inline-block text-[10px] font-mono font-bold pt-1 ${
+                          fu.dueUrgent
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-blue-600 dark:text-blue-400"
+                        }`}
+                      >
+                        {fu.dueText}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -1510,40 +1201,46 @@ export function CitizenNetworkView({
             </div>
 
             <div className="space-y-3">
-              {recommendations.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-3 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 overflow-hidden">
-                    <div className="w-9 h-9 rounded-full bg-zinc-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      {rec.name.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="overflow-hidden">
-                      <h4 className="font-extrabold text-xs text-black dark:text-white truncate">
-                        {rec.name}
-                      </h4>
-                      <p className="text-[11px] text-zinc-500 truncate">
-                        {rec.specialty}
-                      </p>
-                      <span className="text-[10px] text-zinc-400 font-mono block truncate">
-                        {rec.court} • {rec.experience}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleToggleSpecialist(rec.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      rec.status === "inquired"
-                        ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                        : "bg-[#6B1728] hover:bg-[#581220] text-white"
-                    }`}
-                  >
-                    {rec.status === "inquired" ? "Pending" : "Connect"}
-                  </button>
+              {recommendations.length === 0 ? (
+                <div className="p-5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                  No specialist recommendations available yet.
                 </div>
-              ))}
+              ) : (
+                recommendations.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-3 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="w-9 h-9 rounded-full bg-zinc-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                        {rec.name.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="overflow-hidden">
+                        <h4 className="font-extrabold text-xs text-black dark:text-white truncate">
+                          {rec.name}
+                        </h4>
+                        <p className="text-[11px] text-zinc-500 truncate">
+                          {rec.specialty}
+                        </p>
+                        <span className="text-[10px] text-zinc-400 font-mono block truncate">
+                          {rec.court} • {rec.experience}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleToggleSpecialist(rec.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                        rec.status === "inquired"
+                          ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                          : "bg-[#6B1728] hover:bg-[#581220] text-white"
+                      }`}
+                    >
+                      {rec.status === "inquired" ? "Pending" : "Connect"}
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -1571,9 +1268,11 @@ export function CitizenNetworkView({
                     <h3 className="text-base font-extrabold text-black dark:text-white">
                       {selectedContact.name}
                     </h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">
-                      ⭐ {selectedContact.rating}
-                    </span>
+                    {selectedContact.rating > 0 && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-bold">
+                        ⭐ {selectedContact.rating}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-zinc-500 font-medium">
                     {selectedContact.role}
@@ -1618,7 +1317,7 @@ export function CitizenNetworkView({
                   BAR ENROLLMENT
                 </span>
                 <span className="font-mono font-bold text-black dark:text-white">
-                  {selectedContact.barEnrollment}
+                  {selectedContact.barEnrollment || "Not provided"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
@@ -1626,7 +1325,7 @@ export function CitizenNetworkView({
                   COURT &amp; JURISDICTION
                 </span>
                 <span className="font-semibold text-black dark:text-white truncate block">
-                  {selectedContact.court}
+                  {selectedContact.court || "Not provided"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
@@ -1634,7 +1333,7 @@ export function CitizenNetworkView({
                   CONSULTATION FEE
                 </span>
                 <span className="font-mono font-semibold text-black dark:text-white">
-                  {selectedContact.feeText}
+                  {selectedContact.feeText || "Not set"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
@@ -1642,7 +1341,7 @@ export function CitizenNetworkView({
                   OFFICIAL CONTACT
                 </span>
                 <span className="font-mono font-semibold text-black dark:text-white truncate block">
-                  {selectedContact.phone}
+                  {selectedContact.phone || "Not provided"}
                 </span>
               </div>
             </div>
@@ -1672,7 +1371,9 @@ export function CitizenNetworkView({
               <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#6B1728] dark:text-[#ff94a6] block">
                 Latest Status &amp; Representation Note
               </span>
-              <p className="italic">&ldquo;{selectedContact.statusQuote}&rdquo;</p>
+              <p className="italic">
+                {selectedContact.statusQuote ? `“${selectedContact.statusQuote}”` : "No status note added yet."}
+              </p>
             </div>
 
             {/* Footer Buttons */}
@@ -1756,7 +1457,7 @@ export function CitizenNetworkView({
                   required
                   value={newCounselName}
                   onChange={(e) => setNewCounselName(e.target.value)}
-                  placeholder="e.g. Adv. K. Ramachandran Nair"
+                  placeholder="Enter advocate or counsel name"
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1769,7 +1470,7 @@ export function CitizenNetworkView({
                   type="text"
                   value={newCounselRole}
                   onChange={(e) => setNewCounselRole(e.target.value)}
-                  placeholder="e.g. Senior Counsel • Land & Revenue Disputes"
+                  placeholder="Enter title or practice focus"
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1819,7 +1520,7 @@ export function CitizenNetworkView({
                     type="text"
                     value={newCounselCourt}
                     onChange={(e) => setNewCounselCourt(e.target.value)}
-                    placeholder="High Court of Kerala"
+                    placeholder="Enter court or bench"
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
                 </div>
@@ -1849,7 +1550,7 @@ export function CitizenNetworkView({
                   type="text"
                   value={newCounselStatusQuote}
                   onChange={(e) => setNewCounselStatusQuote(e.target.value)}
-                  placeholder="e.g. Discussed consultation for property injunction appeal"
+                  placeholder="Enter case note or inquiry synopsis..."
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>

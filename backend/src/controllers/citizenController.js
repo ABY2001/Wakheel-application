@@ -3301,8 +3301,8 @@ export const getCitizenNetworkContacts = async (req, res) => {
     }
 
     const [contacts, activities] = await Promise.all([
-      NetworkContact.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
-      NetworkActivity.find({ $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+      NetworkContact.find({ userId }).sort({ createdAt: -1 }),
+      NetworkActivity.find({ userId }).sort({ createdAt: -1 }),
     ]);
 
     res.json({
@@ -3358,15 +3358,20 @@ export const createCitizenNetworkContact = async (req, res) => {
 
 export const updateCitizenNetworkContactStage = async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { stage } = req.body;
     if (shouldUseDevStore()) {
-      const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+      const contact = devStore.updateNetworkContactStage(req.params.id, stage, userId);
       if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
       return res.json({ success: true, contact });
     }
 
+    const idFilter = /^[a-f\d]{24}$/i.test(req.params.id)
+      ? { $or: [{ contactId: req.params.id }, { _id: req.params.id }] }
+      : { contactId: req.params.id };
+
     const contact = await NetworkContact.findOneAndUpdate(
-      { $or: [{ contactId: req.params.id }, { _id: req.params.id }] },
+      { userId, ...idFilter },
       { $set: { stage } },
       { new: true }
     );
@@ -3380,13 +3385,21 @@ export const updateCitizenNetworkContactStage = async (req, res) => {
 
 export const deleteCitizenNetworkContact = async (req, res) => {
   try {
+    const userId = getUserId(req);
     if (shouldUseDevStore()) {
-      devStore.deleteNetworkContact(req.params.id);
+      const deleted = devStore.deleteNetworkContact(req.params.id, userId);
+      if (!deleted) return res.status(404).json({ success: false, message: "Contact not found" });
       return res.json({ success: true, message: "Contact deleted from network" });
     }
-    await NetworkContact.deleteOne({
-      $or: [{ contactId: req.params.id }, { _id: req.params.id }],
+    const idFilter = /^[a-f\d]{24}$/i.test(req.params.id)
+      ? { $or: [{ contactId: req.params.id }, { _id: req.params.id }] }
+      : { contactId: req.params.id };
+
+    const result = await NetworkContact.deleteOne({
+      userId,
+      ...idFilter,
     });
+    if (!result.deletedCount) return res.status(404).json({ success: false, message: "Contact not found" });
     res.json({ success: true, message: "Contact deleted from network" });
   } catch (error) {
     console.error("deleteCitizenNetworkContact error:", error);
@@ -3401,9 +3414,7 @@ export const getCitizenNetworkActivities = async (req, res) => {
       const activities = devStore.getNetworkActivities(userId);
       return res.json({ success: true, activities });
     }
-    const activities = await NetworkActivity.find({
-      $or: [{ userId }, { userId: "cit_1" }, { userId: "default_citizen" }, { userId: "adv_1" }],
-    }).sort({ createdAt: -1 });
+    const activities = await NetworkActivity.find({ userId }).sort({ createdAt: -1 });
     res.json({
       success: true,
       activities: activities.map((a) => ({ ...a.toObject(), id: a.activityId || a._id.toString() })),

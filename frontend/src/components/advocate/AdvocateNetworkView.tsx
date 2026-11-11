@@ -160,32 +160,44 @@ export function AdvocateNetworkView() {
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendedAdvocate[]>([]);
 
-  // Fetch initial data from backend with fallback
+  // Fetch initial data from backend
   useEffect(() => {
     let isMounted = true;
     async function loadNetworkData() {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token")
+          : null;
+      if (!token) {
+        setContacts([]);
+        setActivities([]);
+        setFollowUps([]);
+        setRecommendations([]);
+        return;
+      }
+
       try {
         const [cRes, aRes, fRes, rRes] = await Promise.allSettled([
-          advocateApi.getNetworkContacts(),
-          advocateApi.getNetworkActivities(),
-          advocateApi.getNetworkFollowups(),
-          advocateApi.getNetworkRecommendations(),
+          advocateApi.getNetworkContacts(token),
+          advocateApi.getNetworkActivities(token),
+          advocateApi.getNetworkFollowups(token),
+          advocateApi.getNetworkRecommendations(token),
         ]);
         if (!isMounted) return;
-        if (cRes.status === "fulfilled" && cRes.value?.success && Array.isArray(cRes.value.contacts) && cRes.value.contacts.length > 0) {
+        if (cRes.status === "fulfilled" && cRes.value?.success && Array.isArray(cRes.value.contacts)) {
           setContacts(cRes.value.contacts);
         }
-        if (aRes.status === "fulfilled" && aRes.value?.success && Array.isArray(aRes.value.activities) && aRes.value.activities.length > 0) {
+        if (aRes.status === "fulfilled" && aRes.value?.success && Array.isArray(aRes.value.activities)) {
           setActivities(aRes.value.activities);
         }
-        if (fRes.status === "fulfilled" && fRes.value?.success && Array.isArray(fRes.value.followups) && fRes.value.followups.length > 0) {
+        if (fRes.status === "fulfilled" && fRes.value?.success && Array.isArray(fRes.value.followups)) {
           setFollowUps(fRes.value.followups);
         }
-        if (rRes.status === "fulfilled" && rRes.value?.success && Array.isArray(rRes.value.recommendations) && rRes.value.recommendations.length > 0) {
+        if (rRes.status === "fulfilled" && rRes.value?.success && Array.isArray(rRes.value.recommendations)) {
           setRecommendations(rRes.value.recommendations);
         }
       } catch (err) {
-        console.warn("Failed to fetch advocate network data, using offline fallback:", err);
+        console.warn("Failed to fetch advocate network data:", err);
       }
     }
     loadNetworkData();
@@ -213,34 +225,58 @@ export function AdvocateNetworkView() {
   const [addModalInitialStage, setAddModalInitialStage] = useState<PipelineStage>("discover");
   const [newContactName, setNewContactName] = useState("");
   const [newContactRole, setNewContactRole] = useState("");
-  const [newContactBench, setNewContactBench] = useState("High Court of Kerala");
-  const [newContactLocation, setNewContactLocation] = useState("Kochi, Kerala");
+  const [newContactBench, setNewContactBench] = useState("");
+  const [newContactLocation, setNewContactLocation] = useState("");
   const [newContactPracticeArea, setNewContactPracticeArea] = useState("Constitutional Law");
   const [newContactSource, setNewContactSource] = useState("Bar Council Directory");
   const [newContactStatusQuote, setNewContactStatusQuote] = useState("");
 
+  const benchOptions = useMemo(() => {
+    const set = new Set<string>();
+    contacts.forEach((c) => {
+      if (c.bench?.trim()) set.add(c.bench.trim());
+    });
+    return Array.from(set).sort();
+  }, [contacts]);
+
+  const sourceOptions = useMemo(() => {
+    const set = new Set<string>();
+    contacts.forEach((c) => {
+      if (c.source?.trim()) set.add(c.source.trim());
+    });
+    return Array.from(set).sort();
+  }, [contacts]);
+
   // Filtering contacts
   const filteredContacts = useMemo(() => {
-    return contacts.filter((c) => {
+    const list = contacts.filter((c) => {
       const q = searchQuery.toLowerCase().trim();
       const matchSearch =
         !q ||
-        c.name.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q) ||
-        c.chamber.toLowerCase().includes(q) ||
-        c.bench.toLowerCase().includes(q) ||
-        c.location.toLowerCase().includes(q) ||
-        c.practiceArea.toLowerCase().includes(q);
+        (c.name || "").toLowerCase().includes(q) ||
+        (c.role || "").toLowerCase().includes(q) ||
+        (c.chamber || "").toLowerCase().includes(q) ||
+        (c.bench || "").toLowerCase().includes(q) ||
+        (c.location || "").toLowerCase().includes(q) ||
+        (c.practiceArea || "").toLowerCase().includes(q);
 
       const matchStage = selectedStage === "all" || c.stage === selectedStage;
       const matchPractice =
         selectedPracticeArea === "all" || c.practiceArea === selectedPracticeArea;
-      const matchBench = selectedBench === "all" || c.bench.includes(selectedBench);
+      const matchBench = selectedBench === "all" || (c.bench || "").includes(selectedBench);
       const matchSource = selectedSource === "all" || c.source === selectedSource;
 
       return matchSearch && matchStage && matchPractice && matchBench && matchSource;
     });
-  }, [contacts, searchQuery, selectedStage, selectedPracticeArea, selectedBench, selectedSource]);
+
+    if (selectedSort === "name") {
+      return [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+    if (selectedSort === "mutuals") {
+      return [...list].sort((a, b) => (b.mutualsCount || 0) - (a.mutualsCount || 0));
+    }
+    return list;
+  }, [contacts, searchQuery, selectedStage, selectedPracticeArea, selectedBench, selectedSource, selectedSort]);
 
   // Stage breakdown
   const stageCounts = useMemo(() => {
@@ -266,8 +302,8 @@ export function AdvocateNetworkView() {
   const respondedCount = stageCounts.engaged + stageCounts.meeting + stageCounts.active;
   const meetingsCount = stageCounts.meeting;
   const activeCount = stageCounts.active;
-  const responseRatePct = contactedCount > 0 ? Math.round((respondedCount / contactedCount) * 100) : 60;
-  const coreConversionPct = totalNetworkCount > 0 ? Math.round((activeCount / totalNetworkCount) * 100) : 13;
+  const responseRatePct = contactedCount > 0 ? Math.round((respondedCount / contactedCount) * 100) : 0;
+  const coreConversionPct = totalNetworkCount > 0 ? Math.round((activeCount / totalNetworkCount) * 100) : 0;
 
   // Toggle recommendation connect status
   const handleToggleConnect = async (id: string) => {
@@ -312,26 +348,25 @@ export function AdvocateNetworkView() {
     e.preventDefault();
     if (!newContactName.trim()) return;
 
+    const optimisticId = `c-${Date.now()}`;
     const newContact: NetworkContact = {
-      id: `c-${Date.now()}`,
-      name: newContactName.trim().startsWith("Adv.") || newContactName.trim().startsWith("Senior Adv.")
-        ? newContactName.trim()
-        : `Adv. ${newContactName.trim()}`,
+      id: optimisticId,
+      name: newContactName.trim(),
       degree: "1st",
-      role: newContactRole.trim() || "Chamber Associate • General Litigation",
-      chamber: "Independent Chamber Practice",
-      bench: newContactBench,
-      location: newContactLocation,
+      role: newContactRole.trim(),
+      chamber: "",
+      bench: newContactBench.trim(),
+      location: newContactLocation.trim(),
       stage: addModalInitialStage,
       practiceArea: newContactPracticeArea,
       source: newContactSource,
-      mutualsCount: Math.floor(Math.random() * 20) + 3,
-      statusQuote: newContactStatusQuote.trim() || "Relationship initiated via Bar Council portal",
+      mutualsCount: 0,
+      statusQuote: newContactStatusQuote.trim(),
       lastActive: "Just now",
       isOnline: true,
-      barEnrollment: `BCI/${Math.floor(Math.random() * 9000) + 1000}/2023`,
-      phone: "+91 98000 00000",
-      email: `${newContactName.toLowerCase().replace(/[^a-z]/g, "")}@barlaw.in`,
+      barEnrollment: "",
+      phone: "",
+      email: "",
       briefsCount: 0,
     };
 
@@ -350,11 +385,18 @@ export function AdvocateNetworkView() {
     // Reset and close
     setNewContactName("");
     setNewContactRole("");
+    setNewContactBench("");
+    setNewContactLocation("");
     setNewContactStatusQuote("");
     setIsAddModalOpen(false);
 
     try {
-      await advocateApi.createNetworkContact(newContact);
+      const res = await advocateApi.createNetworkContact(newContact);
+      if (res?.success && res?.contact?.id) {
+        setContacts((prev) =>
+          prev.map((c) => (c.id === optimisticId ? { ...c, ...res.contact, id: res.contact.id } : c))
+        );
+      }
     } catch (err) {
       console.warn("Failed to persist new network contact:", err);
     }
@@ -592,32 +634,32 @@ export function AdvocateNetworkView() {
         {/* Multi-segment bar */}
         <div className="w-full h-3 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex shadow-inner">
           <div
-            style={{ width: `${(stageCounts.discover / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.discover / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-blue-500 transition-all duration-500"
             title={`Discover: ${stageCounts.discover}`}
           />
           <div
-            style={{ width: `${(stageCounts.connected / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.connected / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-emerald-500 transition-all duration-500"
             title={`Connected: ${stageCounts.connected}`}
           />
           <div
-            style={{ width: `${(stageCounts.contacted / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.contacted / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-amber-500 transition-all duration-500"
             title={`Contacted: ${stageCounts.contacted}`}
           />
           <div
-            style={{ width: `${(stageCounts.engaged / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.engaged / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-purple-500 transition-all duration-500"
             title={`Engaged: ${stageCounts.engaged}`}
           />
           <div
-            style={{ width: `${(stageCounts.meeting / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.meeting / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-cyan-500 transition-all duration-500"
             title={`Meeting: ${stageCounts.meeting}`}
           />
           <div
-            style={{ width: `${(stageCounts.active / totalNetworkCount) * 100}%` }}
+            style={{ width: `${totalNetworkCount > 0 ? (stageCounts.active / totalNetworkCount) * 100 : 0}%` }}
             className="h-full bg-[#6B1728] transition-all duration-500"
             title={`Active Alliance: ${stageCounts.active}`}
           />
@@ -711,11 +753,11 @@ export function AdvocateNetworkView() {
               className="px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer font-medium"
             >
               <option value="all">All Benches / Locations</option>
-              <option value="Kerala">High Court of Kerala</option>
-              <option value="Delhi">Delhi High Court</option>
-              <option value="Bombay">Bombay High Court</option>
-              <option value="Supreme Court">Supreme Court of India</option>
-              <option value="NCLAT">NCLAT / NCLT</option>
+              {benchOptions.map((bench) => (
+                <option key={bench} value={bench}>
+                  {bench}
+                </option>
+              ))}
             </select>
 
             {/* Sources */}
@@ -725,12 +767,11 @@ export function AdvocateNetworkView() {
               className="px-3 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer font-medium"
             >
               <option value="all">All Sources</option>
-              <option value="Network Recommendation">Network Recommendation</option>
-              <option value="Bar Council Directory">Bar Council Directory</option>
-              <option value="High Court Bar Assn">High Court Bar Assn</option>
-              <option value="LinkedIn Import">LinkedIn Import</option>
-              <option value="Direct Reachout">Direct Reachout</option>
-              <option value="Referral Network">Referral Network</option>
+              {sourceOptions.map((source) => (
+                <option key={source} value={source}>
+                  {source}
+                </option>
+              ))}
             </select>
 
             {/* Sort */}
@@ -825,31 +866,41 @@ export function AdvocateNetworkView() {
                                 {contact.degree}
                               </span>
                             </div>
-                            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-1">
-                              {contact.role}
-                            </p>
-                            <p className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5 truncate">
-                              <MapPin className="w-2.5 h-2.5 shrink-0" />
-                              <span>{contact.location}</span>
-                            </p>
+                            {contact.role && (
+                              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 line-clamp-1">
+                                {contact.role}
+                              </p>
+                            )}
+                            {(contact.location || contact.bench) && (
+                              <p className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5 truncate">
+                                <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                <span>{contact.location || contact.bench}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
 
                         {/* Source Tag & Mutuals */}
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                            <Sparkles className="w-2.5 h-2.5 text-[#6B1728] dark:text-[#ff94a6]" />
-                            {contact.source}
-                          </span>
-                          <span className="text-[10px] text-zinc-500 font-mono">
-                            {contact.mutualsCount} mutuals
-                          </span>
+                          {contact.source && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                              <Sparkles className="w-2.5 h-2.5 text-[#6B1728] dark:text-[#ff94a6]" />
+                              {contact.source}
+                            </span>
+                          )}
+                          {contact.mutualsCount > 0 && (
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              {contact.mutualsCount} mutuals
+                            </span>
+                          )}
                         </div>
 
                         {/* Quote Snippet (italicized) */}
-                        <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 text-[11px] text-zinc-600 dark:text-zinc-300 italic line-clamp-2">
-                          &ldquo;{contact.statusQuote}&rdquo;
-                        </div>
+                        {contact.statusQuote && (
+                          <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 text-[11px] text-zinc-600 dark:text-zinc-300 italic line-clamp-2">
+                            &ldquo;{contact.statusQuote}&rdquo;
+                          </div>
+                        )}
 
                         {/* Bottom Row: Timestamp + View > button */}
                         <div className="flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[10px]">
@@ -905,50 +956,65 @@ export function AdvocateNetworkView() {
           </div>
 
           <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-            {filteredContacts.map((c) => (
-              <div
-                key={c.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                    {c.name.replace("Senior Adv.", "").replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-extrabold text-sm text-black dark:text-white">
-                        {c.name}
-                      </h4>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                        {c.degree}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6]">
-                        {c.stage.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="text-zinc-600 dark:text-zinc-400">
-                      {c.role} • {c.bench}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 italic">
-                      &ldquo;{c.statusQuote}&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right text-[11px] font-mono text-zinc-500 hidden sm:block">
-                    <div>{c.source}</div>
-                    <div>{c.mutualsCount} mutual connections</div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedContact(c)}
-                    className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
-                  >
-                    View &gt;
-                  </button>
-                </div>
+            {filteredContacts.length === 0 ? (
+              <div className="p-10 text-center space-y-2">
+                <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  No contacts in your network yet.
+                </p>
+                <p className="text-xs text-zinc-500">
+                  Click &ldquo;+ Add Contact&rdquo; to add advocates, co-counsel, or chamber allies to your pipeline.
+                </p>
               </div>
-            ))}
+            ) : (
+              filteredContacts.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-zinc-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      {c.name.replace("Senior Adv.", "").replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-extrabold text-sm text-black dark:text-white">
+                          {c.name}
+                        </h4>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                          {c.degree}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a6]">
+                          {c.stage.toUpperCase()}
+                        </span>
+                      </div>
+                      {(c.role || c.bench) && (
+                        <p className="text-zinc-600 dark:text-zinc-400">
+                          {[c.role, c.bench].filter(Boolean).join(" • ")}
+                        </p>
+                      )}
+                      {c.statusQuote && (
+                        <p className="text-[11px] text-zinc-500 italic">
+                          &ldquo;{c.statusQuote}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right text-[11px] font-mono text-zinc-500 hidden sm:block">
+                      {c.source && <div>{c.source}</div>}
+                      {c.mutualsCount > 0 && <div>{c.mutualsCount} mutual connections</div>}
+                    </div>
+                    <button
+                      onClick={() => setSelectedContact(c)}
+                      className="px-3.5 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+                    >
+                      View &gt;
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -980,27 +1046,33 @@ export function AdvocateNetworkView() {
           </div>
 
           <div className="space-y-3">
-            {activities.map((act) => (
-              <div
-                key={act.id}
-                className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors hover:bg-zinc-100/70 dark:hover:bg-zinc-900"
-              >
-                <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0 text-xs">
-                  <p className="text-zinc-800 dark:text-zinc-200">
-                    <span className="font-extrabold text-black dark:text-white">
-                      {act.advocateName}
-                    </span>{" "}
-                    {act.description}
-                  </p>
-                  <span className="text-[10px] font-mono text-zinc-400 block mt-1">
-                    {act.timestamp}
-                  </span>
-                </div>
+            {activities.length === 0 ? (
+              <div className="p-6 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                No network activity recorded yet.
               </div>
-            ))}
+            ) : (
+              activities.map((act) => (
+                <div
+                  key={act.id}
+                  className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors hover:bg-zinc-100/70 dark:hover:bg-zinc-900"
+                >
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-xs">
+                    <p className="text-zinc-800 dark:text-zinc-200">
+                      <span className="font-extrabold text-black dark:text-white">
+                        {act.advocateName}
+                      </span>{" "}
+                      {act.description}
+                    </p>
+                    <span className="text-[10px] font-mono text-zinc-400 block mt-1">
+                      {act.timestamp}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -1082,33 +1154,39 @@ export function AdvocateNetworkView() {
             </div>
 
             <div className="space-y-3">
-              {followUps.map((fu) => (
-                <div
-                  key={fu.id}
-                  className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
-                    <FileText className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-xs space-y-0.5">
-                    <h4 className="font-extrabold text-black dark:text-white truncate">
-                      {fu.advocateName}
-                    </h4>
-                    <p className="text-zinc-600 dark:text-zinc-400 text-[11px] leading-tight">
-                      {fu.task}
-                    </p>
-                    <span
-                      className={`inline-block text-[10px] font-mono font-bold pt-1 ${
-                        fu.dueUrgent
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-blue-600 dark:text-blue-400"
-                      }`}
-                    >
-                      {fu.dueText}
-                    </span>
-                  </div>
+              {followUps.length === 0 ? (
+                <div className="p-5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                  No upcoming follow-ups scheduled.
                 </div>
-              ))}
+              ) : (
+                followUps.map((fu) => (
+                  <div
+                    key={fu.id}
+                    className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-start gap-3 transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <FileText className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-xs space-y-0.5">
+                      <h4 className="font-extrabold text-black dark:text-white truncate">
+                        {fu.advocateName}
+                      </h4>
+                      <p className="text-zinc-600 dark:text-zinc-400 text-[11px] leading-tight">
+                        {fu.task}
+                      </p>
+                      <span
+                        className={`inline-block text-[10px] font-mono font-bold pt-1 ${
+                          fu.dueUrgent
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-blue-600 dark:text-blue-400"
+                        }`}
+                      >
+                        {fu.dueText}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -1122,40 +1200,46 @@ export function AdvocateNetworkView() {
             </div>
 
             <div className="space-y-3">
-              {recommendations.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-3 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 overflow-hidden">
-                    <div className="w-9 h-9 rounded-full bg-zinc-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                      {rec.name.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="overflow-hidden">
-                      <h4 className="font-extrabold text-xs text-black dark:text-white truncate">
-                        {rec.name}
-                      </h4>
-                      <p className="text-[11px] text-zinc-500 truncate">
-                        {rec.specialty}
-                      </p>
-                      <span className="text-[10px] text-zinc-400 font-mono block truncate">
-                        {rec.mutuals} mutual connections
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleToggleConnect(rec.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                      rec.status === "pending"
-                        ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                        : "bg-[#6B1728] hover:bg-[#581220] text-white"
-                    }`}
-                  >
-                    {rec.status === "pending" ? "Pending" : "Connect"}
-                  </button>
+              {recommendations.length === 0 ? (
+                <div className="p-5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                  No network recommendations available yet.
                 </div>
-              ))}
+              ) : (
+                recommendations.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-3 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="w-9 h-9 rounded-full bg-zinc-800 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                        {rec.name.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="overflow-hidden">
+                        <h4 className="font-extrabold text-xs text-black dark:text-white truncate">
+                          {rec.name}
+                        </h4>
+                        <p className="text-[11px] text-zinc-500 truncate">
+                          {rec.specialty}
+                        </p>
+                        <span className="text-[10px] text-zinc-400 font-mono block truncate">
+                          {rec.mutuals} mutual connections
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleToggleConnect(rec.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                        rec.status === "pending"
+                          ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                          : "bg-[#6B1728] hover:bg-[#581220] text-white"
+                      }`}
+                    >
+                      {rec.status === "pending" ? "Pending" : "Connect"}
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -1230,7 +1314,7 @@ export function AdvocateNetworkView() {
                   BAR ENROLLMENT
                 </span>
                 <span className="font-mono font-bold text-black dark:text-white">
-                  {selectedContact.barEnrollment}
+                  {selectedContact.barEnrollment || "Not provided"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
@@ -1238,7 +1322,7 @@ export function AdvocateNetworkView() {
                   BENCH &amp; COURT
                 </span>
                 <span className="font-semibold text-black dark:text-white truncate block">
-                  {selectedContact.bench}
+                  {selectedContact.bench || "Not provided"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
@@ -1246,7 +1330,7 @@ export function AdvocateNetworkView() {
                   PHONE CONTACT
                 </span>
                 <span className="font-mono font-semibold text-black dark:text-white">
-                  {selectedContact.phone}
+                  {selectedContact.phone || "Not provided"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
@@ -1254,7 +1338,7 @@ export function AdvocateNetworkView() {
                   OFFICIAL EMAIL
                 </span>
                 <span className="font-mono font-semibold text-black dark:text-white truncate block">
-                  {selectedContact.email}
+                  {selectedContact.email || "Not provided"}
                 </span>
               </div>
             </div>
@@ -1264,7 +1348,9 @@ export function AdvocateNetworkView() {
               <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#6B1728] dark:text-[#ff94a6] block">
                 Latest Interaction Note
               </span>
-              <p className="italic">&ldquo;{selectedContact.statusQuote}&rdquo;</p>
+              <p className="italic">
+                {selectedContact.statusQuote ? `“${selectedContact.statusQuote}”` : "No status note added yet."}
+              </p>
             </div>
 
             {/* Footer Buttons */}
@@ -1344,7 +1430,7 @@ export function AdvocateNetworkView() {
                   required
                   value={newContactName}
                   onChange={(e) => setNewContactName(e.target.value)}
-                  placeholder="e.g. Adv. Arvind Narayanan"
+                  placeholder="Enter full name"
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1357,7 +1443,7 @@ export function AdvocateNetworkView() {
                   type="text"
                   value={newContactRole}
                   onChange={(e) => setNewContactRole(e.target.value)}
-                  placeholder="e.g. Senior Partner • Corporate Arbitration"
+                  placeholder="Enter role or practice designation"
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
@@ -1409,7 +1495,7 @@ export function AdvocateNetworkView() {
                     type="text"
                     value={newContactBench}
                     onChange={(e) => setNewContactBench(e.target.value)}
-                    placeholder="High Court of Kerala"
+                    placeholder="Enter court or bench"
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
                 </div>
@@ -1441,7 +1527,7 @@ export function AdvocateNetworkView() {
                   type="text"
                   value={newContactStatusQuote}
                   onChange={(e) => setNewContactStatusQuote(e.target.value)}
-                  placeholder="e.g. Discussed joint representation in commercial suit"
+                  placeholder="Enter interaction note..."
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>

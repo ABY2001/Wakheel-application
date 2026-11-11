@@ -2669,8 +2669,8 @@ export const getNetworkContacts = async (req, res) => {
     }
 
     const [contacts, activities] = await Promise.all([
-      NetworkContact.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
-      NetworkActivity.find({ $or: [{ userId: advocateId }, { userId: "adv_1" }] }).sort({ createdAt: -1 }),
+      NetworkContact.find({ userId: advocateId }).sort({ createdAt: -1 }),
+      NetworkActivity.find({ userId: advocateId }).sort({ createdAt: -1 }),
     ]);
 
     res.json({
@@ -2726,15 +2726,20 @@ export const createNetworkContact = async (req, res) => {
 
 export const updateNetworkContactStage = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     const { stage } = req.body;
     if (shouldUseDevStore()) {
-      const contact = devStore.updateNetworkContactStage(req.params.id, stage);
+      const contact = devStore.updateNetworkContactStage(req.params.id, stage, advocateId);
       if (!contact) return res.status(404).json({ success: false, message: "Contact not found" });
       return res.json({ success: true, contact });
     }
 
+    const idFilter = /^[a-f\d]{24}$/i.test(req.params.id)
+      ? { $or: [{ contactId: req.params.id }, { _id: req.params.id }] }
+      : { contactId: req.params.id };
+
     const contact = await NetworkContact.findOneAndUpdate(
-      { $or: [{ contactId: req.params.id }, { _id: req.params.id }] },
+      { userId: advocateId, ...idFilter },
       { $set: { stage } },
       { new: true }
     );
@@ -2748,13 +2753,21 @@ export const updateNetworkContactStage = async (req, res) => {
 
 export const deleteNetworkContact = async (req, res) => {
   try {
+    const advocateId = getAdvocateId(req);
     if (shouldUseDevStore()) {
-      devStore.deleteNetworkContact(req.params.id);
+      const deleted = devStore.deleteNetworkContact(req.params.id, advocateId);
+      if (!deleted) return res.status(404).json({ success: false, message: "Contact not found" });
       return res.json({ success: true, message: "Contact deleted from network" });
     }
-    await NetworkContact.deleteOne({
-      $or: [{ contactId: req.params.id }, { _id: req.params.id }],
+    const idFilter = /^[a-f\d]{24}$/i.test(req.params.id)
+      ? { $or: [{ contactId: req.params.id }, { _id: req.params.id }] }
+      : { contactId: req.params.id };
+
+    const result = await NetworkContact.deleteOne({
+      userId: advocateId,
+      ...idFilter,
     });
+    if (!result.deletedCount) return res.status(404).json({ success: false, message: "Contact not found" });
     res.json({ success: true, message: "Contact deleted from network" });
   } catch (error) {
     console.error("deleteNetworkContact error:", error);
@@ -2769,9 +2782,7 @@ export const getNetworkActivities = async (req, res) => {
       const activities = devStore.getNetworkActivities(advocateId);
       return res.json({ success: true, activities });
     }
-    const activities = await NetworkActivity.find({
-      $or: [{ userId: advocateId }, { userId: "adv_1" }],
-    }).sort({ createdAt: -1 });
+    const activities = await NetworkActivity.find({ userId: advocateId }).sort({ createdAt: -1 });
     res.json({
       success: true,
       activities: activities.map((a) => ({ ...a.toObject(), id: a.activityId || a._id.toString() })),
@@ -2806,7 +2817,8 @@ export const getNetworkRecommendations = async (req, res) => {
 
 export const toggleNetworkRecommendation = async (req, res) => {
   try {
-    const rec = devStore.toggleNetworkRecommendation(req.params.id);
+    const advocateId = getAdvocateId(req);
+    const rec = devStore.toggleNetworkRecommendation(req.params.id, advocateId);
     if (!rec) return res.status(404).json({ success: false, message: "Recommendation not found" });
     res.json({ success: true, recommendation: rec });
   } catch (error) {

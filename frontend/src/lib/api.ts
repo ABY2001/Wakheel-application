@@ -1003,7 +1003,11 @@ export const citizenApi = {
 
   // --- Citizen Legal Network Suite ---
   async getCitizenNetworkContacts(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/contacts`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -1011,7 +1015,11 @@ export const citizenApi = {
   },
 
   async createCitizenNetworkContact(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/contacts`, {
       method: "POST",
       headers: {
@@ -1024,7 +1032,11 @@ export const citizenApi = {
   },
 
   async updateCitizenNetworkContactStage(id: string, stage: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/contacts/${id}/stage`, {
       method: "PUT",
       headers: {
@@ -1037,7 +1049,11 @@ export const citizenApi = {
   },
 
   async deleteCitizenNetworkContact(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/contacts/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -1046,7 +1062,11 @@ export const citizenApi = {
   },
 
   async getCitizenNetworkActivities(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/activities`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -1054,7 +1074,11 @@ export const citizenApi = {
   },
 
   async getCitizenNetworkFollowups(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/followups`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -1062,7 +1086,11 @@ export const citizenApi = {
   },
 
   async getCitizenNetworkRecommendations(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
     const res = await fetch(`${API_BASE_URL}/citizen/network/recommendations`, {
       headers: { Authorization: `Bearer ${t}` },
     });

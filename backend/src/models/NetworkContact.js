@@ -23,23 +23,23 @@ const networkContactSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "Legal Counsel",
+      default: "",
     },
     chamber: {
       type: String,
-      default: "Independent Chambers",
+      default: "",
     },
     bench: {
       type: String,
-      default: "High Court of Kerala",
+      default: "",
     },
     court: {
       type: String,
-      default: "High Court of Kerala",
+      default: "",
     },
     location: {
       type: String,
-      default: "Kochi, Kerala",
+      default: "",
     },
     stage: {
       type: String,
@@ -61,11 +61,11 @@ const networkContactSchema = new mongoose.Schema(
     },
     practiceArea: {
       type: String,
-      default: "Constitutional Law",
+      default: "",
     },
     source: {
       type: String,
-      default: "Bar Council Directory",
+      default: "Direct",
     },
     mutualsCount: {
       type: Number,
@@ -93,7 +93,7 @@ const networkContactSchema = new mongoose.Schema(
     },
     rating: {
       type: Number,
-      default: 4.8,
+      default: 0,
     },
     feeText: {
       type: String,

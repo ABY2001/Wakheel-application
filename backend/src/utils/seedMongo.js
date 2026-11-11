@@ -183,7 +183,7 @@ export const seedMongoIfEmpty = async () => {
 
     // Seed Network Contacts
     const netCount = await NetworkContact.countDocuments();
-    if (netCount === 0) {
+    if (netCount === 0 && DEFAULT_NETWORK_CONTACTS.length > 0) {
       console.log("🌱 Seeding MongoDB Professional Network Contacts...");
       const nDocs = DEFAULT_NETWORK_CONTACTS.map((item) => ({
         contactId: item.id,

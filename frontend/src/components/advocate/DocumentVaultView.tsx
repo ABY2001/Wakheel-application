@@ -69,170 +69,18 @@ interface DocumentVaultViewProps {
   onNavigateTab?: (tab: string) => void;
 }
 
-const DEFAULT_VAULT_FILES: VaultDocument[] = [
-  {
-    id: "doc-01",
-    _id: "doc-01",
-    name: "WPC_19482_2024_Writ_Petition_Final_Paperbook.pdf",
-    title: "WPC 19482/2024 Writ Petition Final Paperbook",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    folder: "Pleadings & Petitions",
-    category: "Pleading",
-    fileType: "pdf",
-    size: "4.8 MB",
-    uploadDate: "Today, 10:15 AM",
-    hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
-    sha256Hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 42,
-    filingStatus: "Approved & Filed with Court Registry",
-    notes: "Main writ petition bundle with Annexures P-1 to P-8 verified and accepted by High Court filing scrutiny.",
-    remarks: "Scrutiny cleared. Token #KL-HC-2024-81920 assigned by High Court Filing Counter.",
-    uploadedBy: "Adv. Meera Krishnan",
-  },
-  {
-    id: "doc-02",
-    _id: "doc-02",
-    name: "Interim_Stay_Order_Single_Bench_2026.pdf",
-    title: "Interim Stay Order Division Bench 2A",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    folder: "Certified Court Orders",
-    category: "Certified Court Order",
-    fileType: "pdf",
-    size: "1.2 MB",
-    uploadDate: "16 Oct 2026",
-    hash: "sha256:3a91b48f9024bc68e10dca27189",
-    sha256Hash: "sha256:3a91b48f9024bc68e10dca27189",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 3,
-    filingStatus: "Counsel Certified & Served",
-    notes: "Daily order granting status quo as to realignment of 11KV transmission lines until next posting.",
-    remarks: "Certified copy sealed by Chamber Counsel and delivered to client docket.",
-    uploadedBy: "Adv. Meera Krishnan",
-  },
-  {
-    id: "doc-03",
-    _id: "doc-03",
-    name: "Ext_P2_Village_Mahazar_Resettlement_Survey.pdf",
-    title: "Village Mahazar & Resettlement Survey Extract",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    folder: "Evidence & Exhibits",
-    category: "Evidence & Exhibits",
-    fileType: "scan",
-    size: "2.3 MB",
-    uploadDate: "18 Oct 2026",
-    hash: "sha256:d12c8a49e50f3b890a214fe6881",
-    sha256Hash: "sha256:d12c8a49e50f3b890a214fe6881",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 6,
-    filingStatus: "Under Counsel Review",
-    notes: "Certified extract of site survey sketch showing ancient teak tree plantation within right-of-way.",
-    remarks: "Awaiting advocate scrutiny of page 4 demarcation stamps before submission.",
-    uploadedBy: "Gopakumar Nambiar (Client)",
-  },
-  {
-    id: "doc-04",
-    _id: "doc-04",
-    name: "Bank_Return_Memo_Insufficient_Funds.pdf",
-    title: "Statutory Cheque Return Memo CTS-2010",
-    matter: "CC 412/2024 — Cheque Dishonour (S.138 NI Act)",
-    matterId: "mat-02",
-    folder: "Evidence & Exhibits",
-    category: "Evidence & Exhibits",
-    fileType: "scan",
-    size: "720 KB",
-    uploadDate: "10 Oct 2026",
-    hash: "sha256:92cb1f570081d4a0e98c61fa348",
-    sha256Hash: "sha256:92cb1f570081d4a0e98c61fa348",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 1,
-    filingStatus: "Approved & Filed with Court Registry",
-    notes: "Original bank memo bearing CTS-2010 return reason code 01 (Funds Insufficient).",
-    remarks: "Marked as Ext. P-2 in trial court complaint bundle.",
-    uploadedBy: "Adv. Meera Krishnan",
-  },
-  {
-    id: "doc-05",
-    _id: "doc-05",
-    name: "Cheque_Dishonour_Notice_Postal_Acknowledgment.pdf",
-    title: "Section 138 Statutory Notice & India Post Tracking",
-    matter: "CC 412/2024 — Cheque Dishonour (S.138 NI Act)",
-    matterId: "mat-02",
-    folder: "Evidence & Exhibits",
-    category: "Evidence & Exhibits",
-    fileType: "pdf",
-    size: "1.6 MB",
-    uploadDate: "15 Oct 2026",
-    hash: "sha256:7c491da823bf108ec92451bc09a",
-    sha256Hash: "sha256:7c491da823bf108ec92451bc09a",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 4,
-    filingStatus: "Approved & Filed with Court Registry",
-    notes: "Statutory legal notice with India Post tracking receipt confirming recipient delivery.",
-    uploadedBy: "Adv. Meera Krishnan",
-  },
-  {
-    id: "doc-06",
-    _id: "doc-06",
-    name: "Vakalatnama_Signed_Advocate_Enrolment_K_1942.pdf",
-    title: "Executed Vakalatnama with Advocate Welfare Stamp",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    folder: "Client Vakalats & KYC",
-    category: "Client Vakalats & KYC",
-    fileType: "scan",
-    size: "850 KB",
-    uploadDate: "12 Oct 2026",
-    hash: "sha256:5ef1092ab7c41908d32b84ac125",
-    sha256Hash: "sha256:5ef1092ab7c41908d32b84ac125",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 2,
-    filingStatus: "Approved & Filed with Court Registry",
-    notes: "Client executed Vakalat with advocate welfare fund stamp affixed and attested.",
-    uploadedBy: "Gopakumar Nambiar (Client)",
-  },
-  {
-    id: "doc-07",
-    _id: "doc_1792561371908",
-    name: "Additional_Affidavit_Ext_P11.pdf",
-    title: "Additional Affidavit Ext P11 Counter to Stay Vacation",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    folder: "Pleadings & Petitions",
-    category: "Pleading Draft / Affidavit Counter",
-    fileType: "pdf",
-    size: "2.1 MB",
-    uploadDate: "21 Oct 2026",
-    hash: "sha256:48f5d79aa968c404bdde8a791011",
-    sha256Hash: "sha256:48f5d79aa968c404bdde8a791011",
-    isEncrypted: true,
-    isSigned: true,
-    pages: 6,
-    filingStatus: "Pending Scrutiny",
-    notes: "Urgent: Counter to respondent I.A. for stay vacation submitted by client.",
-    remarks: "Requires counsel verification of para 7 before final registry submission.",
-    uploadedBy: "Gopakumar Nambiar (Client)",
-  },
-];
+const DEFAULT_VAULT_FILES: VaultDocument[] = [];
 
 export function DocumentVaultView({
-  currentMatter = "WP(C) 19482/2024 — Gopakumar v. KSEB",
+  currentMatter = "",
   token,
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
+  advocateName = "",
+  barCouncilNumber = "",
   onNavigateTab,
 }: DocumentVaultViewProps) {
   // State for files
-  const [files, setFiles] = useState<VaultDocument[]>(DEFAULT_VAULT_FILES);
+  const [files, setFiles] = useState<VaultDocument[]>([]);
+  const [apiMatters, setApiMatters] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -275,11 +123,35 @@ export function DocumentVaultView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Fetch documents from backend API with fallback
+  // Fetch documents & matters from backend API
   const fetchDocuments = async () => {
+    const effectiveToken =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
+    if (!effectiveToken) {
+      setFiles([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
-      const res = await advocateApi.getDocuments(token);
-      if (res && res.success && Array.isArray(res.documents) && res.documents.length > 0) {
+      const [docsRes, mattersRes] = await Promise.allSettled([
+        advocateApi.getDocuments(effectiveToken),
+        advocateApi.getMatters(effectiveToken),
+      ]);
+
+      if (mattersRes.status === "fulfilled" && mattersRes.value?.success && Array.isArray(mattersRes.value.matters)) {
+        const titles = mattersRes.value.matters
+          .map((m: any) => String(m.caseNumber || m.title || "").trim())
+          .filter(Boolean);
+        setApiMatters(Array.from(new Set(titles)));
+      }
+
+      const res = docsRes.status === "fulfilled" ? docsRes.value : null;
+      if (res && res.success && Array.isArray(res.documents)) {
         // Map backend documents to VaultDocument
         const mapped: VaultDocument[] = res.documents.map((d: any) => {
           let folder: VaultDocument["folder"] = "Evidence & Exhibits";
@@ -303,8 +175,8 @@ export function DocumentVaultView({
             name: d.name || d.fileName || d.title || "Document.pdf",
             fileName: d.fileName || d.name || d.title,
             title: d.title || d.name || d.fileName,
-            matter: d.matter || "WP(C) 19482/2024 — Gopakumar v. KSEB",
-            matterId: d.matterId || "mat_wpc_19482",
+            matter: d.matter || "General Legal Vault",
+            matterId: d.matterId || "",
             folder,
             category: d.category || folder,
             subType: d.subType || "all",
@@ -327,8 +199,8 @@ export function DocumentVaultView({
             details: d.details || d.notes || "",
             remarks: d.remarks || "",
             advocateName: d.advocateName || advocateName,
-            uploadedBy: d.citizenName ? `${d.citizenName} (Client)` : d.uploadedBy || d.advocateName || "Citizen Filing",
-            citizenId: d.citizenId || "default_citizen",
+            uploadedBy: d.citizenName ? `${d.citizenName} (Client)` : d.uploadedBy || d.advocateName || "Chamber Upload",
+            citizenId: d.citizenId || "",
           };
         });
 
@@ -370,8 +242,8 @@ export function DocumentVaultView({
       name: sanitizedName,
       fileName: sanitizedName,
       title: sanitizedName.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
-      matter: uploadMatter,
-      matterId: uploadMatter.includes("19482") ? "mat_wpc_19482" : "mat-02",
+      matter: uploadMatter || "General Legal Vault",
+      matterId: "",
       folder: uploadFolder,
       category: uploadFolder,
       fileType: docFileType,
@@ -464,8 +336,8 @@ export function DocumentVaultView({
     const sanitizedFileName = (orderFileName.trim() || orderTitle.trim().replace(/\s+/g, "_")) + ".pdf";
 
     const payload = {
-      matterId: orderMatter.includes("19482") ? "mat_wpc_19482" : "mat-02",
-      matter: orderMatter,
+      matterId: "",
+      matter: orderMatter || "General Legal Matter",
       title: orderTitle.trim(),
       category: "Certified Court Order",
       fileName: sanitizedFileName,
@@ -473,7 +345,7 @@ export function DocumentVaultView({
       pages: Number(orderPages) || 3,
       notes: orderNotes.trim() || `Certified court order issued and attested by ${advocateName}.`,
       filingStatus: "Counsel Certified & Served",
-      citizenId: "default_citizen",
+      citizenId: "",
     };
 
     try {
@@ -609,7 +481,12 @@ export function DocumentVaultView({
     "Client Vakalats & KYC",
   ];
 
-  const mattersList = Array.from(new Set(files.map((f) => f.matter.split("—")[0].trim()))).filter(Boolean);
+  const mattersList = Array.from(
+    new Set([
+      ...apiMatters,
+      ...files.map((f) => String(f.matter || "").split("—")[0].trim()),
+    ])
+  ).filter(Boolean);
 
   // Status pill helper strictly monochrome zinc
   const renderStatusBadge = (doc: VaultDocument) => {
@@ -1200,8 +1077,8 @@ export function DocumentVaultView({
                     scrutinyDecision === "approve"
                       ? "e.g. Scrutiny cleared. E-filing token #HC-EF-2026-9842 verified and filed before the Registry."
                       : scrutinyDecision === "defect"
-                      ? "e.g. Defect: Annexure P-3 is missing demarcation stamp. Please upload certified survey copy."
-                      : "e.g. Attested as certified true copy under signature of Adv. Meera Krishnan (K/1429/2016)."
+                      ? "e.g. Defect: Annexure is missing demarcation stamp. Please upload certified survey copy."
+                      : `e.g. Attested as certified true copy under signature of ${advocateName || "Counsel"}${barCouncilNumber ? ` (${barCouncilNumber})` : ""}.`
                   }
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none resize-none font-sans"
                 />
@@ -1288,13 +1165,14 @@ export function DocumentVaultView({
                     onChange={(e) => setOrderMatter(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                   >
+                    {mattersList.length === 0 && (
+                      <option value="General Legal Matter">General Legal Matter</option>
+                    )}
                     {mattersList.map((m) => (
                       <option key={m} value={m}>
                         {m}
                       </option>
                     ))}
-                    <option value="WP(C) 19482/2024 — Gopakumar v. KSEB">WP(C) 19482/2024 — Gopakumar v. KSEB</option>
-                    <option value="CC 412/2024 — Cheque Dishonour">CC 412/2024 — Cheque Dishonour</option>
                   </select>
                 </div>
 
@@ -1399,7 +1277,7 @@ export function DocumentVaultView({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Counter_Affidavit_KSEB_WP_19482.pdf"
+                  placeholder="e.g. Written_Statement_Signed.pdf"
                   value={uploadFileName}
                   onChange={(e) => setUploadFileName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"

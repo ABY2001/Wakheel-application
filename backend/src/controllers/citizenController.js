@@ -1958,8 +1958,8 @@ const normalizeDocument = (doc) => {
     title: d.title || name,
     category,
     subType,
-    matter: d.matter || "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: d.matterId || "mat_wpc_19482",
+    matter: d.matter || "General Legal Vault",
+    matterId: d.matterId || "",
     size: d.size || d.fileSize || "1.2 MB",
     fileSize: d.fileSize || d.size || "1.2 MB",
     uploadDate: d.uploadDate || (d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Just now"),
@@ -1972,8 +1972,8 @@ const normalizeDocument = (doc) => {
     fileUrl: d.fileUrl || "",
     filingStatus: d.filingStatus || d.status || "Ready in Vault",
     status: d.status || d.filingStatus || "Ready in Vault",
-    advocateName: d.advocateName || "Adv. Meera Krishnan",
-    advocateId: d.advocateId || "adv_1",
+    advocateName: d.advocateName || "",
+    advocateId: d.advocateId || "",
     remarks: d.remarks || "",
   };
 };
@@ -2050,6 +2050,8 @@ export const uploadDocument = async (req, res) => {
       details,
       isSigned,
       fileUrl,
+      advocateName,
+      advocateId,
     } = req.body;
 
     const finalName = fileName || name || title || "Document.pdf";
@@ -2067,6 +2069,13 @@ export const uploadDocument = async (req, res) => {
 
     const generatedHash = `sha256:${Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
 
+    const resolvedAdv =
+      advocateId || advocateName
+        ? shouldUseDevStore()
+          ? devStore.resolveAdvocateByIdOrName(advocateId, advocateName)
+          : { advocateId: advocateId || "", advocateName: advocateName || "" }
+        : { advocateId: "", advocateName: "" };
+
     const docData = {
       citizenId: userId,
       title: finalTitle.trim(),
@@ -2074,8 +2083,8 @@ export const uploadDocument = async (req, res) => {
       fileName: finalName,
       category: finalCategory,
       subType: targetSubType,
-      matter: matter || "WP(C) 19482/2024 — Gopakumar v. KSEB",
-      matterId: matterId || "mat_wpc_19482",
+      matter: matter || "General Legal Vault",
+      matterId: matterId || "",
       fileSize: fileSize || size || "1.5 MB",
       size: fileSize || size || "1.5 MB",
       fileUrl: fileUrl || "",
@@ -2086,8 +2095,8 @@ export const uploadDocument = async (req, res) => {
       hash: generatedHash,
       filingStatus: "Ready in Vault",
       status: "Ready in Vault",
-      advocateName: "Adv. Meera Krishnan",
-      advocateId: "adv_1",
+      advocateName: resolvedAdv.advocateName,
+      advocateId: resolvedAdv.advocateId,
     };
 
     if (shouldUseDevStore()) {
@@ -2133,13 +2142,16 @@ export const fileDocument = async (req, res) => {
 
     const finalFileName = fileName || `${(category || "Pleading").replace(/[\s/]/g, "_")}_Filing.pdf`;
     const finalMatter = matter || "General Legal Filing";
-    const resolvedAdv = shouldUseDevStore()
-      ? devStore.resolveAdvocateByIdOrName(advocateId, advocateName)
-      : {
-          advocateId: advocateId || undefined,
-          advocateName: advocateName || "Adv. Meera Krishnan",
-        };
-    const finalAdvocate = resolvedAdv.advocateName;
+    const resolvedAdv =
+      advocateId || advocateName
+        ? shouldUseDevStore()
+          ? devStore.resolveAdvocateByIdOrName(advocateId, advocateName)
+          : {
+              advocateId: advocateId || undefined,
+              advocateName: advocateName || "Assigned Counsel",
+            }
+        : { advocateId: "", advocateName: "" };
+    const finalAdvocate = resolvedAdv.advocateName || "Assigned Counsel";
     const generatedHash = `sha256:${Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
 
     const filingData = {
@@ -2267,7 +2279,7 @@ export const verifyDocumentHash = async (req, res) => {
       hash: normalized.hash,
       documentName: normalized.name,
       certifiedDate: normalized.uploadDate,
-      issuer: "High Court of Kerala / eCourts Digital Evidence Registry",
+      issuer: "Digital Evidence Integrity & Vault Registry",
       status: "Cryptographically Verified",
     });
   } catch (error) {

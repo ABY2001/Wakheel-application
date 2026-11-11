@@ -55,142 +55,6 @@ export interface VaultDocumentItem {
   details?: string;
 }
 
-const DEFAULT_FILINGS: SubmittedFiling[] = [
-  {
-    id: "filing-01",
-    fileName: "Survey_Sketch_Re-survey_Plan_Block_14.pdf",
-    category: "Survey Sketch / Site Map",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    size: "2.4 MB",
-    date: "Today, 11:15 AM",
-    status: "Transmitted to Advocate",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    id: "filing-02",
-    fileName: "Counter_Affidavit_Objections_Rejoinder.docx",
-    category: "Pleading Draft / Affidavit Counter",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    size: "1.1 MB",
-    date: "18 Oct 2024",
-    status: "Under Counsel Review",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    id: "filing-03",
-    fileName: "Bank_Memo_Original_Debit_Advice.pdf",
-    category: "Bank Statement / Financial Records",
-    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-    size: "820 KB",
-    date: "14 Oct 2024",
-    status: "Accepted for Drafting",
-    advocateName: "Adv. Rajesh V. Varma",
-  },
-];
-
-const DEFAULT_ADVOCATES: AdvocateOption[] = [
-  {
-    id: "adv-meera",
-    name: "Adv. Meera Krishnan",
-    enrolment: "K/001429/2012",
-    chamber: "High Court of Kerala (Court Hall 2A)",
-    specialization: "Senior Counsel • Constitutional & High Court Writs",
-  },
-  {
-    id: "adv-rajesh",
-    name: "Adv. Rajesh V. Varma",
-    enrolment: "K/002194/2015",
-    chamber: "NCLT Kochi Bench & Commercial Court",
-    specialization: "Corporate, Insolvency & Civil Litigation",
-  },
-  {
-    id: "adv-sarah",
-    name: "Adv. Sarah Jenkins",
-    enrolment: "K/001429/2012",
-    chamber: "High Court of Kerala & Subordinate Courts",
-    specialization: "Senior Property & Tenancy Advocate",
-  },
-  {
-    id: "adv-priya",
-    name: "Adv. Priya Nair",
-    enrolment: "K/000892/2018",
-    chamber: "District & Sessions Court, Ernakulam",
-    specialization: "Family Law & Civil Rights Advocate",
-  },
-];
-
-const DEFAULT_VAULT_DOCUMENTS: VaultDocumentItem[] = [
-  {
-    id: "doc-01",
-    name: "WPC_19482_2024_Writ_Petition_Paperbook.pdf",
-    category: "Pleading Draft / Affidavit Counter",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    size: "4.8 MB",
-    uploadDate: "14 Jun 2024",
-    details: "High Court verified true copy writ petition with Annexures P-1 to P-8.",
-  },
-  {
-    id: "doc-02",
-    name: "Interim_Stay_Order_Bench_2A_High_Court.pdf",
-    category: "Other Evidence Document",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    size: "1.2 MB",
-    uploadDate: "16 Oct 2026",
-    details: "Daily order granting extension of interim stay against realignment of 11KV lines.",
-  },
-  {
-    id: "doc-03",
-    name: "Encumbrance_Certificate_Sub_Registrar_Aluva.pdf",
-    category: "Registered Deed / Title Document",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    size: "890 KB",
-    uploadDate: "12 May 2024",
-    details: "Nil encumbrance certificate issued by Sub-Registrar Office, Aluva for Sy. No. 412/1.",
-  },
-  {
-    id: "doc-04",
-    name: "Certified_Copy_OS_412_2023_Preliminary_Decree.pdf",
-    category: "Government Order / Revenue Notice",
-    matter: "OS 412/2023 — Gopakumar v. Varghese Builders",
-    size: "2.1 MB",
-    uploadDate: "20 Sep 2024",
-    details: "Certified True Copy issued by Principal Munsiff Court, Ernakulam with court seal.",
-  },
-  {
-    id: "doc-05",
-    name: "Title_Deed_Jenmam_Assignment_1842_2018.pdf",
-    category: "Registered Deed / Title Document",
-    matter: "OS 412/2023 — Gopakumar v. Varghese Builders",
-    size: "3.5 MB",
-    uploadDate: "05 Jul 2024",
-    details: "Certified copy of registered Jenmam Deed No. 1842/2018 of SRO Ernakulam.",
-  },
-  {
-    id: "doc-06",
-    name: "Master_Services_Agreement_Signed.pdf",
-    category: "Bank Statement / Financial Records",
-    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-    size: "1.6 MB",
-    uploadDate: "10 Mar 2024",
-    details: "Master Services Agreement executed between Malabar Infotech and Coastal Logistics.",
-  },
-  {
-    id: "doc-07",
-    name: "Village_Office_Location_Sketch_Sy_412.pdf",
-    category: "Survey Sketch / Site Map",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    size: "1.9 MB",
-    uploadDate: "08 Aug 2024",
-    details: "Revenue location sketch verified by Village Officer, Aluva East.",
-  },
-];
-
-const MATTERS_LIST = [
-  "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-  "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech Solutions v. Coastal Logistics Services Ltd",
-  "OS 412/2023 — Gopakumar v. Varghese Builders & Developers",
-];
-
 const CATEGORIES_LIST = [
   "Survey Sketch / Site Map",
   "Pleading Draft / Affidavit Counter",
@@ -210,7 +74,7 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
   const [mattersList, setMattersList] = useState<string[]>([]);
   const [selectedMatter, setSelectedMatter] = useState(initialMatter || "__custom__");
   const [customMatterTitle, setCustomMatterTitle] = useState("");
-  const [advocatesList, setAdvocatesList] = useState<AdvocateOption[]>(DEFAULT_ADVOCATES);
+  const [advocatesList, setAdvocatesList] = useState<AdvocateOption[]>([]);
   const [selectedAdvocateId, setSelectedAdvocateId] = useState<string>("");
 
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES_LIST[0]);
@@ -246,8 +110,8 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
     async function loadData() {
       const token =
         typeof window !== "undefined"
-          ? localStorage.getItem("wakheel_token") || "dev_token"
-          : "dev_token";
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
       try {
         const [advRes, mattersRes, filingsRes, docsRes] = await Promise.allSettled([
           citizenApi.getAdvocates(),
@@ -270,7 +134,7 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
               id: a.id || a._id || a.userId,
               name,
               enrolment: a.barCouncilNumber || "Bar Council Verified",
-              chamber: a.primaryCourt || a.chamberAddress || "High Court of Kerala",
+              chamber: a.primaryCourt || a.chamberAddress || "Practising Counsel",
               specialization: specs,
             };
           });
@@ -279,7 +143,8 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
             prev && mappedAdvs.some((a) => a.id === prev) ? prev : mappedAdvs[0].id
           );
         } else {
-          setSelectedAdvocateId((prev) => prev || DEFAULT_ADVOCATES[0].id);
+          setAdvocatesList([]);
+          setSelectedAdvocateId("");
         }
 
         if (
@@ -331,7 +196,7 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
   }, []);
 
   const currentAdvocate =
-    advocatesList.find((a) => a.id === selectedAdvocateId) || advocatesList[0] || DEFAULT_ADVOCATES[0];
+    advocatesList.find((a) => a.id === selectedAdvocateId) || advocatesList[0] || null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -365,8 +230,8 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
     setIsSubmitting(true);
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
 
     let fileName = "";
     let fileSize = "";
@@ -398,8 +263,8 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
         size: fileSize,
         fileSize,
         remarks: filingRemarks,
-        advocateId: currentAdvocate.id,
-        advocateName: currentAdvocate.name,
+        advocateId: currentAdvocate?.id || "",
+        advocateName: currentAdvocate?.name || "",
       });
 
       if (res?.success && res.filing) {
@@ -413,11 +278,11 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
           id: `filing-${Date.now()}`,
           fileName,
           category: selectedCategory,
-          matter: selectedMatter,
+          matter: effectiveMatter,
           size: fileSize,
           date: "Just now",
           status: "Transmitted to Advocate",
-          advocateName: currentAdvocate.name,
+          advocateName: currentAdvocate?.name || "Assigned Counsel",
           source,
         };
         setSubmittedHistory([newFiling, ...submittedHistory]);
@@ -508,11 +373,13 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
                 <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white shrink-0" />
                 <span className="text-zinc-500 font-medium">Assigned Counsel:</span>
                 <strong className="font-bold underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-2">
-                  {currentAdvocate.name}
+                  {currentAdvocate?.name || "No advocate selected"}
                 </strong>
-                <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
-                  ({currentAdvocate.enrolment})
-                </span>
+                {currentAdvocate?.enrolment && (
+                  <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+                    ({currentAdvocate.enrolment})
+                  </span>
+                )}
               </div>
             </div>
             <select
@@ -554,11 +421,15 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
               onChange={(e) => setSelectedAdvocateId(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs sm:text-sm text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white cursor-pointer"
             >
-              {advocatesList.map((adv) => (
-                <option key={adv.id} value={adv.id}>
-                  {adv.name} — {adv.specialization} ({adv.enrolment})
-                </option>
-              ))}
+              {advocatesList.length === 0 ? (
+                <option value="">No registered advocates available yet</option>
+              ) : (
+                advocatesList.map((adv) => (
+                  <option key={adv.id} value={adv.id}>
+                    {adv.name} — {adv.specialization} ({adv.enrolment})
+                  </option>
+                ))
+              )}
             </select>
           </div>
 

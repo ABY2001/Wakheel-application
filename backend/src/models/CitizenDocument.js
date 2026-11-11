@@ -64,11 +64,11 @@ const citizenDocumentSchema = new mongoose.Schema(
     },
     advocateName: {
       type: String,
-      default: "Adv. Meera Krishnan",
+      default: "",
     },
     advocateId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "adv_1",
+      default: "",
     },
     remarks: {
       type: String,

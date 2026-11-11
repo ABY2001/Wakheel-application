@@ -201,239 +201,7 @@ const DEFAULT_CONSULTATIONS = [
   },
 ];
 
-const DEFAULT_DOCUMENTS = [
-  {
-    _id: "doc-01",
-    id: "doc-01",
-    citizenId: "default_citizen",
-    title: "WPC 19482/2024 Writ Petition Paperbook",
-    name: "WPC_19482_2024_Writ_Petition_Paperbook.pdf",
-    fileName: "WPC_19482_2024_Writ_Petition_Paperbook.pdf",
-    category: "Pleading",
-    subType: "all",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    size: "4.8 MB",
-    fileSize: "4.8 MB",
-    uploadDate: "14 Jun 2024",
-    isSigned: true,
-    pages: 42,
-    sha256Hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
-    hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
-    details: "High Court verified true copy writ petition with Annexures P-1 to P-8.",
-    filingStatus: "Approved & Filed with Court Registry",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "doc-02",
-    id: "doc-02",
-    citizenId: "default_citizen",
-    title: "Interim Stay Order Bench 2A High Court",
-    name: "Interim_Stay_Order_Bench_2A_High_Court.pdf",
-    fileName: "Interim_Stay_Order_Bench_2A_High_Court.pdf",
-    category: "Court Order",
-    subType: "all",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    size: "1.2 MB",
-    fileSize: "1.2 MB",
-    uploadDate: "16 Oct 2026",
-    isSigned: true,
-    pages: 3,
-    sha256Hash: "sha256:3a91b48f9024bc68e10dca27189",
-    hash: "sha256:3a91b48f9024bc68e10dca27189",
-    details: "Daily order granting extension of interim stay against realignment of 11KV lines.",
-    filingStatus: "Approved & Filed with Court Registry",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "doc-03",
-    id: "doc-03",
-    citizenId: "default_citizen",
-    title: "High Court Certified True Copy Decree",
-    name: "High_Court_Certified_True_Copy_Decree.pdf",
-    fileName: "High_Court_Certified_True_Copy_Decree.pdf",
-    category: "CTC",
-    subType: "certified-true-copies",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    size: "2.1 MB",
-    fileSize: "2.1 MB",
-    uploadDate: "18 Oct 2024",
-    isSigned: true,
-    pages: 5,
-    sha256Hash: "sha256:92cb1f570081d4a0e98c61fa348",
-    hash: "sha256:92cb1f570081d4a0e98c61fa348",
-    details: "Official Certified True Copy issued by Assistant Registrar (Judicial), Kerala High Court. CTC No: HC-CTC-2024-8910.",
-    filingStatus: "Approved & Filed with Court Registry",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "doc-04",
-    id: "doc-04",
-    citizenId: "default_citizen",
-    title: "Sub Court Demarcation Decree CTC",
-    name: "Sub_Court_Demarcation_Decree_CTC.pdf",
-    fileName: "Sub_Court_Demarcation_Decree_CTC.pdf",
-    category: "CTC",
-    subType: "certified-true-copies",
-    matter: "OS 412/2023 — Gopakumar v. Varghese",
-    matterId: "mat-03",
-    size: "1.8 MB",
-    fileSize: "1.8 MB",
-    uploadDate: "12 Jan 2024",
-    isSigned: true,
-    pages: 4,
-    sha256Hash: "sha256:5ef1092ab7c41908d32b84ac125",
-    hash: "sha256:5ef1092ab7c41908d32b84ac125",
-    details: "Sub Court Ernakulam certified extract bearing judicial adhesive stamps of ₹50.",
-    filingStatus: "Approved & Filed with Court Registry",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "doc-05",
-    id: "doc-05",
-    citizenId: "default_citizen",
-    title: "Commercial Lease Agreement Ernakulam",
-    name: "Commercial_Lease_Agreement_Ernakulam.pdf",
-    fileName: "Commercial_Lease_Agreement_Ernakulam.pdf",
-    category: "Contract",
-    subType: "contracts",
-    matter: "Corporate Legal Affairs",
-    size: "1.5 MB",
-    fileSize: "1.5 MB",
-    uploadDate: "05 Mar 2024",
-    isSigned: true,
-    pages: 14,
-    sha256Hash: "sha256:7c491da823bf108ec92451bc09a",
-    hash: "sha256:7c491da823bf108ec92451bc09a",
-    details: "Registered 3-year commercial property lease deed with indemnity and arbitration clause.",
-    filingStatus: "Ready in Vault",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "doc-06",
-    id: "doc-06",
-    citizenId: "default_citizen",
-    title: "Software Development MSA NDA Executed",
-    name: "Software_Development_MSA_NDA_Executed.pdf",
-    fileName: "Software_Development_MSA_NDA_Executed.pdf",
-    category: "Contract",
-    subType: "contracts",
-    matter: "ARB/NCLT/KOCHI/2024/041",
-    matterId: "mat-02",
-    size: "950 KB",
-    fileSize: "950 KB",
-    uploadDate: "10 Jul 2024",
-    isSigned: true,
-    pages: 9,
-    sha256Hash: "sha256:d12c8a49e50f3b890a214fe6881",
-    hash: "sha256:d12c8a49e50f3b890a214fe6881",
-    details: "Master Services Agreement executed between Malabar Infotech and Coastal Logistics.",
-    filingStatus: "Ready in Vault",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "doc-07",
-    id: "doc-07",
-    citizenId: "default_citizen",
-    title: "High Court EFiling Registry Receipt",
-    name: "High_Court_EFiling_Registry_Receipt.pdf",
-    fileName: "High_Court_EFiling_Registry_Receipt.pdf",
-    category: "Filing Receipt",
-    subType: "document-filing",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    size: "420 KB",
-    fileSize: "420 KB",
-    uploadDate: "14 Jun 2024",
-    isSigned: true,
-    pages: 1,
-    sha256Hash: "sha256:2fa810bc931e508ab219c481944",
-    hash: "sha256:2fa810bc931e508ab219c481944",
-    details: "eCourts e-filing acknowledgment receipt. Filing No: EF/KLHC/2024/19482. Scrutiny cleared.",
-    filingStatus: "Approved & Filed with Court Registry",
-    advocateName: "Adv. Meera Krishnan",
-  },
-  {
-    _id: "filing-01",
-    id: "filing-01",
-    citizenId: "default_citizen",
-    title: "Survey Sketch Re-survey Plan Block 14",
-    name: "Survey_Sketch_Re-survey_Plan_Block_14.pdf",
-    fileName: "Survey_Sketch_Re-survey_Plan_Block_14.pdf",
-    category: "Survey Sketch / Site Map",
-    subType: "document-filing",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    matterId: "mat_wpc_19482",
-    size: "2.4 MB",
-    fileSize: "2.4 MB",
-    uploadDate: "Today, 11:15 AM",
-    date: "Today, 11:15 AM",
-    isSigned: true,
-    pages: 2,
-    sha256Hash: "sha256:4f1a239b8c0d12e457f901ab234",
-    hash: "sha256:4f1a239b8c0d12e457f901ab234",
-    details: "Authenticated village officer sketch showing registered holding demarcations.",
-    filingStatus: "Transmitted to Advocate",
-    status: "Transmitted to Advocate",
-    advocateName: "Adv. Meera Krishnan",
-    advocateId: "adv_1",
-    remarks: "Kindly include this as Annexure P-9 to the rejoinder affidavit.",
-  },
-  {
-    _id: "filing-02",
-    id: "filing-02",
-    citizenId: "default_citizen",
-    title: "Counter Affidavit Objections Rejoinder",
-    name: "Counter_Affidavit_Objections_Rejoinder.docx",
-    fileName: "Counter_Affidavit_Objections_Rejoinder.docx",
-    category: "Pleading Draft / Affidavit Counter",
-    subType: "document-filing",
-    matter: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB",
-    matterId: "mat_wpc_19482",
-    size: "1.1 MB",
-    fileSize: "1.1 MB",
-    uploadDate: "18 Oct 2024",
-    date: "18 Oct 2024",
-    isSigned: false,
-    pages: 8,
-    sha256Hash: "sha256:7bc012398a4d5e6f1a2b3c4d5e6",
-    hash: "sha256:7bc012398a4d5e6f1a2b3c4d5e6",
-    details: "Draft rejoinder answering allegations raised in KSEB executive engineer counter.",
-    filingStatus: "Under Counsel Review",
-    status: "Under Counsel Review",
-    advocateName: "Adv. Meera Krishnan",
-    advocateId: "adv_1",
-    remarks: "Drafted rebuttal for senior counsel review.",
-  },
-  {
-    _id: "filing-03",
-    id: "filing-03",
-    citizenId: "default_citizen",
-    title: "Bank Memo Original Debit Advice",
-    name: "Bank_Memo_Original_Debit_Advice.pdf",
-    fileName: "Bank_Memo_Original_Debit_Advice.pdf",
-    category: "Bank Statement / Financial Records",
-    subType: "document-filing",
-    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-    matterId: "mat-02",
-    size: "820 KB",
-    fileSize: "820 KB",
-    uploadDate: "14 Oct 2024",
-    date: "14 Oct 2024",
-    isSigned: true,
-    pages: 1,
-    sha256Hash: "sha256:99a8b7c6d5e4f3a2b1c0d9e8f7a",
-    hash: "sha256:99a8b7c6d5e4f3a2b1c0d9e8f7a",
-    details: "Bank memo confirming non-clearance of company settlement cheque.",
-    filingStatus: "Accepted for Drafting",
-    status: "Accepted for Drafting",
-    advocateName: "Adv. Meera Krishnan",
-    advocateId: "adv_1",
-    remarks: "Required for petition under Section 9 of IBC.",
-  },
-];
+const DEFAULT_DOCUMENTS = [];
 
 const DEFAULT_NOTICES = [
   {
@@ -2522,7 +2290,29 @@ export const devStore = {
   addDocument(data) {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
     const id = data.id || data._id || "doc_" + Date.now().toString();
-    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
+    const hasExplicitAdvocate = Boolean(
+      (data.advocateId && String(data.advocateId).trim()) ||
+      (data.advocateName && String(data.advocateName).trim())
+    );
+    let resolvedAdv = { advocateId: "", advocateName: "" };
+    if (hasExplicitAdvocate) {
+      resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
+    } else if (data.matterId) {
+      const matters = readFile("dev_matters.json", []);
+      const matchedMatter = matters.find((m) => m.id === data.matterId || m._id === data.matterId);
+      if (
+        matchedMatter &&
+        (matchedMatter.assignedAdvocateId ||
+          matchedMatter.advocateId ||
+          matchedMatter.advocateName ||
+          matchedMatter.assignedAdvocate)
+      ) {
+        resolvedAdv = this.resolveAdvocateByIdOrName(
+          matchedMatter.assignedAdvocateId || matchedMatter.advocateId,
+          matchedMatter.advocateName || matchedMatter.assignedAdvocate
+        );
+      }
+    }
     const citizenInfo = this.getCitizenDisplayInfo(data.citizenId);
     const newDoc = {
       _id: id,
@@ -2711,11 +2501,24 @@ export const devStore = {
       };
     }
 
-    const fallback = this.getAdvocateIdentities(cleanId || "adv_1");
+    if (!cleanId && !normInputName) {
+      return {
+        advocateId: "",
+        advocateName: "",
+        barCouncilNumber: "",
+      };
+    }
+
+    const fallback = this.getAdvocateIdentities(cleanId);
+    const resolvedName =
+      fallback.primaryName && fallback.primaryName !== "Adv. Counsel"
+        ? fallback.primaryName
+        : "";
+    const resolvedEntry = registry.find((e) => e.id === cleanId || e.userId === cleanId);
     return {
-      advocateId: cleanId || "adv_1",
-      advocateName: fallback.primaryName || "Adv. Meera Krishnan",
-      barCouncilNumber: "K/001429/2012",
+      advocateId: cleanId || "",
+      advocateName: resolvedName,
+      barCouncilNumber: resolvedEntry?.barCouncilNumber || "",
     };
   },
 
@@ -2786,7 +2589,8 @@ export const devStore = {
     return String(advocateId) === "adv_1" && (!recIds.length || recIds.includes("adv_1"));
   },
 
-  getAdvocateDocuments(advocateId = "adv_1") {
+  getAdvocateDocuments(advocateId) {
+    if (!advocateId) return [];
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
     return docs
       .filter((d) => this.matchesAdvocate(d, advocateId))
@@ -3414,9 +3218,9 @@ export const devStore = {
     const newDoc = {
       _id: docId,
       id: docId,
-      citizenId: data.citizenId || "default_citizen",
-      matterId: data.matterId || "mat_wpc_19482",
-      matter: data.matter || "WP(C) 19482/2024 — Gopakumar v. KSEB",
+      citizenId: data.citizenId || "",
+      matterId: data.matterId || "",
+      matter: data.matter || "General Legal Matter",
       title: data.title || "Certified Court Order",
       name: data.fileName || data.title || "Certified_Court_Order.pdf",
       fileName: data.fileName || data.title || "Certified_Court_Order.pdf",
@@ -3432,9 +3236,9 @@ export const devStore = {
       pages: data.pages || 4,
       hash,
       sha256Hash: hash,
-      uploadedBy: data.uploadedBy || "Adv. Meera Krishnan",
-      advocateName: data.uploadedBy || "Adv. Meera Krishnan",
-      advocateId: data.advocateId || "adv_1",
+      uploadedBy: data.uploadedBy || data.advocateName || "Chamber Counsel",
+      advocateName: data.advocateName || data.uploadedBy || "",
+      advocateId: data.advocateId || "",
       filingStatus: data.filingStatus || "Counsel Certified & Served",
       status: data.filingStatus || "Counsel Certified & Served",
       notes: data.notes || data.details || "Certified court order attested and shared to client docket with digital chamber seal.",
@@ -6173,6 +5977,11 @@ export const devStore = {
   // ==========================================================================
   getCorporateContracts(userId, filters = {}) {
     let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
+    if (userId) {
+      contracts = contracts.filter((c) => c.userId && String(c.userId) === String(userId));
+    } else {
+      return [];
+    }
     if (filters.companyName) {
       contracts = contracts.filter((c) => c.companyName === filters.companyName);
     }
@@ -6188,10 +5997,10 @@ export const devStore = {
       id: data.id || `cont-${Date.now()}`,
       contractId: data.id || `cont-${Date.now()}`,
       userId,
-      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
+      companyName: data.companyName || "Corporate Client",
       title: data.title || "Commercial Master Service Agreement",
       contractType: data.contractType || "vendor_msa",
-      parties: Array.isArray(data.parties) ? data.parties : ["CyberCorp Technologies Pvt Ltd", "Counterparty Entity"],
+      parties: Array.isArray(data.parties) ? data.parties : [data.companyName || "Corporate Client", "Counterparty Entity"],
       effectiveDate: data.effectiveDate || new Date().toISOString().split("T")[0],
       expiryDate: data.expiryDate || "",
       contractValue: Number(data.contractValue) || 0,
@@ -6283,6 +6092,11 @@ export const devStore = {
   // ==========================================================================
   getCorporateVaultItems(userId, filters = {}) {
     let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
+    if (userId) {
+      items = items.filter((v) => v.userId && String(v.userId) === String(userId));
+    } else {
+      return [];
+    }
     if (filters.companyName) {
       items = items.filter((v) => v.companyName === filters.companyName);
     }
@@ -6298,7 +6112,7 @@ export const devStore = {
       id: data.id || `vlt-${Date.now()}`,
       vaultId: data.id || `vlt-${Date.now()}`,
       userId,
-      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
+      companyName: data.companyName || "Corporate Client",
       docType: data.docType || "moa_aoa",
       title: data.title || "Statutory Charter Document",
       fileSize: data.fileSize || "1.2 MB",
@@ -9389,94 +9203,7 @@ export const DEFAULT_STATUTORY_REGISTERS = [
   },
 ];
 
-export const DEFAULT_CORPORATE_CONTRACTS = [
-  {
-    id: "cont-1",
-    contractId: "cont-1",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    title: "Series A Share Subscription & Shareholders' Agreement (SHA/SSA)",
-    contractType: "sha_ssa",
-    parties: ["CyberCorp Technologies Pvt Ltd", "Indus Venture Capital Fund I", "Dr. Vikram Malhotra", "Priya Sundaram"],
-    effectiveDate: "2026-10-15",
-    expiryDate: "2031-10-14",
-    contractValue: 50000000, // ₹5.00 Cr
-    stampDutyPaid: 5000,
-    eStampCertificateNumber: "IN-DL89210492819234P",
-    governingLaw: "Laws of India (Arbitration under SIAC / New Delhi seat)",
-    keyClauses: [
-      "Board Representation: 1 Nominee Director for Indus Venture Capital",
-      "Reserved Matters: 75% affirmative vote on M&A, debt > ₹1 Cr, IP sale",
-      "Tag-Along & Drag-Along Rights: Drag threshold set at 65% total equity",
-      "Liquidation Preference: 1x Non-Participating Preference on CCPS",
-      "Right of First Refusal (ROFR) & Anti-Dilution protection (Broad-Based Weighted Average)",
-    ],
-    status: "executed",
-    notes: "Stamped in NCT of Delhi. Filed Form PAS-3 and MGT-14 with ROC.",
-  },
-  {
-    id: "cont-2",
-    contractId: "cont-2",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    title: "Mutual Non-Disclosure & Corporate Trade Secret Protection Agreement",
-    contractType: "nda",
-    parties: ["CyberCorp Technologies Pvt Ltd", "QuantEdge Financial Analytics Corp (US)"],
-    effectiveDate: "2026-08-01",
-    expiryDate: "2028-07-31",
-    contractValue: 0,
-    stampDutyPaid: 500,
-    eStampCertificateNumber: "IN-DL40192837461298Q",
-    governingLaw: "Laws of India (Courts of New Delhi)",
-    keyClauses: [
-      "Strict confidentiality covering proprietary ML algorithmic trading models",
-      "2-Year non-solicitation of key software engineering personnel",
-      "Injunctive relief clause without proof of actual damages",
-    ],
-    status: "executed",
-    notes: "Standard bilingual execution completed digitally with DocuSign & DSC.",
-  },
-  {
-    id: "cont-3",
-    contractId: "cont-3",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    title: "Managing Director Service & Executive Remuneration Agreement",
-    contractType: "director_service",
-    parties: ["CyberCorp Technologies Pvt Ltd", "Dr. Vikram Malhotra"],
-    effectiveDate: "2026-04-01",
-    expiryDate: "2029-03-31",
-    contractValue: 7200000, // ₹72 Lakhs/annum
-    stampDutyPaid: 1000,
-    eStampCertificateNumber: "IN-DL10293847562019R",
-    governingLaw: "Companies Act, 2013 (Section 197 read with Schedule V)",
-    keyClauses: [
-      "Fixed Remuneration: ₹5,00,000 per month + 2% net profit performance commission",
-      "Approved by Nomination & Remuneration Committee & General Meeting",
-      "IP Assignment: Complete assignment of all patents and software developed during tenure",
-    ],
-    status: "executed",
-    notes: "Filed Form DIR-12 and MR-1 with RoC Delhi within 60 days of appointment.",
-  },
-  {
-    id: "cont-4",
-    contractId: "cont-4",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    title: "Commercial Lease & Data Center Facility Deed",
-    contractType: "commercial_lease",
-    parties: ["CyberCorp Technologies Pvt Ltd", "Okhla Realtech Infrastructure LLP"],
-    effectiveDate: "2025-06-01",
-    expiryDate: "2028-05-31",
-    contractValue: 10800000, // ₹36 Lakhs/annum
-    stampDutyPaid: 45000,
-    eStampCertificateNumber: "IN-DL78901234567890T",
-    governingLaw: "Transfer of Property Act, 1882 & Delhi Rent Control Act",
-    keyClauses: [
-      "Lease rent ₹3,00,000/month with 5% annual escalation",
-      "Security deposit: 6 months rent refundable on vacation",
-      "Registered with Sub-Registrar IV, Saket, New Delhi",
-    ],
-    status: "stamped_registered",
-    notes: "Original registered deed deposited in Corporate Bank Safe Deposit Locker.",
-  },
-];
+export const DEFAULT_CORPORATE_CONTRACTS = [];
 
 export const DEFAULT_RETAINER_ADVOCATES = [
   {
@@ -9523,73 +9250,7 @@ export const DEFAULT_RETAINER_ADVOCATES = [
   },
 ];
 
-export const DEFAULT_CORPORATE_VAULT_ITEMS = [
-  {
-    id: "vlt-1",
-    vaultId: "vlt-1",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    docType: "moa_aoa",
-    title: "Amended & Restated Memorandum & Articles of Association (MOA/AOA)",
-    fileSize: "2.4 MB",
-    uploadedAt: "2026-10-20",
-    validUntil: "Permanent (Unless Altered)",
-    holderName: "CyberCorp Technologies Pvt Ltd",
-    issuingAuthority: "RoC Delhi & Haryana",
-    status: "valid",
-  },
-  {
-    id: "vlt-2",
-    vaultId: "vlt-2",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    docType: "certificate_of_incorporation",
-    title: "Certificate of Incorporation with Corporate Identity Number (CIN)",
-    fileSize: "1.1 MB",
-    uploadedAt: "2022-04-12",
-    validUntil: "Permanent",
-    holderName: "CyberCorp Technologies Pvt Ltd",
-    issuingAuthority: "Ministry of Corporate Affairs (MCA)",
-    status: "valid",
-  },
-  {
-    id: "vlt-3",
-    vaultId: "vlt-3",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    docType: "dsc_token",
-    title: "Class 3 DSC Token: Dr. Vikram Malhotra (MD)",
-    fileSize: "USB Crypto Token (e-Mudhra)",
-    uploadedAt: "2025-01-15",
-    validUntil: "2027-01-14",
-    holderName: "Dr. Vikram Malhotra (DIN: 08912340)",
-    issuingAuthority: "e-Mudhra CA",
-    status: "valid",
-  },
-  {
-    id: "vlt-4",
-    vaultId: "vlt-4",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    docType: "dsc_token",
-    title: "Class 3 DSC Token: CS Rajesh Sharma (FCS 8492)",
-    fileSize: "USB Crypto Token (Capricorn)",
-    uploadedAt: "2024-11-20",
-    validUntil: "2026-11-19",
-    holderName: "CS Rajesh Sharma (FCS 8492)",
-    issuingAuthority: "Capricorn Identity Services",
-    status: "expiring_soon",
-  },
-  {
-    id: "vlt-5",
-    vaultId: "vlt-5",
-    companyName: "CyberCorp Technologies Pvt Ltd",
-    docType: "trademark_cert",
-    title: "Trademark Registration Certificate (Wordmark: CyberCorp, Class 42)",
-    fileSize: "850 KB",
-    uploadedAt: "2023-08-10",
-    validUntil: "2033-08-09",
-    holderName: "CyberCorp Technologies Pvt Ltd",
-    issuingAuthority: "Trade Marks Registry, Govt of India",
-    status: "valid",
-  },
-];
+export const DEFAULT_CORPORATE_VAULT_ITEMS = [];
 
 export const DEFAULT_SECRETARIAL_INVOICES = [
   {

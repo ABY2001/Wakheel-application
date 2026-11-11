@@ -53,8 +53,8 @@ export interface VakalathItem {
 }
 
 export function AdvocateVakalathnamaView({
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/001429/2012",
+  advocateName = "",
+  barCouncilNumber = "",
   token,
 }: AdvocateVakalathnamaViewProps) {
   // Navigation Tabs
@@ -63,28 +63,28 @@ export function AdvocateVakalathnamaView({
   >("generator");
 
   // Form State
-  const [courtName, setCourtName] = useState("High Court of Kerala at Ernakulam");
-  const [caseNumber, setCaseNumber] = useState("WP(C) 19482/2024");
-  const [petitionerName, setPetitionerName] = useState("Gopakumar Nambiar");
-  const [petitionerAge, setPetitionerAge] = useState("52");
-  const [petitionerFather, setPetitionerFather] = useState("Late K. Raman Nambiar");
-  const [petitionerAddress, setPetitionerAddress] = useState("Nambiar House, Cheranalloor P.O., Ernakulam — 682034");
-  const [petitionerPhone, setPetitionerPhone] = useState("+91 94471 28930");
-  const [petitionerAadhaar, setPetitionerAadhaar] = useState("8920");
-  const [respondentName, setRespondentName] = useState("Kerala State Electricity Board & Anr.");
+  const [courtName, setCourtName] = useState("");
+  const [caseNumber, setCaseNumber] = useState("");
+  const [petitionerName, setPetitionerName] = useState("");
+  const [petitionerAge, setPetitionerAge] = useState("");
+  const [petitionerFather, setPetitionerFather] = useState("");
+  const [petitionerAddress, setPetitionerAddress] = useState("");
+  const [petitionerPhone, setPetitionerPhone] = useState("");
+  const [petitionerAadhaar, setPetitionerAadhaar] = useState("");
+  const [respondentName, setRespondentName] = useState("");
   const [appearanceFor, setAppearanceFor] = useState("Petitioner");
 
   // Welfare Stamp State
-  const [stampAffixed, setStampAffixed] = useState(true);
-  const [stampSerialNumber, setStampSerialNumber] = useState("KAWF-2026-KLHC-98214-E");
-  const [stampBalance, setStampBalance] = useState(18);
+  const [stampAffixed, setStampAffixed] = useState(false);
+  const [stampSerialNumber, setStampSerialNumber] = useState("");
+  const [stampBalance, setStampBalance] = useState(0);
 
   // Client E-Sign OTP State
   const [otpSent, setOtpSent] = useState(false);
   const [otpValue, setOtpValue] = useState("");
-  const [isClientSigned, setIsClientSigned] = useState(true);
-  const [signTimestamp, setSignTimestamp] = useState("29 Oct 2026, 10:15:32 IST");
-  const [signHash, setSignHash] = useState("SHA256: 4f8a92b1c83409ef1277a884e931b2c4d98a0018");
+  const [isClientSigned, setIsClientSigned] = useState(false);
+  const [signTimestamp, setSignTimestamp] = useState("");
+  const [signHash, setSignHash] = useState("");
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -93,54 +93,8 @@ export function AdvocateVakalathnamaView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Pre-configured Executed Register
-  const [vakalathRegister, setVakalathRegister] = useState<VakalathItem[]>([
-    {
-      id: "vak_101",
-      caseNumber: "WP(C) 19482/2024",
-      courtName: "High Court of Kerala (Court Hall 2A)",
-      clientName: "Gopakumar Nambiar",
-      clientPhone: "+91 94471 28930",
-      aadhaarLast4: "8920",
-      partyRole: "Petitioner",
-      stampSerial: "KAWF-2026-KLHC-98214-E",
-      stampAmount: 25,
-      courtFeeAmount: 2,
-      signedAt: "Today, 10:15 IST",
-      status: "verified",
-      hashSha256: "4f8a92b1c83409ef1277a884e931b2c4d98a0018",
-    },
-    {
-      id: "vak_102",
-      caseNumber: "ARB/NCLT/KOCHI/2024/041",
-      courtName: "NCLT Kochi Bench (Court Hall 1)",
-      clientName: "Apex Logistics Ltd (MD: Rajesh Menon)",
-      clientPhone: "+91 98460 44120",
-      aadhaarLast4: "4412",
-      partyRole: "Petitioner",
-      stampSerial: "KAWF-2026-NCLT-98120-E",
-      stampAmount: 25,
-      courtFeeAmount: 2,
-      signedAt: "26 Oct 2026",
-      status: "verified",
-      hashSha256: "9b34e128ccaa0194812f8832a104bb91238914aa",
-    },
-    {
-      id: "vak_103",
-      caseNumber: "Bail Appl. 8920/2026",
-      courtName: "High Court of Kerala (Court Hall 3B)",
-      clientName: "Muhammed Shafi",
-      clientPhone: "+91 98472 11980",
-      aadhaarLast4: "1198",
-      partyRole: "Petitioner / Accused No. 1",
-      stampSerial: "KAWF-2026-KLHC-97994-E",
-      stampAmount: 25,
-      courtFeeAmount: 2,
-      signedAt: "24 Oct 2026",
-      status: "verified",
-      hashSha256: "117a09bcdef449102837418293aa88231049c812",
-    },
-  ]);
+  // Vakalathnama Executed Register
+  const [vakalathRegister, setVakalathRegister] = useState<VakalathItem[]>([]);
 
   // Send Simulated OTP to Client
   const handleSendClientOtp = () => {
@@ -163,13 +117,9 @@ export function AdvocateVakalathnamaView({
 
   // Affix Welfare Stamp
   const handleAffixStamp = () => {
-    if (stampBalance <= 0) {
-      showToast("Insufficient Welfare Stamps. Please purchase from Bar Council e-Portal.");
-      return;
-    }
     setStampAffixed(true);
-    setStampBalance((prev) => prev - 1);
-    const newSerial = `KAWF-2026-KLHC-${Math.floor(10000 + Math.random() * 90000)}-E`;
+    setStampBalance((prev) => Math.max(0, prev - 1));
+    const newSerial = `KAWF-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}-E`;
     setStampSerialNumber(newSerial);
     showToast(`Affixed Kerala Advocate Welfare Stamp (₹25 + ₹2) #${newSerial}.`);
   };
@@ -254,7 +204,7 @@ export function AdvocateVakalathnamaView({
             </span>
             <div className="text-base font-bold text-black dark:text-white flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-[#6B1728]" />
-              <span>Aadhaar OTP Verified</span>
+              <span>{isClientSigned ? "Aadhaar OTP Verified" : "Pending Client eSign"}</span>
             </div>
             <span className="text-[11px] text-zinc-500 font-mono">IT Act 2000 § 3A Compliant</span>
           </div>
@@ -263,8 +213,12 @@ export function AdvocateVakalathnamaView({
             <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block">
               Registry Scrutiny Status
             </span>
-            <div className="text-base font-bold text-black dark:text-white">Zero Defects (D-204 Clear)</div>
-            <span className="text-[11px] text-zinc-500">Ready for E-Filing 3.0 Docket</span>
+            <div className="text-base font-bold text-black dark:text-white">
+              {stampAffixed && isClientSigned ? "Ready for E-Filing" : "Draft in Preparation"}
+            </div>
+            <span className="text-[11px] text-zinc-500">
+              {stampAffixed ? "Welfare Stamp Affixed" : "Affix Welfare Stamp & Client eSign"}
+            </span>
           </div>
         </div>
 
@@ -354,6 +308,7 @@ export function AdvocateVakalathnamaView({
                   onChange={(e) => setCourtName(e.target.value)}
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none cursor-pointer"
                 >
+                  <option value="">Select Court / Tribunal...</option>
                   <option value="High Court of Kerala at Ernakulam">High Court of Kerala at Ernakulam</option>
                   <option value="NCLT Kochi Bench">National Company Law Tribunal (NCLT Kochi)</option>
                   <option value="Sessions Court, Ernakulam">Principal District &amp; Sessions Court</option>
@@ -499,16 +454,7 @@ export function AdvocateVakalathnamaView({
 
               <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-sans text-xs space-y-1">
                 <div className="font-bold text-black dark:text-white">
-                  1. {advocateName} (Roll No: {barCouncilNumber})
-                </div>
-                <div className="text-zinc-600 dark:text-zinc-400">
-                  2. Adv. Rahul Deshmukh (Roll No: K/003412/2024) • Junior Counsel
-                </div>
-                <div className="text-zinc-600 dark:text-zinc-400">
-                  3. Adv. Ananya Iyer (Roll No: K/002189/2023) • Associate Counsel
-                </div>
-                <div className="text-[11px] text-zinc-500 pt-1">
-                  Chamber 402, High Court Advocates Association Building, Marine Drive, Kochi — 682031
+                  1. {advocateName || "Counsel on Record"}{barCouncilNumber ? ` (Roll No: ${barCouncilNumber})` : ""}
                 </div>
               </div>
 
@@ -554,8 +500,10 @@ export function AdvocateVakalathnamaView({
                   I/We hereby accept the appointment as Advocate(s) for the above-named party on the terms agreed.
                 </p>
                 <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <strong className="block text-black dark:text-white">{advocateName}</strong>
-                  <span className="font-mono text-[10px] text-zinc-500 block">Enrolled: {barCouncilNumber}</span>
+                  <strong className="block text-black dark:text-white">{advocateName || "Counsel on Record"}</strong>
+                  <span className="font-mono text-[10px] text-zinc-500 block">
+                    {barCouncilNumber ? `Enrolled: ${barCouncilNumber}` : "Enrollment Pending"}
+                  </span>
                   <span className="text-[10px] text-[#6B1728] font-bold block">✓ Digitally Accepted</span>
                 </div>
               </div>
@@ -634,11 +582,13 @@ export function AdvocateVakalathnamaView({
                   </div>
                   <div className="flex justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
                     <span className="text-zinc-500">Unique Stamp Serial:</span>
-                    <strong className="font-mono text-[#6B1728] dark:text-[#ff94a8]">{stampSerialNumber}</strong>
+                    <strong className="font-mono text-[#6B1728] dark:text-[#ff94a8]">{stampSerialNumber || "Pending Affixation"}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Status:</span>
-                    <span className="font-bold text-[#6B1728] dark:text-[#ff94a8]">✓ Affixed &amp; Cancelled</span>
+                    <span className="font-bold text-[#6B1728] dark:text-[#ff94a8]">
+                      {stampAffixed ? "✓ Affixed & Cancelled" : "Pending Welfare Stamp"}
+                    </span>
                   </div>
                 </div>
 
@@ -674,7 +624,7 @@ export function AdvocateVakalathnamaView({
                   <div className="space-y-1">
                     <div className="w-full h-4 bg-black dark:bg-white rounded-xs opacity-70" />
                     <span className="text-[8px] font-mono font-bold text-black dark:text-white block">
-                      {stampSerialNumber}
+                      {stampSerialNumber || "NOT AFFIXED"}
                     </span>
                   </div>
                 </div>
@@ -937,7 +887,14 @@ export function AdvocateVakalathnamaView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                  {vakalathRegister.map((item) => (
+                  {vakalathRegister.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 px-4 text-center text-xs text-zinc-500">
+                        No executed Vakalathnamas recorded yet. Draft, stamp, and authenticate a Vakalathnama above to register it here.
+                      </td>
+                    </tr>
+                  ) : (
+                    vakalathRegister.map((item) => (
                     <tr key={item.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-950 transition">
                       <td className="py-3.5 px-4">
                         <span className="font-bold text-black dark:text-white block font-mono">
@@ -986,7 +943,8 @@ export function AdvocateVakalathnamaView({
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </div>

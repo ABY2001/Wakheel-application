@@ -54,102 +54,33 @@ export interface ProcessedDocument {
   documentType?: string;
 }
 
-const INITIAL_DOCS: ProcessedDocument[] = [
-  {
-    id: "doc-sample-1",
-    name: "Village_Office_Mahazar_Block_14.pdf",
-    jobType: "translation",
-    sourceLang: "Malayalam (മലയാളം)",
-    targetLang: "English (Kerala High Court Rule 32)",
-    fileSize: "1.8 MB",
-    pageCount: 2,
-    uploadDate: "Today, 09:42 AM",
-    status: "Translated",
-    confidenceScore: "99.2%",
-    documentType: "police_mahazar",
-    ocrText: `മഹസർ (Scene Inspection Memorandum)
-തീയതി: 14-ഒക്ടോബർ-2026 | സ്ഥലം: ആലുവ വില്ലേജ്, എറണാകുളം
-
-എറണാകുളം ജില്ലയിൽ ആലുവ താലൂക്കിൽ ആലുവ വില്ലേജിൽ ബ്ലോക്ക് 14-ൽ റീസർവ്വേ 248/2-ൽ പെട്ട 28.5 സെന്റ് വസ്തുവിൽ വില്ലേജ് ഓഫീസറും കെ.എസ്.ഇ.ബി ഉദ്യോഗസ്ഥരും ചേർന്ന് സ്ഥല പരിശോധന നടത്തി തയ്യാറാക്കിയ മഹസർ.
-
-അതിരുകൾ:
-കിഴക്ക്: സ്വകാര്യ വഴി, രാമനാഥന്റെ വസ്തു
-തെക്ക്: പഞ്ചായത്ത് റോഡ് സംരക്ഷണ ഭിത്തി
-പടിഞ്ഞാറ്: തണ്ടപ്പേർ 8192-ൽ പെട്ട ഗോപകുമാർ നമ്പ്യാരുടെ കൈവശ വസ്തു
-വടക്ക്: പൊതു ഇടത്തോടും തോട്ടുപുറമ്പോക്കും
-
-നിരീക്ഷണങ്ങൾ:
-മേൽ വസ്തുവിന്റെ പടിഞ്ഞാറേ അതിരിൽ 11 കെ.വി വൈദ്യുതി ലൈനിന്റെ മൂന്ന് തൂണുകൾ സ്ഥാപിച്ചിട്ടുള്ളതായി കാണപ്പെട്ടു. അനുമതിയില്ലാതെ 6 തെങ്ങുകളും 2 തേക്ക് മരങ്ങളും മുറിച്ചുമാറ്റിയ നിലയിലാണ്. സർവ്വേ കല്ലുകൾ ഭാഗികമായി നശിപ്പിക്കപ്പെട്ടിട്ടുണ്ട്. കരം അടച്ച രസീത് നമ്പർ 84920 പരിശോധിച്ചു ബോധ്യപ്പെട്ടു.`,
-    translatedText: `MEMORANDUM OF CONTEMPORANEOUS SCENE INSPECTION (MAHAZAR)
-Prepared on 14-October-2026
-
-1. PREAMBLE & CORAM OF INSPECTION:
-In compliance with the directions of the Jurisdictional Authority, the undersigned officers conducted a spot inspection of the schedule property in the presence of independent local witnesses.
-
-2. LOCALITY & BOUNDARY SCHEDULE:
-The subject property comprises land situated in Resurvey Block No. 14, Resurvey No. 248/2 of Aluva Village, Aluva Taluk, Ernakulam District.
-• East: Registered private pathway and holding of Ramanathan
-• South: Boundary wall of Panchayath Road
-• West: Property in Thandapper No. 8192 held by Gopakumar Nambiar
-• North: Irrigation canal stream and revenue poramboke
-
-3. FACTUAL OBSERVATIONS AT SCENE:
-Upon meticulous physical inspection, it is observed that high-tension electric line supports have been planted along the western boundary line. Six yielding coconut palms aged approximately 15-20 years and two teak trees bearing timber markings have been felled without prior demarcation permit. The physical demarcations and survey stones remain partially intact. Basic land tax remittance was verified vide Receipt No. 84920.
-
-4. ATTESTATION & CONCLUSION:
-The contents of this contemporaneous memorandum were read over and explained in Malayalam to all signatories present, who acknowledged the same as accurate and signed hereunder.`,
-    glossary: [
-      {
-        vernacularTerm: "മഹസർ",
-        formalEnglishTerm: "Contemporaneous Scene Inspection Memorandum / Panchnama",
-        definition: "Statutory spot-inspection memo recording on-site evidence and physical status.",
-        statuteReference: "Section 100 CrPC / Section 105 BNSS, 2023",
-      },
-      {
-        vernacularTerm: "കരം",
-        formalEnglishTerm: "Basic Land Revenue Tax",
-        definition: "Annual statutory land assessment paid to State Revenue Department.",
-        statuteReference: "Kerala Land Tax Act, 1961",
-      },
-      {
-        vernacularTerm: "തണ്ടപ്പേർ",
-        formalEnglishTerm: "Revenue Ledger Folio / Patta Account",
-        definition: "Official cadastral ledger holding entry identifying titleholder in village records.",
-        statuteReference: "Kerala Survey and Boundaries Act, 1961",
-      },
-    ],
-    translationCertificate: `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM
-CERTIFICATE OF ACCURATE TRANSLATION UNDER RULE 32 OF THE RULES OF THE HIGH COURT OF KERALA, 1971
-
-I, Advocate practicing before the Hon'ble High Court of Kerala, do hereby solemnly declare and certify:
-1. That I am thoroughly proficient in both Malayalam (the vernacular language of the State of Kerala) and English (the official language of this Hon'ble Court).
-2. That I have meticulously compared the original vernacular document produced herewith with the English translation set out above.
-3. That the English rendering typed above is a true, faithful, and accurate translation of the said original document in all material particulars to the best of my knowledge, information, and belief.`,
-    entities: [
-      { label: "Document Type", value: "Police & Revenue Mahazar" },
-      { label: "Survey Coordinates", value: "Re-survey 248/2, Block 14" },
-      { label: "Jurisdiction", value: "Aluva Village, Ernakulam District" },
-      { label: "Signatories", value: "Village Officer, Taluk Surveyor & 2 Witnesses" },
-    ],
-  },
-];
-
 interface ScanTranslateViewProps {
   isAdvocate?: boolean;
+  advocateName?: string;
+  barCouncilNumber?: string;
 }
 
-export function ScanTranslateView({ isAdvocate = false }: ScanTranslateViewProps) {
-  // Main documents list
+export function ScanTranslateView({
+  isAdvocate = false,
+  advocateName = "",
+  barCouncilNumber = "",
+}: ScanTranslateViewProps) {
+  // Main documents list (starts empty; removes any legacy sample fixture id if previously cached)
   const [documents, setDocuments] = useState<ProcessedDocument[]>(() => {
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("wakheel_scantranslate_docs");
-        if (saved) return JSON.parse(saved);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((d: any) => d?.id !== "doc-sample-1");
+          }
+        }
       } catch {
         // fallback
       }
     }
-    return INITIAL_DOCS;
+    return [];
   });
 
   // AI credits state
@@ -323,9 +254,9 @@ export function ScanTranslateView({ isAdvocate = false }: ScanTranslateViewProps
         documentType: transDocType,
       });
 
-      const sourceText = ocrRes?.ocrText || "വില്ലേജ് ഓഫീസറും പോലീസും ചേർന്ന് സ്ഥലത്ത് മഹസർ തയ്യാറാക്കി. അതിരുകൾ തിരിച്ച് അളവ് സ്കെച്ച് എടുത്തു.";
+      const sourceText = ocrRes?.ocrText || `Vernacular source extract from ${transFile.name}`;
 
-      setTransProcessingStep("Translating vernacular text into High Court Rule 32 Certified English...");
+      setTransProcessingStep("Translating vernacular text into Certified English...");
       await new Promise((r) => setTimeout(r, 800));
 
       // 2. Translate next
@@ -334,8 +265,8 @@ export function ScanTranslateView({ isAdvocate = false }: ScanTranslateViewProps
         sourceLang: transSourceLang as any,
         targetLang: transTargetLang as any,
         documentType: transDocType,
-        advocateName: isAdvocate ? "Adv. Meera Krishnan" : "Adv. Meera Krishnan (High Court of Kerala)",
-        barCouncilNumber: "K/001429/2012",
+        advocateName: advocateName || (isAdvocate ? "Chamber Counsel" : "Authorised Legal Translator"),
+        barCouncilNumber: barCouncilNumber || "",
       });
 
       const newDoc: ProcessedDocument = {
@@ -379,13 +310,13 @@ export function ScanTranslateView({ isAdvocate = false }: ScanTranslateViewProps
         status: "Translated",
         confidenceScore: "99.0%",
         documentType: transDocType,
-        ocrText: `മഹസർ പകർപ്പ്: ആലുവ വില്ലേജ് റീസർവ്വേ 248/2 ലെ സ്ഥല പരിശോധന വിവരണം.`,
+        ocrText: `Vernacular text extracted from ${transFile.name}`,
         translatedText: `CERTIFIED ENGLISH PLEADING TRANSLATION OF VERNACULAR RECORD
 1. STATEMENT OF RECORD:
-The translated vernacular document produced herewith before this Hon'ble Court reflects the spot inspection conducted in Re-survey No. 248/2, Block 14 of Aluva Village.
+The translated vernacular document (${transFile.name}) produced herewith reflects the contents extracted from the submitted record.
 2. STATUTORY CONFORMITY:
-Conforms strictly to Rule 32 of the Rules of the High Court of Kerala, 1971.`,
-        translationCertificate: `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM\nRULE 32 CERTIFICATE OF ACCURATE TRANSLATION\nCertified true and accurate copy.`,
+Formatted for formal court submission and verification.`,
+        translationCertificate: `CERTIFICATE OF ACCURATE TRANSLATION\nSubmitted file: ${transFile.name}\nCertified true and accurate English rendering of the vernacular text.`,
       };
       setDocuments((prev) => [fallbackDoc, ...prev]);
       setCreditsLeft((prev) => Math.max(0, prev - 3));
@@ -408,8 +339,8 @@ Conforms strictly to Rule 32 of the Rules of the High Court of Kerala, 1971.`,
         sourceLang: "ml",
         targetLang: "en",
         documentType: doc.documentType || "police_mahazar",
-        advocateName: "Adv. Meera Krishnan",
-        barCouncilNumber: "K/001429/2012",
+        advocateName: advocateName || (isAdvocate ? "Chamber Counsel" : "Authorised Legal Translator"),
+        barCouncilNumber: barCouncilNumber || "",
       });
 
       const updated: ProcessedDocument = {

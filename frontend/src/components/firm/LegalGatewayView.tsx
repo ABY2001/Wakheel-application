@@ -105,8 +105,8 @@ interface LegalGatewayViewProps {
 }
 
 export function LegalGatewayView({
-  firmName = "Apex Law & Corporate Partners LLP",
-  csName = "CS Rajesh Sharma",
+  firmName = "",
+  csName = "",
   initialSubTab = "contracts",
 }: LegalGatewayViewProps) {
   const [activeTab, setActiveTab] = useState<"contracts" | "retainer-advocates" | "vault" | "billing">(initialSubTab);
@@ -118,7 +118,7 @@ export function LegalGatewayView({
   }, [initialSubTab]);
 
   // Data Collections
-  const [selectedCompanyName, setSelectedCompanyName] = useState("CyberCorp Technologies Pvt Ltd");
+  const [selectedCompanyName, setSelectedCompanyName] = useState("");
   const [contracts, setContracts] = useState<CorporateContractItem[]>([]);
   const [advocates, setAdvocates] = useState<RetainerAdvocateItem[]>([]);
   const [vaultItems, setVaultItems] = useState<CorporateVaultItemType[]>([]);
@@ -145,26 +145,26 @@ export function LegalGatewayView({
   // New Contract Form
   const [newContTitle, setNewContTitle] = useState("");
   const [newContType, setNewContType] = useState<CorporateContractItem["contractType"]>("sha_ssa");
-  const [newContParties, setNewContParties] = useState("CyberCorp Technologies Pvt Ltd, Investor Name");
-  const [newContValue, setNewContValue] = useState(25000000);
-  const [newContDuty, setNewContDuty] = useState(2500);
+  const [newContParties, setNewContParties] = useState("");
+  const [newContValue, setNewContValue] = useState(0);
+  const [newContDuty, setNewContDuty] = useState(0);
 
   // New Advocate Form
   const [newAdvName, setNewAdvName] = useState("");
-  const [newAdvBar, setNewAdvBar] = useState("D/1234/2015");
-  const [newAdvJurisdiction, setNewAdvJurisdiction] = useState("NCLT New Delhi & High Court");
-  const [newAdvSpec, setNewAdvSpec] = useState("Corporate Insolvency & M&A");
-  const [newAdvRetainer, setNewAdvRetainer] = useState(50000);
+  const [newAdvBar, setNewAdvBar] = useState("");
+  const [newAdvJurisdiction, setNewAdvJurisdiction] = useState("");
+  const [newAdvSpec, setNewAdvSpec] = useState("");
+  const [newAdvRetainer, setNewAdvRetainer] = useState(0);
 
   // New Vault Item Form
   const [newVltTitle, setNewVltTitle] = useState("");
   const [newVltDocType, setNewVltDocType] = useState<CorporateVaultItemType["docType"]>("moa_aoa");
-  const [newVltHolder, setNewVltHolder] = useState("Managing Director");
+  const [newVltHolder, setNewVltHolder] = useState("");
 
   // New Invoice Form
-  const [newInvClient, setNewInvClient] = useState("CyberCorp Technologies Pvt Ltd");
-  const [newInvDesc, setNewInvDesc] = useState("Secretarial Retainer & Board Governance");
-  const [newInvSubtotal, setNewInvSubtotal] = useState(50000);
+  const [newInvClient, setNewInvClient] = useState("");
+  const [newInvDesc, setNewInvDesc] = useState("");
+  const [newInvSubtotal, setNewInvSubtotal] = useState(0);
 
   // Load from backend on mount
   useEffect(() => {

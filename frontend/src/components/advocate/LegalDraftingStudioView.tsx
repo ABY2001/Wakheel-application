@@ -42,10 +42,10 @@ interface DraftingTemplate {
 }
 
 export const LegalDraftingStudioView: React.FC<LegalDraftingStudioViewProps> = ({
-  currentMatter = "WP(C) 19482/2024 - Gopakumar Nambiar v. KSEB",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
-  token = "advocate_token",
+  currentMatter = "",
+  advocateName = "",
+  barCouncilNumber = "",
+  token = "",
   onNavigateTab,
 }) => {
   // State: Templates & Active Selection
@@ -54,25 +54,19 @@ export const LegalDraftingStudioView: React.FC<LegalDraftingStudioViewProps> = (
   const [loadingTemplates, setLoadingTemplates] = useState<boolean>(true);
 
   // State: Form Parameters
-  const [courtForum, setCourtForum] = useState<string>("IN THE HIGH COURT OF KERALA AT ERNAKULAM");
-  const [caseNumber, setCaseNumber] = useState<string>("19482/2024");
-  const [clientName, setClientName] = useState<string>("Gopakumar Nambiar");
-  const [clientAddress, setClientAddress] = useState<string>(
-    "Plot 42, Nambiar Gardens, Aluva, Ernakulam, Kerala 683101"
+  const [courtForum, setCourtForum] = useState<string>("");
+  const [caseNumber, setCaseNumber] = useState<string>(
+    currentMatter ? currentMatter.split("-")[0].split("—")[0].trim() : ""
   );
-  const [respondentName, setRespondentName] = useState<string>(
-    "Kerala State Electricity Board Ltd. (KSEB) & Others"
-  );
-  const [respondentAddress, setRespondentAddress] = useState<string>(
-    "Vydyuthi Bhavanam, Pattom, Thiruvananthapuram - 695004"
-  );
-  const [subject, setSubject] = useState<string>(
-    "Unlawful transmission line alignment across registered agricultural holding violating Section 16(1) Telegraph Act"
-  );
-  const [chequeNumber, setChequeNumber] = useState<string>("491028");
-  const [chequeAmount, setChequeAmount] = useState<string>("5,00,000");
-  const [memoReason, setMemoReason] = useState<string>("Funds Insufficient / Exceeds Arrangement");
-  const [memoDate, setMemoDate] = useState<string>("22-Sep-2024");
+  const [clientName, setClientName] = useState<string>("");
+  const [clientAddress, setClientAddress] = useState<string>("");
+  const [respondentName, setRespondentName] = useState<string>("");
+  const [respondentAddress, setRespondentAddress] = useState<string>("");
+  const [subject, setSubject] = useState<string>("");
+  const [chequeNumber, setChequeNumber] = useState<string>("");
+  const [chequeAmount, setChequeAmount] = useState<string>("");
+  const [memoReason, setMemoReason] = useState<string>("");
+  const [memoDate, setMemoDate] = useState<string>("");
 
   // State: Draft Editor & Modes
   const [draftContent, setDraftContent] = useState<string>("");
@@ -170,7 +164,7 @@ export const LegalDraftingStudioView: React.FC<LegalDraftingStudioViewProps> = (
           respondentName,
           respondentAddress,
           advocateName,
-          advocateChambers: "Chamber No. 14, High Court Advocates Association (KHCAA) Golden Jubilee Chamber Complex, Ernakulam, Kochi 682031",
+          advocateChambers: "",
           barCouncilNumber,
           caseNumber,
           subject,
@@ -196,29 +190,26 @@ export const LegalDraftingStudioView: React.FC<LegalDraftingStudioViewProps> = (
     }
   };
 
-  // Generate on first mount
-  useEffect(() => {
-    handleGenerateDraft("wpc_writ_petition");
-  }, []);
+  // Start with a blank drafting form until the advocate fills details or clicks Generate Draft
 
   // 3. Quick Insert Statutory Clauses
   const handleInsertClause = (clauseType: string) => {
     let snippet = "";
     switch (clauseType) {
       case "delay_condonation":
-        snippet = `\n\nEXPLANATION FOR DELAY (Section 5, Limitation Act, 1963):\nThe Petitioner respectfully submits that the delay in approaching this Hon'ble Court following Exhibit P-6 order was solely attributable to the bona fide pursuit of administrative remedies before the District Magistrate. There has been no deliberate laches, inaction, or contumacious negligence on the part of the Petitioner.`;
+        snippet = `\n\nEXPLANATION FOR DELAY (Section 5, Limitation Act, 1963):\nThe Petitioner respectfully submits that the delay in approaching this Hon'ble Court was bona fide and attributable to sufficient cause shown in the accompanying affidavit. There has been no deliberate laches, inaction, or negligence.`;
         break;
       case "balance_convenience":
-        snippet = `\n\nBALANCE OF CONVENIENCE & IRREPARABLE INJURY:\nThe Petitioner has made out a strong prima facie case for the grant of interim relief. If the Respondents are permitted to forcibly erect high-tension electric pylons during the pendency of this Writ Petition, the Petitioner will suffer irreparable loss and damage that cannot be adequately compensated in terms of money. The balance of convenience squarely tilts in favour of maintaining status quo.`;
+        snippet = `\n\nBALANCE OF CONVENIENCE & IRREPARABLE INJURY:\nThe Petitioner has made out a strong prima facie case for the grant of interim relief. Unless interim protection is granted during the pendency of these proceedings, the Petitioner will suffer irreparable injury that cannot be adequately compensated in terms of money. The balance of convenience squarely tilts in favour of maintaining status quo.`;
         break;
       case "valsamma_precedent":
-        snippet = `\n\nBINDING DIVISION BENCH PRECEDENT (Valsamma v. KSEB 2024):\nAs held by the Division Bench of this Hon'ble Court in Valsamma & Ors. v. Kerala State Electricity Board [2024 (2) KHC 401 DB], once a landowner registers an objection in writing under Section 16(1) of the Indian Telegraph Act, 1885, the statutory licensee possesses zero unbridled discretion to proceed with works unilaterally without obtaining a prior adjudication order from the District Magistrate.`;
+        snippet = `\n\nJURISDICTIONAL & PROCEDURAL PRECEDENT:\nWhere a statute mandates reference to or prior satisfaction by a designated adjudicatory authority upon written objection, unilateral execution without jurisdiction renders the impugned action non est and void ab initio in law.`;
         break;
       case "urgency_memo":
-        snippet = `\n\nMEMO OF URGENCY:\nThe Counsel for the Petitioner respectfully mentions that coercive tree-felling operations are slated for imminent commencement at 10:00 AM on Monday. Hence, leave is respectfully craved to take up the accompanying petition out of turn and post before the Hon'ble Bench for urgent ad-interim orders.`;
+        snippet = `\n\nMEMO OF URGENCY:\nThe Counsel for the Petitioner respectfully submits that coercive steps are slated for imminent commencement. Leave is therefore craved to list this petition urgently for ad-interim relief.`;
         break;
       case "verification_block":
-        snippet = `\n\nVERIFICATION AFFIDAVIT:\nI, ${clientName}, the Petitioner / Deponent herein, do hereby solemnly declare that the statements made in paragraphs 1 to 12 above are true to my personal knowledge, belief, and official records.\n\nVerified at Ernakulam on this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}.\n\nDEPONENT\n\nAdvocate, High Court of Kerala`;
+        snippet = `\n\nVERIFICATION AFFIDAVIT:\nI, ${clientName || "[Deponent Name]"}, the Petitioner / Deponent herein, do hereby solemnly declare that the statements made in the paragraphs above are true to my personal knowledge, belief, and official records.\n\nVerified on this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}.\n\nDEPONENT\n\n${advocateName || "Advocate for Deponent"}`;
         break;
       default:
         break;

@@ -38,146 +38,12 @@ export interface ClientDocument {
   pages: number;
   hash: string;
   subType: "all" | "case-diary" | "certified-true-copies" | "contracts" | "document-filing";
+  filingStatus?: string;
   details?: string;
   fileUrl?: string;
 }
 
-const INITIAL_DOCUMENTS: ClientDocument[] = [
-  {
-    id: "doc-01",
-    name: "WPC_19482_2024_Writ_Petition_Paperbook.pdf",
-    category: "Pleading",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    size: "4.8 MB",
-    uploadDate: "14 Jun 2024",
-    isSigned: true,
-    pages: 42,
-    hash: "sha256:8f4b23c8a91d0e41785cbfa7192",
-    subType: "all",
-    details: "High Court verified true copy writ petition with Annexures P-1 to P-8.",
-  },
-  {
-    id: "doc-02",
-    name: "Interim_Stay_Order_Bench_2A_High_Court.pdf",
-    category: "Court Order",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    size: "1.2 MB",
-    uploadDate: "16 Oct 2026",
-    isSigned: true,
-    pages: 3,
-    hash: "sha256:3a91b48f9024bc68e10dca27189",
-    subType: "all",
-    details: "Daily order granting extension of interim stay against realignment of 11KV lines.",
-  },
-  {
-    id: "doc-03",
-    name: "High_Court_Certified_True_Copy_Decree.pdf",
-    category: "CTC",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    size: "2.1 MB",
-    uploadDate: "18 Oct 2024",
-    isSigned: true,
-    pages: 5,
-    hash: "sha256:92cb1f570081d4a0e98c61fa348",
-    subType: "certified-true-copies",
-    details: "Official Certified True Copy issued by Assistant Registrar (Judicial), Kerala High Court. CTC No: HC-CTC-2024-8910.",
-  },
-  {
-    id: "doc-04",
-    name: "Sub_Court_Demarcation_Decree_CTC.pdf",
-    category: "CTC",
-    matter: "OS 412/2023 — Gopakumar v. Varghese",
-    size: "1.8 MB",
-    uploadDate: "12 Jan 2024",
-    isSigned: true,
-    pages: 4,
-    hash: "sha256:5ef1092ab7c41908d32b84ac125",
-    subType: "certified-true-copies",
-    details: "Sub Court Ernakulam certified extract bearing judicial adhesive stamps of ₹50.",
-  },
-  {
-    id: "doc-05",
-    name: "Commercial_Lease_Agreement_Ernakulam.pdf",
-    category: "Contract",
-    matter: "Corporate Legal Affairs",
-    size: "1.5 MB",
-    uploadDate: "05 Mar 2024",
-    isSigned: true,
-    pages: 14,
-    hash: "sha256:7c491da823bf108ec92451bc09a",
-    subType: "contracts",
-    details: "Registered 3-year commercial property lease deed with indemnity and arbitration clause.",
-  },
-  {
-    id: "doc-06",
-    name: "Software_Development_MSA_NDA_Executed.pdf",
-    category: "Contract",
-    matter: "ARB/NCLT/KOCHI/2024/041",
-    size: "950 KB",
-    uploadDate: "10 Jul 2024",
-    isSigned: true,
-    pages: 9,
-    hash: "sha256:d12c8a49e50f3b890a214fe6881",
-    subType: "contracts",
-    details: "Master Services Agreement executed between Malabar Infotech and Coastal Logistics.",
-  },
-  {
-    id: "doc-07",
-    name: "High_Court_EFiling_Registry_Receipt.pdf",
-    category: "Filing Receipt",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    size: "420 KB",
-    uploadDate: "14 Jun 2024",
-    isSigned: true,
-    pages: 1,
-    hash: "sha256:2fa810bc931e508ab219c481944",
-    subType: "document-filing",
-    details: "eCourts e-filing acknowledgment receipt. Filing No: EF/KLHC/2024/19482. Scrutiny cleared.",
-  },
-  {
-    id: "doc-08",
-    name: "NCLT_Petition_Filing_Diary_Slip.pdf",
-    category: "Filing Receipt",
-    matter: "ARB/NCLT/KOCHI/2024/041",
-    size: "380 KB",
-    uploadDate: "01 Aug 2024",
-    isSigned: true,
-    pages: 1,
-    hash: "sha256:a12b3c4d5e6f7a8b9c0d1e2f3a4",
-    subType: "document-filing",
-    details: "NCLT Kochi Bench diary slip acknowledging Section 9 company petition presentation.",
-  },
-];
-
-const CASE_DIARY_ENTRIES = [
-  {
-    id: "diary-01",
-    date: "16 Oct 2026",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    bench: "High Court Bench 2A (Division Bench)",
-    stage: "Interim Relief Hearing",
-    notes: "Division Bench heard senior standing counsel for KSEB. Bench observed prima facie deviation from gazetted corridor. Interim injunction extended by 3 weeks. Adv. Meera Krishnan instructed to file rejoinder by 28th October.",
-    nextAction: "File counter-rejoinder with survey commissioner report before next listing on 20-Nov-2024.",
-  },
-  {
-    id: "diary-02",
-    date: "22 Oct 2024",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    bench: "Single Bench (Admission)",
-    stage: "Notice Before Admission",
-    notes: "Notice before admission issued to respondents 1 to 4. Special messenger service allowed at petitioner's cost.",
-    nextAction: "Serve paper-book copies to office of Advocate General and KSEB standing counsel.",
-  },
-  {
-    id: "diary-03",
-    date: "15 Aug 2024",
-    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-    bench: "NCLT Court Hall 1 (Kochi)",
-    stage: "Pre-Institution Scrutiny",
-    notes: "Registry scrutiny pointed out defect regarding calculation of interest under MSME Development Act. Defect cured within statutory 7 days.",
-    nextAction: "Matter cleared for division bench listing on 20-Nov-2024.",
-  },
-];
+const INITIAL_DOCUMENTS: ClientDocument[] = [];
 
 interface ClientDocumentsViewProps {
   initialTab?: "all" | "case-diary" | "certified-true-copies" | "contracts" | "document-filing";
@@ -198,12 +64,13 @@ export function ClientDocumentsView({
   }, [initialTab]);
 
   // Documents state
-  const [docsList, setDocsList] = useState<ClientDocument[]>(INITIAL_DOCUMENTS);
+  const [docsList, setDocsList] = useState<ClientDocument[]>([]);
+  const [apiMatters, setApiMatters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMatterFilter, setSelectedMatterFilter] = useState("All Matters");
   const [loadingDocs, setLoadingDocs] = useState(false);
 
-  // Sync documents from backend API on mount
+  // Sync documents & matters from backend API on mount
   useEffect(() => {
     let isMounted = true;
     async function fetchDocs() {
@@ -211,14 +78,31 @@ export function ClientDocumentsView({
         setLoadingDocs(true);
         const token =
           typeof window !== "undefined"
-            ? localStorage.getItem("wakheel_token") || "dev_token"
-            : "dev_token";
-        const res = await citizenApi.getDocuments(token);
-        if (isMounted && res?.success && Array.isArray(res.documents) && res.documents.length > 0) {
-          setDocsList(res.documents);
+            ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+            : "";
+        if (!token) {
+          if (isMounted) setDocsList([]);
+          return;
+        }
+        const [docsRes, mattersRes] = await Promise.allSettled([
+          citizenApi.getDocuments(token),
+          citizenApi.getMatters(token),
+        ]);
+        if (!isMounted) return;
+        if (docsRes.status === "fulfilled" && docsRes.value?.success && Array.isArray(docsRes.value.documents)) {
+          setDocsList(docsRes.value.documents);
+        } else {
+          setDocsList([]);
+        }
+        if (mattersRes.status === "fulfilled" && mattersRes.value?.success && Array.isArray(mattersRes.value.matters)) {
+          const names = mattersRes.value.matters
+            .map((m: any) => String(m.caseNumber ? `${m.caseNumber} — ${m.title || ""}` : m.title || "").trim())
+            .filter(Boolean);
+          setApiMatters(Array.from(new Set(names)));
         }
       } catch (err) {
-        console.warn("Using fallback documents:", err);
+        console.warn("Failed loading client documents:", err);
+        if (isMounted) setDocsList([]);
       } finally {
         if (isMounted) setLoadingDocs(false);
       }
@@ -240,7 +124,7 @@ export function ClientDocumentsView({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [newDocName, setNewDocName] = useState("");
   const [newDocCategory, setNewDocCategory] = useState<ClientDocument["category"]>("Pleading");
-  const [newDocMatter, setNewDocMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+  const [newDocMatter, setNewDocMatter] = useState("");
   const [newDocNotes, setNewDocNotes] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
@@ -566,43 +450,48 @@ Cryptographically attested by Wakheel Digital Court Vault`;
                 Official notes recorded after court sessions and advocate bench appearances.
               </p>
             </div>
-            <span className="text-xs font-mono text-zinc-400">{CASE_DIARY_ENTRIES.length} Entries</span>
+            <span className="text-xs font-mono text-zinc-400">
+              {docsList.filter((d) => d.subType === "case-diary").length} Entries
+            </span>
           </div>
 
           <div className="space-y-3.5">
-            {CASE_DIARY_ENTRIES.map((entry) => (
-              <div
-                key={entry.id}
-                className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-5 space-y-3 shadow-xs"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-md bg-black text-white dark:bg-white dark:text-black font-mono font-bold text-xs">
-                      {entry.date}
-                    </span>
-                    <span className="font-bold text-sm text-black dark:text-white">
-                      {entry.matter}
-                    </span>
-                  </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200">
-                    {entry.stage}
-                  </span>
-                </div>
-
-                <div className="text-xs text-zinc-500 font-mono">
-                  {entry.bench}
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white leading-relaxed">
-                  {entry.notes}
-                </div>
-
-                <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 pt-1">
-                  <span className="font-bold text-black dark:text-white">Follow-Up Action:</span>
-                  <span>{entry.nextAction}</span>
-                </div>
+            {docsList.filter((d) => d.subType === "case-diary").length === 0 ? (
+              <div className="p-10 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-center space-y-2">
+                <BookOpen className="w-7 h-7 mx-auto text-zinc-400" />
+                <h4 className="text-sm font-bold text-black dark:text-white">No case diary entries recorded yet</h4>
+                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                  Hearing logs and bench proceedings posted by your advocate will appear here chronologically.
+                </p>
               </div>
-            ))}
+            ) : (
+              docsList
+                .filter((d) => d.subType === "case-diary")
+                .map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-5 space-y-3 shadow-xs"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-0.5 rounded-md bg-black text-white dark:bg-white dark:text-black font-mono font-bold text-xs">
+                          {entry.uploadDate}
+                        </span>
+                        <span className="font-bold text-sm text-black dark:text-white">
+                          {entry.matter}
+                        </span>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200">
+                        {entry.filingStatus || entry.category || "Hearing Update"}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white leading-relaxed">
+                      {entry.details || entry.name}
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         </div>
       )}
@@ -640,9 +529,11 @@ Cryptographically attested by Wakheel Digital Court Vault`;
                 className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs text-black dark:text-white focus:outline-none cursor-pointer"
               >
                 <option value="All Matters">All Matters</option>
-                <option value="WP(C) 19482/2024">WP(C) 19482/2024</option>
-                <option value="ARB/NCLT">ARB/NCLT/KOCHI/2024/041</option>
-                <option value="OS 412/2023">OS 412/2023</option>
+                {Array.from(new Set(docsList.map((d) => d.matter).filter(Boolean))).map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -881,7 +772,7 @@ Cryptographically attested by Wakheel Digital Court Vault`;
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Counter_Affidavit_WP_19482.pdf"
+                  placeholder="e.g. Rental_Agreement_2026.pdf"
                   value={newDocName}
                   onChange={(e) => setNewDocName(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
@@ -913,10 +804,17 @@ Cryptographically attested by Wakheel Digital Court Vault`;
                   </label>
                   <input
                     type="text"
+                    list="client-vault-matters-datalist"
                     value={newDocMatter}
                     onChange={(e) => setNewDocMatter(e.target.value)}
+                    placeholder="Optional case number or matter title"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none font-mono text-[11px]"
                   />
+                  <datalist id="client-vault-matters-datalist">
+                    {apiMatters.map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
                 </div>
               </div>
 

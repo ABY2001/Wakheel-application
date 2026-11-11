@@ -206,52 +206,41 @@ export const extractDocumentOcr = async (req, res) => {
         { label: "Document Type", value: "Police & Revenue Mahazar" },
         { label: "Survey Coordinates", value: "Re-survey 248/2, Block 14" },
         { label: "Jurisdiction", value: "Aluva Village, Kanayannur / Aluva Taluk" },
-        { label: "Registered Deponent", value: "Gopakumar Nambiar (Thandapper 8192)" },
-        { label: "Seals & Endorsements", value: "Village Officer Seal, Revenue Department Kerala" },
+        { label: "Registered Deponent", value: "Registered Landholder / Occupier" },
+        { label: "Seals & Endorsements", value: "Village Officer Seal, Revenue Department" },
       ];
     } else if (lowerName.includes("aadharm") || lowerName.includes("deed") || lowerName.includes("tax") || lowerName.includes("karan") || documentType === "land_revenue") {
       detectedLanguage = "Malayalam (മലയാളം)";
       pageCount = 3;
       extractedText = `ആധാരം പകർപ്പും തണ്ടപ്പേർ വിവരങ്ങളും (Title Indenture & Revenue Record)
-സബ് രജിസ്ട്രാർ ഓഫീസ്: എറണാകുളം | രജിസ്ട്രേഷൻ നമ്പർ: 1842/2018
+സബ് രജിസ്ട്രാർ ഓഫീസ് | രജിസ്ട്രേഷൻ നമ്പർ: [DEED_NO]
 
-എറണാകുളം സബ് രജിസ്ട്രിയിൽ 1842/2018 നമ്പറായി രജിസ്റ്റർ ചെയ്ത ജന്മം തീറാധാരം. പഴയ സർവ്വേ നമ്പർ 412/1, റീസർവ്വേ 248/2, ബ്ലോക്ക് 14-ൽ ഉൾപ്പെട്ട 28.5 സെന്റ് (11.53 ആർസ്) ഭൂമി.
+[SUB-DISTRICT] സബ് രജിസ്ട്രിയിൽ രജിസ്റ്റർ ചെയ്ത ജന്മം തീറാധാരം. പഴയ സർവ്വേ / റീസർവ്വേ വിവരങ്ങൾ പ്രമാണത്തിൽ രേഖപ്പെടുത്തിയ പ്രകാരം.
 
-വസ്തുവിന്റെ ഉടമസ്ഥാവകാശം സർവ്വ സ്വതന്ത്രമായ ജന്മാവകാശത്തോടെ തീറുവാങ്ങി കൈവശം അനുഭവിച്ചു വരുന്നതാണ്. യാതൊരുവിധ കുടിശ്ശികകളോ വായ്പാ ബാധ്യതകളോ നിലവിലില്ല. കേരള ലാൻഡ് ടാക്സ് ആക്ട് 1961 പ്രകാരമുള്ള കരം 2024-2025 സാമ്പത്തിക വർഷം വരെ പൂർണ്ണമായി അടച്ചുതീർത്തിട്ടുള്ളതാണ്.
+വസ്തുവിന്റെ ഉടമസ്ഥാവകാശം തീറുവാങ്ങി കൈവശം അനുഭവിച്ചു വരുന്നതാണ്. കരം അടച്ച വിവരങ്ങൾ റവന്യൂ രേഖകളിൽ രേഖപ്പെടുത്തിയിട്ടുള്ളതാണ്.
 
 സബ് രജിസ്ട്രാർ സാക്ഷ്യപ്പെടുത്തിയ പകർപ്പ്.`;
       entities = [
-        { label: "Deed Folio", value: "Registered Indenture No. 1842/2018 SRO Ernakulam" },
-        { label: "Tenure Classification", value: "Absolute Freehold (Jenmam Rights)" },
-        { label: "Extent of Holding", value: "28.5 Cents (11.53 Ares)" },
-        { label: "Revenue Status", value: "Basic Land Tax Remitted (Kerala Land Tax Act, 1961)" },
+        { label: "Document Classification", value: "Registered Title Indenture / Revenue Record" },
+        { label: "OCR Status", value: "Indexed & Structured" },
       ];
     } else if (lowerName.includes("order") || lowerName.includes("judgment") || lowerName.includes("judgement") || documentType === "court_order") {
       detectedLanguage = "English (Formal Court Record)";
       pageCount = 4;
-      extractedText = `IN THE HIGH COURT OF KERALA AT ERNAKULAM
-PRESENT: THE HON'BLE MR. JUSTICE DEVASISH ROY
-Tuesday, the 16th day of October 2024 / 24th Aswina, 1946
+      extractedText = `[OCR EXTRACTED COURT RECORD: ${fileName}]
+COURT FORUM: [COMPETENT COURT / BENCH]
+CASE REFERENCE: [CASE NUMBER]
 
-WP(C) NO. 19482 OF 2024 (S)
+PARTIES:
+PETITIONER / APPLICANT: [PETITIONER NAME]
+RESPONDENTS: [RESPONDENT NAME(S)]
 
-PETITIONER:
-Gopakumar Nambiar, Aged 54, S/o Late K. P. Nambiar,
-Residing at Nambiar Mandiram, Desom, Aluva, Ernakulam District.
-
-RESPONDENTS:
-1. Kerala State Electricity Board Ltd, Vydyuthi Bhavanam, Pattom, Thiruvananthapuram.
-2. The Assistant Executive Engineer, Electrical Sub-Division, KSEB, Aluva.
-3. The District Magistrate / District Collector, Civil Station, Kakkanad, Ernakulam.
-
-ORDER:
-Admit. Government Pleader takes notice for Respondent 3. Standing Counsel takes notice for Respondents 1 and 2.
-Post after four weeks for counter affidavit. In the meantime, there shall be an interim direction directing the respondents to maintain status quo with regard to the felling of trees in the petitioner's property comprised in Re-survey No. 248/2 of Aluva Village.`;
+RECORDED ORDER SUMMARY:
+Notice ordered to respondents. Matter posted for counter statement / hearing on the next notified date with interim directions subject to final adjudication.`;
       entities = [
-        { label: "Court Forum", value: "High Court of Kerala at Ernakulam" },
-        { label: "Case Docket", value: "WP(C) 19482/2024" },
-        { label: "Bench Coram", value: "Hon'ble Single Bench" },
-        { label: "Operative Injunction", value: "Ad-interim status quo order against tree felling" },
+        { label: "Document Type", value: "Court Order / Proceeding" },
+        { label: "Source File", value: fileName },
+        { label: "Extraction Mode", value: "Legal OCR Transcription" },
       ];
     } else {
       detectedLanguage = language === "en" ? "English" : language === "hi" ? "Hindi (हिन्दी)" : "Malayalam (മലയാളം)";
@@ -306,8 +295,8 @@ export const translateLegalDocument = async (req, res) => {
       sourceLang = "ml",
       targetLang = "en",
       documentType = "general",
-      advocateName = "Adv. Meera Krishnan",
-      barCouncilNumber = "K/001429/2012",
+      advocateName = "Chamber Counsel",
+      barCouncilNumber = "",
     } = req.body;
 
     if (!text || !text.trim()) {
@@ -342,11 +331,11 @@ Prepared on ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "l
 In compliance with the directions of the Jurisdictional Authority, the undersigned officers conducted a spot inspection of the schedule property in the presence of independent local witnesses.
 
 2. LOCALITY & BOUNDARY SCHEDULE:
-The subject property comprises land situated in Resurvey Block No. 14, Resurvey No. 248/2 of Aluva Village, Aluva Taluk, Ernakulam District.
-• East: Registered private pathway and holding of Ramanathan
+The subject property comprises the demarcated schedule land parcel identified in the field inspection records.
+• East: Registered private pathway
 • South: Boundary wall of Panchayath Road
-• West: Property in Thandapper No. 8192 held by Gopakumar Nambiar
-• North: Irrigation canal stream and revenue poramboke
+• West: Adjoining Thandapper landholding of the Deponent
+• North: Public stream / revenue poramboke
 
 3. FACTUAL OBSERVATIONS AT SCENE:
 Upon meticulous physical inspection, it is observed that high-tension electric line supports have been planted along the western boundary line. Six yielding coconut palms aged approximately 15-20 years and two teak trees bearing timber markings have been felled without prior demarcation permit. The physical demarcations and survey stones remain partially intact.
@@ -516,21 +505,21 @@ export const draftPleading = async (req, res) => {
     } = req.body;
 
     const {
-      clientName = "Gopakumar Nambiar",
-      clientAddress = "Plot 42, Nambiar Gardens, Aluva, Ernakulam, Kerala 683101",
-      respondentName = "Varghese Builders & Developers Pvt. Ltd.",
-      respondentAddress = "Door No. 12/842, Marine Drive Commercial Complex, Kochi, Kerala 682031",
-      advocateName = "Adv. Meera Krishnan",
-      advocateChambers = "Chamber No. 14, High Court Advocates Association (KHCAA) Golden Jubilee Chamber Complex, Ernakulam, Kochi 682031",
-      barCouncilNumber = "K/001429/2012",
-      chequeNumber = "491028",
-      chequeDate = "15-Sep-2024",
-      chequeAmount = "5,00,000",
-      bankName = "State Bank of India, Aluva Town Branch",
-      memoDate = "22-Sep-2024",
+      clientName = "[CLIENT / PETITIONER NAME]",
+      clientAddress = "[CLIENT ADDRESS]",
+      respondentName = "[RESPONDENT / OPPOSITE PARTY NAME]",
+      respondentAddress = "[RESPONDENT ADDRESS]",
+      advocateName = "[ADVOCATE NAME]",
+      advocateChambers = "[ADVOCATE CHAMBER ADDRESS]",
+      barCouncilNumber = "[BAR ROLL NUMBER]",
+      chequeNumber = "[CHEQUE NUMBER]",
+      chequeDate = "[CHEQUE DATE]",
+      chequeAmount = "[AMOUNT]",
+      bankName = "[BANK NAME & BRANCH]",
+      memoDate = "[MEMO DATE]",
       memoReason = "Funds Insufficient / Exceeds Arrangement",
-      caseNumber = "WP(C) 19482/2024",
-      subject = "Unlawful diversion of high-tension electricity transmission line across registered agricultural holding",
+      caseNumber = "[CASE NUMBER]",
+      subject = "[SUBJECT MATTER & CAUSE OF ACTION]",
     } = parameters;
 
     let draftedContent = "";
@@ -578,55 +567,45 @@ Yours faithfully,
 ${advocateName}
 Advocate for the Complainant`;
     } else if (type === "wpc_writ_petition") {
-      templateTitle = "Article 226 Writ Petition (Civil) — High Court of Kerala";
-      draftedContent = `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM
+      templateTitle = "Article 226 Writ Petition (Civil)";
+      draftedContent = `BEFORE THE HON'BLE HIGH COURT
 (Special Original Jurisdiction)
-W.P.(C) NO. ${caseNumber} OF 2024
+W.P.(C) NO. ${caseNumber}
 
 MEMORANDUM OF WRIT PETITION (CIVIL) UNDER ARTICLE 226 OF THE CONSTITUTION OF INDIA
 
 BETWEEN:
-${clientName}, aged 54 years,
-S/o Late K. Nambiar, residing at ${clientAddress}
+${clientName}, residing at ${clientAddress}
 ... PETITIONER
 
 AND:
 
-1. Kerala State Electricity Board Ltd. (KSEB),
-   Rep. by its Chairman & Managing Director,
-   Vydyuthi Bhavanam, Pattom, Thiruvananthapuram - 695004.
-
-2. The Executive Engineer, Transmission Division,
-   KSEB Sub-Station, Aluva, Ernakulam - 683101.
-
-3. The District Magistrate & District Collector,
-   Collectorate, Kakkanad, Ernakulam - 682030.
+1. ${respondentName}, having address at ${respondentAddress}
+2. The Competent Statutory Authority / State Department
 ... RESPONDENTS
 
-SYNOPSIS & LIST OF DATES:
-• 12-Apr-2018: Petitioner purchased schedule agricultural land vide registered Title Deed No. 1842/2018 of SRO Aluva.
-• 14-Aug-2024: Respondents 1 & 2 marked alignment across petitioner's yielding grove without prior statutory notice.
-• 22-Aug-2024: Petitioner submitted detailed written objection before Respondent 3 invoking Section 16(1) of Telegraph Act.
-• Hence this Writ Petition praying for writ of mandamus and prohibitory orders.
+SYNOPSIS & BRIEF FACTS:
+The Petitioner is aggrieved by the impugned administrative action concerning ${subject}, taken arbitrarily without affording due notice or opportunity of personal hearing.
 
 GROUNDS OF WRIT PETITION:
-A. The unilateral action of Respondents 1 & 2 in trespassing upon petitioner's private land without notice violates Article 300A of the Constitution of India.
-B. Under Section 10(d) of the Indian Telegraph Act, 1885, the licensee is under a statutory obligation to cause minimum damage. Alternative unobstructed public road margin alignment is readily feasible.
-C. Binding Division Bench ruling of this Hon'ble Court in Valsamma v. KSEB [2024 (2) KHC 401 DB] mandates prior District Magistrate sanction whenever landowner raises objection.
+A. The impugned action of the Respondents is arbitrary, illegal, and violative of Articles 14 and 300A of the Constitution of India.
+B. The Respondents failed to follow mandatory statutory procedure and principles of natural justice before initiating adverse action against the Petitioner.
+C. Where statutory remedies require adjudication by the designated authority, unilateral action is ultra vires and unsustainable in law.
 
 INTERIM PRAYER:
-For the reasons stated in the accompanying affidavit, it is humbly prayed that this Hon'ble Court may be pleased to issue an interim direction restraining Respondents 1 and 2 from felling any trees or erecting transmission line poles through the petitioner's property, pending disposal of this Writ Petition (Civil).
+For the reasons stated in the accompanying affidavit, it is humbly prayed that this Hon'ble Court may be pleased to issue an interim direction staying further coercive steps relating to ${subject}, pending disposal of this Writ Petition (Civil).
 
 PRAYER:
 Wherefore it is respectfully prayed that this Hon'ble Court may graciously be pleased to:
-(i) Issue a writ of mandamus directing Respondents 1 and 2 to divert the transmission line alignment along the public road margin;
-(ii) Direct Respondent 3 to expeditiously consider and pass orders on Exhibit P-4 objection in accordance with Section 16(1) of the Indian Telegraph Act, 1885;
+(i) Issue a writ of certiorari or mandamus quashing the impugned proceedings relating to ${subject};
+(ii) Direct the Respondents to consider the Petitioner's written representation in accordance with law after affording an opportunity of hearing;
 (iii) Award costs of these proceedings to the Petitioner.
 
-DATED THIS ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} AT ERNAKULAM.
+DATED THIS ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}.
 
 COUNSEL FOR THE PETITIONER:
-${advocateName} (Roll No: ${barCouncilNumber})`;
+${advocateName} (Roll No: ${barCouncilNumber})
+${advocateChambers}`;
     } else if (type === "ia_interim_stay") {
       templateTitle = "Interlocutory Application (I.A.) for Interim Stay — High Court of Kerala";
       draftedContent = `BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM
@@ -931,7 +910,7 @@ export const refineLegalDraft = async (req, res) => {
       if (action === "expand_grounds") {
         refinedText = `${content}\n\nADDITIONAL STATUTORY GROUNDS (Incorporated by Counsel):\n` +
           `D. FOR THAT the impugned action violates the salutary principles of Natural Justice (Audi Alteram Partem), inasmuch as no reasonable opportunity of personal hearing was afforded prior to taking adverse coercive action.\n` +
-          `E. FOR THAT in Valsamma & Ors. v. KSEB [2024 (2) KHC 401 DB], the Division Bench of this Hon'ble Court authoritatively held that a licensee exercising powers under Section 10 of the Telegraph Act has zero unilateral jurisdiction to proceed with works once a landowner registers written objection under Section 16(1).\n` +
+          `E. FOR THAT the exercise of statutory power without adhering to mandatory procedural safeguards renders the impugned proceedings ultra vires and void in law.\n` +
           `F. FOR THAT the balance of convenience lies entirely in favour of the Petitioner, and the Petitioner will suffer grave and irreparable loss if status quo is not maintained pending final adjudication.\n` +
           (customPrompt ? `G. FOR THAT ${customPrompt.replace(/\.$/, "")}, rendering the entire proceedings arbitrary and void ab initio.` : "");
       } else if (action === "add_prayer") {
@@ -1077,16 +1056,54 @@ Under Kerala High Court procedure and relevant Central statutes, maintainability
 
 export const extractCaseChronology = async (req, res) => {
   try {
-    const { bundleType = "kerala_land_kseb", documents = [], customPrompt = "" } = req.body;
+    const { bundleType = "custom", documents = [], customPrompt = "", caseMetadata: passedMeta = {} } = req.body;
 
     let events = [];
-    let caseMetadata = {};
+    let caseMetadata = {
+      courtForum: passedMeta.courtForum || "[COURT / TRIBUNAL FORUM]",
+      caseNumber: passedMeta.caseNumber || "[CASE NUMBER]",
+      causeTitle: passedMeta.causeTitle || "[PETITIONER / PLAINTIFF] vs. [RESPONDENT / DEFENDANT]",
+      matterType: passedMeta.matterType || "Litigation / Contested Matter",
+      benchType: passedMeta.benchType || "Original Jurisdiction",
+    };
 
-    if (bundleType === "s138_ni_act" || customPrompt.toLowerCase().includes("138") || customPrompt.toLowerCase().includes("cheque")) {
+    if (Array.isArray(documents) && documents.length > 0 && bundleType !== "s138_ni_act" && bundleType !== "sample_writ") {
+      events = documents.map((doc, idx) => {
+        const rawText = typeof doc === "string" ? doc : doc.text || doc.name || doc.title || `Document ${idx + 1}`;
+        const dateMatch = rawText.match(/\b(\d{1,2}[./-]\d{1,2}[./-]\d{2,4}|\d{4}-\d{2}-\d{2})\b/);
+        return {
+          id: `ev-${idx + 1}`,
+          slNo: idx + 1,
+          date: doc?.date || (dateMatch ? dateMatch[0] : new Date().toLocaleDateString("en-GB")),
+          particulars: doc?.summary || doc?.details || `Submitted record: ${typeof doc === "string" ? doc : doc.name || doc.title || "Uploaded Exhibit"}`,
+          exhibit: doc?.exhibit || `Exhibit ${String.fromCharCode(65 + (idx % 26))}`,
+          documentTitle: typeof doc === "string" ? doc : doc.name || doc.title || `Exhibit ${idx + 1}`,
+          pageRange: doc?.pages || "1 - —",
+          category: doc?.category || "Case Record",
+          significance: customPrompt ? `Indexed in context of: ${customPrompt}` : "Indexed chronologically from case bundle.",
+          status: "neutral",
+        };
+      });
+    } else if (customPrompt && customPrompt.trim() && bundleType === "custom") {
+      events = [
+        {
+          id: "ev-1",
+          slNo: 1,
+          date: new Date().toLocaleDateString("en-GB"),
+          particulars: customPrompt.trim(),
+          exhibit: "Statement",
+          documentTitle: "Counsel Case Fact Note",
+          pageRange: "1",
+          category: "Factual Summary",
+          significance: "Captured from custom counsel chronology prompt.",
+          status: "neutral",
+        },
+      ];
+    } else if (bundleType === "s138_ni_act") {
       caseMetadata = {
-        courtForum: "Court of Judicial First Class Magistrate, Ernakulam",
-        caseNumber: "C.C. No. 412 OF 2024",
-        causeTitle: "K. R. Mohanan (Complainant) vs. S. Vijayan (Accused)",
+        courtForum: passedMeta.courtForum || "Court of Judicial First Class Magistrate",
+        caseNumber: passedMeta.caseNumber || "[C.C. CASE NUMBER]",
+        causeTitle: passedMeta.causeTitle || "[Complainant] vs. [Accused]",
         matterType: "Criminal Complaint under Section 138, Negotiable Instruments Act, 1881",
         benchType: "Magisterial Jurisdiction",
       };
@@ -1095,169 +1112,37 @@ export const extractCaseChronology = async (req, res) => {
         {
           id: "ev-1",
           slNo: 1,
-          date: "02.01.2024",
-          particulars: "Accused borrowed ₹5,00,000/- for commercial business liquidity and issued Cheque No. 481920 drawn on State Bank of India, MG Road Branch, Ernakulam with assurance of clearance on presentation.",
+          date: "Day 0 (Instrument Date)",
+          particulars: "Cheque issued towards discharge of legally enforceable debt or liability.",
           exhibit: "Exhibit P-1",
-          documentTitle: "Loan Agreement & Original Cheque No. 481920",
-          pageRange: "14 - 17",
+          documentTitle: "Dishonoured Cheque & Ledger",
+          pageRange: "—",
           category: "Debt Inception",
-          significance: "Establishes legally enforceable debt under Section 139 presumption.",
+          significance: "Presumption under Section 139 NI Act applies.",
           status: "favourable",
         },
         {
           id: "ev-2",
           slNo: 2,
-          date: "15.01.2024",
-          particulars: "Complainant presented Cheque No. 481920 through Canara Bank, Kaloor Branch; same was dishonoured with Bank Return Memo endorsing 'Funds Insufficient'.",
+          date: "Within 3 Months",
+          particulars: "Cheque presented for encashment and returned unpaid with Bank Return Memo.",
           exhibit: "Exhibit P-2",
-          documentTitle: "Bank Return Memo (Canara Bank / SBI)",
-          pageRange: "18 - 19",
+          documentTitle: "Bank Return Memo",
+          pageRange: "—",
           category: "Dishonour Memo",
-          significance: "Proves dishonour within 3 months validity under Section 138(a).",
+          significance: "Must be presented within validity under Section 138(a).",
           status: "adverse",
         },
         {
           id: "ev-3",
           slNo: 3,
-          date: "25.01.2024",
-          particulars: "Statutory Legal Demand Notice issued by Advocate on behalf of Complainant calling upon Accused to discharge ₹5,00,000/- within 15 days of receipt (issued within 10 days of return memo).",
+          date: "Within 30 Days of Memo",
+          particulars: "Statutory Demand Notice issued under Section 138(b) granting 15 days to pay.",
           exhibit: "Exhibit P-3",
           documentTitle: "Statutory Demand Notice u/s 138(b)",
-          pageRange: "20 - 24",
-          category: "Statutory Notice",
-          significance: "Complies with mandatory 30-day notice window under Section 138(b).",
-          status: "favourable",
-        },
-        {
-          id: "ev-4",
-          slNo: 4,
-          date: "28.01.2024",
-          particulars: "Statutory notice served upon Accused via Registered Speed Post with Acknowledgment Due (Consignment No. EK7182910IN) as confirmed by India Post Delivery Track report.",
-          exhibit: "Exhibit P-4",
-          documentTitle: "India Post Speed Post Tracking & Acknowledgment Card",
-          pageRange: "25 - 27",
-          category: "Service of Notice",
-          significance: "Statutory 15-day cure window triggered from 28.01.2024 under Section 27 General Clauses Act.",
-          status: "favourable",
-        },
-        {
-          id: "ev-5",
-          slNo: 5,
-          date: "12.02.2024",
-          particulars: "Expiry of 15 days statutory cure period. Accused failed and neglected to remit payment or issue reply; statutory cause of action crystallized on 13.02.2024.",
-          exhibit: "—",
-          documentTitle: "Statutory Limitation Milestone",
           pageRange: "—",
-          category: "Cause of Action",
-          significance: "Cause of action arises under Section 138(c) read with Section 142(1)(b).",
-          status: "adverse",
-        },
-        {
-          id: "ev-6",
-          slNo: 6,
-          date: "28.02.2024",
-          particulars: "Complainant instituted Criminal Complaint under Section 142(1)(b) before the Chief Judicial Magistrate Court, Ernakulam (filed within 15 days of cause of action; well within 30 days limitation).",
-          exhibit: "Pleading",
-          documentTitle: "Formal Criminal Complaint & Sworn Affidavit",
-          pageRange: "1 - 13",
-          category: "Complaint Filing",
-          significance: "Institution strictly within 30-day statutory limitation period under Section 142.",
-          status: "favourable",
-        },
-      ];
-    } else {
-      // Default: Kerala Land Dispute & KSEB High-Tension Line (WP(C) 19482/2024)
-      caseMetadata = {
-        courtForum: "IN THE HIGH COURT OF KERALA AT ERNAKULAM",
-        caseNumber: "W.P.(C) No. 19482 OF 2024",
-        causeTitle: "Gopakumar Nambiar (Petitioner) vs. Kerala State Electricity Board & Others (Respondents)",
-        matterType: "Writ Petition (Civil) under Article 226 of the Constitution of India",
-        benchType: "Division Bench / Special Original Jurisdiction",
-      };
-
-      events = [
-        {
-          id: "ev-1",
-          slNo: 1,
-          date: "14.03.2018",
-          particulars: "Petitioner acquired absolute registered title and peaceful possession of 24.5 Ares in Re-Survey No. 142/2, Paravur Village via registered Sale Deed No. 1842/2018, SRO Paravur with residential homestead and yield-bearing nutmeg/coconut plantation.",
-          exhibit: "Exhibit P-1",
-          documentTitle: "Registered Absolute Sale Deed No. 1842/2018",
-          pageRange: "14 - 19",
-          category: "Title Deed",
-          significance: "Establishes unencumbered freehold ownership and locus standi of petitioner.",
-          status: "favourable",
-        },
-        {
-          id: "ev-2",
-          slNo: 2,
-          date: "04.09.2022",
-          particulars: "Jurisdictional Village Officer issued Thandapper Ledger Receipt and Possession Certificate affirming timely remittance of Basic Land Tax and physical possession of property by Petitioner.",
-          exhibit: "Exhibit P-2",
-          documentTitle: "Possession Certificate & Land Tax Remittance Receipt",
-          pageRange: "20 - 22",
-          category: "Revenue Records",
-          significance: "Continuous revenue possession without any government easement or reservation.",
-          status: "favourable",
-        },
-        {
-          id: "ev-3",
-          slNo: 3,
-          date: "12.06.2023",
-          particulars: "Officers of Respondent No. 2 (KSEB Transmission Division) made unannounced spot entry without prior statutory notice to survey 66kV transmission route bisecting Petitioner's residential courtyard.",
-          exhibit: "Exhibit P-3",
-          documentTitle: "KSEB Route Feasibility Survey Notice of Entry",
-          pageRange: "23 - 25",
-          category: "Administrative Entry",
-          significance: "Infringement of procedural mandate under Section 10(d) of Indian Telegraph Act, 1885.",
-          status: "procedural",
-        },
-        {
-          id: "ev-4",
-          slNo: 4,
-          date: "28.06.2023",
-          particulars: "Petitioner submitted comprehensive Written Statutory Objection under Section 16(1) of Indian Telegraph Act before Assistant Executive Engineer pointing out feasible alternate alignment along existing PWD road margin.",
-          exhibit: "Exhibit P-4",
-          documentTitle: "Statutory Objection u/s 16(1) Indian Telegraph Act",
-          pageRange: "26 - 29",
-          category: "Statutory Objection",
-          significance: "Creates statutory bar preventing licensee from entering without District Magistrate order.",
-          status: "favourable",
-        },
-        {
-          id: "ev-5",
-          slNo: 5,
-          date: "15.01.2024",
-          particulars: "Village Officer and Local Police conducted joint site inspection and drew Contemporaneous Mahazar confirming that proposed line cuts across petitioner's dwelling house at 2.4m clearance.",
-          exhibit: "Exhibit P-5",
-          documentTitle: "Police & Village Revenue Joint Inspection Mahazar",
-          pageRange: "30 - 34",
-          category: "Spot Mahazar",
-          significance: "Judicial evidence establishing disproportionate damage contrary to Section 10(d).",
-          status: "neutral",
-        },
-        {
-          id: "ev-6",
-          slNo: 6,
-          date: "04.03.2024",
-          particulars: "Respondent No. 2 (AEE, KSEB) arbitrarily issued Impugned Summary Rejection Order No. DB-21/TR-24 refusing alternate alignment without referral to Additional District Magistrate.",
-          exhibit: "Exhibit P-6",
-          documentTitle: "Impugned Summary Rejection Order No. DB-21/TR-24",
-          pageRange: "35 - 37",
-          category: "Impugned Order",
-          significance: "Ultra vires jurisdiction; violation of Supreme Court ruling in Power Grid Corp v. Century Textiles (2017).",
-          status: "adverse",
-        },
-        {
-          id: "ev-7",
-          slNo: 7,
-          date: "18.10.2024",
-          particulars: "Petitioner instituted Writ Petition (Civil) under Article 226 before the Hon'ble High Court of Kerala challenging Exhibit P-6 order and seeking writ of mandamus directing referral to District Magistrate under Section 16(1).",
-          exhibit: "Pleading",
-          documentTitle: "Writ Petition (Civil) Memorandum & Grounds",
-          pageRange: "1 - 13",
-          category: "High Court Filing",
-          significance: "Seeks quashing of Exhibit P-6 and ad-interim stay of line drawing.",
+          category: "Statutory Notice",
+          significance: "Mandatory notice compliance under Section 138(b).",
           status: "favourable",
         },
       ];
@@ -1279,90 +1164,64 @@ export const extractCaseChronology = async (req, res) => {
 
 export const auditChronologyConflicts = async (req, res) => {
   try {
-    const { events = [], bundleType = "kerala_land_kseb" } = req.body;
+    const { events = [] } = req.body;
 
-    let contradictions = [];
-    let limitationAlerts = [];
-    let proceduralDefects = [];
-    let curativePleadingClause = "";
+    const contradictions = [];
+    const limitationAlerts = [];
+    const proceduralDefects = [];
 
-    if (bundleType === "s138_ni_act") {
-      contradictions = [
-        {
-          id: "c-1",
-          severity: "medium",
-          title: "Bank Memo Date vs Postal Dispatch Alignment",
-          detail: "Return Memo is dated 15.01.2024, whereas Demand Notice was dispatched on 25.01.2024 (10-day gap). Verify Complainant's intimation date to preempt defense delay objection.",
-          reconciliation: "Pleaded in Para 5 that Complainant received written intimation from bank on 18.01.2024; hence notice was dispatched within 7 days of actual knowledge.",
-        },
-      ];
-
-      limitationAlerts = [
-        {
-          id: "lim-1",
-          severity: "low",
-          statute: "Section 142(1)(b), Negotiable Instruments Act, 1881",
-          finding: "Cause of action crystallized on 13.02.2024. Complaint instituted on 28.02.2024 (15 days elapsed).",
-          status: "Strictly within 30-day limitation window (15 days remaining before bar).",
-        },
-      ];
-
-      proceduralDefects = [
-        {
-          id: "p-1",
-          severity: "low",
-          title: "Postal Track Consignment Certificate",
-          finding: "Ensure web delivery track is supported by Certificate under Section 65B of Indian Evidence Act / Section 63 BSA, 2023.",
-          solution: "Affix Section 63 BSA certificate with counsel attestation.",
-        },
-      ];
-
-      curativePleadingClause = `The Complainant submits that the Statutory Demand Notice was issued strictly within 30 days of receiving the Bank Memo. The Accused having failed to discharge the liability within 15 days of delivery on 28.01.2024, this complaint is instituted well within the 30-day window under Section 142(1)(b) of the Negotiable Instruments Act.`;
-    } else {
-      // Default: Kerala Land Dispute & KSEB
-      contradictions = [
-        {
-          id: "c-1",
-          severity: "high",
-          title: "Survey Number Mismatch: Sale Deed vs. Scene Mahazar",
-          detail: "Sale Deed Exhibit P-1 conveys 'Re-Survey No. 142/2', whereas Village Police Mahazar Exhibit P-5 documents spot inspection over 'Re-Survey No. 142/2-A'.",
-          reconciliation: "Incorporate clarificatory averment in Synopsis Para 3: 'Re-Survey No. 142/2 was sub-divided into 142/2-A during the 2021 Taluk Resurvey without alteration of metes, bounds, or possession.'",
-        },
-        {
-          id: "c-2",
-          severity: "medium",
-          title: "Clearance Measurement Divergence in Route Feasibility",
-          detail: "KSEB Route Notice (Exhibit P-3) alleges vertical clearance of 4.1 meters from dwelling house, whereas contemporaneous Spot Mahazar (Exhibit P-5) recorded actual clearance of only 2.4 meters.",
-          reconciliation: "Highlight that Exhibit P-5 is an objective joint revenue inspection signed by the Village Officer, superseding ex-parte assertions of the transmission licensee.",
-        },
-      ];
-
-      limitationAlerts = [
-        {
-          id: "lim-1",
-          severity: "medium",
-          statute: "Article 226, Constitution of India & Section 16(1) Indian Telegraph Act",
-          finding: "Impugned Order Exhibit P-6 was rendered on 04.03.2024; Writ Petition instituted on 18.10.2024 (7 months delay).",
-          status: "Requires explaining bona-fide delay on grounds of pending representation before District Collector.",
-        },
-      ];
-
-      proceduralDefects = [
-        {
-          id: "p-1",
-          severity: "high",
-          title: "Jurisdictional Breach of Section 16(1) Telegraph Act",
-          finding: "Once the landholder registers written objection under Section 16(1), the licensee has no statutory jurisdiction to decide its own case. Referral to Additional District Magistrate is mandatory under Kerala High Court ruling in Valsamma v. KSEB (2024).",
-          solution: "Draft specific Writ of Certiorari & Mandamus grounds asserting total lack of jurisdiction in Exhibit P-6.",
-        },
-      ];
-
-      curativePleadingClause = `The Petitioner respectfully submits that the delay in approaching this Hon'ble Court following Exhibit P-6 order was solely attributable to the bona fide pursuit of administrative remedies before the District Magistrate. In view of the law declared in Valsamma v. KSEB (2024 (2) KHC 401 DB), Respondent No. 2 possesses zero jurisdiction to override petitioner's Section 16 objection without an order from the District Magistrate.`;
+    if (!Array.isArray(events) || events.length === 0) {
+      return res.json({
+        success: true,
+        auditPassed: true,
+        discrepanciesCount: 0,
+        contradictions: [],
+        limitationAlerts: [],
+        proceduralDefects: [],
+        curativePleadingClause: "Add at least one dated chronology event to run contradiction and limitation checks.",
+        timestamp: new Date().toISOString(),
+      });
     }
+
+    const missingExhibits = events.filter((e) => !e.exhibit || e.exhibit === "—");
+    if (missingExhibits.length > 0) {
+      proceduralDefects.push({
+        id: "p-missing-exhibit",
+        severity: "medium",
+        title: `${missingExhibits.length} Event(s) Without Marked Exhibit / Annexure`,
+        finding: "Chronology entries without linked exhibits or annexure references invite court scrutiny objections.",
+        solution: "Mark each relied-upon factual event with its corresponding Exhibit or Annexure number and page range.",
+      });
+    }
+
+    const missingPages = events.filter((e) => !e.pageRange || e.pageRange === "—");
+    if (missingPages.length > 0) {
+      contradictions.push({
+        id: "c-missing-pages",
+        severity: "low",
+        title: `${missingPages.length} Event(s) Missing Paperbook Page Pagination`,
+        detail: "Events without exact page references delay judicial verification during admission hearing.",
+        reconciliation: "Paginate the typed paperbook and update the page range column before e-filing.",
+      });
+    }
+
+    const adverseEvents = events.filter((e) => e.status === "adverse");
+    if (adverseEvents.length > 0) {
+      limitationAlerts.push({
+        id: "lim-adverse",
+        severity: "medium",
+        statute: "Limitation Act, 1963 / Statutory Appeal Window",
+        finding: `${adverseEvents.length} adverse order/event(s) flagged in timeline. Verify statutory limitation computed from the earliest impugned date.`,
+        status: "Verify accrual of cause of action and exclude certified-copy preparation days under Section 12.",
+      });
+    }
+
+    const curativePleadingClause =
+      "The Petitioner/Applicant respectfully submits that the present proceeding has been instituted bona fide and within the period of limitation computed from accrual of cause of action, supported by authenticated documentary exhibits.";
 
     res.json({
       success: true,
-      auditPassed: false,
+      auditPassed: contradictions.length + limitationAlerts.length + proceduralDefects.length === 0,
       discrepanciesCount: contradictions.length + limitationAlerts.length + proceduralDefects.length,
       contradictions,
       limitationAlerts,
@@ -1381,37 +1240,34 @@ export const generateHighCourtSynopsis = async (req, res) => {
     const {
       caseMetadata = {},
       events = [],
-      advocateName = "Adv. Meera Krishnan",
-      barCouncilNumber = "K/1429/2016",
+      advocateName = "[ADVOCATE NAME]",
+      barCouncilNumber = "[BAR ROLL NUMBER]",
     } = req.body;
 
-    const court = caseMetadata.courtForum || "IN THE HIGH COURT OF KERALA AT ERNAKULAM";
-    const caseNo = caseMetadata.caseNumber || "W.P.(C) No. 19482 OF 2024";
-    const causeTitle = caseMetadata.causeTitle || "Gopakumar Nambiar v. Kerala State Electricity Board & Others";
-    const matterType = caseMetadata.matterType || "Writ Petition (Civil) under Article 226 of the Constitution of India";
+    const court = caseMetadata.courtForum || "[COURT / TRIBUNAL FORUM]";
+    const caseNo = caseMetadata.caseNumber || "[CASE NUMBER]";
+    const causeTitle = caseMetadata.causeTitle || "[PETITIONER] vs. [RESPONDENT]";
+    const matterType = caseMetadata.matterType || "Litigation / Writ / Civil Proceeding";
 
     // Build Formatted Plain Text Synopsis
-    let textSynopsis = `${court}\n(Special Original Jurisdiction)\n\n${caseNo}\n\n`;
+    let textSynopsis = `${court}\n(Original / Appellate Jurisdiction)\n\n${caseNo}\n\n`;
     textSynopsis += `IN THE MATTER OF:\n${causeTitle}\n\n`;
     textSynopsis += `----------------------------------------------------------------------------------------\n`;
     textSynopsis += `                        SYNOPSIS AND CHRONOLOGY OF EVENTS\n`;
     textSynopsis += `----------------------------------------------------------------------------------------\n\n`;
     textSynopsis += `BRIEF SYNOPSIS:\n`;
-    textSynopsis += `This ${matterType} is instituted challenging the arbitrary action of the Respondents in seeking to draw high-tension transmission lines through the petitioner's registered residential holding in violation of Section 16(1) of the Indian Telegraph Act, 1885 and without adjudication by the District Magistrate.\n\n`;
+    textSynopsis += `This ${matterType} is instituted on the facts and chronological events enumerated below for appropriate relief before this Hon'ble Court.\n\n`;
     textSynopsis += `CHRONOLOGY OF EVENTS:\n`;
     textSynopsis += `----------------------------------------------------------------------------------------\n`;
     textSynopsis += `Sl. No. | Date       | Particulars of Events                              | Exhibit | Page\n`;
     textSynopsis += `----------------------------------------------------------------------------------------\n`;
 
-    events.forEach((ev) => {
-      textSynopsis += `${String(ev.slNo).padEnd(7)} | ${ev.date.padEnd(10)} | ${ev.particulars.slice(0, 48).padEnd(50)} | ${(ev.exhibit || "—").padEnd(7)} | ${ev.pageRange || "—"}\n`;
+    events.forEach((ev, idx) => {
+      textSynopsis += `${String(ev.slNo || idx + 1).padEnd(7)} | ${String(ev.date || "—").padEnd(10)} | ${String(ev.particulars || "").slice(0, 48).padEnd(50)} | ${String(ev.exhibit || "—").padEnd(7)} | ${ev.pageRange || "—"}\n`;
     });
     textSynopsis += `----------------------------------------------------------------------------------------\n\n`;
-    textSynopsis += `POINTS FOR DETERMINATION:\n`;
-    textSynopsis += `I. Whether the licensee can override a written objection under Section 16(1) without approaching the District Magistrate?\n`;
-    textSynopsis += `II. Whether the impugned action violates Section 10(d) of the Indian Telegraph Act, 1885 and Article 300A of the Constitution of India?\n\n`;
-    textSynopsis += `Dated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} at Ernakulam.\n\n`;
-    textSynopsis += `Counsel for the Petitioner:\n${advocateName}\nRoll No. ${barCouncilNumber}\nHigh Court Chamber Block, Ernakulam\n`;
+    textSynopsis += `Dated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}.\n\n`;
+    textSynopsis += `Counsel for the Petitioner / Applicant:\n${advocateName}${barCouncilNumber ? `\nRoll No. ${barCouncilNumber}` : ""}\n`;
 
     res.json({
       success: true,
@@ -1436,172 +1292,201 @@ export const generateHighCourtSynopsis = async (req, res) => {
 // ============================================================================
 const STANDARD_SAMPLE_AGREEMENTS = {
   commercial_msa: {
-    title: "Master Services Agreement (MSA) — IT & Cloud Operations",
-    parties: "Malabar Infotech Solutions Pvt. Ltd. (Vendor) & Coastal Retail Conglomerate (Client)",
+    title: "Master Services Agreement (MSA) — Standard Template",
+    parties: "[Vendor Entity] & [Client Entity]",
     text: `MASTER SERVICES AGREEMENT
 
-This Master Services Agreement ("Agreement") is executed at Ernakulam on this 10th day of January, 2024.
-
 CLAUSE 8. LIMITATION OF LIABILITY & INDEMNIFICATION
-8.1 The Vendor agrees to unconditionally defend, indemnify, and hold harmless the Client, its directors, and affiliates against any and all claims, actions, damages, liabilities, losses, and penalties arising from breach of this Agreement, third-party intellectual property claims, or service outages, without any financial ceiling or limitation of amount.
-8.2 The Client shall have zero liability for any indirect, incidental, or commercial loss.
+8.1 The Vendor agrees to unconditionally defend, indemnify, and hold harmless the Client against any and all claims and losses without any financial ceiling or limitation of amount.
 
 CLAUSE 12. NON-COMPETE & POST-TERMINATION RESTRAINT
-12.1 The Vendor covenants that for a period of twenty-four (24) months following termination or expiration of this Agreement, the Vendor shall not directly or indirectly provide identical or substantially similar software consulting services to any commercial entity engaged in retail operations anywhere within the territory of India.
+12.1 For a period of 24 months following termination, the Vendor shall not directly or indirectly provide competing services anywhere within the territory of India.
 
 CLAUSE 15. TERMINATION FOR CONVENIENCE
-15.1 The Client reserves the unilateral right to terminate this Agreement at any time with immediate effect without assigning any cause. The Vendor shall have no right of termination for convenience prior to the completion of the initial three (3) year term.
+15.1 The Client reserves the unilateral right to terminate this Agreement at any time without assigning any cause or providing a reciprocal exit right.
 
 CLAUSE 18. DISPUTE RESOLUTION & ARBITRATION
-18.1 In the event of any dispute or difference arising out of or in connection with this Agreement, the matter shall be referred to the sole arbitration of an arbitrator appointed unilaterally and exclusively by the Managing Director of the Client. The decision of such arbitrator shall be final, binding, and non-appealable.
-18.2 Venue and seat of arbitration shall be Kochi, Kerala.
-
-CLAUSE 21. TRUNCATION OF LEGAL CLAIMS
-21.1 Any claim, dispute, or notice of default by the Vendor must be formally registered and instituted before court or arbitrator within six (6) months of the occurrence of the cause of action, failing which all claims shall be deemed permanently waived, barred, and extinguished.
-
-CLAUSE 24. DELAY & LIQUIDATED DAMAGES
-24.1 In the event of any service level delivery delay, the Vendor shall pay liquidated damages of ₹1,00,000/- per day of delay to the Client, irrespective of whether the Client has incurred actual financial injury or loss.`,
+18.1 Any dispute shall be referred to a sole arbitrator appointed unilaterally and exclusively by the Managing Director of the Client.`,
   },
   commercial_lease: {
-    title: "Commercial Property Indenture of Lease — Marine Drive Complex",
-    parties: "Apex Commercial Towers LLP (Lessor) & Malabar Diagnostics Centre (Lessee)",
+    title: "Commercial Lease Indenture — Standard Template",
+    parties: "[Lessor Entity] & [Lessee Entity]",
     text: `COMMERCIAL LEASE DEED
 
 CLAUSE 6. SECURITY DEPOSIT FORFEITURE
-6.1 In the event of the Lessee vacating the premises prior to the lock-in period of 36 months, the entire interest-free refundable security deposit of ₹25,00,000/- shall stand forfeited as pre-estimated damages, without the Lessor being required to prove actual vacant possession loss.
+6.1 In the event of vacating prior to the 36-month lock-in period, the entire security deposit shall stand forfeited regardless of actual loss.
 
 CLAUSE 11. UNILATERAL RENT ESCALATION
-11.1 The Lessor reserves the absolute right to increase the monthly rent by up to 20% at the end of each completed 11-month cycle at its sole discretion upon 7 days notice.
+11.1 The Lessor reserves the absolute right to increase monthly rent up to 20% upon 7 days notice.
 
 CLAUSE 14. ARBITRATION & APPOINTMENT
-14.1 Any dispute relating to ejectment, rent recovery, or property condition shall be arbitrated by a sole arbitrator nominated exclusively by the Lessor's Advisory Board.`,
+14.1 Any dispute shall be arbitrated by a sole arbitrator nominated exclusively by the Lessor.`,
   },
 };
 
 export const auditContract = async (req, res) => {
   try {
-    const { contractText = "", contractType = "commercial_msa" } = req.body;
+    const {
+      contractText = "",
+      contractType = "commercial_msa",
+      contractTitle = "",
+      parties = "",
+      useSample = false,
+    } = req.body;
+
+    const hasCustomText = Boolean(contractText && contractText.trim().length > 0);
+    if (!hasCustomText && !useSample) {
+      return res.status(400).json({
+        success: false,
+        message: "Please paste contract clauses or select a document before running an audit.",
+      });
+    }
 
     const chosenSample = STANDARD_SAMPLE_AGREEMENTS[contractType] || STANDARD_SAMPLE_AGREEMENTS.commercial_msa;
-    const textToAudit = contractText && contractText.trim().length > 30 ? contractText : chosenSample.text;
+    const textToAudit = hasCustomText ? contractText.trim() : chosenSample.text;
+    const lower = textToAudit.toLowerCase();
 
-    // Static / Rule-Based Deep Legal Audit Engine
-    const clauses = [
-      {
-        id: "cl-1",
-        clauseNumber: "Clause 18.1",
-        clauseName: "Unilateral Arbitrator Appointment",
+    const clauses = [];
+
+    if (lower.includes("unilateral") || (lower.includes("arbitrat") && (lower.includes("sole") || lower.includes("exclusively") || lower.includes("nominate")))) {
+      clauses.push({
+        id: "cl-arb",
+        clauseNumber: "Arbitration Clause",
+        clauseName: "Unilateral / One-Sided Arbitrator Appointment",
         category: "Dispute Resolution & Arbitration",
-        originalText:
-          "the matter shall be referred to the sole arbitration of an arbitrator appointed unilaterally and exclusively by the Managing Director of the Client.",
+        originalText: "Arbitrator appointment vested unilaterally in one contracting party or its officer.",
         riskLevel: "Critical (Void Ab Initio)",
         riskScore: 95,
         status: "Void Under Indian Law",
         statuteRef: "Section 12(5) & Seventh Schedule, Arbitration & Conciliation Act, 1996",
-        landmarkPrecedent:
-          "Perkins Eastman Architects DPC v. HSCC (India) Ltd. (2020) 2 SCC 760; TRF Ltd. v. Energo Engineering (2017) 8 SCC 377",
+        landmarkPrecedent: "Perkins Eastman Architects DPC v. HSCC (India) Ltd. (2020) 2 SCC 760",
         legalExplanation:
-          "A person who has an interest in the outcome or decision of the dispute is statutorily ineligible under Section 12(5) to act as an arbitrator, and is consequently disqualified from appointing anyone else as the sole arbitrator. A unilateral appointment clause is void ab initio.",
+          "A party interested in the outcome is statutorily ineligible to act as or unilaterally nominate a sole arbitrator under Section 12(5).",
         counselRedline:
-          "In the event of any dispute arising out of or in connection with this Agreement, the dispute shall be resolved through institutional arbitration administered by the High Court of Kerala Arbitration Centre under its Rules. The arbitral tribunal shall consist of a sole arbitrator appointed by mutual agreement of the parties within 30 days, failing which either party may apply to the Hon'ble High Court of Kerala under Section 11(6) of the Act. Seat and venue shall be Ernakulam, Kerala.",
-        actionRequired: "Mandatory Replacement prior to signature",
-      },
-      {
-        id: "cl-2",
-        clauseNumber: "Clause 12.1",
+          "All disputes shall be referred to an independent sole arbitrator appointed mutually within 30 days, failing which appointment shall be made under Section 11(6) of the Arbitration & Conciliation Act, 1996.",
+        actionRequired: "Replace with mutual/institutional appointment mechanism",
+      });
+    }
+
+    if (lower.includes("non-compete") || lower.includes("restrain") || lower.includes("competing") || lower.includes("not directly or indirectly")) {
+      clauses.push({
+        id: "cl-noncompete",
+        clauseNumber: "Restrictive Covenant",
         clauseName: "Post-Termination Restraint of Trade (Non-Compete)",
-        category: "Restrictive Covenants & Anti-Trust",
-        originalText:
-          "for a period of twenty-four (24) months following termination or expiration of this Agreement, the Vendor shall not directly or indirectly provide identical or substantially similar software consulting services... anywhere within the territory of India.",
+        category: "Restrictive Covenants",
+        originalText: "Post-termination prohibition restricting lawful trade, business, or services.",
         riskLevel: "Critical (Void Ab Initio)",
         riskScore: 92,
         status: "Void Under Section 27",
         statuteRef: "Section 27, Indian Contract Act, 1872",
-        landmarkPrecedent:
-          "Percept D'Mark (India) (P) Ltd. v. Zaheer Khan (2006) 4 SCC 227; Superintendence Company of India v. Krishan Murgai (1981) 2 SCC 246",
+        landmarkPrecedent: "Percept D'Mark (India) (P) Ltd. v. Zaheer Khan (2006) 4 SCC 227",
         legalExplanation:
-          "Under Section 27 of the Indian Contract Act, every agreement by which any person is restrained from exercising a lawful profession, trade, or business post-contract is void to that extent. Unlike English common law, Indian courts do not apply the test of 'reasonable restraint' to post-termination non-compete clauses.",
+          "Post-termination non-compete restraints extending beyond the contract term are void under Section 27 of the Indian Contract Act.",
         counselRedline:
-          "The Vendor covenants that during the term of this Agreement and for a period of twelve (12) months thereafter, the Vendor shall not solicit the Client's existing customers using confidential information. Both parties agree that this covenant does not restrain the Vendor from carrying on its legitimate trade or profession in compliance with Section 27 of the Indian Contract Act, 1872.",
+          "Restrict covenants post-termination strictly to non-disclosure of confidential information and non-solicitation of active personnel/clients.",
         actionRequired: "Narrow to confidentiality & non-solicitation only",
-      },
-      {
-        id: "cl-3",
-        clauseNumber: "Clause 21.1",
-        clauseName: "Truncation of Statutory Limitation Period (6 Months Bar)",
+      });
+    }
+
+    if (lower.includes("waived") || lower.includes("extinguish") || (lower.includes("month") && lower.includes("claim") && lower.includes("bar"))) {
+      clauses.push({
+        id: "cl-lim",
+        clauseNumber: "Claims Limitation",
+        clauseName: "Contractual Truncation of Limitation Period",
         category: "Limitation & Access to Justice",
-        originalText:
-          "Any claim, dispute, or notice of default by the Vendor must be formally registered and instituted before court or arbitrator within six (6) months of the occurrence... failing which all claims shall be deemed permanently waived, barred, and extinguished.",
+        originalText: "Shortened limitation window extinguishing statutory rights or remedies prior to statutory period.",
         riskLevel: "Critical (Void Ab Initio)",
         riskScore: 89,
         status: "Void Under Section 28",
         statuteRef: "Section 28(b), Indian Contract Act, 1872",
-        landmarkPrecedent:
-          "National Insurance Co. Ltd. v. Sujir Ganesh Nayak & Co. (1997) 4 SCC 366; Union of India v. Indusind Bank Ltd. (2016) 9 SCC 720",
+        landmarkPrecedent: "Union of India v. Indusind Bank Ltd. (2016) 9 SCC 720",
         legalExplanation:
-          "Section 28 explicitly renders void any agreement that extinguishes the rights of any party thereto, or discharges any party from liability, on the expiry of a specified period so as to restrict any party from enforcing their rights before courts within the statutory 3-year limitation period.",
+          "Agreements curtailing the statutory limitation period or extinguishing rights upon shorter expiry are void under Section 28.",
         counselRedline:
-          "Any claim or dispute arising out of or relating to this Agreement may be instituted within the statutory periods of limitation prescribed under the Limitation Act, 1963. The parties agree to first engage in good-faith executive escalation for a period of twenty-one (21) days prior to initiating arbitral proceedings.",
-        actionRequired: "Delete truncation clause entirely",
-      },
-      {
-        id: "cl-4",
-        clauseNumber: "Clause 8.1",
-        clauseName: "Uncapped Indemnity & Consequential Losses",
+          "All claims and remedies shall remain governed by statutory periods under the Limitation Act, 1963.",
+        actionRequired: "Delete limitation curtailment language",
+      });
+    }
+
+    if (lower.includes("indemnif") || lower.includes("without any financial ceiling") || lower.includes("unlimited liability")) {
+      clauses.push({
+        id: "cl-indem",
+        clauseNumber: "Indemnity / Liability",
+        clauseName: "Uncapped Indemnity & Consequential Exposure",
         category: "Liability Allocation & Risk Caps",
-        originalText:
-          "The Vendor agrees to unconditionally defend, indemnify, and hold harmless the Client... against any and all claims, actions, damages, liabilities, losses, and penalties... without any financial ceiling or limitation of amount.",
+        originalText: "Indemnification obligations lacking aggregate monetary cap or exclusion of indirect loss.",
         riskLevel: "High Risk (Unbalanced Exposure)",
         riskScore: 78,
         status: "Commercial Exposure",
         statuteRef: "Section 73, Indian Contract Act, 1872",
-        landmarkPrecedent:
-          "Kailash Nath Associates v. Delhi Development Authority (2015) 4 SCC 136; Hadley v. Baxendale (1854)",
+        landmarkPrecedent: "Kailash Nath Associates v. DDA (2015) 4 SCC 136",
         legalExplanation:
-          "Uncapped indemnities expose the vendor to remote, indirect, and unlimited consequential business losses that far exceed the commercial consideration of the contract, contrary to the causation boundaries codified in Section 73.",
+          "Uncapped indemnity clauses expose the obligor to disproportionate and indirect damages beyond contract consideration.",
         counselRedline:
-          "The Vendor's maximum aggregate liability arising out of or in connection with this Agreement, whether in contract, tort (including negligence), or under an indemnity, shall in no event exceed the total fees actually received by the Vendor in the preceding twelve (12) months. Neither party shall be liable for indirect, special, incidental, or consequential loss.",
-        actionRequired: "Insert reciprocal 12-month fee cap & carve out indirect damages",
-      },
-      {
-        id: "cl-5",
-        clauseNumber: "Clause 24.1",
-        clauseName: "Liquidated Damages Stipulation in Terrorem",
+          "Aggregate liability under indemnity shall not exceed fees paid in the preceding 12 months, excluding indirect or consequential damages.",
+        actionRequired: "Insert monetary cap & exclude consequential loss",
+      });
+    }
+
+    if (lower.includes("liquidated damages") || lower.includes("forfeit") || lower.includes("penalty")) {
+      clauses.push({
+        id: "cl-ld",
+        clauseNumber: "Damages / Forfeiture",
+        clauseName: "Liquidated Damages / Forfeiture Stipulations",
         category: "Damages & Penalty Doctrine",
-        originalText:
-          "the Vendor shall pay liquidated damages of ₹1,00,000/- per day of delay to the Client, irrespective of whether the Client has incurred actual financial injury or loss.",
+        originalText: "Pre-fixed penalty or deposit forfeiture stipulation without proof of actual damage.",
         riskLevel: "Medium Risk (Penalty Doctrine)",
         riskScore: 65,
         status: "Enforceability Subject to Proof",
         statuteRef: "Section 74, Indian Contract Act, 1872",
-        landmarkPrecedent:
-          "Fateh Chand v. Balkishan Dass (1964) 1 SCR 515; Maula Bux v. Union of India (1969) 2 SCC 554",
+        landmarkPrecedent: "Fateh Chand v. Balkishan Dass (1964) 1 SCR 515",
         legalExplanation:
-          "Under Section 74 of the Indian Contract Act, naming a sum irrespective of actual loss operates as a penalty. The aggrieved party is entitled only to reasonable compensation not exceeding the named amount, upon proving genuine damage unless the loss is incapable of exact assessment.",
+          "Stipulations operating in terrorem are unenforceable unless proven as a genuine pre-estimate of reasonable compensation under Section 74.",
         counselRedline:
-          "In the event of unexcused milestone delay attributable solely to the Vendor, the Client may levy agreed liquidated damages at the rate of 0.5% of the delayed milestone fee per complete week of delay, subject to an aggregate ceiling of 5% of the Total Contract Value, as a genuine and reasonable pre-estimate of administrative loss.",
-        actionRequired: "Cap at 5% Total Value and clarify pre-estimate",
-      },
-      {
-        id: "cl-6",
-        clauseNumber: "Clause 15.1",
-        clauseName: "Unilateral Termination for Convenience without Cure",
+          "Specify liquidated damages as a reasonable pre-estimate subject to a capped percentage and mitigation obligations.",
+        actionRequired: "Cap quantum and establish pre-estimate rationale",
+      });
+    }
+
+    if (lower.includes("terminate") || lower.includes("termination") || lower.includes("escalation")) {
+      clauses.push({
+        id: "cl-term",
+        clauseNumber: "Termination / Commercial Terms",
+        clauseName: "Asymmetric Termination or Escalation Terms",
         category: "Termination & Equity",
-        originalText:
-          "The Client reserves the unilateral right to terminate this Agreement at any time with immediate effect without assigning any cause. The Vendor shall have no right of termination for convenience...",
+        originalText: "Termination for convenience or unilateral commercial variation without reciprocal notice/cure.",
         riskLevel: "Medium Risk (Commercial Imbalance)",
         riskScore: 58,
         status: "Onerous Term",
         statuteRef: "Specific Relief Act, 1963 (Section 14 & 20A)",
-        landmarkPrecedent:
-          "Central Inland Water Transport Corp. v. Brojo Nath Ganguly (1986) 3 SCC 156",
+        landmarkPrecedent: "Central Inland Water Transport Corp. v. Brojo Nath Ganguly (1986) 3 SCC 156",
         legalExplanation:
-          "Unilateral termination without reciprocal exit provisions or a mandatory 30-day cure period for material breach creates unconscionable business exposure and leaves the vendor vulnerable to sudden revenue cessation.",
+          "One-sided exit or escalation clauses without a mutual notice window or 30-day breach cure period create operational risk.",
         counselRedline:
-          "Either party may terminate this Agreement for convenience by giving sixty (60) days prior written notice. In the event of material breach, the non-breaching party shall issue a formal cure notice specifying thirty (30) days to remedy the breach before exercising any right of termination.",
-        actionRequired: "Make termination mutual with 60 days notice & 30 days cure",
-      },
-    ];
+          "Provide mutual 60-day convenience termination notice and a mandatory 30-day written cure period for remediable breaches.",
+        actionRequired: "Make exit rights mutual with written cure window",
+      });
+    }
+
+    if (clauses.length === 0) {
+      clauses.push({
+        id: "cl-baseline",
+        clauseNumber: "General Review",
+        clauseName: "No High-Severity Statutory Red Flags Matched",
+        category: "Baseline Compliance Check",
+        originalText: textToAudit.slice(0, 220),
+        riskLevel: "Low Risk (Baseline Pass)",
+        riskScore: 22,
+        status: "Standard Review",
+        statuteRef: "Indian Contract Act, 1872 (General Principles)",
+        landmarkPrecedent: "Standard Commercial Contracting Norms",
+        legalExplanation:
+          "No explicit unilateral arbitrator, Section 27 non-compete, or Section 28 limitation truncation phrasing was detected in the supplied text. Perform manual commercial verification of consideration, jurisdiction, and execution stamp duty.",
+        counselRedline:
+          "Verify governing law, stamp duty compliance, notice addresses, and authorized signatory credentials prior to execution.",
+        actionRequired: "Verify commercial schedules & stamp duty",
+      });
+    }
 
     const overallRiskScore = Math.round(
       clauses.reduce((acc, c) => acc + c.riskScore, 0) / clauses.length
@@ -1609,8 +1494,8 @@ export const auditContract = async (req, res) => {
 
     res.json({
       success: true,
-      contractTitle: chosenSample.title,
-      parties: chosenSample.parties,
+      contractTitle: contractTitle || (hasCustomText ? "Submitted Contract Under Counsel Review" : chosenSample.title),
+      parties: parties || (hasCustomText ? "Contracting Parties (Per Submitted Instrument)" : chosenSample.parties),
       overallRiskScore,
       riskLevel: overallRiskScore > 70 ? "Critical / High Risk" : overallRiskScore > 45 ? "Moderate Risk" : "Low Risk",
       totalClausesAudited: clauses.length,
@@ -1619,14 +1504,16 @@ export const auditContract = async (req, res) => {
       mediumWarnings: clauses.filter((c) => c.riskLevel.includes("Medium")).length,
       clauses,
       statutesCovered: [
-        "Indian Contract Act, 1872 (Section 27, 28, 73 & 74)",
-        "Arbitration & Conciliation Act, 1996 (Section 12(5) & Seventh Schedule)",
+        "Indian Contract Act, 1872",
+        "Arbitration & Conciliation Act, 1996",
         "Specific Relief Act, 1963",
         "Limitation Act, 1963",
       ],
       executiveSummary:
-        "Commercial contract contains 3 clauses that are void ab initio under Indian law: Unilateral Arbitrator Appointment (Perkins Eastman doctrine), Post-Termination Non-Compete (Section 27 Indian Contract Act), and a 6-month Truncated Limitation Clause (Section 28). Signing this agreement without counsel redlines leaves the client legally vulnerable.",
-      mode: "dummy_data",
+        overallRiskScore > 45
+          ? `Contract scan flagged ${clauses.length} clause area(s) requiring counsel review or redline negotiation before execution.`
+          : "Baseline automated scan completed without major statutory red flags; complete standard commercial verification.",
+      mode: "rule_engine",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

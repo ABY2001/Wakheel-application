@@ -801,107 +801,6 @@ const MORE_CATEGORIES = [
   { id: "commercial", label: "Commercial" },
 ];
 
-const ACTIVE_CASE_AUTOFILL_DATA: Record<string, string> = {
-  "Forum or authority name": "HIGH COURT OF KERALA AT ERNAKULAM",
-  "Case type and number or reference if any": "W.P.(C) No. 19482",
-  "Year or blank": "2024",
-  "Cause title or matter description": "K. Gopakumar Nambiar v. Kerala State Electricity Board Ltd. & Others",
-  "DEPONENT NAME": "K. GOPAKUMAR NAMBIAR",
-  "PURPOSE OF AFFIDAVIT TITLE": "IN SUPPORT OF WRIT PETITION",
-  "Deponent name": "K. Gopakumar Nambiar",
-  "Son Daughter Wife Of": "Son of",
-  "Parent or spouse name": "Late K. Raghavan Nambiar",
-  "Age": "48",
-  "Occupation": "Industrialist & Exporter",
-  "Address": "TC 14/1922, 'Sreevalsam', Panampilly Nagar, Kochi, Kerala 682036",
-  "Deponent capacity": "Petitioner",
-  "Source Of Authority If Representative": "as Managing Director authorized vide Board Resolution dated 12.01.2024",
-  "Purpose of affidavit": "to place on record material facts and documentary exhibits in support of the prayer for stay of overhead line drawing across petitioner's industrial premises",
-  "Fact 1": "The petitioner is the absolute title-holder in possession of 1.42 Acres of registered commercial property in Sy. No. 412/1-B of Elamkulam Village, Kanayannur Taluk.",
-  "Fact 2": "On 14.10.2024, respondent officials attempted unlawful entry into petitioner's premises without prior statutory notice under Section 16(1) of the Indian Telegraph Act, 1885.",
-  "Fact 3": "The alternative realignment proposed by the Petitioner through the public road boundary is technically feasible and incurs zero commercial damage.",
-  "Fact 4": "Unless this Hon'ble Court grants an interim order of status quo, grave and irreparable injury will be caused to the petitioner's export manufacturing unit.",
-  "Purpose specific averments paragraph 1": "The impugned alignment arbitrarily traverses right across the petitioner's heavy machinery testing bay, creating acute safety hazards.",
-  "Purpose specific averments paragraph 2": "The District Magistrate has failed to exercise statutory jurisdiction under Section 16(1) to adjudicate the petitioner's written objection dated 18.10.2024.",
-  "Numbered paragraphs": "1 to 8",
-  "Place of affirmation": "Ernakulam",
-  "Day": "29th",
-  "Month": "October",
-  "Year": "2024",
-
-  // Common cross-template mocks
-  "High Court or Judicial Forum": "HIGH COURT OF KERALA AT ERNAKULAM",
-  "Writ petition number": "19482",
-  "Original petitioner name": "K. Gopakumar Nambiar",
-  "Respondent name and capacity": "Kerala State Electricity Board Ltd., Rep. by Secretary",
-  "Authority designation of deponent": "Executive Engineer, Transmission Division, Kalamassery",
-  "Preliminary objection points": "Alternative statutory remedy exists before the District Magistrate under Section 16(1) of the Indian Telegraph Act, 1885.",
-  "Para wise rebuttal points": "The 110kV line route was finalized following aerial survey and technical clearance by the Chief Electrical Inspectorate.",
-  "Statutory justification": "Actions taken strictly conform to Section 67 & 68 of the Electricity Act, 2003.",
-  "Place of verification": "Ernakulam",
-  "Court Name": "HIGH COURT OF KERALA AT ERNAKULAM",
-  "Applicant Name": "K. Gopakumar Nambiar",
-  "Ground of extreme urgency": "Physical tower installation work is scheduled to commence on 01.11.2024.",
-  "Impugned event date or deadline": "01.11.2024",
-  "Irreparable injury description": "Irreversible damage will be caused to export operations.",
-  "Place": "Kochi",
-  "Date": "29.10.2024",
-  "Client company name": "Apex Logistics & Infotech Solutions Ltd.",
-  "Client registered address": "Infopark Phase II, Kakkanad, Kochi, Kerala 682042",
-  "Consultant name and PAN": "Adv. Rajesh V. Kurup, PAN: ABCPK1234F",
-  "Consultant residential or office address": "Chamber 412, High Court Lawyers Chamber Complex, Ernakulam",
-  "Scope of services": "Regulatory statutory compliance advisory, corporate dispute resolution, and contractual drafting",
-  "Monthly retainer fee in INR": "1,25,000",
-  "Milestone payment schedule": "payable by 5th day of every calendar month",
-  "Termination notice days": "30",
-  "Confidentiality period": "3",
-  "Governing jurisdiction city": "Kochi / Ernakulam",
-  "Execution Date": "29th October 2024",
-  "First Party Name and Details": "Apex Logistics Ltd. represented by MD K. Gopakumar",
-  "Second Party Name and Details": "Malabar Maritime Supply Chain LLP",
-  "Purpose of collaboration": "Joint logistics warehousing and customs clearing automation",
-  "Mutual obligations": "Parties shall share facility space and ERP software infrastructure",
-  "Validity period months": "12",
-  "Exclusivity window": "90 days",
-  "Governing City": "Ernakulam",
-  "Drawer name and address": "M/s Greenfield Agri Ventures, MG Road, Ernakulam",
-  "Payee name and address": "Highland Spices & Exports Pvt. Ltd., Willingdon Island, Kochi",
-  "Cheque number and date": "Cheque No. 492019 dated 15.09.2024",
-  "Cheque amount in INR": "14,50,000",
-  "Drawee bank and branch": "HDFC Bank Ltd., Ravipuram Branch, Kochi",
-  "Return memo date and reason": "22.09.2024 with memo 'FUNDS INSUFFICIENT'",
-  "Advocate name and office address": "Adv. S. Venugopal, Chamber 314, HC Road, Ernakulam",
-  "Tenant name and demised premises": "M/s Oceanic Traders, Door No. 44/129, Marine Drive, Kochi",
-  "Landlord name and address": "Sri. K. Gopakumar Nambiar, Panampilly Nagar, Kochi",
-  "Monthly rental rate INR": "45,000",
-  "Arrears amount and months": "1,35,000 (3 months default)",
-  "Notice expiry date": "15th November 2024",
-  "Petitioner name and address": "K. Gopakumar Nambiar, Panampilly Nagar, Kochi",
-  "Respondent 1 authority": "Kerala State Electricity Board Ltd., Rep. by Secretary, Vydyuthi Bhavanam, Thiruvananthapuram",
-  "Property survey number and village": "Sy. No. 412/1-B, Elamkulam Village, Kanayannur Taluk",
-  "Impugned order number and date": "Order No. KSEB/CE/TRANS/2024-912 dated 03.10.2024",
-  "Specific prayers": "Issue a Writ of Certiorari quashing impugned order and mandamus directing fair consideration of alternative route alignment",
-  "Grounds of violation": "Arbitrary overhead drawing without Section 16(1) hearing",
-  "Counsel Name": "Adv. S. Venugopal & Associates",
-  "Accused name and age": "Arjun Menon, Aged 32 years",
-  "Police station and crime number": "Infopark Police Station, Crime No. 412/2024",
-  "Offences under BNS": "Sections 316(2), 318(4) of Bharatiya Nyaya Sanhita, 2023",
-  "Grounds of insufficient evidence": "The alleged transaction is purely of a civil contractual nature; no custodial interrogation is warranted.",
-  "Cooperation undertaking": "Applicant undertakes to appear before the Investigating Officer as and when directed and surrender passport.",
-  "Vendor name and address": "Sri. K. Gopakumar Nambiar, Panampilly Nagar, Kochi",
-  "Purchaser name and address": "M/s Skyline Realty Developers LLP, MG Road, Ernakulam",
-  "Total sale consideration INR": "2,85,00,000",
-  "Advance earnest money INR": "50,00,000",
-  "Schedule property details sy no": "Sy. No. 412/1-B, Elamkulam Village, measuring 1.42 Acres",
-  "Conveyance closing period months": "3",
-  "Claimant name and counsel": "M/s Malabar Marine Exports, represented by Adv. S. Venugopal",
-  "Respondent name and address": "Oceanic Cold Storage Logistics Pvt. Ltd., Port Road, Kochi",
-  "Arbitration clause number": "Clause 18 (Dispute Resolution by Sole Arbitrator)",
-  "Statement of facts and default": "Failure to remit cold storage freight charges despite issuance of reconciled account statements",
-  "Total claimed sum in INR": "48,75,000",
-  "Interest rate percent": "18",
-};
-
 export default function TemplatesLibraryView({
   onSelectTemplateForFiling,
 }: {
@@ -970,18 +869,33 @@ export default function TemplatesLibraryView({
     if (!previewTemplate) return;
     setIsAiFilling(true);
     setTimeout(() => {
+      let profileName = "";
+      if (typeof window !== "undefined") {
+        try {
+          const u = JSON.parse(localStorage.getItem("wakheel_user") || "{}");
+          profileName = u.fullName || u.name || "";
+        } catch {
+          // ignore
+        }
+      }
       const newVals: Record<string, string> = { ...particularsValues };
       previewTemplate.fillableVariables.forEach((variable) => {
-        if (ACTIVE_CASE_AUTOFILL_DATA[variable]) {
-          newVals[variable] = ACTIVE_CASE_AUTOFILL_DATA[variable];
+        if (newVals[variable]?.trim()) return;
+        const lower = variable.toLowerCase();
+        if (profileName && (lower.includes("deponent name") || lower.includes("applicant name") || lower.includes("counsel name") || lower.includes("advocate name"))) {
+          newVals[variable] = profileName;
+        } else if (lower === "date") {
+          newVals[variable] = new Date().toLocaleDateString("en-GB");
+        } else if (lower === "year" || lower.includes("year or blank")) {
+          newVals[variable] = String(new Date().getFullYear());
         } else {
-          newVals[variable] = `[${variable} - Auto-generated from active matter records]`;
+          newVals[variable] = `[Enter ${variable}]`;
         }
       });
       setParticularsValues(newVals);
       setIsAiFilling(false);
-      showToast("✨ Auto-filled particulars from active case WP(C) 19482/2024");
-    }, 400);
+      showToast("Prepared template placeholders from current workspace context");
+    }, 300);
   };
 
   const handleCopyDraft = (text: string) => {

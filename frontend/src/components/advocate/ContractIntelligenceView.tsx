@@ -61,10 +61,10 @@ interface AuditReport {
 }
 
 export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> = ({
-  currentMatter = "ARB/NCLT/KOCHI/2024/041 - Malabar Infotech Solutions",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
-  token = "advocate_token",
+  currentMatter = "",
+  advocateName = "",
+  barCouncilNumber = "",
+  token = "",
   onNavigateTab,
 }) => {
   // State: Selected template & contract text
@@ -91,8 +91,13 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // 1. Initial Contract Audit
+  // 1. Run Contract Audit against pasted or uploaded agreement text
   const runContractAudit = async (type = selectedAgreementType, customText = contractText) => {
+    if (!customText || !customText.trim()) {
+      showToast("Paste or enter contract text in the Contract Draft Canvas before auditing.");
+      return;
+    }
+
     setIsAuditing(true);
     try {
       const res = await copilotApi.auditContract({
@@ -102,18 +107,6 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
 
       if (res && res.success) {
         setAuditReport(res);
-        if (!customText) {
-          // Re-populate with sample text if empty
-          if (type === "commercial_msa") {
-            setContractText(
-              `MASTER SERVICES AGREEMENT\n\nExecuted at Ernakulam.\n\nCLAUSE 8. LIMITATION OF LIABILITY & INDEMNIFICATION\n8.1 The Vendor agrees to unconditionally defend, indemnify, and hold harmless the Client against any and all claims, actions, damages, liabilities, losses, and penalties arising from breach of this Agreement without any financial ceiling or limitation of amount.\n\nCLAUSE 12. NON-COMPETE & POST-TERMINATION RESTRAINT\n12.1 The Vendor covenants that for a period of twenty-four (24) months following termination, the Vendor shall not directly or indirectly provide identical software consulting services anywhere within India.\n\nCLAUSE 15. TERMINATION FOR CONVENIENCE\n15.1 The Client reserves the unilateral right to terminate this Agreement at any time with immediate effect without cause. The Vendor shall have no right of termination for convenience.\n\nCLAUSE 18. DISPUTE RESOLUTION & ARBITRATION\n18.1 All disputes shall be referred to the sole arbitration of an arbitrator appointed unilaterally and exclusively by the Managing Director of the Client.\n\nCLAUSE 21. TRUNCATION OF LEGAL CLAIMS\n21.1 Any claim or dispute must be formally instituted before court or arbitrator within six (6) months of occurrence, failing which all claims shall be permanently waived and barred.\n\nCLAUSE 24. DELAY & LIQUIDATED DAMAGES\n24.1 In the event of service delay, the Vendor shall pay liquidated damages of ₹1,00,000/- per day irrespective of actual loss.`
-            );
-          } else {
-            setContractText(
-              `COMMERCIAL LEASE DEED\n\nMarine Drive Complex, Ernakulam.\n\nCLAUSE 6. SECURITY DEPOSIT FORFEITURE\n6.1 In the event of the Lessee vacating prior to 36 months, the entire security deposit of ₹25,00,000/- shall stand forfeited without proof of actual loss.\n\nCLAUSE 11. UNILATERAL RENT ESCALATION\n11.1 The Lessor reserves the absolute right to increase rent by up to 20% at its sole discretion upon 7 days notice.\n\nCLAUSE 14. ARBITRATION\n14.1 Any dispute shall be arbitrated by a sole arbitrator nominated exclusively by the Lessor's Advisory Board.`
-            );
-          }
-        }
         showToast("Contract Risk Audit completed with statutory concordance.");
       }
     } catch (err: any) {
@@ -123,10 +116,6 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
       setIsAuditing(false);
     }
   };
-
-  useEffect(() => {
-    runContractAudit("commercial_msa");
-  }, []);
 
   // 2. Apply Counsel Redline to Contract Text
   const handleApplyRedline = (clause: AuditedClause) => {
@@ -239,7 +228,7 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
         <body>
           <div class="header">
             <div class="title">CHAMBER RISK AUDIT &amp; CONTRACT INTELLIGENCE REPORT</div>
-            <div class="meta">WAKHEEL LEGAL TECHNOLOGY • ADV. MEERA KRISHNAN (ROLL NO: ${barCouncilNumber})</div>
+            <div class="meta">WAKHEEL LEGAL TECHNOLOGY • ${(advocateName || "CHAMBER COUNSEL").toUpperCase()}${barCouncilNumber ? ` (ROLL NO: ${barCouncilNumber})` : ""}</div>
           </div>
           <p><b>Agreement Under Audit:</b> ${auditReport.contractTitle}</p>
           <p><b>Parties:</b> ${auditReport.parties}</p>
@@ -317,7 +306,7 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-black dark:text-white transition-colors border border-zinc-200 dark:border-zinc-800 disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isAuditing ? "animate-spin" : ""}`} />
-              <span>Re-Audit Contract</span>
+              <span>{auditReport ? "Re-Audit Contract" : "Run Statutory Audit"}</span>
             </button>
 
             <button
@@ -358,10 +347,7 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
             Agreement:
           </span>
           <button
-            onClick={() => {
-              setSelectedAgreementType("commercial_msa");
-              runContractAudit("commercial_msa", "");
-            }}
+            onClick={() => setSelectedAgreementType("commercial_msa")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors shrink-0 border ${
               selectedAgreementType === "commercial_msa"
                 ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
@@ -371,17 +357,14 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
             Master Services Agreement (MSA)
           </button>
           <button
-            onClick={() => {
-              setSelectedAgreementType("commercial_lease");
-              runContractAudit("commercial_lease", "");
-            }}
+            onClick={() => setSelectedAgreementType("commercial_lease")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors shrink-0 border ${
               selectedAgreementType === "commercial_lease"
                 ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
                 : "bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800"
             }`}
           >
-            Commercial Lease Deed (Marine Drive)
+            Commercial Lease Deed
           </button>
         </div>
       </div>
@@ -520,6 +503,17 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
 
           {/* Clause Audit Cards */}
           <div className="space-y-4">
+            {!auditReport && displayedClauses.length === 0 && (
+              <div className="p-10 text-center rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 space-y-2">
+                <Scale className="w-8 h-8 text-zinc-400 mx-auto" />
+                <h4 className="text-sm font-bold text-black dark:text-white">
+                  No Contract Text Audited Yet
+                </h4>
+                <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                  Paste any agreement or contract clauses into the Contract Draft Canvas on the right and click Run Statutory Audit to scan for risk vectors and redlines.
+                </p>
+              </div>
+            )}
             {displayedClauses.map((clause) => {
               const isApplied = appliedRedlines[clause.id];
               const isSelected = selectedClauseForAi?.id === clause.id;
@@ -691,6 +685,7 @@ export const ContractIntelligenceView: React.FC<ContractIntelligenceViewProps> =
             <textarea
               value={contractText}
               onChange={(e) => setContractText(e.target.value)}
+              placeholder="Paste agreement clauses or contract text here to scan for risk flags and statutory compliance..."
               rows={22}
               className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono text-xs leading-relaxed focus:outline-none resize-y"
               style={{ minHeight: "480px" }}

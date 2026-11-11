@@ -61,31 +61,24 @@ export interface CaseChronologyBuilderProps {
 }
 
 export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
-  currentMatterTitle = "WP(C) 19482/2024 — Gopakumar v. KSEB",
+  advocateName = "",
+  barCouncilNumber = "",
+  currentMatterTitle = "",
 }) => {
   // Active Dossier Bundle
-  const [selectedBundle, setSelectedBundle] = useState<"kerala_land_kseb" | "s138_ni_act" | "custom">("kerala_land_kseb");
-  const [customDocuments, setCustomDocuments] = useState<Array<{ name: string; size: string; type: string }>>([
-    { name: "Deed_1842_2018_SRO_Paravur.pdf", size: "3.4 MB", type: "Sale Deed" },
-    { name: "Possession_Cert_Revenue_Receipt.pdf", size: "1.1 MB", type: "Land Revenue" },
-    { name: "KSEB_Route_Notice_June2023.pdf", size: "840 KB", type: "Statutory Notice" },
-    { name: "Section_16_Telegraph_Objection.pdf", size: "1.8 MB", type: "Objection Letter" },
-    { name: "Joint_Police_Village_Mahazar_Jan2024.pdf", size: "2.6 MB", type: "Scene Mahazar" },
-    { name: "Impugned_Rejection_Order_AEE.pdf", size: "620 KB", type: "Impugned Order" },
-  ]);
+  const [selectedBundle, setSelectedBundle] = useState<"kerala_land_kseb" | "s138_ni_act" | "custom">("custom");
+  const [customDocuments, setCustomDocuments] = useState<Array<{ name: string; size: string; type: string }>>([]);
 
   // View Mode: 'table' | 'timeline' | 'synopsis' | 'contradictions'
   const [activeView, setActiveView] = useState<"table" | "timeline" | "synopsis" | "contradictions">("table");
 
   // Chronology State
   const [caseMetadata, setCaseMetadata] = useState<CaseMetadata>({
-    courtForum: "IN THE HIGH COURT OF KERALA AT ERNAKULAM",
-    caseNumber: "W.P.(C) No. 19482 OF 2024",
-    causeTitle: "Gopakumar Nambiar (Petitioner) vs. Kerala State Electricity Board & Others (Respondents)",
-    matterType: "Writ Petition (Civil) under Article 226 of the Constitution of India",
-    benchType: "Special Original Jurisdiction / Division Bench",
+    courtForum: "",
+    caseNumber: currentMatterTitle ? currentMatterTitle.split("—")[0].split("-")[0].trim() : "",
+    causeTitle: currentMatterTitle || "",
+    matterType: "",
+    benchType: "",
   });
 
   const [events, setEvents] = useState<ChronologyEvent[]>([]);
@@ -133,12 +126,25 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
   // File input ref for document upload
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Initial Load: Extract chronology on mount or when bundle changes
+  // Initial Load: Extract chronology only when user documents are staged
   useEffect(() => {
-    handleRunExtraction(selectedBundle);
+    if (customDocuments.length > 0) {
+      handleRunExtraction(selectedBundle);
+    }
   }, [selectedBundle]);
 
   const handleRunExtraction = async (bundle: "kerala_land_kseb" | "s138_ni_act" | "custom") => {
+    if (customDocuments.length === 0) {
+      setEvents([]);
+      setAuditData({
+        contradictions: [],
+        limitationAlerts: [],
+        proceduralDefects: [],
+        curativePleadingClause: "",
+      });
+      return;
+    }
+
     setIsExtracting(true);
     setExtractionStage(1);
 
@@ -151,7 +157,7 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
       if (typeof copilotApi?.extractChronology === "function") {
         try {
           res = await copilotApi.extractChronology({
-            bundleType: bundle,
+            bundleType: "custom",
             documents: customDocuments,
           });
         } catch (apiErr) {
@@ -159,15 +165,21 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
         }
       }
 
-      // If API was not available or failed, use bulletproof local fallback
+      // If API was not available or failed, derive events cleanly from uploaded documents
       if (!res || !res.success) {
-        res = getLocalBundleData(bundle);
+        res = getLocalBundleData(customDocuments, caseMetadata);
       }
 
       if (res && res.success) {
         setEvents(res.events || []);
         if (res.caseMetadata) {
-          setCaseMetadata(res.caseMetadata);
+          setCaseMetadata((prev) => ({
+            courtForum: res.caseMetadata.courtForum || prev.courtForum,
+            caseNumber: res.caseMetadata.caseNumber || prev.caseNumber,
+            causeTitle: res.caseMetadata.causeTitle || prev.causeTitle,
+            matterType: res.caseMetadata.matterType || prev.matterType,
+            benchType: res.caseMetadata.benchType || prev.benchType,
+          }));
         }
 
         // Run contradiction audit
@@ -184,7 +196,7 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
         }
 
         if (!auditRes || !auditRes.success) {
-          auditRes = getLocalAuditData(bundle);
+          auditRes = getLocalAuditData(res.events || []);
         }
 
         if (auditRes && auditRes.success) {
@@ -392,8 +404,8 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
       out += `${String(ev.slNo).padEnd(7)} | ${ev.date.padEnd(10)} | ${ev.particulars.slice(0, 48).padEnd(50)} | ${(ev.exhibit || "—").padEnd(7)} | ${ev.pageRange || "—"}\n`;
     });
     out += `----------------------------------------------------------------------------------------\n`;
-    out += `\nDated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })} at Ernakulam.\n\n`;
-    out += `Counsel for the Petitioner:\n${advocateName} (Roll No. ${barCouncilNumber})\n`;
+    out += `\nDated this the ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}.\n\n`;
+    out += `Counsel for the Petitioner:\n${advocateName || "Counsel on Record"}${barCouncilNumber ? ` (Roll No. ${barCouncilNumber})` : ""}\n`;
     return out;
   };
 
@@ -451,48 +463,20 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
           </div>
         </div>
 
-        {/* Case Dossier Bundle Switcher */}
+        {/* Case Dossier Bundle Controls */}
         <div className="pt-4 border-t border-zinc-100 dark:border-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-black dark:text-white flex items-center gap-1.5 text-xs">
               <Layers className="w-3.5 h-3.5" />
-              Select Matter Dossier:
+              Case Bundle Documents:
             </span>
-            <div className="inline-flex rounded-xl border border-zinc-200 dark:border-zinc-800 p-0.5 bg-zinc-100 dark:bg-zinc-900 font-semibold">
-              <button
-                type="button"
-                onClick={() => setSelectedBundle("kerala_land_kseb")}
-                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                  selectedBundle === "kerala_land_kseb"
-                    ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
-                    : "text-zinc-500 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                WP(C) 19482/2024 (Land &amp; KSEB Line)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedBundle("s138_ni_act")}
-                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                  selectedBundle === "s138_ni_act"
-                    ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
-                    : "text-zinc-500 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                CC 412/2024 (S.138 Cheque Dishonour)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedBundle("custom")}
-                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                  selectedBundle === "custom"
-                    ? "bg-white dark:bg-black text-black dark:text-white font-bold shadow-xs"
-                    : "text-zinc-500 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                + Custom Case Bundle
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-black dark:text-white font-semibold transition-colors cursor-pointer"
+            >
+              + Upload Case Bundle Documents
+            </button>
           </div>
 
           <div className="flex items-center gap-3 text-zinc-500 font-mono text-[11px]">
@@ -1233,244 +1217,45 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
 // ============================================================================
 // BUILT-IN FALLBACK DATA GENERATORS (Turbopack & Offline Resilient)
 // ============================================================================
-function getLocalBundleData(bundle: string) {
-  if (bundle === "s138_ni_act") {
-    return {
-      success: true,
-      caseMetadata: {
-        courtForum: "Court of Judicial First Class Magistrate, Ernakulam",
-        caseNumber: "C.C. No. 412 OF 2024",
-        causeTitle: "K. R. Mohanan (Complainant) vs. S. Vijayan (Accused)",
-        matterType: "Criminal Complaint under Section 138, Negotiable Instruments Act, 1881",
-        benchType: "Magisterial Jurisdiction",
-      },
-      events: [
-        {
-          id: "ev-1",
-          slNo: 1,
-          date: "02.01.2024",
-          particulars: "Accused borrowed ₹5,00,000/- for commercial business liquidity and issued Cheque No. 481920 drawn on State Bank of India, MG Road Branch with assurance of clearance.",
-          exhibit: "Exhibit P-1",
-          documentTitle: "Loan Agreement & Original Cheque No. 481920",
-          pageRange: "14 - 17",
-          category: "Debt Inception",
-          significance: "Establishes legally enforceable debt under Section 139 presumption.",
-          status: "favourable" as const,
-        },
-        {
-          id: "ev-2",
-          slNo: 2,
-          date: "15.01.2024",
-          particulars: "Complainant presented Cheque No. 481920 through Canara Bank; dishonoured with Bank Return Memo endorsing 'Funds Insufficient'.",
-          exhibit: "Exhibit P-2",
-          documentTitle: "Bank Return Memo (Canara Bank / SBI)",
-          pageRange: "18 - 19",
-          category: "Dishonour Memo",
-          significance: "Proves dishonour within 3 months validity under Section 138(a).",
-          status: "adverse" as const,
-        },
-        {
-          id: "ev-3",
-          slNo: 3,
-          date: "25.01.2024",
-          particulars: "Statutory Legal Demand Notice issued by Advocate on behalf of Complainant calling upon Accused to discharge ₹5,00,000/- within 15 days of receipt.",
-          exhibit: "Exhibit P-3",
-          documentTitle: "Statutory Demand Notice u/s 138(b)",
-          pageRange: "20 - 24",
-          category: "Statutory Notice",
-          significance: "Complies with mandatory 30-day notice window under Section 138(b).",
-          status: "favourable" as const,
-        },
-        {
-          id: "ev-4",
-          slNo: 4,
-          date: "28.01.2024",
-          particulars: "Statutory notice served upon Accused via Registered Speed Post with Acknowledgment Due as confirmed by India Post Delivery Track report.",
-          exhibit: "Exhibit P-4",
-          documentTitle: "India Post Speed Post Tracking & Acknowledgment Card",
-          pageRange: "25 - 27",
-          category: "Service of Notice",
-          significance: "Statutory 15-day cure window triggered from 28.01.2024.",
-          status: "favourable" as const,
-        },
-        {
-          id: "ev-5",
-          slNo: 5,
-          date: "12.02.2024",
-          particulars: "Expiry of 15 days statutory cure period. Accused failed and neglected to remit payment or issue reply; statutory cause of action crystallized on 13.02.2024.",
-          exhibit: "—",
-          documentTitle: "Statutory Limitation Milestone",
-          pageRange: "—",
-          category: "Cause of Action",
-          significance: "Cause of action arises under Section 138(c) read with Section 142(1)(b).",
-          status: "adverse" as const,
-        },
-        {
-          id: "ev-6",
-          slNo: 6,
-          date: "28.02.2024",
-          particulars: "Complainant instituted Criminal Complaint under Section 142(1)(b) before Chief Judicial Magistrate Court within 30 days statutory limitation window.",
-          exhibit: "Pleading",
-          documentTitle: "Formal Criminal Complaint & Sworn Affidavit",
-          pageRange: "1 - 13",
-          category: "Complaint Filing",
-          significance: "Institution strictly within 30-day statutory limitation period under Section 142.",
-          status: "favourable" as const,
-        },
-      ],
-    };
-  }
+function getLocalBundleData(
+  documents: Array<{ name: string; size: string; type: string }>,
+  existingMeta: CaseMetadata
+) {
+  const events: ChronologyEvent[] = documents.map((doc, idx) => ({
+    id: `ev-${Date.now()}-${idx + 1}`,
+    slNo: idx + 1,
+    date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }).replace(/\//g, "."),
+    particulars: `Uploaded ${doc.type || "case document"}: ${doc.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}`,
+    exhibit: `Exhibit P-${idx + 1}`,
+    documentTitle: doc.name,
+    pageRange: `${idx * 3 + 1} - ${(idx + 1) * 3}`,
+    category: doc.type || "Uploaded Record",
+    significance: "Staged from uploaded chamber paper-book file.",
+    status: "neutral" as const,
+  }));
 
-  // Default: Kerala Land Dispute & KSEB Line
   return {
     success: true,
-    caseMetadata: {
-      courtForum: "IN THE HIGH COURT OF KERALA AT ERNAKULAM",
-      caseNumber: "W.P.(C) No. 19482 OF 2024",
-      causeTitle: "Gopakumar Nambiar (Petitioner) vs. Kerala State Electricity Board & Others (Respondents)",
-      matterType: "Writ Petition (Civil) under Article 226 of the Constitution of India",
-      benchType: "Special Original Jurisdiction / Division Bench",
-    },
-    events: [
-      {
-        id: "ev-1",
-        slNo: 1,
-        date: "14.03.2018",
-        particulars: "Petitioner acquired absolute registered title and peaceful possession of 24.5 Ares in Re-Survey No. 142/2, Paravur Village via registered Sale Deed No. 1842/2018, SRO Paravur with residential homestead and yield-bearing nutmeg/coconut plantation.",
-        exhibit: "Exhibit P-1",
-        documentTitle: "Registered Absolute Sale Deed No. 1842/2018",
-        pageRange: "14 - 19",
-        category: "Title Deed",
-        significance: "Establishes unencumbered freehold ownership and locus standi of petitioner.",
-        status: "favourable" as const,
-      },
-      {
-        id: "ev-2",
-        slNo: 2,
-        date: "04.09.2022",
-        particulars: "Jurisdictional Village Officer issued Thandapper Ledger Receipt and Possession Certificate affirming timely remittance of Basic Land Tax and physical possession of property by Petitioner.",
-        exhibit: "Exhibit P-2",
-        documentTitle: "Possession Certificate & Land Tax Remittance Receipt",
-        pageRange: "20 - 22",
-        category: "Revenue Records",
-        significance: "Continuous revenue possession without any government easement or reservation.",
-        status: "favourable" as const,
-      },
-      {
-        id: "ev-3",
-        slNo: 3,
-        date: "12.06.2023",
-        particulars: "Officers of Respondent No. 2 (KSEB Transmission Division) made unannounced spot entry without prior statutory notice to survey 66kV transmission route bisecting Petitioner's residential courtyard.",
-        exhibit: "Exhibit P-3",
-        documentTitle: "KSEB Route Feasibility Survey Notice of Entry",
-        pageRange: "23 - 25",
-        category: "Administrative Entry",
-        significance: "Infringement of procedural mandate under Section 10(d) of Indian Telegraph Act, 1885.",
-        status: "procedural" as const,
-      },
-      {
-        id: "ev-4",
-        slNo: 4,
-        date: "28.06.2023",
-        particulars: "Petitioner submitted comprehensive Written Statutory Objection under Section 16(1) of Indian Telegraph Act before Assistant Executive Engineer pointing out feasible alternate alignment along existing PWD road margin.",
-        exhibit: "Exhibit P-4",
-        documentTitle: "Statutory Objection u/s 16(1) Indian Telegraph Act",
-        pageRange: "26 - 29",
-        category: "Statutory Objection",
-        significance: "Creates statutory bar preventing licensee from entering without District Magistrate order.",
-        status: "favourable" as const,
-      },
-      {
-        id: "ev-5",
-        slNo: 5,
-        date: "15.01.2024",
-        particulars: "Village Officer and Local Police conducted joint site inspection and drew Contemporaneous Mahazar confirming that proposed line cuts across petitioner's dwelling house at 2.4m clearance.",
-        exhibit: "Exhibit P-5",
-        documentTitle: "Police & Village Revenue Joint Inspection Mahazar",
-        pageRange: "30 - 34",
-        category: "Spot Mahazar",
-        significance: "Judicial evidence establishing disproportionate damage contrary to Section 10(d).",
-        status: "neutral" as const,
-      },
-      {
-        id: "ev-6",
-        slNo: 6,
-        date: "04.03.2024",
-        particulars: "Respondent No. 2 (AEE, KSEB) arbitrarily issued Impugned Summary Rejection Order No. DB-21/TR-24 refusing alternate alignment without referral to Additional District Magistrate.",
-        exhibit: "Exhibit P-6",
-        documentTitle: "Impugned Summary Rejection Order No. DB-21/TR-24",
-        pageRange: "35 - 37",
-        category: "Impugned Order",
-        significance: "Ultra vires jurisdiction; violation of Supreme Court ruling in Power Grid Corp v. Century Textiles (2017).",
-        status: "adverse" as const,
-      },
-      {
-        id: "ev-7",
-        slNo: 7,
-        date: "18.10.2024",
-        particulars: "Petitioner instituted Writ Petition (Civil) under Article 226 before the Hon'ble High Court of Kerala challenging Exhibit P-6 order and seeking writ of mandamus directing referral to District Magistrate under Section 16(1).",
-        exhibit: "Pleading",
-        documentTitle: "Writ Petition (Civil) Memorandum & Grounds",
-        pageRange: "1 - 13",
-        category: "High Court Filing",
-        significance: "Seeks quashing of Exhibit P-6 and ad-interim stay of line drawing.",
-        status: "favourable" as const,
-      },
-    ],
+    caseMetadata: existingMeta,
+    events,
   };
 }
 
-function getLocalAuditData(bundle: string) {
-  if (bundle === "s138_ni_act") {
-    return {
-      success: true,
-      contradictions: [
-        {
-          severity: "medium",
-          title: "Bank Memo Date vs Postal Dispatch Alignment",
-          detail: "Return Memo is dated 15.01.2024, whereas Demand Notice was dispatched on 25.01.2024 (10-day gap). Verify Complainant's intimation date to preempt delay objection.",
-          reconciliation: "Pleaded in Para 5 that Complainant received written intimation from bank on 18.01.2024; hence notice was dispatched within 7 days of actual knowledge.",
-        },
-      ],
-      limitationAlerts: [
-        {
-          severity: "low",
-          statute: "Section 142(1)(b), Negotiable Instruments Act, 1881",
-          finding: "Cause of action crystallized on 13.02.2024. Complaint instituted on 28.02.2024 (15 days elapsed).",
-          status: "Strictly within 30-day limitation window (15 days remaining before bar).",
-        },
-      ],
-      proceduralDefects: [],
-      curativePleadingClause: "The Complainant submits that the Statutory Demand Notice was issued strictly within 30 days of receiving the Bank Memo.",
-    };
-  }
+function getLocalAuditData(events: ChronologyEvent[]) {
+  const missingExhibits = events.filter((ev) => !ev.exhibit || ev.exhibit === "—");
+  const proceduralDefects = missingExhibits.map((ev) => ({
+    severity: "low",
+    title: `Missing Exhibit Mark at Sl. No. ${ev.slNo}`,
+    detail: `Event '${ev.documentTitle || ev.particulars.slice(0, 40)}' does not carry an Exhibit identifier.`,
+    reconciliation: "Assign a sequential Exhibit label before binding the final paper-book.",
+  }));
 
   return {
     success: true,
-    contradictions: [
-      {
-        severity: "high",
-        title: "Survey Number Mismatch: Sale Deed vs. Scene Mahazar",
-        detail: "Sale Deed Exhibit P-1 conveys 'Re-Survey No. 142/2', whereas Village Police Mahazar Exhibit P-5 documents spot inspection over 'Re-Survey No. 142/2-A'.",
-        reconciliation: "Incorporate clarificatory averment in Synopsis Para 3: 'Re-Survey No. 142/2 was sub-divided into 142/2-A during the 2021 Taluk Resurvey without alteration of metes, bounds, or possession.'",
-      },
-      {
-        severity: "medium",
-        title: "Clearance Measurement Divergence in Route Feasibility",
-        detail: "KSEB Route Notice (Exhibit P-3) alleges vertical clearance of 4.1 meters from dwelling house, whereas contemporaneous Spot Mahazar (Exhibit P-5) recorded actual clearance of only 2.4 meters.",
-        reconciliation: "Highlight that Exhibit P-5 is an objective joint revenue inspection signed by the Village Officer, superseding ex-parte assertions of the transmission licensee.",
-      },
-    ],
-    limitationAlerts: [
-      {
-        severity: "medium",
-        statute: "Article 226, Constitution of India & Section 16(1) Indian Telegraph Act",
-        finding: "Impugned Order Exhibit P-6 was rendered on 04.03.2024; Writ Petition instituted on 18.10.2024 (7 months delay).",
-        status: "Requires explaining bona-fide delay on grounds of pending representation before District Collector.",
-      },
-    ],
-    proceduralDefects: [],
-    curativePleadingClause: "The Petitioner respectfully submits that the delay in approaching this Hon'ble Court following Exhibit P-6 order was solely attributable to the bona fide pursuit of administrative remedies before the District Magistrate.",
+    contradictions: [],
+    limitationAlerts: [],
+    proceduralDefects,
+    curativePleadingClause: "",
   };
 }
 

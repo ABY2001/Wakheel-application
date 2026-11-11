@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { advocateApi } from "@/lib/api";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -66,8 +67,8 @@ export interface ConflictCheckResult {
 }
 
 export function AdvocateConflictScannerView({
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/001429/2012",
+  advocateName = "",
+  barCouncilNumber = "",
   token,
 }: AdvocateConflictScannerViewProps) {
   // Active Tab
@@ -76,12 +77,43 @@ export function AdvocateConflictScannerView({
   );
 
   // Form State
-  const [proposedClient, setProposedClient] = useState("Marine Exports Pvt Ltd");
-  const [adverseParty, setAdverseParty] = useState("Apex Logistics Ltd");
-  const [promotersOrSubsidiaries, setPromotersOrSubsidiaries] = useState("Apex Maritime Cargo & Cold Storage Division");
-  const [subjectMatter, setSubjectMatter] = useState("Commercial Breach of Contract & Asset Attachment");
-  const [courtForum, setCourtForum] = useState("High Court of Kerala (Commercial Appellate Division)");
+  const [proposedClient, setProposedClient] = useState("");
+  const [adverseParty, setAdverseParty] = useState("");
+  const [promotersOrSubsidiaries, setPromotersOrSubsidiaries] = useState("");
+  const [subjectMatter, setSubjectMatter] = useState("");
+  const [courtForum, setCourtForum] = useState("");
   const [scanDepth, setScanDepth] = useState<"standard" | "deep">("deep");
+
+  // Chamber Roster State loaded from API
+  const [chamberClients, setChamberClients] = useState<any[]>([]);
+  const [chamberMatters, setChamberMatters] = useState<any[]>([]);
+
+  useEffect(() => {
+    const effectiveToken =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
+    if (!effectiveToken) return;
+
+    let mounted = true;
+    (async () => {
+      const [clientsRes, mattersRes] = await Promise.allSettled([
+        advocateApi.getClients(effectiveToken),
+        advocateApi.getMatters(effectiveToken),
+      ]);
+      if (!mounted) return;
+      if (clientsRes.status === "fulfilled" && clientsRes.value?.success && Array.isArray(clientsRes.value.clients)) {
+        setChamberClients(clientsRes.value.clients);
+      }
+      if (mattersRes.status === "fulfilled" && mattersRes.value?.success && Array.isArray(mattersRes.value.matters)) {
+        setChamberMatters(mattersRes.value.matters);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
 
   // Scanner Live Progression State
   const [isScanning, setIsScanning] = useState(false);
@@ -101,263 +133,169 @@ export function AdvocateConflictScannerView({
   };
 
   // Historical Conflict Clearance Logs
-  const [auditLogs, setAuditLogs] = useState<ConflictCheckResult[]>([
-    {
-      scanId: "BCI-SCAN-2026-0941",
-      timestamp: "Today, 09:15 IST",
-      proposedClient: "Marine Exports Pvt Ltd",
-      adverseParty: "Apex Logistics Ltd",
-      subjectMatter: "Commercial Arbitration Counter-Claim under Section 9",
-      courtForum: "NCLT Kochi Bench",
-      severity: "critical",
-      severityTitle: "CRITICAL CONFLICT DETECTED — MANDATORY BCI RULE 8 BAR",
-      bciRuleCited: "Bar Council of India Rules Part VI, Ch. II, R. 8 & Advocates Act § 35",
-      statutorySummary:
-        "Advocate has previously advised and currently acts for Apex Logistics Ltd in ARB/NCLT/KOCHI/2024/041. Representation of the opposite party is prohibited under mandatory Bar Council ethics rules.",
-      conflictingMatters: [
-        {
-          caseNumber: "ARB/NCLT/KOCHI/2024/041",
-          partyRole: "Petitioner (Current Client)",
-          courtName: "NCLT Kochi Bench",
-          year: "2024-Present",
-          activeStatus: "Active Roster",
-          chamberRole: "Senior Counsel on Record",
-        },
-      ],
-      riskVectors: [
-        {
-          category: "Direct Adversarial Representation",
-          description: "Representing opposing party against an active chamber client on record.",
-          level: "high",
-        },
-        {
-          category: "Confidential Information Cross-Contamination",
-          description: "Access to trade secrets and financial balance sheets of Apex Logistics Ltd.",
-          level: "high",
-        },
-      ],
-      recommendedAction:
-        "MANDATORY REFUSAL OF BRIEF: Advocate must immediately decline representation of Marine Exports Pvt Ltd and issue a non-engagement formal letter pursuant to BCI Rule 8.",
-      waiverApplicable: false,
-    },
-    {
-      scanId: "BCI-SCAN-2026-0812",
-      timestamp: "24 Oct 2026, 14:30 IST",
-      proposedClient: "Vanguard Infrastructure Ltd",
-      adverseParty: "KSEB Contracting Division",
-      subjectMatter: "Telegraph Line Injunction Challenge (Section 10)",
-      courtForum: "High Court of Kerala (Court Hall 2A)",
-      severity: "warning",
-      severityTitle: "POTENTIAL CONFLICT DETECTED — MANDATORY DISCLOSURE REQUIRED",
-      bciRuleCited: "Bar Council of India Rules Part VI, Ch. II, R. 10",
-      statutorySummary:
-        "Chamber currently represents Gopakumar Nambiar against KSEB in WP(C) 19482/2024. While not direct representation of KSEB, position taken in statutory interpretation must not clash.",
-      conflictingMatters: [
-        {
-          caseNumber: "WP(C) 19482/2024",
-          partyRole: "Petitioner vs KSEB",
-          courtName: "High Court of Kerala",
-          year: "2024",
-          activeStatus: "Active Roster",
-          chamberRole: "Counsel on Record",
-        },
-      ],
-      riskVectors: [
-        {
-          category: "Substantive Legal Position Harmony",
-          description: "Both matters contest Section 16 Telegraph Act referrals against the same utility board.",
-          level: "medium",
-        },
-      ],
-      recommendedAction:
-        "RULE 10 FULL DISCLOSURE: Obtain written informed consent from Vanguard Infrastructure Ltd acknowledging chamber's active writ against KSEB.",
-      waiverApplicable: true,
-    },
-    {
-      scanId: "BCI-SCAN-2026-0701",
-      timestamp: "20 Oct 2026, 11:00 IST",
-      proposedClient: "Cochin Port Trust Workers Union",
-      adverseParty: "Ministry of Ports & Shipping",
-      subjectMatter: "Industrial Dispute & Pension Equalization",
-      courtForum: "Central Government Industrial Tribunal (CGIT)",
-      severity: "clear",
-      severityTitle: "ZERO ADVERSE CONFLICT DETECTED — ETHICS CLEARANCE CERTIFIED",
-      bciRuleCited: "BCI Rules Part VI, Section II (Rules 8–10 Compliant)",
-      statutorySummary:
-        "No prior representation, confidential disclosures, or pecuniary interests detected across chamber archives or corporate registers.",
-      conflictingMatters: [],
-      riskVectors: [
-        {
-          category: "Adverse Party Roster Check",
-          description: "No match found across 420 active or concluded chamber dockets.",
-          level: "low",
-        },
-      ],
-      recommendedAction:
-        "SAFE TO ACCEPT BRIEF: Issue Vakalathnama and execute statutory Advocate Welfare Fund stamping.",
-      waiverApplicable: false,
-    },
-  ]);
+  const [auditLogs, setAuditLogs] = useState<ConflictCheckResult[]>([]);
 
-  // Execute Conflict Scanner Simulation
+  // Execute Conflict Scanner against real chamber clients & matters
   const handleExecuteScan = () => {
+    if (!proposedClient.trim() || !adverseParty.trim()) {
+      showToast("Please enter Proposed Client and Adverse Party names.");
+      return;
+    }
+
     setIsScanning(true);
     setScanResult(null);
-    setScanProgressStage("Querying Chamber Active Dockets & eCourts CNR Database...");
+    setScanProgressStage("Querying Chamber Active Clients & Case Dockets...");
 
     setTimeout(() => {
-      setScanProgressStage("Cross-referencing MCA Corporate Director DIN & Subsidiary Holdings...");
-    }, 600);
+      setScanProgressStage("Cross-referencing Opposing Parties, Promoters & Active Briefs...");
+    }, 500);
 
     setTimeout(() => {
       setScanProgressStage("Auditing Bar Council of India Rule 8, 9, 10 Ethics Standards...");
-    }, 1200);
+    }, 1000);
 
     setTimeout(() => {
       setIsScanning(false);
 
-      // Evaluate match condition
-      const clientLower = proposedClient.toLowerCase();
-      const adverseLower = adverseParty.toLowerCase();
+      const adverseLower = adverseParty.trim().toLowerCase();
+      const promoterTokens = promotersOrSubsidiaries
+        .split(/[,;&]+/)
+        .map((s) => s.trim().toLowerCase())
+        .filter((s) => s.length >= 3);
+
+      const matchesParty = (candidate?: string) => {
+        const c = String(candidate || "").trim().toLowerCase();
+        if (!c || c.length < 3) return false;
+        if (c.includes(adverseLower) || adverseLower.includes(c)) return true;
+        return promoterTokens.some((tok) => c.includes(tok) || tok.includes(c));
+      };
+
+      const directClientMatches = chamberClients.filter((c) => matchesParty(c.fullName || c.name));
+      const directMatterClientMatches = chamberMatters.filter(
+        (m) => matchesParty(m.clientName || m.petitioner)
+      );
+      const opponentMatterMatches = chamberMatters.filter(
+        (m) =>
+          !matchesParty(m.clientName || m.petitioner) &&
+          (matchesParty(m.respondent) || matchesParty(m.title))
+      );
 
       let result: ConflictCheckResult;
 
-      if (adverseLower.includes("apex") || adverseLower.includes("logistics")) {
+      if (directClientMatches.length > 0 || directMatterClientMatches.length > 0) {
+        const conflictingMatters = [
+          ...directMatterClientMatches.map((m) => ({
+            caseNumber: String(m.caseNumber || m.title || m._id || m.id || "Chamber Matter"),
+            partyRole: "Existing Client / Petitioner",
+            courtName: String(m.court || "Registered Forum"),
+            year: String(m.filingDate || "Active"),
+            activeStatus: String(m.status || "Active Roster"),
+            chamberRole: advocateName || "Counsel on Record",
+          })),
+          ...directClientMatches.map((c) => ({
+            caseNumber: String(c.caseReference || c.email || c._id || c.id || "Client Retainer"),
+            partyRole: "Registered Chamber Client",
+            courtName: "Chamber Retainer Roster",
+            year: "Active",
+            activeStatus: String(c.status || "Active"),
+            chamberRole: advocateName || "Counsel on Record",
+          })),
+        ];
+
         result = {
-          scanId: `BCI-SCAN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          scanId: `BCI-SCAN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
           timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
           proposedClient,
           adverseParty,
-          subjectMatter,
-          courtForum,
+          subjectMatter: subjectMatter || "General Brief Check",
+          courtForum: courtForum || "Unspecified Forum",
           severity: "critical",
           severityTitle: "CRITICAL CONFLICT DETECTED — MANDATORY BCI RULE 8 BAR",
           bciRuleCited: "Bar Council of India Rules Part VI, Chapter II, Section II, Rule 8",
-          statutorySummary: `Advocate currently acts as Senior Counsel on record for Apex Logistics Ltd in active commercial dispute ARB/NCLT/KOCHI/2024/041. Appearing against Apex Logistics Ltd for ${proposedClient} represents a direct breach of Rule 8 and invites disciplinary proceedings under Section 35 of the Advocates Act, 1961.`,
-          conflictingMatters: [
-            {
-              caseNumber: "ARB/NCLT/KOCHI/2024/041",
-              partyRole: "Petitioner (Active Chamber Retainer)",
-              courtName: "NCLT Kochi Bench",
-              year: "2024-Present",
-              activeStatus: "Active Roster",
-              chamberRole: "Senior Counsel on Record",
-            },
-          ],
+          statutorySummary: `Adverse party '${adverseParty}' matches an active or retained chamber client/petitioner in your chamber records. Appearing against them for '${proposedClient}' triggers a direct bar under BCI Rule 8.`,
+          conflictingMatters,
           riskVectors: [
             {
               category: "Rule 8 Direct Adversarial Bar",
-              description: "Advocate has advised and drawn pleadings for Apex Logistics Ltd in commercial proceedings.",
+              description: "Opposing party is represented by your chamber in existing records.",
               level: "high",
             },
             {
               category: "Fiduciary Confidentiality Breach",
-              description: "Chamber has privileged corporate disclosures, bank audits, and dispute strategies on file.",
-              level: "high",
-            },
-            {
-              category: "Corporate Veil Cross-Holding",
-              description: `Subsidiary '${promotersOrSubsidiaries}' shares common managing directors with active client.`,
+              description: "Prior client disclosures and strategy notes may create privilege contamination.",
               level: "high",
             },
           ],
           recommendedAction:
-            "MANDATORY REFUSAL OF BRIEF: Advocate must immediately refuse to act, appear, or plead for Marine Exports Pvt Ltd. Issue formal Non-Engagement Notice.",
+            "MANDATORY REFUSAL OF BRIEF: Decline representation and issue a formal Non-Engagement Notice.",
           waiverApplicable: false,
         };
-      } else if (adverseLower.includes("kseb") || adverseLower.includes("electricity")) {
+      } else if (opponentMatterMatches.length > 0) {
         result = {
-          scanId: `BCI-SCAN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          scanId: `BCI-SCAN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
           timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
           proposedClient,
           adverseParty,
-          subjectMatter,
-          courtForum,
+          subjectMatter: subjectMatter || "General Brief Check",
+          courtForum: courtForum || "Unspecified Forum",
           severity: "warning",
           severityTitle: "POTENTIAL CONFLICT DETECTED — RULE 10 MANDATORY DISCLOSURE",
           bciRuleCited: "Bar Council of India Rules Part VI, Chapter II, Section II, Rule 10",
-          statutorySummary: `Chamber currently represents Gopakumar Nambiar against KSEB in WP(C) 19482/2024. While the chamber is not representing KSEB, Section 10 Telegraph Act principles are simultaneously being argued in Division Bench 2A. Full disclosure to ${proposedClient} is mandatory prior to brief acceptance.`,
-          conflictingMatters: [
-            {
-              caseNumber: "WP(C) 19482/2024",
-              partyRole: "Petitioner vs KSEB",
-              courtName: "High Court of Kerala (Court Hall 2A)",
-              year: "2024",
-              activeStatus: "Active Roster",
-              chamberRole: "Counsel on Record",
-            },
-          ],
+          statutorySummary: `Your chamber already handles ${opponentMatterMatches.length} matter(s) involving '${adverseParty}' as an opposing party or title reference. Review positional consistency and issue Rule 10 disclosure to '${proposedClient}' before acceptance.`,
+          conflictingMatters: opponentMatterMatches.map((m) => ({
+            caseNumber: String(m.caseNumber || m.title || m._id || m.id || "Chamber Matter"),
+            partyRole: "Existing Counter-Party Reference",
+            courtName: String(m.court || "Registered Forum"),
+            year: String(m.filingDate || "Active"),
+            activeStatus: String(m.status || "Active Roster"),
+            chamberRole: advocateName || "Counsel on Record",
+          })),
           riskVectors: [
             {
-              category: "Jurisprudential Position Alignment",
-              description: "Chamber has argued against KSEB's line drawing routes under Section 16(1).",
+              category: "Positional & Counter-Party Overlap",
+              description: "Chamber holds pending dockets involving the same opposite party.",
               level: "medium",
             },
           ],
           recommendedAction:
-            "OBTAIN WRITTEN WAIVER: Issue BCI Rule 10 Written Disclosure and obtain countersigned client consent.",
+            "OBTAIN WRITTEN DISCLOSURE CONSENT: Issue BCI Rule 10 disclosure and confirm no conflict with existing clients.",
           waiverApplicable: true,
         };
       } else {
         result = {
-          scanId: `BCI-SCAN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          scanId: `BCI-SCAN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
           timestamp: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
           proposedClient,
           adverseParty,
-          subjectMatter,
-          courtForum,
+          subjectMatter: subjectMatter || "General Brief Check",
+          courtForum: courtForum || "Unspecified Forum",
           severity: "clear",
           severityTitle: "ZERO ADVERSE CONFLICT DETECTED — ETHICS CLEARANCE CERTIFIED",
           bciRuleCited: "BCI Rules Part VI, Section II (Rules 8, 9, 10 Compliant)",
-          statutorySummary: `Exhaustive audit across 420 active and concluded chamber files, CNR numbers, and corporate databases reveals zero conflict of interest, prior advisory, or pecuniary connection with ${adverseParty}.`,
+          statutorySummary: `Audit across ${chamberClients.length} active chamber client(s) and ${chamberMatters.length} registered matter(s) found no adverse overlap or prior representation involving '${adverseParty}'.`,
           conflictingMatters: [],
           riskVectors: [
             {
               category: "Chamber Roster Search",
-              description: "No match for opposing party in 5-year retrospective archive.",
+              description: `Scanned ${chamberClients.length} client records and ${chamberMatters.length} matter dockets with zero matches.`,
               level: "low",
             },
             {
-              category: "Associate Independence Check",
-              description: "All chamber associates certified free of prior employment or representation with adverse party.",
+              category: "BCI Ethics Screening",
+              description: "No direct or indirect Rule 8/9/10 conflict flagged in chamber database.",
               level: "low",
             },
           ],
           recommendedAction:
-            "SAFE TO ACCEPT BRIEF: Issue Vakalathnama, execute statutory Welfare Fund Stamping, and register matter.",
+            "SAFE TO ACCEPT BRIEF: Proceed with Vakalathnama execution and statutory stamping.",
           waiverApplicable: false,
         };
       }
 
       setScanResult(result);
-      setAuditLogs([result, ...auditLogs]);
+      setAuditLogs((prev) => [result, ...prev]);
       showToast("Bar Council conflict audit complete.");
-    }, 1800);
-  };
-
-  // Preset Scenario Loaders
-  const loadScenarioA = () => {
-    setProposedClient("Marine Exports Pvt Ltd");
-    setAdverseParty("Apex Logistics Ltd");
-    setPromotersOrSubsidiaries("Apex Maritime Cargo & Cold Storage Division");
-    setSubjectMatter("Commercial Breach of Contract & Asset Attachment (S.9)");
-    setCourtForum("NCLT Kochi Bench");
-  };
-
-  const loadScenarioB = () => {
-    setProposedClient("Vanguard Infrastructure Ltd");
-    setAdverseParty("Kerala State Electricity Board (KSEB)");
-    setPromotersOrSubsidiaries("Chief Engineer Transmission Circle");
-    setSubjectMatter("Substation Line Drawing Injunction (Section 10 Telegraph Act)");
-    setCourtForum("High Court of Kerala (Court Hall 2A)");
-  };
-
-  const loadScenarioC = () => {
-    setProposedClient("Cochin Port Trust Workers Union");
-    setAdverseParty("Ministry of Ports & Shipping");
-    setPromotersOrSubsidiaries("Major Port Authorities Board");
-    setSubjectMatter("Industrial Tribunal Wage Revision Dispute");
-    setCourtForum("Central Government Industrial Tribunal (CGIT)");
+    }, 1400);
   };
 
   return (
@@ -492,34 +430,16 @@ export function AdvocateConflictScannerView({
       {/* ============================================================== */}
       {activeTab === "scanner" && (
         <div className="space-y-6">
-          {/* Quick Scenario Loader Pills */}
+          {/* Live Chamber Scan Scope Banner */}
           <div className="p-4 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <span className="font-bold text-black dark:text-white flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#6B1728]" />
-              Quick Test Scenarios:
+              Live Chamber Conflict Index:
             </span>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={loadScenarioA}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-[11px] font-semibold text-black dark:text-white cursor-pointer"
-              >
-                🔴 Scenario A: Direct Opposing Client (Rule 8 Bar)
-              </button>
-
-              <button
-                onClick={loadScenarioB}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-[11px] font-semibold text-black dark:text-white cursor-pointer"
-              >
-                🟠 Scenario B: Common Counter-Party (Rule 10 Waiver)
-              </button>
-
-              <button
-                onClick={loadScenarioC}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-[11px] font-semibold text-black dark:text-white cursor-pointer"
-              >
-                🟢 Scenario C: Clean Representation (Zero Conflict)
-              </button>
+            <div className="flex items-center gap-3 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
+              <span>{chamberClients.length} Active Client(s)</span>
+              <span>•</span>
+              <span>{chamberMatters.length} Registered Matter(s)</span>
             </div>
           </div>
 
@@ -543,7 +463,7 @@ export function AdvocateConflictScannerView({
                   type="text"
                   value={proposedClient}
                   onChange={(e) => setProposedClient(e.target.value)}
-                  placeholder="e.g. Marine Exports Pvt Ltd"
+                  placeholder="Enter proposed client or entity name"
                   className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -556,7 +476,7 @@ export function AdvocateConflictScannerView({
                   type="text"
                   value={adverseParty}
                   onChange={(e) => setAdverseParty(e.target.value)}
-                  placeholder="e.g. Apex Logistics Ltd"
+                  placeholder="Enter opposing or adverse party name"
                   className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -569,7 +489,7 @@ export function AdvocateConflictScannerView({
                   type="text"
                   value={promotersOrSubsidiaries}
                   onChange={(e) => setPromotersOrSubsidiaries(e.target.value)}
-                  placeholder="e.g. Apex Maritime Cargo & Cold Storage Division"
+                  placeholder="Optional promoters, subsidiaries, or co-defendants"
                   className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -582,7 +502,7 @@ export function AdvocateConflictScannerView({
                   type="text"
                   value={subjectMatter}
                   onChange={(e) => setSubjectMatter(e.target.value)}
-                  placeholder="e.g. Commercial Breach of Contract & Asset Attachment"
+                  placeholder="Brief dispute description or statutory provision"
                   className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -596,11 +516,12 @@ export function AdvocateConflictScannerView({
                   onChange={(e) => setCourtForum(e.target.value)}
                   className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none cursor-pointer"
                 >
-                  <option value="High Court of Kerala (Commercial Appellate Division)">High Court of Kerala (Commercial Appellate Division)</option>
-                  <option value="High Court of Kerala (Writ Jurisdiction DB 2A)">High Court of Kerala (Writ Jurisdiction DB 2A)</option>
-                  <option value="NCLT Kochi Bench">NCLT Kochi Bench</option>
-                  <option value="Sessions Court / JFCM-II Ernakulam">Sessions Court / JFCM-II Ernakulam</option>
-                  <option value="Arbitral Tribunal (Kochi / Kakkanad)">Arbitral Tribunal (Kochi / Kakkanad)</option>
+                  <option value="">Select court or tribunal forum...</option>
+                  <option value="High Court (Commercial Appellate Division)">High Court (Commercial Appellate Division)</option>
+                  <option value="High Court (Writ Jurisdiction)">High Court (Writ Jurisdiction)</option>
+                  <option value="National Company Law Tribunal (NCLT)">National Company Law Tribunal (NCLT)</option>
+                  <option value="District & Sessions / Magistrate Court">District &amp; Sessions / Magistrate Court</option>
+                  <option value="Arbitral Tribunal">Arbitral Tribunal</option>
                 </select>
               </div>
 
@@ -932,21 +853,21 @@ export function AdvocateConflictScannerView({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
-                <span className="font-bold text-black dark:text-white block">Screened Junior Associate:</span>
-                <div className="font-mono text-zinc-700 dark:text-zinc-300">Adv. Rahul Deshmukh</div>
+                <span className="font-bold text-black dark:text-white block">Screened Associate Assignment:</span>
+                <div className="font-mono text-zinc-700 dark:text-zinc-300">No Associate Screened</div>
                 <p className="text-[11px] text-zinc-500">
-                  Prior clerkship at opposing law firm. Disqualified from all dockets involving KSEB contracting disputes.
+                  Flagged associates with prior opposing firm connections can be quarantined from affected chamber dockets here.
                 </p>
-                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#6B1728] text-white">
-                  Access Revoked
+                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white">
+                  Standby
                 </span>
               </div>
 
               <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
                 <span className="font-bold text-black dark:text-white block">Protected Case Vault:</span>
-                <div className="font-mono text-zinc-700 dark:text-zinc-300">WP(C) 19482/2024 Bundle</div>
+                <div className="font-mono text-zinc-700 dark:text-zinc-300">Scoped Chamber Partitions</div>
                 <p className="text-[11px] text-zinc-500">
-                  256-bit encrypted partition with hardware security key required. Audit log tracks all read queries.
+                  256-bit encrypted partition with access-control enforcement and audit log tracking for walled files.
                 </p>
                 <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white">
                   Encrypted Partition

@@ -947,9 +947,11 @@ export const addMatterTimelineEvent = async (req, res) => {
 export const shareCourtDocument = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
+    const uploadedBy = req.user?.fullName || req.body?.uploadedBy || req.body?.advocateName || "Chamber Counsel";
     const data = {
       ...req.body,
-      uploadedBy: req.user?.fullName || "Adv. Meera Krishnan",
+      uploadedBy,
+      advocateName: req.user?.fullName || req.body?.advocateName || uploadedBy,
       advocateId,
     };
 
@@ -959,7 +961,7 @@ export const shareCourtDocument = async (req, res) => {
         broadcastMessageToUser(doc.citizenId, {
           type: "court_order_shared",
           document: doc,
-          message: `Advocate ${data.uploadedBy} has uploaded and shared a certified court order: ${doc.title || doc.name}`,
+          message: `${uploadedBy} has uploaded and shared a certified court order: ${doc.title || doc.name}`,
         });
       }
       return res.status(201).json({
@@ -971,8 +973,11 @@ export const shareCourtDocument = async (req, res) => {
     }
 
     const doc = await CitizenDocument.create({
-      citizenId: data.citizenId || "default_citizen",
+      citizenId: data.citizenId || advocateId,
       advocateId,
+      advocateName: data.advocateName,
+      matter: data.matter || "General Legal Matter",
+      matterId: data.matterId || "",
       title: data.title || "Certified Court Order",
       category: data.category || "Certified Court Order",
       fileName: data.fileName || "Court_Order.pdf",
@@ -985,7 +990,7 @@ export const shareCourtDocument = async (req, res) => {
       broadcastMessageToUser(data.citizenId, {
         type: "court_order_shared",
         document: doc,
-        message: `Advocate ${data.uploadedBy} has uploaded and shared a certified court order: ${doc.title}`,
+        message: `${uploadedBy} has uploaded and shared a certified court order: ${doc.title}`,
       });
     }
 
@@ -1013,9 +1018,7 @@ export const getAdvocateDocuments = async (req, res) => {
       return res.json({ success: true, count: documents.length, documents, mode: "dummy_data" });
     }
 
-    const docs = await CitizenDocument.find({
-      $or: [{ advocateId }, { subType: "document-filing" }],
-    }).sort({ createdAt: -1 });
+    const docs = await CitizenDocument.find({ advocateId }).sort({ createdAt: -1 });
 
     res.json({ success: true, count: docs.length, documents: docs, mode: "cloud_db" });
   } catch (error) {
@@ -1083,7 +1086,7 @@ export const updateDocumentFilingStatus = async (req, res) => {
 export const uploadAdvocateDocument = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const advocateName = req.user?.fullName || "Adv. Meera Krishnan";
+    const advocateName = req.user?.fullName || req.body?.advocateName || "Chamber Counsel";
     const data = {
       ...req.body,
       advocateId,
@@ -1102,8 +1105,11 @@ export const uploadAdvocateDocument = async (req, res) => {
     }
 
     const doc = await CitizenDocument.create({
-      citizenId: data.citizenId || "default_citizen",
+      citizenId: data.citizenId || advocateId,
       advocateId,
+      advocateName,
+      matter: data.matter || "General Legal Vault",
+      matterId: data.matterId || "",
       title: data.name || data.title,
       fileName: data.fileName || data.name,
       category: data.category || "Pleadings & Petitions",

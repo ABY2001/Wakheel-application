@@ -1901,8 +1901,8 @@ export function AdvocateWorkspaceView() {
                 <div className="space-y-4">
                   <CourtCauselistRadarView
                     advocateName={displayFullName}
-                    barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-                    token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+                    barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+                    token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
                   />
                 </div>
               )}
@@ -2895,7 +2895,7 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {activeTab === "clients" && (
             <AdvocateClientsView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
               onOpenChat={() => setActiveTab("messages")}
               onOpenConsultation={() => setActiveTab("appointments")}
@@ -2908,7 +2908,7 @@ export function AdvocateWorkspaceView() {
           {isRecordings && (
             <ChamberVoiceDictation
               currentMatter={selectedMatter}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
               onNavigateToCaseNotes={() => setActiveTab("notes")}
             />
@@ -2918,7 +2918,7 @@ export function AdvocateWorkspaceView() {
           {/* VIEW 6B: Communications (Inbox, Messages, Chats, Video Meet)   */}
           {isCommunications && (
             <AdvocateInboxView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
               advocateEmail={(advocateProfileData as any)?.email || (advocateProfile as any)?.email || ""}
               initialMode={activeTab === "messages" || activeTab === "chats" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
@@ -2934,8 +2934,8 @@ export function AdvocateWorkspaceView() {
             <AutonomousAgentsView
               initialSubTab={activeTab === "chamber-skills" ? "chamber-skills" : "workflows"}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
             />
           )}
 
@@ -2945,8 +2945,8 @@ export function AdvocateWorkspaceView() {
             <ChamberKnowledgeBaseView
               initialSubTab={activeTab}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
             />
           )}
 
@@ -2966,8 +2966,8 @@ export function AdvocateWorkspaceView() {
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
               <AdvocateVakalathnamaView
                 advocateName={displayFullName}
-                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               />
             </div>
           )}
@@ -2979,8 +2979,8 @@ export function AdvocateWorkspaceView() {
               activeModule={activeTab}
               onSelectModule={(m) => setActiveTab(m)}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
             />
           )}
 
@@ -3001,7 +3001,7 @@ export function AdvocateWorkspaceView() {
             <ERPModulesView
               activeModule={activeTab}
               onSelectModule={(m) => setActiveTab(m)}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
             />
           )}
@@ -3012,7 +3012,7 @@ export function AdvocateWorkspaceView() {
             <AnalyticsView
               activeModule={activeTab}
               onSelectModule={(m) => setActiveTab(m)}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
             />
           )}
@@ -3054,9 +3054,9 @@ export function AdvocateWorkspaceView() {
           {/* ============================================================== */}
           {(activeTab === "appointments" || activeTab === "consultations") && (
             <AdvocateConsultationsView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
             />
           )}
 
@@ -3246,7 +3246,7 @@ export function AdvocateWorkspaceView() {
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto space-y-6">
               <CaseChronologyBuilder
                 advocateName={displayFullName}
-                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
                 currentMatterTitle={selectedMatter}
               />
             </div>
@@ -3257,9 +3257,9 @@ export function AdvocateWorkspaceView() {
           {activeTab === "vault" && (
             <DocumentVaultView
               currentMatter={selectedMatter}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
           )}
@@ -3268,7 +3268,11 @@ export function AdvocateWorkspaceView() {
           {/* VIEW: Scan / Translate Suite (OCR & Certified Translation)      */}
           {/* ============================================================== */}
           {(activeTab === "scan-translate" || activeTab === "ocr-translate") && (
-            <ScanTranslateView isAdvocate={true} />
+            <ScanTranslateView
+              isAdvocate={true}
+              advocateName={displayFullName}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+            />
           )}
 
           {/* ============================================================== */}
@@ -3277,8 +3281,8 @@ export function AdvocateWorkspaceView() {
             <LegalDraftingStudioView
               currentMatter={selectedMatter}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
           )}
@@ -3290,7 +3294,7 @@ export function AdvocateWorkspaceView() {
               currentMatter={selectedMatter}
               advocateName={displayFullName}
               barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
           )}
@@ -3301,8 +3305,8 @@ export function AdvocateWorkspaceView() {
             <ContractIntelligenceView
               currentMatter={selectedMatter}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />
           )}
@@ -3313,8 +3317,8 @@ export function AdvocateWorkspaceView() {
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
               <CourtCauselistRadarView
                 advocateName={displayFullName}
-                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               />
             </div>
           )}
@@ -3326,7 +3330,7 @@ export function AdvocateWorkspaceView() {
               <AdvocateTrustBillingView
                 advocateName={displayFullName}
                 barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
-                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               />
             </div>
           )}
@@ -3336,8 +3340,8 @@ export function AdvocateWorkspaceView() {
           {["scrutiny-efiling", "scrutiny", "efiling"].includes(activeTab) && (
             <ScrutinyDefectClearingView
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
             />
           )}
 
@@ -3359,8 +3363,8 @@ export function AdvocateWorkspaceView() {
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
               <AdvocateConflictScannerView
                 advocateName={displayFullName}
-                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
-                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
+                token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
               />
             </div>
           )}
@@ -3855,7 +3859,7 @@ export function AdvocateWorkspaceView() {
 
             <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-xs font-serif leading-relaxed text-black dark:text-white whitespace-pre-line max-h-[340px] overflow-y-auto">
               {translationCertificate || (
-                "BEFORE THE HON'BLE HIGH COURT OF KERALA AT ERNAKULAM\nCERTIFICATE UNDER RULE 32\n\nI, Adv. Meera Krishnan, Advocate, Roll No. K/001429/2012, practicing before the Hon'ble High Court of Kerala, do hereby solemnly certify that I am proficient in both Malayalam and English, and the accompanying translation is true, faithful, and accurate in all material particulars.\n\nDated this day at Ernakulam.\n\n(Sd/-)\nAdvocate for the Deponent"
+                `BEFORE THE HON'BLE COURT\nCERTIFICATE UNDER RULE 32\n\nI, ${displayFullName || "Counsel on Record"}, Advocate${(advocateProfile as any)?.enrollmentNumber ? `, Roll No. ${(advocateProfile as any).enrollmentNumber}` : ""}, do hereby solemnly certify that I am proficient in both languages, and the accompanying translation is true, faithful, and accurate in all material particulars.\n\n(Sd/-)\nAdvocate for the Deponent`
               )}
             </div>
 

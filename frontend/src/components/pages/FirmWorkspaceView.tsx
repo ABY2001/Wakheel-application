@@ -988,7 +988,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <LegalGatewayView
                 firmName={firm.name}
-                csName={firm.founderName || "CS Corporate Practice"}
+                csName={firm.founderName || ""}
                 initialSubTab={activeTab as any}
               />
             </div>

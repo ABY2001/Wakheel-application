@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { advocateApi } from "@/lib/api";
 import {
   FileText,
   AlertTriangle,
@@ -76,199 +77,7 @@ export interface EFilingDocket {
   defects: ScrutinyDefect[];
 }
 
-const INITIAL_DOCKETS: EFilingDocket[] = [
-  {
-    id: "dkt-01",
-    filingToken: "EF-KLHC-2026-0049182",
-    court: "High Court of Kerala at Ernakulam",
-    bench: "Hon'ble Division Bench 2A (Hon'ble Mr. Justice P.B. Suresh Kumar & Hon'ble Mr. Justice C. Pratheep Kumar)",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB & Anr.",
-    caseType: "Writ Petition (Civil) - WP(C)",
-    caseYear: "2026",
-    stage: "defects_notified",
-    stageLabel: "Defects Notified (Action Required)",
-    petitionerName: "Gopakumar Nambiar",
-    respondentName: "Kerala State Electricity Board Ltd. & Anr.",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/1429/2016",
-    standingCounselName: "Adv. Standing Counsel for KSEB",
-    sectionOfficer: "Sri. V. Santhosh Kumar (Section Officer)",
-    scrutinyDivision: "Judicial Scrutiny Branch (Writs Section)",
-    efilingDate: "21 Oct 2026",
-    defectNotifiedDate: "24 Oct 2026",
-    statutoryCureDeadline: "31 Oct 2026 (5:00 PM)",
-    daysRemaining: 3,
-    courtHall: "Court Hall 2A",
-    itemNumber: "Item No. 18 (Motion List)",
-    listingDate: "Tomorrow, 29 Oct 2026",
-    defects: [
-      {
-        id: "def-01",
-        code: "D-101",
-        category: "indexing",
-        ruleReference: "Rule 14(2) Kerala High Court Rules",
-        objectionText:
-          "Annexure P-4 Survey sketch pages 14 to 18 not consecutively machine-numbered; handwritten folio numbers obscured by margin fold.",
-        actionRequired:
-          "Upload consecutively re-paginated PDF of Annexure P-4 with clear top-right folios.",
-        severity: "high",
-        status: "pending",
-      },
-      {
-        id: "def-02",
-        code: "D-302",
-        category: "translation",
-        ruleReference: "Rule 32 Kerala High Court Rules (True Translation)",
-        objectionText:
-          "Annexure P-2 Revenue tax receipt and Mahazar are in vernacular Malayalam. Formal Rule 32 Advocate True Translation Certificate missing.",
-        actionRequired:
-          "Affix Rule 32 Advocate True Translation Certificate signed by counsel with enrollment number.",
-        severity: "high",
-        status: "pending",
-      },
-      {
-        id: "def-03",
-        code: "D-405",
-        category: "service",
-        ruleReference: "Rule 35(1) Advance Service on Standing Counsel",
-        objectionText:
-          "Proof of advance service of motion paperbook on Standing Counsel for KSEB not annexed in the digital service memo.",
-        actionRequired:
-          "Attach physical acknowledgment stamp slip or official e-Service delivery token.",
-        severity: "medium",
-        status: "cured",
-        curedAt: "26 Oct 2026, 04:30 PM",
-        curedRemarks:
-          "Service acknowledgment receipt #KSEB-SC-4482 signed by Standing Counsel clerk annexed.",
-        replacementFileName: "KSEB_Standing_Counsel_Service_Proof_Ack.pdf",
-      },
-    ],
-  },
-  {
-    id: "dkt-02",
-    filingToken: "EF-KLHC-2026-0051204",
-    court: "High Court of Kerala at Ernakulam",
-    bench: "Single Bench Criminal (Hon'ble Mr. Justice C.S. Dias)",
-    matterTitle: "Bail Appl. 8920/2026 — Shafeeq Rahman v. State of Kerala",
-    caseType: "Bail Application - Section 483 BNSS",
-    caseYear: "2026",
-    stage: "defects_cured",
-    stageLabel: "Defects Cured / Ready for Re-Presentation",
-    petitionerName: "Shafeeq Rahman",
-    respondentName: "State of Kerala (Represented by Sub Inspector of Police, Aluva)",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/1429/2016",
-    standingCounselName: "Public Prosecutor (High Court of Kerala)",
-    sectionOfficer: "Smt. Bindu Menon (Section Officer)",
-    scrutinyDivision: "Criminal Scrutiny Branch",
-    efilingDate: "24 Oct 2026",
-    defectNotifiedDate: "26 Oct 2026",
-    statutoryCureDeadline: "02 Nov 2026 (5:00 PM)",
-    daysRemaining: 5,
-    courtHall: "Court Hall 3B",
-    itemNumber: "Item No. 42",
-    listingDate: "30 Oct 2026",
-    defects: [
-      {
-        id: "def-04",
-        code: "D-204",
-        category: "court_fee",
-        ruleReference: "Kerala Court Fees & Suits Valuation Act (Schedule II, Art 13)",
-        objectionText:
-          "Shortage of Rs. 50 Court Fee adhesive stamp on petition; Advocate Welfare Fund stamp of Rs. 25 missing on Vakalathnama.",
-        actionRequired:
-          "Pay differential e-Court fee and annex e-Challan payment receipt.",
-        severity: "high",
-        status: "cured",
-        curedAt: "27 Oct 2026, 11:15 AM",
-        curedRemarks:
-          "Government treasury e-Challan KL-TR-2026-90412 for Rs. 75 successfully paid and annexed.",
-        replacementFileName: "Treasury_eChallan_CourtFee_KL90412.pdf",
-      },
-      {
-        id: "def-05",
-        code: "D-508",
-        category: "affidavit",
-        ruleReference: "Oaths Act 1969 & Criminal Rules of Practice Rule 24",
-        objectionText:
-          "Deponent verification affidavit omitted notary registration serial number and commission expiry date.",
-        actionRequired:
-          "Submit verified re-attestation by Notary Public with serial folio number.",
-        severity: "medium",
-        status: "cured",
-        curedAt: "27 Oct 2026, 02:45 PM",
-        curedRemarks:
-          "Re-attested verification affidavit with Notary Adv. K.R. Joseph (Reg No. 142/2018) uploaded.",
-        replacementFileName: "Re_Attested_Verification_Affidavit_Notary.pdf",
-      },
-    ],
-  },
-  {
-    id: "dkt-03",
-    filingToken: "EF-NCLT-2026-001094",
-    court: "National Company Law Tribunal (Kochi Bench)",
-    bench: "Court Hall 1 (Hon'ble Judicial Member & Hon'ble Technical Member)",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041 — Malabar Marine Products v. Coastal Logistics",
-    caseType: "Section 9 Commercial Arbitration Application",
-    caseYear: "2026",
-    stage: "numbered_listed",
-    stageLabel: "Numbered & Registered (Scrutiny Cleared)",
-    petitionerName: "Malabar Marine Products Ltd.",
-    respondentName: "Coastal Logistics Infrastructure Pvt. Ltd.",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/1429/2016",
-    standingCounselName: "Adv. Rajesh V. Varma (Counsel for Respondent)",
-    sectionOfficer: "Registrar (Judicial) NCLT",
-    scrutinyDivision: "Registry Scrutiny Cell",
-    efilingDate: "15 Oct 2026",
-    defectNotifiedDate: "18 Oct 2026",
-    statutoryCureDeadline: "25 Oct 2026",
-    daysRemaining: 0,
-    courtHall: "NCLT Hall 1",
-    itemNumber: "Item No. 07",
-    listingDate: "18 Nov 2026",
-    defects: [
-      {
-        id: "def-06",
-        code: "D-612",
-        category: "vakalath",
-        ruleReference: "NCLT Rules 2016 Rule 26 (Representation)",
-        objectionText:
-          "Corporate Board Resolution authorizing signatory was dated prior to the incorporation of the petitioner's subsidiary.",
-        actionRequired:
-          "Produce certified true extract of Board Resolution passed pursuant to Section 179 Companies Act.",
-        severity: "high",
-        status: "cured",
-        curedAt: "20 Oct 2026, 05:00 PM",
-        curedRemarks:
-          "Fresh Board Resolution dated 14 Oct 2026 signed by Managing Director filed and scrutinized.",
-        replacementFileName: "Certified_Board_Resolution_14Oct2026.pdf",
-      },
-    ],
-  },
-  {
-    id: "dkt-04",
-    filingToken: "EF-KLHC-2026-0052811",
-    court: "High Court of Kerala at Ernakulam",
-    bench: "Single Bench Criminal (Hon'ble Mr. Justice Bechu Kurian Thomas)",
-    matterTitle: "Crl.M.C. 3192/2026 — Ananthu Krishnan v. State of Kerala",
-    caseType: "Section 528 BNSS (FIR Quashing)",
-    caseYear: "2026",
-    stage: "under_scrutiny",
-    stageLabel: "Under Primary Scrutiny",
-    petitionerName: "Ananthu Krishnan & Anr.",
-    respondentName: "State of Kerala & Defacto Complainant",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/1429/2016",
-    standingCounselName: "Senior Public Prosecutor",
-    sectionOfficer: "Sri. K.P. Haridas (Junior Scrutiny Officer)",
-    scrutinyDivision: "Filing Scrutiny Branch 3",
-    efilingDate: "27 Oct 2026",
-    statutoryCureDeadline: "03 Nov 2026",
-    daysRemaining: 6,
-    defects: [],
-  },
-];
+const INITIAL_DOCKETS: EFilingDocket[] = [];
 
 interface ScrutinyDefectClearingViewProps {
   token?: string;
@@ -277,9 +86,9 @@ interface ScrutinyDefectClearingViewProps {
 }
 
 export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProps> = ({
-  token = "advocate_token",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
+  token = "",
+  advocateName = "",
+  barCouncilNumber = "",
 }) => {
   const [dockets, setDockets] = useState<EFilingDocket[]>(INITIAL_DOCKETS);
   const [selectedDocketId, setSelectedDocketId] = useState<string>(INITIAL_DOCKETS[0]?.id || "");
@@ -295,18 +104,12 @@ export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProp
   const [showNewDocketModal, setShowNewDocketModal] = useState(false);
 
   // Motion Slip Generator parameters
-  const [motionCourtHall, setMotionCourtHall] = useState("Court Hall 2A");
-  const [motionBench, setMotionBench] = useState(
-    "Hon'ble Division Bench 2A (Hon'ble Mr. Justice P.B. Suresh Kumar & Hon'ble Mr. Justice C. Pratheep Kumar)"
-  );
-  const [motionDate, setMotionDate] = useState("Tomorrow, 29 October 2026");
-  const [motionItemNo, setMotionItemNo] = useState("Item No. 18 (Urgent Admission)");
-  const [motionUrgencyGrounds, setMotionUrgencyGrounds] = useState(
-    "Imminent high-tension line drawing scheduled by respondents for 30 October 2026 across petitioner's agricultural holding. All scrutiny defects stand cured. Stay extension application requires immediate consideration to avert fait accompli."
-  );
-  const [motionPrayer, setMotionPrayer] = useState(
-    "Humbly prayed that this Hon'ble Court may be pleased to grant urgent leave to move the motion slip and list the matter for hearing on interim relief today / tomorrow as Item No. 18."
-  );
+  const [motionCourtHall, setMotionCourtHall] = useState("");
+  const [motionBench, setMotionBench] = useState("");
+  const [motionDate, setMotionDate] = useState("");
+  const [motionItemNo, setMotionItemNo] = useState("");
+  const [motionUrgencyGrounds, setMotionUrgencyGrounds] = useState("");
+  const [motionPrayer, setMotionPrayer] = useState("");
   const [copiedState, setCopiedState] = useState<string | null>(null);
 
   // New docket state
@@ -318,6 +121,86 @@ export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProp
   const activeDocket = useMemo(() => {
     return dockets.find((d) => d.id === selectedDocketId) || dockets[0];
   }, [dockets, selectedDocketId]);
+
+  useEffect(() => {
+    const effectiveToken =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
+    if (!effectiveToken) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await advocateApi.getDocuments(effectiveToken);
+        if (!mounted || !res?.success || !Array.isArray(res.documents)) return;
+        const filingDocs = res.documents.filter((d: any) => {
+          const st = String(d.filingStatus || d.status || "").toLowerCase();
+          return (
+            d.subType === "document-filing" ||
+            st.includes("scrutiny") ||
+            st.includes("defect") ||
+            st.includes("transmitted") ||
+            st.includes("review")
+          );
+        });
+        if (filingDocs.length === 0) return;
+
+        const mapped: EFilingDocket[] = filingDocs.map((d: any, idx: number) => {
+          const st = String(d.filingStatus || d.status || "").toLowerCase();
+          const hasDefect = st.includes("defect") || st.includes("revision");
+          const isCleared = st.includes("approved") || st.includes("filed");
+          return {
+            id: String(d._id || d.id || `dkt-api-${idx}`),
+            filingToken: String(d.filingToken || d.hash || `EF-${String(d._id || d.id || idx).slice(-8)}`).slice(0, 24),
+            court: String(d.court || "Registry E-Filing Counter"),
+            bench: String(d.bench || "Assigned Bench"),
+            matterTitle: String(d.matter || d.title || d.fileName || d.name || "Filed Document"),
+            caseType: String(d.category || "E-Filing Document"),
+            caseYear: String(new Date().getFullYear()),
+            stage: hasDefect
+              ? "defects_notified"
+              : isCleared
+              ? "numbered_listed"
+              : "under_scrutiny",
+            stageLabel: String(d.filingStatus || d.status || "Under Primary Scrutiny"),
+            petitionerName: String(d.uploadedBy || "Client / Petitioner"),
+            respondentName: "Respondent",
+            advocateName: String(d.advocateName || advocateName || ""),
+            barCouncilNumber: barCouncilNumber || "",
+            standingCounselName: "",
+            sectionOfficer: "Registry Scrutiny Wing",
+            scrutinyDivision: "Filing Scrutiny Division",
+            efilingDate: String(d.uploadDate || d.date || "Recently"),
+            statutoryCureDeadline: hasDefect ? "Action Required" : "7 Days from Notice",
+            daysRemaining: hasDefect ? 3 : 7,
+            defects: hasDefect
+              ? [
+                  {
+                    id: `def-api-${idx}`,
+                    code: "REG-01",
+                    category: "other",
+                    ruleReference: "Registry Scrutiny Objection",
+                    objectionText: String(d.remarks || d.notes || "Defect notified during registry scrutiny."),
+                    actionRequired: "Upload cured replacement filing document.",
+                    severity: "high",
+                    status: "pending",
+                  },
+                ]
+              : [],
+          };
+        });
+        setDockets(mapped);
+        setSelectedDocketId((prev) => prev || mapped[0]?.id || "");
+      } catch {
+        // Leave empty when backend is unreachable
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [token, advocateName, barCouncilNumber]);
 
   const filteredDockets = useMemo(() => {
     return dockets.filter((d) => {
@@ -395,19 +278,19 @@ export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProp
 
     const newDoc: EFilingDocket = {
       id: `dkt-${Date.now()}`,
-      filingToken: `EF-KLHC-2026-00${Math.floor(10000 + Math.random() * 90000)}`,
-      court: "High Court of Kerala at Ernakulam",
-      bench: "Single Bench / Court Hall 4",
+      filingToken: `EF-${new Date().getFullYear()}-00${Math.floor(10000 + Math.random() * 90000)}`,
+      court: "Registry E-Filing Counter",
+      bench: "Assigned Bench",
       matterTitle: `${newMatterTitle.trim()} — ${newPetitioner || "Petitioner"} v. ${newRespondent || "Respondent"}`,
       caseType: newCaseType,
-      caseYear: "2026",
+      caseYear: String(new Date().getFullYear()),
       stage: "under_scrutiny",
       stageLabel: "Under Primary Scrutiny",
       petitionerName: newPetitioner || "Petitioner",
       respondentName: newRespondent || "Respondent",
-      advocateName: advocateName,
-      barCouncilNumber: barCouncilNumber,
-      standingCounselName: "Government Pleader / Standing Counsel",
+      advocateName: advocateName || "",
+      barCouncilNumber: barCouncilNumber || "",
+      standingCounselName: "",
       sectionOfficer: "Registry Scrutiny Wing",
       scrutinyDivision: "Filing Scrutiny Division",
       efilingDate: "Today",
@@ -444,8 +327,9 @@ export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProp
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
+            disabled={!activeDocket}
             onClick={() => setShowMotionModal(true)}
-            className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+            className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs uppercase tracking-wider hover:opacity-90 disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-xs"
           >
             <Send className="w-3.5 h-3.5 text-[#6B1728]" />
             <span>Generate Motion Slip</span>
@@ -453,8 +337,9 @@ export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProp
 
           <button
             type="button"
+            disabled={!activeDocket}
             onClick={() => setShowRePresentModal(true)}
-            className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white font-bold text-xs uppercase tracking-wider hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+            className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-black dark:text-white font-bold text-xs uppercase tracking-wider hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-xs"
           >
             <FileCheck2 className="w-3.5 h-3.5" />
             <span>Re-Presentation Memo</span>
@@ -626,6 +511,25 @@ export const ScrutinyDefectClearingView: React.FC<ScrutinyDefectClearingViewProp
         </div>
 
         {/* Right Column: Active Docket Scrutiny Inspection, Curing & Motion Details (8 Cols) */}
+        {!activeDocket && (
+          <div className="lg:col-span-8 flex flex-col items-center justify-center p-12 text-center rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 min-h-[380px]">
+            <FileCheck2 className="w-10 h-10 text-zinc-400 mb-3" />
+            <h3 className="text-base font-bold text-black dark:text-white mb-1">
+              No E-Filing Scrutiny Dockets Yet
+            </h3>
+            <p className="text-xs text-zinc-500 max-w-md mb-5">
+              Client filings sent for registry scrutiny or manually logged e-filing tokens will appear here for defect tracking and motion slip generation.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowNewDocketModal(true)}
+              className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Add Filing Docket
+            </button>
+          </div>
+        )}
         {activeDocket && (
           <div className="lg:col-span-8 space-y-6">
             {/* Active Docket Card */}
@@ -1240,7 +1144,7 @@ Bar Council Enrollment: ${barCouncilNumber}`}
                   required
                   value={newMatterTitle}
                   onChange={(e) => setNewMatterTitle(e.target.value)}
-                  placeholder="e.g. WP(C) 20114/2026"
+                  placeholder="Enter case number or matter title"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white font-sans focus:outline-none focus:border-black"
                 />
               </div>

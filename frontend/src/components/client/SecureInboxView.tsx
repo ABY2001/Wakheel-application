@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { citizenApi } from "@/lib/api";
 import {
   Mail,
   MessageSquare,
@@ -93,6 +94,8 @@ export interface ChatMessage {
 
 export interface ChatAdvocateThread {
   id: string;
+  advocateId?: string;
+  matterId?: string;
   type: "direct" | "group";
   name: string;
   chamber: string;
@@ -123,592 +126,262 @@ export interface LegalNotificationItem {
   actionLabel?: string;
 }
 
-const INITIAL_LEGAL_EMAILS: LegalEmailItem[] = [
-  {
-    id: "mail-1",
-    senderName: "Adv. Meera Krishnan",
-    senderEmail: "meera.krishnan@keralabar.org",
-    senderAvatarText: "MK",
-    recipientName: "Gopakumar Nambiar",
-    recipientEmail: "gopakumar.nambiar@wakheel.in",
-    matterTitle: "WP(C) 19482/2024 • High Court of Kerala",
-    subject: "Hearing Update: Interim Stay Extended in WP(C) 19482/2024",
-    snippet:
-      "Division Bench 2A has taken our reply affidavit on record and strongly questioned KSEB regarding Section 16 Telegraph Act compliance...",
-    body: [
-      "Dear Mr. Gopakumar Nambiar,",
-      "I am pleased to report that our matter was called before Division Bench 2A (Hon'ble Mr. Justice P.B. Suresh Kumar and Hon'ble Mr. Justice C. Pratheep Kumar) today as Item No. 18.",
-      "The Bench took our counter-reply affidavit on record and sternly questioned the Assistant Executive Engineer regarding their failure to serve mandatory prior written notice under Section 16(1) of the Indian Telegraph Act before entering upon your agricultural property.",
-      "Consequently, the Hon'ble Court has extended the interim stay order in full force until 12 November 2026. The KSEB contractors are strictly prohibited from moving machinery or cutting standing rubber trees on your holding.",
-      "Please find attached the certified true copy of today's Daily Order as well as the marked annexures for your records.",
-      "Best regards,\nAdv. Meera Krishnan\nSenior Counsel, High Court of Kerala",
-    ],
-    timestamp: "12 min ago",
-    fullDate: "27 Oct 2026, 10:24 AM",
-    folder: "inbox",
-    category: "urgent",
-    categoryLabel: "High Court Stay Order",
-    categoryColor: "zinc",
-    isRead: false,
-    isStarred: true,
-    attachments: [
-      {
-        name: "WPC_19482_Daily_Order_Bench_2A.pdf",
-        size: "1.56 MB",
-        type: "pdf",
-        color: "sky",
-      },
-      {
-        name: "KSEB_Counter_Affidavit_Scanned.pdf",
-        size: "3.82 MB",
-        type: "pdf",
-        color: "amber",
-      },
-    ],
-  },
-  {
-    id: "mail-2",
-    senderName: "Adv. Sarah Jenkins",
-    senderEmail: "sarah.jenkins@ernakulamcourt.org",
-    senderAvatarText: "SJ",
-    recipientName: "Gopakumar Nambiar",
-    recipientEmail: "gopakumar.nambiar@wakheel.in",
-    matterTitle: "OS 412/2023 • Principal Munsiff Court",
-    subject: "Advocate Commissioner Survey Report Filed in OS 412/2023",
-    snippet:
-      "The court-appointed Advocate Commissioner has officially filed the re-survey sketch confirming that the adjacent developer encroached 1.8 meters...",
-    body: [
-      "Dear Mr. Nambiar,",
-      "The Advocate Commissioner appointed in OS 412/2023 has submitted their official report and revenue survey sketch before the Principal Munsiff Court today.",
-      "Crucially, the report confirms that the western boundary stone of Re-Survey No. 412/1 was shifted by the defendant's construction workers, encroaching 1.8 meters into your registered holding.",
-      "The case is posted for examination of the Advocate Commissioner as CW-1 on 04 November 2026. We are in a commanding position to seek a permanent prohibitory decree.",
-      "Warm regards,\nAdv. Sarah Jenkins\nChamber 304, District Court Complex",
-    ],
-    timestamp: "11:42 AM",
-    fullDate: "26 Oct 2026, 11:42 AM",
-    folder: "inbox",
-    category: "property",
-    categoryLabel: "Civil & Land Suit",
-    categoryColor: "amber",
-    isRead: true,
-    isStarred: false,
-    attachments: [
-      {
-        name: "Advocate_Commissioner_Survey_Sketch_Sy_412.pdf",
-        size: "2.45 MB",
-        type: "pdf",
-        color: "sky",
-      },
-    ],
-  },
-  {
-    id: "mail-3",
-    senderName: "High Court Registry Notice",
-    senderEmail: "registry@hckerala.gov.in",
-    senderAvatarText: "HC",
-    recipientName: "Gopakumar Nambiar",
-    recipientEmail: "gopakumar.nambiar@wakheel.in",
-    matterTitle: "WP(C) 19482/2024 • eCourts Cause List",
-    subject: "Official eCourts Cause List Publication Notice — Bench 2A",
-    snippet:
-      "Electronic Registry confirmation: WP(C) 19482/2024 has been listed on the motion board before Division Bench 2A for compliance reporting...",
-    body: [
-      "NOTICE ISSUED BY REGISTRY, HIGH COURT OF KERALA AT ERNAKULAM",
-      "Case Number: WP(C) 19482/2024",
-      "Petitioner: Gopakumar Nambiar | Respondent: Kerala State Electricity Board & Anr.",
-      "The above-captioned matter stands listed on the Cause List for 12 November 2026 before Division Bench 2A as Item No. 18.",
-      "Advocate on Record for Petitioner: Adv. Meera Krishnan (Enrollment No. K/001429/2012).",
-      "This is an automated eCourts registry alert under National Judicial Data Grid (NJDG) standards.",
-    ],
-    timestamp: "Yesterday",
-    fullDate: "25 Oct 2026, 06:30 PM",
-    folder: "inbox",
-    category: "work",
-    categoryLabel: "Court Registry Alert",
-    categoryColor: "sky",
-    isRead: true,
-    isStarred: false,
-  },
-  {
-    id: "mail-4",
-    senderName: "Adv. Rajesh V. Varma",
-    senderEmail: "rajesh.varma@ncltbar.org",
-    senderAvatarText: "RV",
-    recipientName: "Gopakumar Nambiar",
-    recipientEmail: "gopakumar.nambiar@wakheel.in",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041 • Commercial Arbitration",
-    subject: "Arbitration Statement of Claim Finalized for Execution",
-    snippet:
-      "The statement of claim for recovery of Rs. 48.6 Lakhs along with Section 17 interim relief application is drafted and ready for review...",
-    body: [
-      "Dear Gopakumar,",
-      "I have finalized our Statement of Claim under Section 23 of the Arbitration and Conciliation Act, 1996 for recovery of Rs. 48.6 Lakhs against Coastal Logistics.",
-      "We have also incorporated an urgent Section 17 application requesting the learned Arbitrator to direct the respondent to furnish bank guarantee security.",
-      "The next sitting of the Arbitral Tribunal is confirmed for 18 November 2026 at 2:30 PM.",
-      "Sincerely,\nAdv. Rajesh V. Varma\nCommercial & Corporate Counsel",
-    ],
-    timestamp: "24 Oct",
-    fullDate: "24 Oct 2026, 02:15 PM",
-    folder: "inbox",
-    category: "commercial",
-    categoryLabel: "Commercial Arbitration",
-    categoryColor: "purple",
-    isRead: true,
-    isStarred: true,
-    attachments: [
-      {
-        name: "Arbitration_Statement_of_Claim_Draft.docx",
-        size: "1.20 MB",
-        type: "docx",
-        color: "amber",
-      },
-    ],
-  },
-  {
-    id: "mail-5",
-    senderName: "Adv. Priya Nair",
-    senderEmail: "priya.nair@kollambar.org",
-    senderAvatarText: "PN",
-    recipientName: "Gopakumar Nambiar",
-    recipientEmail: "gopakumar.nambiar@wakheel.in",
-    matterTitle: "Section 138 NI Act • Statutory Notice",
-    subject: "Statutory 15-Day Demand Notice Dispatched via Speed Post",
-    snippet:
-      "Statutory demand notice under Section 138(b) was successfully dispatched today via Speed Post with Acknowledgment Due (Consignment EK984712041IN)...",
-    body: [
-      "Dear Gopakumar,",
-      "This is to formally confirm that the Statutory Legal Notice under Section 138(b) of the Negotiable Instruments Act has been dispatched today via Speed Post.",
-      "Consignment Number: EK984712041IN.",
-      "As per Supreme Court mandates (2024 INSC 782), the noticee has 15 clear days from the date of postal delivery to remit the cheque amount of Rs. 3,50,000/-.",
-      "We will monitor the India Post delivery confirmation portal. If payment is defaulted on Day 16, we will lodge the criminal complaint before the JFCM.",
-      "Best,\nAdv. Priya Nair",
-    ],
-    timestamp: "22 Oct",
-    fullDate: "22 Oct 2026, 04:50 PM",
-    folder: "inbox",
-    category: "urgent",
-    categoryLabel: "Statutory Notice",
-    categoryColor: "zinc",
-    isRead: true,
-    isStarred: false,
-    attachments: [
-      {
-        name: "India_Post_Speed_Post_Receipt_EK984712041IN.pdf",
-        size: "820 KB",
-        type: "pdf",
-        color: "sky",
-      },
-    ],
-  },
-];
+const INITIAL_LEGAL_EMAILS: LegalEmailItem[] = [];
 
-const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [
-  {
-    id: "adv-meera",
-    type: "direct",
-    name: "John Doe",
-    chamber: "Chamber 402 • High Court of Kerala",
-    court: "Manhattan",
-    specialization: "Senior Counsel • Constitutional & Writs",
-    matter: "WP(C) 19482/2024",
-    avatarText: "JD",
-    avatarBgColor: "bg-[#0066FF] text-white",
-    online: true,
-    lastMessage: "The quick brown fox jumps over the lazy dog.",
-    lastTime: "Today",
-    unreadCount: 1,
-    messages: [
-      {
-        id: "m-1",
-        sender: "advocate",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-      {
-        id: "m-2",
-        sender: "citizen",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Today",
-        status: "read",
-      },
-      {
-        id: "m-3",
-        sender: "advocate",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-      {
-        id: "m-4",
-        sender: "citizen",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Today",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "adv-sarah",
-    type: "direct",
-    name: "John Doe",
-    chamber: "Chamber 304 • District Court Complex",
-    court: "Manhattan",
-    specialization: "Senior Property & Tenancy Advocate",
-    matter: "OS 412/2023",
-    avatarText: "JD",
-    avatarBgColor: "bg-[#00875A] text-white",
-    online: true,
-    lastMessage: "The quick brown fox jumps over the lazy dog.",
-    lastTime: "Sunday",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "s-1",
-        sender: "advocate",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-      {
-        id: "s-2",
-        sender: "citizen",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Today",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "adv-rajesh",
-    type: "direct",
-    name: "John Doe",
-    chamber: "NCLT Bar Chambers • Commercial Tribunal",
-    court: "Manhattan",
-    specialization: "Commercial & Corporate Litigator",
-    matter: "ARB/NCLT/KOCHI/2024/041",
-    avatarText: "JD",
-    avatarBgColor: "bg-[#00B8D9] text-white",
-    online: true,
-    lastMessage: "The quick brown fox jumps over the lazy dog.",
-    lastTime: "Saturday",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "r-1",
-        sender: "advocate",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-      {
-        id: "r-2",
-        sender: "citizen",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Today",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "adv-priya",
-    type: "direct",
-    name: "John Doe",
-    chamber: "Chamber 12 • Judicial First Class Court",
-    court: "Manhattan",
-    specialization: "Civil Rights & Statutory Notices",
-    matter: "Section 138 NI Act Notice",
-    avatarText: "JD",
-    avatarBgColor: "bg-[#FFAB00] text-white",
-    online: true,
-    lastMessage: "The quick brown fox jumps over the lazy dog.",
-    lastTime: "Friday",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "p-1",
-        sender: "advocate",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-      {
-        id: "p-2",
-        sender: "citizen",
-        text: "The quick brown fox jumps over the lazy dog.",
-        timestamp: "Today",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "group-hc",
-    type: "group",
-    name: "High Court Bench 2A Counsel Team",
-    chamber: "WP(C) 19482/2024 Legal Defense",
-    court: "High Court of Kerala",
-    specialization: "Writ Litigation Panel",
-    matter: "WP(C) 19482/2024",
-    avatarText: "HC",
-    avatarBgColor: "bg-black text-white dark:bg-white dark:text-black",
-    online: true,
-    lastMessage: "Adv. Anand: Registry motion slip submitted for tomorrow.",
-    lastTime: "Today",
-    unreadCount: 2,
-    participants: ["Adv. Meera Krishnan", "Adv. Anand (Junior)", "You"],
-    messages: [
-      {
-        id: "g-1",
-        sender: "advocate",
-        text: "Division Bench 2A has listed our motion item for first hour call.",
-        timestamp: "Today",
-        status: "read",
-      },
-      {
-        id: "g-2",
-        sender: "citizen",
-        text: "Thank you counsel, will the certified order copy be presented?",
-        timestamp: "Today",
-        status: "read",
-      },
-      {
-        id: "g-3",
-        sender: "advocate",
-        text: "Adv. Anand: Registry motion slip submitted for tomorrow.",
-        timestamp: "Today",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "group-property",
-    type: "group",
-    name: "Property Boundary & Title Panel",
-    chamber: "OS 412/2023 Survey Execution",
-    court: "Principal Munsiff Court",
-    specialization: "Civil Commission Panel",
-    matter: "OS 412/2023",
-    avatarText: "PB",
-    avatarBgColor: "bg-[#6B1728] text-white",
-    online: true,
-    lastMessage: "Surveyor Raman: Final sketch uploaded to vault.",
-    lastTime: "Sunday",
-    unreadCount: 0,
-    participants: ["Adv. Sarah Jenkins", "Surveyor Raman", "You"],
-    messages: [
-      {
-        id: "gp-1",
-        sender: "advocate",
-        text: "Survey report uploaded to the shared documents vault.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-      {
-        id: "gp-2",
-        sender: "citizen",
-        text: "Received and reviewed. The encroachment measurements are clear.",
-        timestamp: "Sunday",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "group-corporate",
-    type: "group",
-    name: "Commercial Arbitral Taskforce",
-    chamber: "ARB/NCLT/KOCHI/2024/041",
-    court: "NCLT Kochi Bench",
-    specialization: "Corporate Insolvency Taskforce",
-    matter: "ARB/NCLT/KOCHI/2024/041",
-    avatarText: "AT",
-    avatarBgColor: "bg-zinc-800 text-white",
-    online: false,
-    lastMessage: "Statement of claim accepted by sole arbitrator.",
-    lastTime: "Friday",
-    unreadCount: 0,
-    participants: ["Adv. Rajesh V. Varma", "Chartered Accountant Vinod", "You"],
-    messages: [
-      {
-        id: "gc-1",
-        sender: "advocate",
-        text: "Arbitral Tribunal has admitted our rejoinder submissions.",
-        timestamp: "Friday",
-        status: "read",
-      },
-    ],
-  },
-];
+const INITIAL_CHAT_THREADS: ChatAdvocateThread[] = [];
 
-const INITIAL_NOTIFICATIONS: LegalNotificationItem[] = [
-  {
-    id: "notif-info-1",
-    type: "info",
-    title: "This is informative message",
-    category: "system",
-    categoryLabel: "Info Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "Just now",
-    isRead: false,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-success-1",
-    type: "success",
-    title: "This is success message",
-    category: "orders",
-    categoryLabel: "Success Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "5 min ago",
-    isRead: false,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-warning-1",
-    type: "warning",
-    title: "This is warning message",
-    category: "hearings",
-    categoryLabel: "Warning Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "20 min ago",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-danger-1",
-    type: "danger",
-    title: "This is danger message",
-    category: "notices",
-    categoryLabel: "Danger Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "1 hour ago",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-1",
-    type: "success",
-    title: "Interim Stay Order Certified Copy Issued",
-    category: "orders",
-    categoryLabel: "High Court Order",
-    summary: "Hon'ble Division Bench 2A has issued the certified true copy of today's Daily Order in WP(C) 19482/2024. Stay extended until 12 Nov 2026.",
-    timestamp: "12 min ago",
-    caseRef: "WP(C) 19482/2024",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-2",
-    type: "warning",
-    title: "Urgent Causelist Listing for Tomorrow",
-    category: "hearings",
-    categoryLabel: "Court Hearing",
-    summary: "Item No. 42 scheduled before Hon'ble Justice P. V. Kunhikrishnan at 10:30 AM. Lead appearance confirmed.",
-    timestamp: "45 min ago",
-    caseRef: "WP(C) 19482/2024",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-3",
-    type: "info",
-    title: "Speed Post Statutory Notice Delivered",
-    category: "notices",
-    categoryLabel: "India Post Delivery",
-    summary: "Speed Post consignment EK984712041IN successfully served on respondent. 15-day statutory cure clock commenced under Section 138 NI Act.",
-    timestamp: "2 hours ago",
-    caseRef: "Sec. 138 NI Act Notice",
-    isRead: false,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-4",
-    type: "danger",
-    title: "Advocate Commissioner Survey Report Uploaded",
-    category: "filings",
-    categoryLabel: "Survey Filing",
-    summary: "Court Advocate Commissioner filed the physical boundary measurement report confirming 1.8m encroachment into west plot boundary.",
-    timestamp: "Yesterday",
-    caseRef: "OS 412/2023",
-    isRead: true,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-5",
-    type: "info",
-    title: "Pre-Motion Virtual Chamber Consultation Confirmed",
-    category: "hearings",
-    categoryLabel: "Chamber Meet",
-    summary: "Virtual Chamber session booked with Adv. Sarah Jenkins for 29 Oct at 03:00 PM. Video link secured under Section 126 privilege.",
-    timestamp: "2 days ago",
-    caseRef: "OS 412/2023",
-    isRead: true,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-6",
-    type: "warning",
-    title: "Arbitral Tribunal Statement of Claim Received",
-    category: "filings",
-    categoryLabel: "Tribunal Registry",
-    summary: "Claimant submitted 3 volumes of audited ledgers in ARB/NCLT/KOCHI/2024/041. Rejoinder defense preparation underway.",
-    timestamp: "3 days ago",
-    caseRef: "ARB/NCLT/KOCHI/2024/041",
-    isRead: true,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-];
+interface AdvocateOption {
+  id: string;
+  name: string;
+  chamber: string;
+  specialization: string;
+  matterTitle?: string;
+}
+
+const getInitials = (name: string) =>
+  String(name || "CN")
+    .replace(/^adv\.?\s*/i, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0] || "")
+    .join("")
+    .toUpperCase() || "CN";
 
 interface SecureInboxViewProps {
   token?: string;
+  citizenName?: string;
+  citizenEmail?: string;
   initialMode?: InboxMode;
   onOpenConsultationModal?: () => void;
 }
 
 export function SecureInboxView({
+  token,
+  citizenName = "Citizen",
+  citizenEmail = "",
   initialMode = "mails",
   onOpenConsultationModal,
 }: SecureInboxViewProps) {
   const [inboxMode, setInboxMode] = useState<InboxMode>(initialMode);
 
+  useEffect(() => {
+    setInboxMode(initialMode);
+  }, [initialMode]);
+
+  const authToken = useMemo(
+    () =>
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : ""),
+    [token]
+  );
+
+  const citizenInitials = useMemo(() => getInitials(citizenName || "You"), [citizenName]);
+
   // Mails State
-  const [emails, setEmails] = useState<LegalEmailItem[]>(INITIAL_LEGAL_EMAILS);
+  const [emails, setEmails] = useState<LegalEmailItem[]>([]);
+  const [isLoadingMails, setIsLoadingMails] = useState<boolean>(false);
+  const [isSendingMail, setIsSendingMail] = useState<boolean>(false);
   const [selectedFolder, setSelectedFolder] = useState<MailFolder>("inbox");
   const [selectedCategory, setSelectedCategory] = useState<MailCategory>("all");
   const [mailSearchQuery, setMailSearchQuery] = useState<string>("");
-  const [selectedEmailId, setSelectedEmailId] = useState<string>("mail-1");
+  const [selectedEmailId, setSelectedEmailId] = useState<string>("");
   const [composeModalOpen, setComposeModalOpen] = useState<boolean>(false);
   const [replyInput, setReplyInput] = useState<string>("");
   const [replySuccess, setReplySuccess] = useState<boolean>(false);
 
   // Compose State
-  const [composeTo, setComposeTo] = useState<string>("Adv. Meera Krishnan");
+  const [composeRecipientId, setComposeRecipientId] = useState<string>("");
+  const [composeTo, setComposeTo] = useState<string>("");
+  const [composeMatter, setComposeMatter] = useState<string>("");
   const [composeSubject, setComposeSubject] = useState<string>("");
   const [composeBody, setComposeBody] = useState<string>("");
 
-  // Instant Messages State
-  const [chatThreads, setChatThreads] = useState<ChatAdvocateThread[]>(INITIAL_CHAT_THREADS);
+  // Counsel Directory & Instant Messages State
+  const [counselOptions, setCounselOptions] = useState<AdvocateOption[]>([]);
+  const [chatThreads, setChatThreads] = useState<ChatAdvocateThread[]>([]);
+  const [isLoadingChats, setIsLoadingChats] = useState<boolean>(false);
+  const [isSendingChat, setIsSendingChat] = useState<boolean>(false);
   const [chatSegment, setChatSegment] = useState<"direct" | "group">("direct");
-  const [selectedChatId, setSelectedChatId] = useState<string>("adv-meera");
+  const [selectedChatId, setSelectedChatId] = useState<string>("");
   const [chatInputText, setChatInputText] = useState<string>("");
   const [chatSearchQuery, setChatSearchQuery] = useState<string>("");
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [newDiscussionOpen, setNewDiscussionOpen] = useState<boolean>(false);
+  const [statusNotice, setStatusNotice] = useState<string>("");
   const chatMessagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Notifications State
-  const [notifications, setNotifications] = useState<LegalNotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<LegalNotificationItem[]>([]);
   const [selectedNotifFilter, setSelectedNotifFilter] = useState<string>("all");
+
+  const loadInboxData = useCallback(async () => {
+    setIsLoadingMails(true);
+    setIsLoadingChats(true);
+    try {
+      const [mailsRes, msgsRes, notifsRes, advRes, mattersRes, consultRes, grvRes] =
+        await Promise.all([
+          citizenApi.getMails(authToken).catch(() => null),
+          citizenApi.getMessages(authToken).catch(() => null),
+          citizenApi.getNotifications(authToken).catch(() => null),
+          citizenApi.getAdvocates().catch(() => null),
+          authToken ? citizenApi.getMatters(authToken).catch(() => null) : Promise.resolve(null),
+          authToken ? citizenApi.getConsultations(authToken).catch(() => null) : Promise.resolve(null),
+          authToken ? citizenApi.getGrievances(authToken).catch(() => null) : Promise.resolve(null),
+        ]);
+
+      // Build Advocate Directory from citizen's matters/consultations/grievances + registered advocates
+      const directoryMap = new Map<string, AdvocateOption>();
+      const registerAdvocate = (opt: Partial<AdvocateOption> & { name?: string }) => {
+        const cleanName = String(opt.name || "").trim();
+        const cleanId = String(opt.id || "").trim();
+        const key = cleanId || cleanName.toLowerCase();
+        if (!key || !cleanName) return;
+        const prev = directoryMap.get(key);
+        directoryMap.set(key, {
+          id: cleanId || prev?.id || "",
+          name: cleanName,
+          chamber: opt.chamber || prev?.chamber || "Advocate Chamber",
+          specialization: opt.specialization || prev?.specialization || "Legal Counsel",
+          matterTitle: opt.matterTitle || prev?.matterTitle,
+        });
+      };
+
+      if (mattersRes?.success && Array.isArray(mattersRes.matters)) {
+        mattersRes.matters.forEach((m: any) =>
+          registerAdvocate({
+            id: m.advocateId,
+            name: m.advocateName,
+            chamber: m.courtName || "Assigned Counsel Chamber",
+            matterTitle: m.title || m.caseNumber,
+          })
+        );
+      }
+      if (consultRes?.success && Array.isArray(consultRes.consultations)) {
+        consultRes.consultations.forEach((c: any) =>
+          registerAdvocate({
+            id: c.advocateId,
+            name: c.advocateName,
+            matterTitle: c.matterTitle || c.legalIssueSummary,
+          })
+        );
+      }
+      if (grvRes?.success && Array.isArray(grvRes.grievances)) {
+        grvRes.grievances.forEach((g: any) =>
+          registerAdvocate({
+            id: g.matchedAdvocateId || g.advocateId,
+            name: g.matchedAdvocateName || g.advocateName,
+            matterTitle: g.title,
+          })
+        );
+      }
+      if (advRes?.success && Array.isArray(advRes.advocates)) {
+        advRes.advocates.forEach((a: any) =>
+          registerAdvocate({
+            id: a.id || a._id || a.advocateId,
+            name: a.fullName || a.name,
+            chamber: a.court || a.chamber || "Advocate Chamber",
+            specialization: a.specialization || "Legal Counsel",
+          })
+        );
+      }
+
+      const directoryList = Array.from(directoryMap.values());
+      setCounselOptions(directoryList);
+
+      if (mailsRes?.success && Array.isArray(mailsRes.mails)) {
+        setEmails(mailsRes.mails);
+      }
+      if (notifsRes?.success && Array.isArray(notifsRes.notifications)) {
+        setNotifications(notifsRes.notifications);
+      }
+
+      if (msgsRes?.success && Array.isArray(msgsRes.messages)) {
+        const grouped = new Map<string, ChatAdvocateThread>();
+        msgsRes.messages.forEach((m: any) => {
+          const isCitizen =
+            m.senderRole === "citizen" ||
+            (!m.senderRole && m.recipientRole === "advocate");
+          const advId = String(
+            (isCitizen ? m.recipientId : m.senderId) || m.advocateId || ""
+          ).trim();
+          const advName = String(
+            (isCitizen ? m.recipientName : m.senderName) || "Counsel"
+          ).trim();
+          const key = advId || advName.toLowerCase();
+          if (!key) return;
+
+          const dirMatch = directoryList.find(
+            (d) =>
+              (advId && d.id === advId) ||
+              d.name.toLowerCase() === advName.toLowerCase()
+          );
+
+          const chatMsg: ChatMessage = {
+            id: String(m.id || m._id || Math.random()),
+            sender: isCitizen ? "citizen" : "advocate",
+            text: String(m.content || ""),
+            timestamp: m.createdAt
+              ? new Date(m.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Just now",
+            status: m.isRead ? "read" : "delivered",
+          };
+
+          if (!grouped.has(key)) {
+            const displayName = dirMatch?.name || advName;
+            grouped.set(key, {
+              id: advId || key,
+              advocateId: advId || dirMatch?.id || "",
+              matterId: String(m.matterId || ""),
+              type: "direct",
+              name: displayName,
+              chamber: dirMatch?.chamber || "Privileged Counsel Chamber",
+              court: dirMatch?.chamber || m.matterTitle || "Client Chamber Link",
+              specialization: dirMatch?.specialization || "Legal Counsel",
+              matter: m.matterTitle || dirMatch?.matterTitle || "General Legal Counsel",
+              avatarText: getInitials(displayName),
+              avatarBgColor: "bg-black text-white dark:bg-white dark:text-black",
+              online: true,
+              lastMessage: chatMsg.text,
+              lastTime: chatMsg.timestamp,
+              unreadCount: !isCitizen && !m.isRead ? 1 : 0,
+              messages: [chatMsg],
+            });
+          } else {
+            const existing = grouped.get(key)!;
+            existing.messages.push(chatMsg);
+            existing.lastMessage = chatMsg.text;
+            existing.lastTime = chatMsg.timestamp;
+            if (!isCitizen && !m.isRead) {
+              existing.unreadCount += 1;
+            }
+          }
+        });
+
+        const threadList = Array.from(grouped.values());
+        setChatThreads((prev) => {
+          const existingKeys = new Set(threadList.map((t) => t.id));
+          const pendingEmpty = prev.filter(
+            (p) => !existingKeys.has(p.id) && p.messages.length === 0
+          );
+          return [...pendingEmpty, ...threadList];
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to load citizen inbox:", err);
+    } finally {
+      setIsLoadingMails(false);
+      setIsLoadingChats(false);
+    }
+  }, [authToken]);
+
+  useEffect(() => {
+    loadInboxData();
+  }, [loadInboxData, inboxMode]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -717,32 +390,12 @@ export function SecureInboxView({
     }
   }, [inboxMode, selectedChatId, chatThreads]);
 
-  // Voice recording simulation
-  const toggleRecording = () => {
-    if (isRecording) {
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-      setIsRecording(false);
-      setChatInputText(
-        (prev) =>
-          (prev ? prev + " " : "") +
-          "[Voice Note]: Adv. Meera, can you please verify if the court ordered an advocate commissioner for the site inspection?"
-      );
-      setRecordingSeconds(0);
-    } else {
-      setIsRecording(true);
-      setRecordingSeconds(0);
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingSeconds((s) => s + 1);
-      }, 1000);
-    }
-  };
-
   // Filtered Mails
   const filteredEmails = useMemo(() => {
     return emails.filter((mail) => {
       const matchFolder =
         selectedFolder === "starred"
-          ? mail.isStarred
+          ? mail.isStarred && mail.folder !== "trash"
           : mail.folder === selectedFolder;
 
       const matchCategory =
@@ -761,7 +414,10 @@ export function SecureInboxView({
   }, [emails, selectedFolder, selectedCategory, mailSearchQuery]);
 
   const activeEmail =
-    emails.find((e) => e.id === selectedEmailId) || filteredEmails[0] || emails[0];
+    filteredEmails.find((e) => e.id === selectedEmailId) || filteredEmails[0];
+
+  const unreadInboxCount = emails.filter((e) => !e.isRead && e.folder === "inbox").length;
+  const draftsCount = emails.filter((e) => e.folder === "drafts").length;
 
   const filteredChatThreads = useMemo(() => {
     const segmentFiltered = chatThreads.filter(
@@ -779,121 +435,245 @@ export function SecureInboxView({
   }, [chatThreads, chatSegment, chatSearchQuery]);
 
   const activeChatThread =
-    chatThreads.find((c) => c.id === selectedChatId) ||
+    filteredChatThreads.find((c) => c.id === selectedChatId) ||
     filteredChatThreads[0] ||
-    chatThreads[0];
+    (chatSegment === "direct" ? chatThreads[0] : undefined);
+
+  // Select email & mark read
+  const handleSelectEmail = async (mail: LegalEmailItem) => {
+    setSelectedEmailId(mail.id);
+    if (!mail.isRead) {
+      setEmails((prev) =>
+        prev.map((m) => (m.id === mail.id ? { ...m, isRead: true } : m))
+      );
+      try {
+        await citizenApi.updateMail(authToken, mail.id, { isRead: true });
+      } catch (err) {
+        console.warn("Failed to mark mail read:", err);
+      }
+    }
+  };
 
   // Toggle star
-  const handleToggleStar = (emailId: string, e?: React.MouseEvent) => {
+  const handleToggleStar = async (emailId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    const target = emails.find((m) => m.id === emailId);
+    const nextStar = !target?.isStarred;
     setEmails((prev) =>
       prev.map((mail) =>
-        mail.id === emailId ? { ...mail, isStarred: !mail.isStarred } : mail
+        mail.id === emailId ? { ...mail, isStarred: nextStar } : mail
       )
     );
+    try {
+      await citizenApi.updateMail(authToken, emailId, { isStarred: nextStar });
+    } catch (err) {
+      console.warn("Failed to update star status:", err);
+    }
+  };
+
+  // Archive email
+  const handleArchiveEmail = async (emailId: string) => {
+    setEmails((prev) =>
+      prev.map((mail) =>
+        mail.id === emailId ? { ...mail, folder: "archive" as MailFolder } : mail
+      )
+    );
+    try {
+      await citizenApi.updateMail(authToken, emailId, { folder: "archive" });
+    } catch (err) {
+      console.warn("Failed to archive mail:", err);
+    }
   };
 
   // Delete / Trash email
-  const handleDeleteEmail = (emailId: string) => {
+  const handleDeleteEmail = async (emailId: string) => {
+    const target = emails.find((m) => m.id === emailId);
+    const isAlreadyTrash = target?.folder === "trash";
     setEmails((prev) =>
-      prev.map((mail) =>
-        mail.id === emailId ? { ...mail, folder: "trash" as MailFolder } : mail
-      )
+      isAlreadyTrash
+        ? prev.filter((mail) => mail.id !== emailId)
+        : prev.map((mail) =>
+            mail.id === emailId ? { ...mail, folder: "trash" as MailFolder } : mail
+          )
     );
+    try {
+      await citizenApi.deleteMail(authToken, emailId);
+    } catch (err) {
+      console.warn("Failed to delete mail:", err);
+    }
   };
 
   // Send quick reply in Mail
-  const handleSendMailReply = () => {
-    if (!replyInput.trim()) return;
-    setReplySuccess(true);
-    setReplyInput("");
-    setTimeout(() => setReplySuccess(false), 2500);
+  const handleSendMailReply = async () => {
+    if (!replyInput.trim() || !activeEmail || isSendingMail) return;
+    setIsSendingMail(true);
+    try {
+      const res = await citizenApi.replyMail(authToken, activeEmail.id, replyInput.trim());
+      if (res?.success && res.mail) {
+        setEmails((prev) => prev.map((m) => (m.id === activeEmail.id ? res.mail : m)));
+        setReplySuccess(true);
+        setReplyInput("");
+        setTimeout(() => setReplySuccess(false), 2500);
+      }
+    } catch (err) {
+      console.warn("Failed to reply to mail:", err);
+    } finally {
+      setIsSendingMail(false);
+    }
   };
 
   // Send new compose mail
-  const handleSendCompose = () => {
-    if (!composeSubject.trim() || !composeBody.trim()) return;
+  const handleSendCompose = async () => {
+    if ((!composeRecipientId && !composeTo.trim()) || !composeSubject.trim() || !composeBody.trim() || isSendingMail) return;
+    setIsSendingMail(true);
+    try {
+      const res = await citizenApi.sendMail(authToken, {
+        recipientId: composeRecipientId,
+        recipientName: composeTo.trim(),
+        matterTitle: composeMatter.trim() || "Client Correspondence",
+        subject: composeSubject.trim(),
+        body: composeBody.trim(),
+        category: "work",
+        categoryLabel: "Client Instruction",
+        categoryColor: "sky",
+      });
+      if (res?.success && res.mail) {
+        setEmails((prev) => [res.mail, ...prev]);
+        setSelectedFolder("sent");
+        setSelectedEmailId(res.mail.id);
+      }
+      setComposeModalOpen(false);
+      setComposeSubject("");
+      setComposeBody("");
+      setComposeMatter("");
+    } catch (err) {
+      console.warn("Failed to transmit mail:", err);
+    } finally {
+      setIsSendingMail(false);
+    }
+  };
 
-    const newMail: LegalEmailItem = {
-      id: "mail-" + Date.now(),
-      senderName: "Gopakumar Nambiar",
-      senderEmail: "gopakumar.nambiar@wakheel.in",
-      senderAvatarText: "GO",
-      recipientName: composeTo,
-      recipientEmail: "counsel@wakheel.in",
-      matterTitle: "WP(C) 19482/2024 • High Court of Kerala",
-      subject: composeSubject,
-      snippet: composeBody.slice(0, 100),
-      body: [composeBody],
-      timestamp: "Just now",
-      fullDate: new Date().toLocaleString(),
-      folder: "sent",
-      category: "work",
-      categoryLabel: "Client Instruction",
-      categoryColor: "sky",
-      isRead: true,
-      isStarred: false,
-    };
+  // Select chat thread & mark incoming messages read
+  const handleSelectChatThread = async (thread: ChatAdvocateThread) => {
+    setSelectedChatId(thread.id);
+    if (thread.unreadCount > 0) {
+      const unreadIds = thread.messages
+        .filter((m) => m.sender === "advocate" && m.status !== "read")
+        .map((m) => m.id);
+      setChatThreads((prev) =>
+        prev.map((t) =>
+          t.id === thread.id
+            ? {
+                ...t,
+                unreadCount: 0,
+                messages: t.messages.map((m) =>
+                  m.sender === "advocate" ? { ...m, status: "read" } : m
+                ),
+              }
+            : t
+        )
+      );
+      await Promise.all(
+        unreadIds.map((id) => citizenApi.markMessageAsRead(authToken, id).catch(() => null))
+      );
+    }
+  };
 
-    setEmails((prev) => [newMail, ...prev]);
-    setComposeModalOpen(false);
-    setComposeSubject("");
-    setComposeBody("");
+  // Start discussion with selected advocate
+  const handleStartAdvocateDiscussion = (opt: AdvocateOption) => {
+    const targetKey = opt.id || opt.name.toLowerCase();
+    const existing = chatThreads.find(
+      (t) =>
+        (opt.id && (t.id === opt.id || t.advocateId === opt.id)) ||
+        t.name.toLowerCase() === opt.name.toLowerCase()
+    );
+    if (existing) {
+      setChatSegment("direct");
+      handleSelectChatThread(existing);
+    } else {
+      const newThread: ChatAdvocateThread = {
+        id: opt.id || targetKey,
+        advocateId: opt.id,
+        type: "direct",
+        name: opt.name,
+        chamber: opt.chamber || "Advocate Chamber",
+        court: opt.chamber || "Privileged Chamber Channel",
+        specialization: opt.specialization || "Legal Counsel",
+        matter: opt.matterTitle || "General Legal Counsel",
+        avatarText: getInitials(opt.name),
+        avatarBgColor: "bg-black text-white dark:bg-white dark:text-black",
+        online: true,
+        lastMessage: "Start a privileged discussion...",
+        lastTime: "",
+        unreadCount: 0,
+        messages: [],
+      };
+      setChatSegment("direct");
+      setChatThreads((prev) => [newThread, ...prev]);
+      setSelectedChatId(newThread.id);
+    }
+    setNewDiscussionOpen(false);
   };
 
   // Send Instant Chat Message
-  const handleSendChatMessage = () => {
-    if (!chatInputText.trim()) return;
+  const handleSendChatMessage = async () => {
+    if (!chatInputText.trim() || !activeChatThread || isSendingChat) return;
+    const text = chatInputText.trim();
+    const targetThreadId = activeChatThread.id;
+    const tempId = "c-msg-" + Date.now();
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const newMsg: ChatMessage = {
-      id: "c-msg-" + Date.now(),
+      id: tempId,
       sender: "citizen",
-      text: chatInputText.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      text,
+      timestamp: nowTime,
       status: "sent",
     };
 
     setChatThreads((prev) =>
-      prev.map((thread) => {
-        if (thread.id === selectedChatId) {
-          return {
-            ...thread,
-            lastMessage: newMsg.text,
-            lastTime: newMsg.timestamp,
-            messages: [...thread.messages, newMsg],
-          };
-        }
-        return thread;
-      })
-    );
-
-    const sentText = chatInputText;
-    setChatInputText("");
-
-    // Simulate counsel response after 1.5s
-    setTimeout(() => {
-      const advocateReply: ChatMessage = {
-        id: "c-adv-" + Date.now(),
-        sender: "advocate",
-        text: `Received: "${sentText.slice(0, 45)}...". I am reviewing this with my junior associates and will prepare the required note for court.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        status: "read",
-      };
-
-      setChatThreads((prev) =>
-        prev.map((thread) => {
-          if (thread.id === selectedChatId) {
-            return {
+      prev.map((thread) =>
+        thread.id === targetThreadId
+          ? {
               ...thread,
-              lastMessage: advocateReply.text,
-              lastTime: advocateReply.timestamp,
-              messages: [...thread.messages, advocateReply],
-            };
-          }
-          return thread;
-        })
-      );
-    }, 1500);
+              lastMessage: newMsg.text,
+              lastTime: newMsg.timestamp,
+              messages: [...thread.messages, newMsg],
+            }
+          : thread
+      )
+    );
+    setChatInputText("");
+    setIsSendingChat(true);
+
+    try {
+      const res = await citizenApi.sendCitizenMessage(authToken, {
+        content: text,
+        recipientId: activeChatThread.advocateId || (activeChatThread.id.startsWith("adv_") || !activeChatThread.id.includes(" ") ? activeChatThread.id : ""),
+        recipientName: activeChatThread.name,
+        matterId: activeChatThread.matterId || "",
+        matterTitle: activeChatThread.matter || "General Legal Counsel",
+      });
+      if (res?.success && res.messageData) {
+        const savedId = String(res.messageData.id || res.messageData._id || tempId);
+        setChatThreads((prev) =>
+          prev.map((thread) =>
+            thread.id === targetThreadId
+              ? {
+                  ...thread,
+                  messages: thread.messages.map((m) =>
+                    m.id === tempId ? { ...m, id: savedId, status: "delivered" } : m
+                  ),
+                }
+              : thread
+          )
+        );
+      }
+    } catch (err) {
+      console.warn("Failed to send message to advocate:", err);
+    } finally {
+      setIsSendingChat(false);
+    }
   };
 
   return (
@@ -921,7 +701,7 @@ export function SecureInboxView({
                   ? "bg-white text-black dark:bg-black dark:text-white"
                   : "bg-black text-white dark:bg-white dark:text-black"
               }`}>
-                {emails.filter((e) => !e.isRead).length}
+                {unreadInboxCount}
               </span>
             </button>
 
@@ -979,6 +759,19 @@ export function SecureInboxView({
         </div>
       </div>
 
+      {statusNotice && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300">
+          <span>{statusNotice}</span>
+          <button
+            type="button"
+            onClick={() => setStatusNotice("")}
+            className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* =========================================================================
           MODE 1: MAILS (Exact 3-Column Layout Matching Image 2)
       ========================================================================= */}
@@ -1002,9 +795,9 @@ export function SecureInboxView({
               {/* Folders List */}
               <div className="space-y-1 text-xs">
                 {[
-                  { id: "inbox" as MailFolder, label: "Inbox", icon: InboxIcon, badge: 8, badgeColor: "bg-black text-white dark:bg-white dark:text-black" },
+                  { id: "inbox" as MailFolder, label: "Inbox", icon: InboxIcon, badge: unreadInboxCount > 0 ? unreadInboxCount : undefined, badgeColor: "bg-black text-white dark:bg-white dark:text-black" },
                   { id: "starred" as MailFolder, label: "Starred", icon: Star },
-                  { id: "drafts" as MailFolder, label: "Drafts", icon: FileEdit, badge: 4, badgeColor: "bg-amber-500 text-white" },
+                  { id: "drafts" as MailFolder, label: "Drafts", icon: FileEdit, badge: draftsCount > 0 ? draftsCount : undefined, badgeColor: "bg-amber-500 text-white" },
                   { id: "sent" as MailFolder, label: "Sent", icon: Send },
                   { id: "archive" as MailFolder, label: "Archive", icon: Archive },
                   { id: "trash" as MailFolder, label: "Trash", icon: Trash2 },
@@ -1110,12 +903,7 @@ export function SecureInboxView({
                 return (
                   <div
                     key={mail.id}
-                    onClick={() => {
-                      setSelectedEmailId(mail.id);
-                      setEmails((prev) =>
-                        prev.map((m) => (m.id === mail.id ? { ...m, isRead: true } : m))
-                      );
-                    }}
+                    onClick={() => handleSelectEmail(mail)}
                     className={`relative p-4 transition-all cursor-pointer flex gap-3 group ${
                       isSelected
                         ? "bg-zinc-50 dark:bg-zinc-900/70"
@@ -1167,7 +955,9 @@ export function SecureInboxView({
 
               {filteredEmails.length === 0 && (
                 <div className="p-8 text-center text-xs text-zinc-500">
-                  No mails match your search in this folder.
+                  {isLoadingMails
+                    ? "Syncing secure correspondence..."
+                    : "No mails in this folder yet."}
                 </div>
               )}
             </div>
@@ -1209,40 +999,25 @@ export function SecureInboxView({
 
                     <button
                       type="button"
+                      onClick={() => handleArchiveEmail(activeEmail.id)}
                       title="Archive"
                       className="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                     >
                       <Archive className="w-4 h-4" />
                     </button>
-
-                    <button
-                      type="button"
-                      title="Move to Folder"
-                      className="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                    >
-                      <Folder className="w-4 h-4" />
-                    </button>
-
-                    <button
-                      type="button"
-                      title="Apply Tag"
-                      className="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                    >
-                      <Tag className="w-4 h-4" />
-                    </button>
                   </div>
 
-                  {/* Navigation / Count matching Image 2 */}
+                  {/* Navigation / Count */}
                   <div className="flex items-center gap-2 text-xs font-mono text-zinc-500">
                     <span>
-                      {emails.findIndex((e) => e.id === activeEmail.id) + 1} of {emails.length}
+                      {filteredEmails.findIndex((e) => e.id === activeEmail.id) + 1} of {filteredEmails.length}
                     </span>
                     <div className="flex items-center gap-0.5">
                       <button
                         type="button"
                         onClick={() => {
-                          const idx = emails.findIndex((e) => e.id === activeEmail.id);
-                          if (idx > 0) setSelectedEmailId(emails[idx - 1].id);
+                          const idx = filteredEmails.findIndex((e) => e.id === activeEmail.id);
+                          if (idx > 0) handleSelectEmail(filteredEmails[idx - 1]);
                         }}
                         className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
                       >
@@ -1251,8 +1026,8 @@ export function SecureInboxView({
                       <button
                         type="button"
                         onClick={() => {
-                          const idx = emails.findIndex((e) => e.id === activeEmail.id);
-                          if (idx < emails.length - 1) setSelectedEmailId(emails[idx + 1].id);
+                          const idx = filteredEmails.findIndex((e) => e.id === activeEmail.id);
+                          if (idx < filteredEmails.length - 1) handleSelectEmail(filteredEmails[idx + 1]);
                         }}
                         className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 cursor-pointer"
                       >
@@ -1337,7 +1112,7 @@ export function SecureInboxView({
                             </div>
                             <button
                               type="button"
-                              onClick={() => alert(`Downloading ${att.name}...`)}
+                              onClick={() => setStatusNotice(`Downloading attached document: ${att.name}`)}
                               className="p-2 rounded-lg bg-white/80 dark:bg-black/60 hover:bg-white dark:hover:bg-black transition-colors ml-1 cursor-pointer"
                               title="Download attachment"
                             >
@@ -1375,11 +1150,11 @@ export function SecureInboxView({
                           <button
                             type="button"
                             onClick={handleSendMailReply}
-                            disabled={!replyInput.trim()}
+                            disabled={!replyInput.trim() || isSendingMail}
                             className="px-4 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs disabled:opacity-40 cursor-pointer hover:opacity-90 flex items-center gap-1.5"
                           >
                             <Send className="w-3 h-3" />
-                            <span>Reply</span>
+                            <span>{isSendingMail ? "Sending..." : "Reply"}</span>
                           </button>
                         </div>
                       </div>
@@ -1409,7 +1184,12 @@ export function SecureInboxView({
                   </button>
                   <button
                     type="button"
-                    onClick={() => alert("Forward dialog opened.")}
+                    onClick={() => {
+                      setComposeSubject(`Fwd: ${activeEmail.subject}`);
+                      setComposeMatter(activeEmail.matterTitle || "");
+                      setComposeBody((activeEmail.body || []).join("\n\n"));
+                      setComposeModalOpen(true);
+                    }}
                     className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                     title="Forward"
                   >
@@ -1419,7 +1199,9 @@ export function SecureInboxView({
               </div>
             ) : (
               <div className="p-16 text-center text-xs text-zinc-400">
-                Select an email to view its privileged contents.
+                {emails.length === 0
+                  ? "No correspondence yet. Click 'New Message' to contact an assigned or registered advocate."
+                  : "Select an email to view its privileged contents."}
               </div>
             )}
           </div>
@@ -1482,7 +1264,7 @@ export function SecureInboxView({
                 <h3 className="font-bold text-base text-black dark:text-white">Discussions</h3>
                 <button
                   type="button"
-                  onClick={() => alert("New Discussion")}
+                  onClick={() => setNewDiscussionOpen(true)}
                   className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                   title="New Discussion"
                 >
@@ -1491,14 +1273,14 @@ export function SecureInboxView({
               </div>
             </div>
 
-            {/* Discussions List matching screenshot */}
+            {/* Discussions List */}
             <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900 px-3 py-2">
               {filteredChatThreads.map((thread) => {
-                const isSelected = activeChatThread.id === thread.id;
+                const isSelected = activeChatThread?.id === thread.id;
                 return (
                   <div
                     key={thread.id}
-                    onClick={() => setSelectedChatId(thread.id)}
+                    onClick={() => handleSelectChatThread(thread)}
                     className={`py-3 px-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-3 ${
                       isSelected
                         ? "bg-zinc-50 dark:bg-zinc-900/60"
@@ -1509,7 +1291,7 @@ export function SecureInboxView({
                     <div className="relative shrink-0">
                       <div
                         className={`w-10 h-10 rounded-full ${
-                          thread.avatarBgColor || "bg-[#0066FF] text-white"
+                          thread.avatarBgColor || "bg-black text-white dark:bg-white dark:text-black"
                         } font-bold text-xs flex items-center justify-center shadow-2xs`}
                       >
                         {thread.avatarText}
@@ -1531,156 +1313,209 @@ export function SecureInboxView({
                         {thread.lastMessage}
                       </p>
                     </div>
+
+                    {thread.unreadCount > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#6B1728] text-white shrink-0">
+                        {thread.unreadCount}
+                      </span>
+                    )}
                   </div>
                 );
               })}
 
               {filteredChatThreads.length === 0 && (
-                <div className="p-8 text-center text-xs text-zinc-400">
-                  No discussions found matching &quot;{chatSearchQuery}&quot;.
+                <div className="p-8 text-center text-xs text-zinc-400 space-y-3">
+                  <p>
+                    {isLoadingChats
+                      ? "Loading encrypted threads..."
+                      : chatSearchQuery
+                      ? `No discussions found matching "${chatSearchQuery}".`
+                      : chatSegment === "group"
+                      ? "No group panels joined yet."
+                      : "No counsel discussions yet."}
+                  </p>
+                  {!isLoadingChats && !chatSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setNewDiscussionOpen(true)}
+                      className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold cursor-pointer hover:opacity-90"
+                    >
+                      Start Counsel Chat
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
           {/* -------------------------------------------------------------
-              COLUMN 2: Right Main Chat Conversation Pane (Matching User Image)
+              COLUMN 2: Right Main Chat Conversation Pane
           ------------------------------------------------------------- */}
           <div className="flex-1 flex flex-col justify-between bg-white dark:bg-black min-w-0">
-            {/* Header: Avatar, Name, Manhattan, Video, Phone, Users */}
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-black">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-[#0066FF] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                  JD
-                </div>
-                <div className="min-w-0">
-                  <h4 className="font-bold text-sm text-black dark:text-white truncate">
-                    {activeChatThread.name}
-                  </h4>
-                  <span className="text-xs text-zinc-400 truncate block">
-                    {activeChatThread.court || "Manhattan"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Icons matching screenshot: Video, Phone, Users */}
-              <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
-                {onOpenConsultationModal && (
-                  <button
-                    type="button"
-                    onClick={onOpenConsultationModal}
-                    className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                    title="Video Call"
-                  >
-                    <Video className="w-5 h-5" />
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => alert(`Placing encrypted call to ${activeChatThread.name}`)}
-                  className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                  title="Voice Call"
-                >
-                  <Phone className="w-5 h-5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => alert(`Participant Info: ${activeChatThread.name}`)}
-                  className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                  title="Members"
-                >
-                  <Users className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Message Stream matching screenshot layout */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-              {activeChatThread.messages.map((msg) => {
-                const isCitizen = msg.sender === "citizen";
-                return (
-                  <div key={msg.id} className="space-y-1">
-                    {/* Date / Day Indicator matching screenshot */}
+            {activeChatThread ? (
+              <>
+                <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-black">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`flex items-center gap-2 text-[11px] text-zinc-400 font-normal px-2 ${
-                        isCitizen ? "justify-end" : "justify-start"
-                      }`}
+                      className={`w-10 h-10 rounded-full ${
+                        activeChatThread.avatarBgColor || "bg-black text-white dark:bg-white dark:text-black"
+                      } font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs`}
                     >
-                      <span>{msg.timestamp}</span>
+                      {activeChatThread.avatarText}
                     </div>
-
-                    <div
-                      className={`flex gap-3 items-end ${
-                        isCitizen ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      {/* Left incoming avatar matching screenshot */}
-                      {!isCitizen && (
-                        <div className="w-8 h-8 rounded-full bg-[#0066FF] text-white font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs mb-1">
-                          JD
-                        </div>
-                      )}
-
-                      {/* Chat bubble: Soft gray for incoming, Burgundy (#6B1728) for outgoing */}
-                      <div
-                        className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-4 text-xs shadow-2xs leading-relaxed ${
-                          isCitizen
-                            ? "bg-[#6B1728] text-white font-medium"
-                            : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-transparent dark:border-zinc-800/80"
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap">{msg.text}</p>
-                      </div>
-
-                      {/* Right outgoing avatar matching screenshot */}
-                      {isCitizen && (
-                        <div className="w-8 h-8 rounded-full bg-[#00B8D9] text-white font-bold text-[11px] flex items-center justify-center shrink-0 mb-1 shadow-2xs">
-                          JD
-                        </div>
-                      )}
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm text-black dark:text-white truncate">
+                        {activeChatThread.name}
+                      </h4>
+                      <span className="text-xs text-zinc-400 truncate block">
+                        {activeChatThread.court || activeChatThread.chamber || activeChatThread.matter}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-              <div ref={chatMessagesEndRef} />
-            </div>
 
-            {/* Bottom Input Container matching screenshot */}
-            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black">
-              <div className="rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
+                  {/* Action Icons: Video, Phone, Members */}
+                  <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400">
+                    {onOpenConsultationModal && (
+                      <button
+                        type="button"
+                        onClick={onOpenConsultationModal}
+                        className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                        title="Video Call"
+                      >
+                        <Video className="w-5 h-5" />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setStatusNotice(`Secure audio channel ready with ${activeChatThread.name}.`)}
+                      className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                      title="Voice Call"
+                    >
+                      <Phone className="w-5 h-5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setStatusNotice(
+                          `${activeChatThread.name} • ${activeChatThread.specialization} • Matter: ${activeChatThread.matter}`
+                        )
+                      }
+                      className="p-1.5 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                      title="Members"
+                    >
+                      <Users className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Message Stream */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                  {activeChatThread.messages.length === 0 && (
+                    <div className="p-8 text-center text-xs text-zinc-400">
+                      Send your first encrypted instruction to {activeChatThread.name}.
+                    </div>
+                  )}
+                  {activeChatThread.messages.map((msg) => {
+                    const isCitizen = msg.sender === "citizen";
+                    return (
+                      <div key={msg.id} className="space-y-1">
+                        <div
+                          className={`flex items-center gap-2 text-[11px] text-zinc-400 font-normal px-2 ${
+                            isCitizen ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          <span>{msg.timestamp}</span>
+                        </div>
+
+                        <div
+                          className={`flex gap-3 items-end ${
+                            isCitizen ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          {!isCitizen && (
+                            <div
+                              className={`w-8 h-8 rounded-full ${
+                                activeChatThread.avatarBgColor || "bg-black text-white dark:bg-white dark:text-black"
+                              } font-bold text-[11px] flex items-center justify-center shrink-0 shadow-2xs mb-1`}
+                            >
+                              {activeChatThread.avatarText}
+                            </div>
+                          )}
+
+                          <div
+                            className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-4 text-xs shadow-2xs leading-relaxed ${
+                              isCitizen
+                                ? "bg-[#6B1728] text-white font-medium"
+                                : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-transparent dark:border-zinc-800/80"
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap">{msg.text}</p>
+                          </div>
+
+                          {isCitizen && (
+                            <div className="w-8 h-8 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black font-bold text-[11px] flex items-center justify-center shrink-0 mb-1 shadow-2xs">
+                              {citizenInitials}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={chatMessagesEndRef} />
+                </div>
+
+                {/* Bottom Input Container */}
+                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black">
+                  <div className="rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setChatInputText((prev) => prev + " ⚖️")}
+                      className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                      title="Emoji"
+                    >
+                      <Smile className="w-5 h-5" />
+                    </button>
+
+                    <input
+                      type="text"
+                      placeholder="Type message..."
+                      value={chatInputText}
+                      onChange={(e) => setChatInputText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSendChatMessage();
+                      }}
+                      className="flex-1 bg-transparent text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleSendChatMessage}
+                      disabled={!chatInputText.trim() || isSendingChat}
+                      className="text-zinc-400 hover:text-black dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
+                      title="Send message"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-3">
+                <MessageSquare className="w-8 h-8 text-zinc-300 dark:text-zinc-700" />
+                <p className="text-xs text-zinc-500 max-w-sm">
+                  No active advocate discussion selected. Select a conversation or start a direct encrypted message with an advocate.
+                </p>
                 <button
                   type="button"
-                  onClick={() => setChatInputText((prev) => prev + " ⚖️")}
-                  className="text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                  title="Emoji"
+                  onClick={() => setNewDiscussionOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90"
                 >
-                  <Smile className="w-5 h-5" />
-                </button>
-
-                <input
-                  type="text"
-                  placeholder="Type message..."
-                  value={chatInputText}
-                  onChange={(e) => setChatInputText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSendChatMessage();
-                  }}
-                  className="flex-1 bg-transparent text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
-                />
-
-                <button
-                  type="button"
-                  onClick={handleSendChatMessage}
-                  disabled={!chatInputText.trim()}
-                  className="text-zinc-400 hover:text-black dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
-                  title="Send message"
-                >
-                  <Send className="w-4 h-4" />
+                  Start New Discussion
                 </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -1712,8 +1547,12 @@ export function SecureInboxView({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  const ids = notifications.map((n) => n.id);
                   setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+                  if (ids.length) {
+                    await citizenApi.markAllNotificationsRead(authToken, ids).catch(() => null);
+                  }
                 }}
                 className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-black dark:text-white cursor-pointer transition-colors"
               >
@@ -1721,7 +1560,13 @@ export function SecureInboxView({
               </button>
               <button
                 type="button"
-                onClick={() => setNotifications([])}
+                onClick={async () => {
+                  const ids = notifications.map((n) => n.id);
+                  setNotifications([]);
+                  if (ids.length) {
+                    await citizenApi.clearAllNotifications(authToken, ids).catch(() => null);
+                  }
+                }}
                 className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer transition-colors"
               >
                 Clear all
@@ -1823,16 +1668,27 @@ export function SecureInboxView({
                     <div className="relative flex items-center gap-3.5 shrink-0 ml-2">
                       <button
                         type="button"
-                        onClick={() => alert(`Action launched for: ${notif.title}`)}
+                        onClick={async () => {
+                          setNotifications((prev) =>
+                            prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
+                          );
+                          await citizenApi.markNotificationRead(authToken, notif.id).catch(() => null);
+                          if (notif.category === "hearings" && onOpenConsultationModal) {
+                            onOpenConsultationModal();
+                          } else {
+                            setStatusNotice(`${notif.title}: ${notif.summary}`);
+                          }
+                        }}
                         className={`text-xs font-semibold ${typeConfig.textAccent} hover:underline cursor-pointer transition-colors`}
                       >
-                        {notif.actionLabel || "Action"}
+                        {notif.actionLabel || "View"}
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+                          await citizenApi.dismissNotification(authToken, notif.id).catch(() => null);
                         }}
                         className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer transition-colors rounded"
                         title="Dismiss"
@@ -1874,25 +1730,64 @@ export function SecureInboxView({
             </div>
 
             <div className="space-y-3 text-xs">
+              {counselOptions.length > 0 && (
+                <div className="space-y-1">
+                  <label className="font-bold text-zinc-500 block">Select Counsel:</label>
+                  <select
+                    value={composeRecipientId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setComposeRecipientId(val);
+                      const matched = counselOptions.find((o) => (o.id || o.name) === val);
+                      if (matched) {
+                        setComposeTo(matched.name);
+                        if (!composeMatter && matched.matterTitle) {
+                          setComposeMatter(matched.matterTitle);
+                        }
+                      }
+                    }}
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs text-black dark:text-white focus:outline-none"
+                  >
+                    <option value="">-- Choose your assigned or registered advocate --</option>
+                    {counselOptions.map((adv) => (
+                      <option key={adv.id || adv.name} value={adv.id || adv.name}>
+                        {adv.name} ({adv.specialization})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="space-y-1">
-                <label className="font-bold text-zinc-500 block">Recipient Counsel:</label>
-                <select
+                <label className="font-bold text-zinc-500 block">Recipient Name / Email:</label>
+                <input
+                  type="text"
+                  placeholder="Select above or type advocate name"
                   value={composeTo}
-                  onChange={(e) => setComposeTo(e.target.value)}
+                  onChange={(e) => {
+                    setComposeTo(e.target.value);
+                    if (!e.target.value.trim()) setComposeRecipientId("");
+                  }}
                   className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs text-black dark:text-white focus:outline-none"
-                >
-                  <option value="Adv. Meera Krishnan">Adv. Meera Krishnan (High Court Writs)</option>
-                  <option value="Adv. Sarah Jenkins">Adv. Sarah Jenkins (Civil &amp; Property)</option>
-                  <option value="Adv. Rajesh V. Varma">Adv. Rajesh V. Varma (Commercial NCLT)</option>
-                  <option value="Adv. Priya Nair">Adv. Priya Nair (Section 138 Notice)</option>
-                </select>
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-zinc-500 block">Matter / Reference (Optional):</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Case title or consultation topic"
+                  value={composeMatter}
+                  onChange={(e) => setComposeMatter(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs text-black dark:text-white focus:outline-none"
+                />
               </div>
 
               <div className="space-y-1">
                 <label className="font-bold text-zinc-500 block">Subject Line:</label>
                 <input
                   type="text"
-                  placeholder="e.g. Urgent Instructions Regarding Transmission Line Realignment Survey"
+                  placeholder="Enter message subject"
                   value={composeSubject}
                   onChange={(e) => setComposeSubject(e.target.value)}
                   className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs text-black dark:text-white focus:outline-none"
@@ -1913,7 +1808,7 @@ export function SecureInboxView({
 
             <div className="flex items-center justify-between pt-3 border-t border-zinc-200 dark:border-zinc-800">
               <span className="text-[10px] font-mono text-zinc-400">
-                Protected by Advocate-Client Privilege
+                Protected by Advocate-Client Privilege {citizenEmail ? `• ${citizenEmail}` : ""}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -1926,13 +1821,61 @@ export function SecureInboxView({
                 <button
                   type="button"
                   onClick={handleSendCompose}
-                  disabled={!composeSubject.trim() || !composeBody.trim()}
+                  disabled={(!composeRecipientId && !composeTo.trim()) || !composeSubject.trim() || !composeBody.trim() || isSendingMail}
                   className="px-5 py-2 rounded-xl bg-black hover:bg-zinc-800 disabled:opacity-40 font-bold text-xs text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black cursor-pointer transition-all shadow-xs"
                 >
-                  Transmit Mail
+                  {isSendingMail ? "Transmitting..." : "Transmit Mail"}
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {newDiscussionOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+              <h3 className="font-bold text-sm text-black dark:text-white">
+                Start Privileged Advocate Discussion
+              </h3>
+              <button
+                type="button"
+                onClick={() => setNewDiscussionOpen(false)}
+                className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {counselOptions.length === 0 ? (
+              <div className="p-6 text-center text-xs text-zinc-500 space-y-2">
+                <p>No registered advocates available yet.</p>
+                <p className="text-[11px] text-zinc-400">
+                  File a legal petition or book a consultation with an advocate to message them directly.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {counselOptions.map((adv) => (
+                  <button
+                    key={adv.id || adv.name}
+                    type="button"
+                    onClick={() => handleStartAdvocateDiscussion(adv)}
+                    className="w-full text-left p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white flex items-center justify-between gap-3 transition-all cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-bold text-xs text-black dark:text-white block truncate">
+                        {adv.name}
+                      </span>
+                      <span className="text-[11px] text-zinc-500 font-mono block truncate">
+                        {adv.matterTitle || adv.specialization}
+                      </span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

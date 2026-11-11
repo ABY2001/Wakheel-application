@@ -1776,6 +1776,167 @@ export const buildAdvocateNotifications = ({
   return items;
 };
 
+export const buildCitizenNotifications = ({
+  grievances = [],
+  matters = [],
+  consultations = [],
+  notices = [],
+  documents = [],
+  invoices = [],
+  messages = [],
+  userId = "",
+  readIds = [],
+  dismissedIds = [],
+}) => {
+  const readSet = new Set((readIds || []).map(String));
+  const dismissedSet = new Set((dismissedIds || []).map(String));
+  const items = [];
+
+  const pushItem = (item) => {
+    if (!item?.id || dismissedSet.has(String(item.id))) return;
+    items.push({
+      ...item,
+      isRead: readSet.has(String(item.id)),
+      timestamp: formatRelativeTime(item.epochMs),
+    });
+  };
+
+  for (const m of matters) {
+    const mid = String(m._id || m.id || "");
+    if (!mid) continue;
+    const epochMs = parseNotificationEpoch(m);
+    const hasHearing = Boolean(m.nextHearingDate);
+    pushItem({
+      id: `cit_notif_matter_${mid}`,
+      type: m.advocateName ? "success" : "info",
+      category: hasHearing ? "hearings" : "filings",
+      categoryLabel: hasHearing ? "Scheduled Hearing" : "Matter Filing",
+      title: `${m.matterTitle || m.title || m.caseNumber || "Active Matter"}`,
+      summary: `${m.courtForum || m.court || "Court Registry"}${m.advocateName ? ` • Counsel: ${m.advocateName}` : ""}${m.stage ? ` • ${m.stage}` : ""}`,
+      caseRef: m.caseNumber || m.cnrNumber || m.matterType || "Matter",
+      priority: hasHearing ? "high" : "normal",
+      actionLabel: "Open Matter",
+      epochMs,
+    });
+  }
+
+  for (const c of consultations) {
+    const cid = String(c._id || c.id || "");
+    if (!cid || c.status === "cancelled") continue;
+    const epochMs = parseNotificationEpoch(c);
+    pushItem({
+      id: `cit_notif_cons_${cid}`,
+      type: c.status === "confirmed" ? "success" : "warning",
+      category: "hearings",
+      categoryLabel: "Chamber Consult",
+      title: `Consultation with ${c.advocateName || "Counsel"}`,
+      summary: `${c.subject || "Legal Consultation"}${c.timeSlot ? ` • ${c.timeSlot}` : ""} (${c.status || "Scheduled"})`,
+      caseRef: c.consultationType || "Consultation",
+      priority: "high",
+      actionLabel: "View Consult",
+      epochMs,
+    });
+  }
+
+  for (const n of notices) {
+    const nid = String(n._id || n.id || "");
+    if (!nid) continue;
+    const epochMs = parseNotificationEpoch(n);
+    pushItem({
+      id: `cit_notif_notice_${nid}`,
+      type: "info",
+      category: "notices",
+      categoryLabel: n.noticeType || "Statutory Notice",
+      title: n.title || `Legal Notice to ${n.recipientName || "Noticee"}`,
+      summary: `${n.recipientName ? `To: ${n.recipientName} • ` : ""}${n.speedPostTrackingNumber ? `Speed Post: ${n.speedPostTrackingNumber}` : n.status || "Tracked Notice"}`,
+      caseRef: n.speedPostTrackingNumber || "Notice",
+      priority: "normal",
+      actionLabel: "Track Notice",
+      epochMs,
+    });
+  }
+
+  for (const g of grievances) {
+    const gid = String(g._id || g.id || "");
+    if (!gid) continue;
+    const epochMs = parseNotificationEpoch(g);
+    pushItem({
+      id: `cit_notif_griev_${gid}`,
+      type: g.assignedAdvocateName ? "success" : "info",
+      category: "filings",
+      categoryLabel: g.assignedAdvocateName ? "Counsel Assigned" : "Petition Intake",
+      title: g.title || "Submitted Legal Grievance",
+      summary: `${g.category || "Legal Representation"}${g.assignedAdvocateName ? ` • Assigned to ${g.assignedAdvocateName}` : ""}`,
+      caseRef: g.category || "Petition",
+      priority: "normal",
+      actionLabel: "View Petition",
+      epochMs,
+    });
+  }
+
+  for (const d of documents) {
+    const did = String(d._id || d.id || "");
+    if (!did) continue;
+    const epochMs = parseNotificationEpoch(d);
+    const isOrder =
+      String(d.category || "").toLowerCase().includes("order") ||
+      String(d.subType || "").toLowerCase().includes("order");
+    pushItem({
+      id: `cit_notif_doc_${did}`,
+      type: isOrder ? "success" : "info",
+      category: isOrder ? "orders" : "filings",
+      categoryLabel: d.category || "Vault Document",
+      title: d.name || d.title || d.fileName || "Document Filed",
+      summary: `${d.matter ? `${d.matter} • ` : ""}${d.filingStatus || "Stored in Vault"}`,
+      caseRef: d.matter || "Document Vault",
+      priority: isOrder ? "high" : "normal",
+      actionLabel: "Open Vault",
+      epochMs,
+    });
+  }
+
+  for (const inv of invoices) {
+    const iid = String(inv._id || inv.id || "");
+    if (!iid || inv.status === "paid") continue;
+    const epochMs = parseNotificationEpoch(inv);
+    pushItem({
+      id: `cit_notif_inv_${iid}`,
+      type: "warning",
+      category: "notices",
+      categoryLabel: "Fee Statement",
+      title: `Invoice from ${inv.advocateName || "Counsel"}`,
+      summary: `${inv.matterTitle || "Legal Representation"} • ₹${Number(inv.totalAmount || 0).toLocaleString("en-IN")} (${inv.status || "unpaid"})`,
+      caseRef: inv.invoiceNumber || "Invoice",
+      priority: "high",
+      actionLabel: "View Billing",
+      epochMs,
+    });
+  }
+
+  for (const msg of messages) {
+    if (msg.isRead) continue;
+    if (userId && String(msg.recipientId) !== String(userId) && msg.senderRole === "citizen") continue;
+    const mid = String(msg._id || msg.id || "");
+    if (!mid) continue;
+    const epochMs = parseNotificationEpoch(msg);
+    pushItem({
+      id: `cit_notif_msg_${mid}`,
+      type: "info",
+      category: "orders",
+      categoryLabel: "Counsel Message",
+      title: `Message from ${msg.senderName || "Counsel"}`,
+      summary: `${msg.matterTitle ? `${msg.matterTitle}: ` : ""}${String(msg.content || "").slice(0, 110)}`,
+      caseRef: msg.matterTitle || "Privileged Message",
+      priority: "high",
+      actionLabel: "Reply",
+      epochMs,
+    });
+  }
+
+  items.sort((a, b) => (b.epochMs || 0) - (a.epochMs || 0));
+  return items;
+};
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -2499,7 +2660,13 @@ export const devStore = {
       primaryName = `Adv. ${primaryName}`;
     }
 
-    return { ids, names, emails, primaryName: primaryName || "Adv. Counsel" };
+    return {
+      ids,
+      names,
+      emails,
+      primaryName: primaryName || "Adv. Counsel",
+      primaryEmail: Array.from(emails)[0] || "",
+    };
   },
 
   resolveAdvocateByIdOrName(advocateId, advocateName) {
@@ -3282,30 +3449,56 @@ export const devStore = {
 
   // --- Secure Client-Advocate Messaging ---
   getMessages(userId = "default_citizen", matterId = "") {
+    const cleanUserId = String(userId || "").trim();
+    if (!cleanUserId) return [];
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
-    return messages.filter((m) => {
-      const matchUser =
-        !userId ||
-        m.senderId === userId ||
-        m.recipientId === userId ||
-        userId === "default_citizen";
-      const matchMatter = !matterId || m.matterId === matterId;
-      return matchUser && matchMatter;
-    });
+    const isLegacyCitizen = cleanUserId === "default_citizen";
+
+    return messages
+      .filter((m) => {
+        const senderStr = m.senderId ? String(m.senderId) : "";
+        const recipStr = m.recipientId ? String(m.recipientId) : "";
+        const matchUser =
+          senderStr === cleanUserId ||
+          recipStr === cleanUserId ||
+          (isLegacyCitizen && (senderStr === "default_citizen" || recipStr === "default_citizen"));
+        const matchMatter = !matterId || String(m.matterId || "") === String(matterId);
+        return matchUser && matchMatter;
+      })
+      .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
   },
 
   sendMessage(data) {
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
     const now = new Date();
+    const senderId = data.senderId ? String(data.senderId) : "default_citizen";
+    const citizenInfo = this.getCitizenDisplayInfo(senderId);
+
+    let resolvedAdv = null;
+    if (data.recipientId || data.recipientName) {
+      resolvedAdv = this.resolveAdvocateByIdOrName(data.recipientId, data.recipientName);
+    }
+
+    const fallbackRecipientId = data.recipientId
+      ? String(data.recipientId)
+      : resolvedAdv?.advocateId || (senderId === "default_citizen" ? "adv_1" : "");
+    const fallbackRecipientName =
+      data.recipientName ||
+      resolvedAdv?.advocateName ||
+      (senderId === "default_citizen" ? "Adv. Meera Krishnan" : "Counsel");
+
+    const id = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newMsg = {
-      _id: "msg_" + Date.now().toString(),
-      id: "msg_" + Date.now().toString(),
-      senderId: data.senderId || "default_citizen",
+      _id: id,
+      id,
+      senderId,
       senderRole: data.senderRole || "citizen",
-      senderName: data.senderName || "Gopakumar Nambiar",
-      recipientId: data.recipientId || "adv_1",
+      senderName:
+        data.senderName ||
+        (senderId === "default_citizen" ? "Gopakumar Nambiar" : citizenInfo.citizenName || "Registered Citizen"),
+      recipientId: fallbackRecipientId,
       recipientRole: data.recipientRole || "advocate",
-      recipientName: data.recipientName || "Adv. Meera Krishnan",
+      recipientName: fallbackRecipientName,
       matterId: data.matterId || "",
       matterTitle: data.matterTitle || "General Legal Counsel",
       content: data.content,
@@ -3320,10 +3513,13 @@ export const devStore = {
     return newMsg;
   },
 
-  markMessageAsRead(messageId) {
+  markMessageAsRead(messageId, actorUserId = "") {
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
-    const msg = messages.find((m) => m._id === messageId || m.id === messageId);
+    const msg = messages.find((m) => String(m._id) === String(messageId) || String(m.id) === String(messageId));
     if (!msg) return null;
+    if (actorUserId && String(msg.recipientId) !== String(actorUserId) && String(msg.senderId) !== String(actorUserId)) {
+      return null;
+    }
     msg.isRead = true;
     msg.readAt = new Date().toISOString();
     writeFile("dev_messages.json", messages);
@@ -3331,37 +3527,75 @@ export const devStore = {
   },
 
   getUnreadMessageCount(userId = "default_citizen") {
-    const messages = this.getMessages(userId);
-    return messages.filter((m) => m.recipientId === userId && !m.isRead).length;
+    const cleanUserId = String(userId || "").trim();
+    if (!cleanUserId) return 0;
+    const messages = this.getMessages(cleanUserId);
+    return messages.filter((m) => String(m.recipientId) === cleanUserId && !m.isRead).length;
   },
 
   // --- Advocate Messaging & Threads ---
   getAdvocateMessages(advocateId = "adv_1") {
+    const cleanId = String(advocateId || "").trim();
+    if (!cleanId) return [];
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
-    return messages.filter(
-      (m) =>
-        m.senderId === advocateId ||
-        m.recipientId === advocateId ||
-        m.recipientRole === "advocate" ||
-        advocateId === "adv_1"
-    );
+    const identity = this.getAdvocateIdentities(cleanId);
+    const isLegacyDemoAdvocate = cleanId === "adv_1";
+
+    return messages.filter((m) => {
+      const senderStr = m.senderId ? String(m.senderId) : "";
+      const recipStr = m.recipientId ? String(m.recipientId) : "";
+
+      if (senderStr === cleanId || recipStr === cleanId) return true;
+      if (identity.ids.has(senderStr) || identity.ids.has(recipStr)) return true;
+
+      if (
+        this.matchesAdvocate(
+          { advocateId: recipStr || m.advocateId, advocateName: m.recipientName || m.advocateName },
+          cleanId
+        )
+      ) {
+        return true;
+      }
+
+      if (
+        m.senderRole === "advocate" &&
+        this.matchesAdvocate({ advocateId: senderStr, advocateName: m.senderName }, cleanId)
+      ) {
+        return true;
+      }
+
+      return isLegacyDemoAdvocate && (senderStr === "adv_1" || recipStr === "adv_1");
+    });
   },
 
   getAdvocateThreads(advocateId = "adv_1") {
-    const messages = this.getAdvocateMessages(advocateId);
+    const cleanAdvId = String(advocateId || "").trim();
+    const identity = this.getAdvocateIdentities(cleanAdvId);
+    const messages = this.getAdvocateMessages(cleanAdvId);
     const threadsMap = new Map();
 
     messages.forEach((msg) => {
-      const isOutbound = msg.senderId === advocateId || msg.senderRole === "advocate";
-      const citizenId = isOutbound ? msg.recipientId : msg.senderId;
-      const citizenName = isOutbound ? msg.recipientName : msg.senderName;
+      const senderStr = msg.senderId ? String(msg.senderId) : "";
+      const isOutbound =
+        senderStr === cleanAdvId || identity.ids.has(senderStr) || msg.senderRole === "advocate";
+      const citizenId = String(isOutbound ? msg.recipientId : msg.senderId || "").trim();
+      if (!citizenId) return;
+
+      const rawCitizenName = isOutbound ? msg.recipientName : msg.senderName;
+      const citizenInfo = this.getCitizenDisplayInfo(citizenId);
+      const displayCitizenName =
+        rawCitizenName && rawCitizenName !== "Citizen Client" && rawCitizenName !== "Registered Client"
+          ? rawCitizenName
+          : citizenInfo.citizenName || "Registered Client";
 
       if (!threadsMap.has(citizenId)) {
         threadsMap.set(citizenId, {
           citizenId,
-          citizenName: citizenName || "Citizen Client",
+          citizenName: displayCitizenName,
+          citizenEmail: citizenInfo.citizenEmail || "",
+          citizenPhone: citizenInfo.citizenPhone || "",
           matterId: msg.matterId || "",
-          matterTitle: msg.matterTitle || "Chamber Representation",
+          matterTitle: msg.matterTitle || "Direct Counsel Communication",
           messages: [],
           lastMessage: msg,
           unreadCount: 0,
@@ -3370,7 +3604,7 @@ export const devStore = {
 
       const thread = threadsMap.get(citizenId);
       thread.messages.push(msg);
-      if (new Date(msg.createdAt) >= new Date(thread.lastMessage.createdAt)) {
+      if (new Date(msg.createdAt || 0) >= new Date(thread.lastMessage.createdAt || 0)) {
         thread.lastMessage = msg;
         if (msg.matterTitle) thread.matterTitle = msg.matterTitle;
       }
@@ -3379,35 +3613,46 @@ export const devStore = {
       }
     });
 
+    threadsMap.forEach((t) => {
+      t.messages.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+    });
+
     return Array.from(threadsMap.values()).sort(
-      (a, b) => new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime()
+      (a, b) => new Date(b.lastMessage.createdAt || 0).getTime() - new Date(a.lastMessage.createdAt || 0).getTime()
     );
   },
 
-  getAdvocateThread(advocateId = "adv_1", citizenId = "default_citizen") {
+  getAdvocateThread(advocateId = "adv_1", citizenId = "") {
+    const cleanCitizenId = String(citizenId || "").trim();
+    if (!cleanCitizenId) return [];
     const messages = this.getAdvocateMessages(advocateId);
-    return messages.filter(
-      (m) =>
-        (m.senderId === citizenId && (m.recipientId === advocateId || m.recipientRole === "advocate")) ||
-        (m.recipientId === citizenId && (m.senderId === advocateId || m.senderRole === "advocate")) ||
-        (citizenId === "default_citizen" && (m.senderId === "default_citizen" || m.recipientId === "default_citizen"))
-    ).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    return messages
+      .filter(
+        (m) => String(m.senderId) === cleanCitizenId || String(m.recipientId) === cleanCitizenId
+      )
+      .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
   },
 
   sendAdvocateMessage(data) {
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
     const now = new Date();
+    const senderId = data.senderId ? String(data.senderId) : "adv_1";
+    const identity = this.getAdvocateIdentities(senderId);
+    const recipientId = data.recipientId ? String(data.recipientId) : "";
+    const citizenInfo = recipientId ? this.getCitizenDisplayInfo(recipientId) : { citizenName: "" };
+
+    const id = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newMsg = {
-      _id: "msg_" + Date.now().toString(),
-      id: "msg_" + Date.now().toString(),
-      senderId: data.senderId || "adv_1",
+      _id: id,
+      id,
+      senderId,
       senderRole: "advocate",
-      senderName: data.senderName || "Adv. Meera Krishnan",
-      recipientId: data.recipientId || "default_citizen",
+      senderName: data.senderName || identity.primaryName || "Counsel",
+      recipientId,
       recipientRole: "citizen",
-      recipientName: data.recipientName || "Gopakumar Nambiar",
-      matterId: data.matterId || "mat_wpc_19482",
-      matterTitle: data.matterTitle || "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+      recipientName: data.recipientName || citizenInfo.citizenName || "Client",
+      matterId: data.matterId || "",
+      matterTitle: data.matterTitle || "Direct Counsel Communication",
       content: data.content,
       attachments: data.attachments || [],
       isRead: false,
@@ -3420,17 +3665,36 @@ export const devStore = {
     return newMsg;
   },
 
-  markAdvocateThreadRead(advocateId = "adv_1", citizenId = "default_citizen") {
+  markAdvocateThreadRead(advocateId = "adv_1", citizenId = "") {
+    const cleanAdvId = String(advocateId || "").trim();
+    const cleanCitizenId = String(citizenId || "").trim();
+    if (!cleanAdvId || !cleanCitizenId) return 0;
+
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    const identity = this.getAdvocateIdentities(cleanAdvId);
+    const isLegacyDemoAdvocate = cleanAdvId === "adv_1";
     let updatedCount = 0;
+
     messages.forEach((m) => {
-      const isIncoming = m.senderId === citizenId || (citizenId === "default_citizen" && m.senderRole === "citizen");
-      if (isIncoming && !m.isRead) {
+      const senderStr = m.senderId ? String(m.senderId) : "";
+      const recipStr = m.recipientId ? String(m.recipientId) : "";
+      const fromTargetCitizen = senderStr === cleanCitizenId;
+      const targetsThisAdvocate =
+        recipStr === cleanAdvId ||
+        identity.ids.has(recipStr) ||
+        this.matchesAdvocate(
+          { advocateId: recipStr || m.advocateId, advocateName: m.recipientName || m.advocateName },
+          cleanAdvId
+        ) ||
+        (isLegacyDemoAdvocate && m.recipientRole === "advocate" && (!recipStr || recipStr === "adv_1"));
+
+      if (fromTargetCitizen && targetsThisAdvocate && !m.isRead) {
         m.isRead = true;
         m.readAt = new Date().toISOString();
         updatedCount++;
       }
     });
+
     if (updatedCount > 0) {
       writeFile("dev_messages.json", messages);
     }
@@ -3438,8 +3702,293 @@ export const devStore = {
   },
 
   getAdvocateUnreadCount(advocateId = "adv_1") {
-    const messages = this.getAdvocateMessages(advocateId);
-    return messages.filter((m) => m.recipientRole === "advocate" && !m.isRead).length;
+    const cleanAdvId = String(advocateId || "").trim();
+    if (!cleanAdvId) return 0;
+    const identity = this.getAdvocateIdentities(cleanAdvId);
+    const messages = this.getAdvocateMessages(cleanAdvId);
+    return messages.filter((m) => {
+      const senderStr = m.senderId ? String(m.senderId) : "";
+      const isOutbound =
+        senderStr === cleanAdvId || identity.ids.has(senderStr) || m.senderRole === "advocate";
+      return !isOutbound && !m.isRead;
+    }).length;
+  },
+
+  // --- Persisted Formal Mailbox (Chamber & Citizen Correspondence) ---
+  getMailboxEmails(ownerId = "", ownerRole = "advocate") {
+    const cleanOwnerId = String(ownerId || "").trim();
+    if (!cleanOwnerId) return [];
+    const raw = readFile("dev_mails.json", []);
+    const allMails = Array.isArray(raw) ? raw : [];
+
+    return allMails
+      .filter((mail) => {
+        if (!mail) return false;
+        const mailOwner = String(mail.ownerId || "");
+        if (ownerRole === "advocate") {
+          return (
+            mailOwner === cleanOwnerId ||
+            (mail.ownerRole === "advocate" &&
+              this.matchesAdvocate(
+                { advocateId: mailOwner, advocateName: mail.ownerName || mail.recipientName },
+                cleanOwnerId
+              ))
+          );
+        }
+        return mailOwner === cleanOwnerId;
+      })
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  sendMailboxEmail({
+    senderId,
+    senderRole = "advocate",
+    senderName = "",
+    senderEmail = "",
+    recipientId = "",
+    recipientRole = "",
+    recipientName = "",
+    recipientEmail = "",
+    matterTitle = "General Correspondence",
+    subject = "",
+    body = [],
+    category = "general",
+    categoryLabel = "Correspondence",
+    categoryColor = "sky",
+    folder = "sent",
+    attachments = [],
+  }) {
+    const raw = readFile("dev_mails.json", []);
+    const allMails = Array.isArray(raw) ? raw : [];
+    const now = new Date();
+    const isoNow = now.toISOString();
+    const formattedDate = now.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const shortTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    const bodyParagraphs = Array.isArray(body)
+      ? body.filter(Boolean)
+      : String(body || "")
+          .split("\n")
+          .filter(Boolean);
+    const snippet = bodyParagraphs.join(" ").slice(0, 140);
+
+    const initialsOf = (name) =>
+      String(name || "WL")
+        .replace(/^adv\.?\s*/i, "")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((p) => p[0] || "")
+        .join("")
+        .toUpperCase() || "WL";
+
+    let resolvedRecipientId = String(recipientId || "").trim();
+    let resolvedRecipientName = String(recipientName || "").trim();
+    let resolvedRecipientRole =
+      recipientRole || (senderRole === "citizen" ? "advocate" : "citizen");
+
+    if (senderRole === "citizen" && (!resolvedRecipientId || resolvedRecipientRole === "advocate")) {
+      const adv = this.resolveAdvocateByIdOrName(resolvedRecipientId, resolvedRecipientName);
+      if (adv?.advocateId && (resolvedRecipientId || resolvedRecipientName)) {
+        resolvedRecipientId = adv.advocateId;
+        resolvedRecipientName = resolvedRecipientName || adv.advocateName;
+      }
+    }
+
+    const baseId = `mail_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const senderCopy = {
+      id: baseId,
+      ownerId: String(senderId || ""),
+      ownerRole: senderRole,
+      ownerName: senderName,
+      senderId: String(senderId || ""),
+      senderRole,
+      senderName: senderName || (senderRole === "advocate" ? "Counsel" : "Registered Citizen"),
+      senderEmail: senderEmail || "",
+      senderAvatarText: initialsOf(senderName),
+      recipientId: resolvedRecipientId,
+      recipientRole: resolvedRecipientRole,
+      recipientName: resolvedRecipientName || "Recipient",
+      recipientEmail: recipientEmail || "",
+      matterTitle: matterTitle || "General Correspondence",
+      subject: String(subject || "").trim(),
+      snippet: snippet.length === 140 ? `${snippet}...` : snippet,
+      body: bodyParagraphs,
+      timestamp: shortTime,
+      fullDate: formattedDate,
+      folder: folder === "drafts" ? "drafts" : "sent",
+      category: category || "general",
+      categoryLabel: categoryLabel || "Correspondence",
+      categoryColor: categoryColor || "sky",
+      isRead: true,
+      isStarred: false,
+      attachments: Array.isArray(attachments) ? attachments : [],
+      createdAt: isoNow,
+    };
+
+    allMails.unshift(senderCopy);
+
+    if (senderCopy.folder !== "drafts" && resolvedRecipientId) {
+      const recipientCopy = {
+        ...senderCopy,
+        id: `${baseId}_inbox`,
+        ownerId: resolvedRecipientId,
+        ownerRole: resolvedRecipientRole,
+        ownerName: resolvedRecipientName,
+        folder: "inbox",
+        isRead: false,
+      };
+      allMails.unshift(recipientCopy);
+    }
+
+    writeFile("dev_mails.json", allMails);
+    return senderCopy;
+  },
+
+  replyMailboxEmail(mailId, actorId, actorRole, content, actorName = "") {
+    const raw = readFile("dev_mails.json", []);
+    const allMails = Array.isArray(raw) ? raw : [];
+    const target = allMails.find((m) => String(m.id) === String(mailId));
+    if (!target) return null;
+
+    const cleanActorId = String(actorId || "");
+    const ownsTarget =
+      String(target.ownerId) === cleanActorId ||
+      (actorRole === "advocate" &&
+        target.ownerRole === "advocate" &&
+        this.matchesAdvocate({ advocateId: target.ownerId, advocateName: target.ownerName }, cleanActorId));
+    if (!ownsTarget) return null;
+
+    const now = new Date();
+    const formattedDate = now.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const replyLine = `[Reply by ${actorName || cleanActorId} • ${formattedDate}]: ${String(content || "").trim()}`;
+    target.body = [...(Array.isArray(target.body) ? target.body : []), replyLine];
+    target.snippet = String(content || "").trim().slice(0, 120);
+    target.fullDate = formattedDate;
+    target.timestamp = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    const counterId =
+      String(target.senderId) === cleanActorId ? target.recipientId : target.senderId;
+    const counterRole =
+      String(target.senderId) === cleanActorId ? target.recipientRole : target.senderRole;
+    const counterName =
+      String(target.senderId) === cleanActorId ? target.recipientName : target.senderName;
+
+    if (counterId) {
+      const inboxCopy = {
+        ...target,
+        id: `mail_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        ownerId: String(counterId),
+        ownerRole: counterRole || (actorRole === "citizen" ? "advocate" : "citizen"),
+        ownerName: counterName || "",
+        senderId: cleanActorId,
+        senderRole: actorRole,
+        senderName: actorName || target.recipientName || "Sender",
+        recipientId: String(counterId),
+        recipientName: counterName || "Recipient",
+        subject: target.subject.startsWith("Re:") ? target.subject : `Re: ${target.subject}`,
+        folder: "inbox",
+        isRead: false,
+        createdAt: now.toISOString(),
+      };
+      allMails.unshift(inboxCopy);
+    }
+
+    writeFile("dev_mails.json", allMails);
+    return target;
+  },
+
+  updateMailboxEmail(mailId, actorId, actorRole = "advocate", updates = {}) {
+    const raw = readFile("dev_mails.json", []);
+    const allMails = Array.isArray(raw) ? raw : [];
+    const target = allMails.find((m) => String(m.id) === String(mailId));
+    if (!target) return null;
+
+    const cleanActorId = String(actorId || "");
+    const ownsTarget =
+      String(target.ownerId) === cleanActorId ||
+      (actorRole === "advocate" &&
+        target.ownerRole === "advocate" &&
+        this.matchesAdvocate({ advocateId: target.ownerId, advocateName: target.ownerName }, cleanActorId));
+    if (!ownsTarget) return null;
+
+    if (typeof updates.isRead === "boolean") target.isRead = updates.isRead;
+    if (typeof updates.isStarred === "boolean") target.isStarred = updates.isStarred;
+    if (updates.folder && ["inbox", "starred", "drafts", "sent", "archive", "trash"].includes(updates.folder)) {
+      target.folder = updates.folder;
+    }
+    writeFile("dev_mails.json", allMails);
+    return target;
+  },
+
+  deleteMailboxEmail(mailId, actorId, actorRole = "advocate") {
+    const raw = readFile("dev_mails.json", []);
+    const allMails = Array.isArray(raw) ? raw : [];
+    const idx = allMails.findIndex((m) => String(m.id) === String(mailId));
+    if (idx === -1) return null;
+
+    const target = allMails[idx];
+    const cleanActorId = String(actorId || "");
+    const ownsTarget =
+      String(target.ownerId) === cleanActorId ||
+      (actorRole === "advocate" &&
+        target.ownerRole === "advocate" &&
+        this.matchesAdvocate({ advocateId: target.ownerId, advocateName: target.ownerName }, cleanActorId));
+    if (!ownsTarget) return null;
+
+    if (target.folder === "trash") {
+      allMails.splice(idx, 1);
+    } else {
+      target.folder = "trash";
+    }
+    writeFile("dev_mails.json", allMails);
+    return target;
+  },
+
+  // --- Citizen Notifications ---
+  getCitizenNotifications(userId) {
+    if (!userId) return [];
+    const grievances = this.getGrievances(userId);
+    const matters = this.getMatters(userId);
+    const consultations = this.getConsultations(userId);
+    const notices = this.getNotices(userId);
+    const documents = this.getDocuments(userId);
+    const invoices = this.getCitizenInvoices(userId);
+    const messages = this.getMessages(userId);
+    const state = this.getNotificationState(`citizen::${userId}`);
+
+    return buildCitizenNotifications({
+      grievances,
+      matters,
+      consultations,
+      notices,
+      documents,
+      invoices,
+      messages,
+      userId,
+      readIds: state.readIds,
+      dismissedIds: state.dismissedIds,
+    });
+  },
+
+  markCitizenNotificationsRead(userId, notificationIds = []) {
+    return this.updateNotificationState(`citizen::${userId}`, "readIds", notificationIds);
+  },
+
+  dismissCitizenNotifications(userId, notificationIds = []) {
+    return this.updateNotificationState(`citizen::${userId}`, "dismissedIds", notificationIds);
   },
 
   // --- Advocate Notifications (Client Interest, Petitions, Consultations, Filings & Causelist) ---

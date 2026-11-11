@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { advocateApi, AdvocateNotificationItem } from "@/lib/api";
+import { advocateApi, AdvocateNotificationItem, AdvocateClientItem } from "@/lib/api";
 import {
   Mail,
   Send,
@@ -84,6 +84,8 @@ export interface ChatMessage {
 
 export interface AdvocateChatThread {
   id: string;
+  citizenId?: string;
+  matterId?: string;
   type: "direct" | "group";
   name: string;
   role: string;
@@ -100,309 +102,20 @@ export interface AdvocateChatThread {
 
 export type ChamberNotificationItem = AdvocateNotificationItem;
 
-const INITIAL_CHAMBER_EMAILS: ChamberEmailItem[] = [
-  {
-    id: "c-mail-1",
-    senderName: "Registrar (Judicial), High Court of Kerala",
-    senderEmail: "registrar.judicial@keralahighcourt.gov.in",
-    senderAvatarText: "HC",
-    recipientName: "Adv. Meera Krishnan",
-    recipientEmail: "meera.krishnan@keralabar.org",
-    matterTitle: "WP(C) 19482/2024 • Division Bench 2A",
-    subject: "Motion Slip Admitted & Numbering Defects Cured in WP(C) 19482/2024",
-    snippet:
-      "Section 16 Telegraph Act rejoinder affidavit and paper book numbering defects have been successfully cured. Listed tomorrow as Item No. 18 before DB-2A...",
-    body: [
-      "To: Adv. Meera Krishnan, Counsel for Petitioner,",
-      "Ref: WP(C) No. 19482/2024 (Gopakumar Nambiar v. Kerala State Electricity Board & Anr.)",
-      "This is to formally communicate from the Registry (Judicial) that the scrutiny defects pointed out on 24 October 2026 with respect to Annexure P-4 survey sketch numbering have been cleared.",
-      "The motion slip submitted by your junior associate has been accepted by the Hon'ble Division Bench 2A (Hon'ble Mr. Justice P.B. Suresh Kumar and Hon'ble Mr. Justice C. Pratheep Kumar).",
-      "The matter stands listed for hearing on stay extension tomorrow, 29 October 2026, as Item No. 18 in Court Hall 2A.",
-      "Sd/-\nSection Officer (Judicial Writs)\nHigh Court of Kerala, Ernakulam",
-    ],
-    timestamp: "10:45 AM",
-    fullDate: "28 Oct 2026, 10:45 AM",
-    folder: "inbox",
-    category: "registry",
-    categoryLabel: "High Court Registry",
-    isRead: false,
-    isStarred: true,
-    attachments: [
-      {
-        name: "High_Court_Motion_Admission_Slip_19482.pdf",
-        size: "420 KB",
-        type: "pdf",
-      },
-    ],
-  },
-  {
-    id: "c-mail-2",
-    senderName: "Adv. Rajesh V. Varma (Commercial Co-Counsel)",
-    senderEmail: "rajesh.varma@arbitrationcouncil.in",
-    senderAvatarText: "RV",
-    recipientName: "Adv. Meera Krishnan",
-    recipientEmail: "meera.krishnan@keralabar.org",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041 • Arbitral Tribunal",
-    subject: "Arbitral Tribunal Notice: Section 17 Security Hearing Scheduled for 18 Nov",
-    snippet:
-      "Learned Sole Arbitrator has scheduled the next preliminary procedural hearing on 18 November 2026 at 02:30 PM for hearing our interim bank guarantee plea...",
-    body: [
-      "Dear Meera,",
-      "Please find enclosed the formal procedural order passed by the learned Sole Arbitrator in ARB/NCLT/KOCHI/2024/041.",
-      "The Tribunal has directed Coastal Logistics to submit their counter-affidavit to our Section 17 interim relief application by 10 November 2026.",
-      "The oral arguments on interim bank guarantee of Rs. 48.6 Lakhs are confirmed for 18 November at the Chamber of the Arbitrator.",
-      "Best regards,\nRajesh V. Varma\nCommercial Arbitration Counsel",
-    ],
-    timestamp: "Yesterday",
-    fullDate: "27 Oct 2026, 04:15 PM",
-    folder: "inbox",
-    category: "arbitration",
-    categoryLabel: "Commercial Arbitration",
-    isRead: true,
-    isStarred: true,
-    attachments: [
-      {
-        name: "Arbitral_Procedural_Order_No_3.pdf",
-        size: "1.1 MB",
-        type: "pdf",
-      },
-    ],
-  },
-  {
-    id: "c-mail-3",
-    senderName: "Gopakumar Nambiar (Client)",
-    senderEmail: "gopakumar.nambiar@wakheel.in",
-    senderAvatarText: "GN",
-    recipientName: "Adv. Meera Krishnan",
-    recipientEmail: "meera.krishnan@keralabar.org",
-    matterTitle: "WP(C) 19482/2024 • Property Demarcation",
-    subject: "Signed Vakalatnama & Attested Revenue Survey Sketch for Tomorrow",
-    snippet:
-      "Dear Counsel, I have signed the Vakalatnama and attached the attested land tax receipt and revenue sketch for tomorrow's hearing...",
-    body: [
-      "Respected Counsel,",
-      "As requested during our consultation yesterday, I have executed the fresh Vakalatnama before the Village Notary and scanned the document.",
-      "I am also attaching the certified boundary measurement sketch issued by the Taluk Surveyor showing that the 11KV overhead line can easily take the road margin puramboke.",
-      "I will be present at Court Hall 2A at 10:15 AM tomorrow.",
-      "Thank you,\nGopakumar Nambiar",
-    ],
-    timestamp: "26 Oct",
-    fullDate: "26 Oct 2026, 06:30 PM",
-    folder: "inbox",
-    category: "client",
-    categoryLabel: "Client Instructions",
-    isRead: true,
-    isStarred: false,
-    attachments: [
-      {
-        name: "Attested_Revenue_Sketch_Sy_142.pdf",
-        size: "2.4 MB",
-        type: "pdf",
-      },
-      {
-        name: "Signed_Vakalatnama_Attested.pdf",
-        size: "890 KB",
-        type: "pdf",
-      },
-    ],
-  },
-  {
-    id: "c-mail-4",
-    senderName: "Advocate Commissioner K. M. Balachandran",
-    senderEmail: "balachandran.comm@keralabar.org",
-    senderAvatarText: "KB",
-    recipientName: "Adv. Meera Krishnan",
-    recipientEmail: "meera.krishnan@keralabar.org",
-    matterTitle: "OS 412/2023 • Principal Munsiff Court",
-    subject: "Commission Notice: Physical Boundary Survey Fixed for 30 October 2026 at 10:00 AM",
-    snippet:
-      "Notice is hereby issued to counsel for plaintiff and defendant that local inspection and boundary measurement of the suit schedule property will commence...",
-    body: [
-      "To: Adv. Meera Krishnan, Counsel for Plaintiff,",
-      "Take notice that in pursuance of the warrant issued by the Hon'ble Principal Munsiff Court in IA 3/2024 in OS 412/2023, I shall execute the local commission on Friday, 30 October 2026 at 10:00 AM.",
-      "The Village Assistant and Head Surveyor have been summoned with original Re-Survey Field Measurement Books (FMB).",
-      "Counsel or authorized representative is requested to be present at the site with memo of instructions.",
-      "Yours faithfully,\nK. M. Balachandran\nAdvocate Commissioner",
-    ],
-    timestamp: "25 Oct",
-    fullDate: "25 Oct 2026, 11:00 AM",
-    folder: "inbox",
-    category: "notices",
-    categoryLabel: "Commission Notice",
-    isRead: true,
-    isStarred: false,
-    attachments: [
-      {
-        name: "Advocate_Commissioner_Inspection_Warrant.pdf",
-        size: "680 KB",
-        type: "pdf",
-      },
-    ],
-  },
-  {
-    id: "c-mail-5",
-    senderName: "Speed Post Tracking Alert",
-    senderEmail: "speedpost.alert@indiapost.gov.in",
-    senderAvatarText: "IP",
-    recipientName: "Adv. Meera Krishnan",
-    recipientEmail: "meera.krishnan@keralabar.org",
-    matterTitle: "Section 138 NI Act • Statutory Notice",
-    subject: "Consignment EK984712041IN: Statutory Notice Served on Noticee at Calicut",
-    snippet:
-      "Consignment EK984712041IN was successfully served on 24 October 2026. The 15-day statutory payment cure period expires on 08 November 2026...",
-    body: [
-      "India Post Consignment Tracking Department",
-      "Consignment Number: EK984712041IN",
-      "Booking Date: 22/10/2026",
-      "Delivered To: Noticee (Managing Director, Coastal Logistics Pvt Ltd, Calicut)",
-      "Delivery Timestamp: 24/10/2026, 03:42 PM",
-      "Statutory Note: The 15-day statutory cure clock under Section 138(c) of the Negotiable Instruments Act commences from 25/10/2026.",
-      "Certified delivery certificate can be produced before the Judicial First Class Magistrate Court.",
-    ],
-    timestamp: "24 Oct",
-    fullDate: "24 Oct 2026, 05:20 PM",
-    folder: "inbox",
-    category: "notices",
-    categoryLabel: "Statutory Delivery",
-    isRead: true,
-    isStarred: false,
-    attachments: [
-      {
-        name: "India_Post_Official_Delivery_Certificate.pdf",
-        size: "510 KB",
-        type: "pdf",
-      },
-    ],
-  },
-];
-
-const INITIAL_CHAMBER_THREADS: AdvocateChatThread[] = [
-  {
-    id: "thread-client-gopa",
-    type: "direct",
-    name: "Gopakumar Nambiar",
-    role: "Client • WP(C) 19482/2024",
-    matter: "WP(C) 19482/2024",
-    avatarText: "GN",
-    avatarBgColor: "bg-black text-white dark:bg-white dark:text-black",
-    online: true,
-    lastMessage: "Thank you counsel, will the certified order copy be presented?",
-    lastTime: "11:20 AM",
-    unreadCount: 1,
-    messages: [
-      {
-        id: "m-1",
-        sender: "client",
-        text: "Namaskaram Adv. Meera, did the High Court Registry clear our Section 16 objection memo?",
-        timestamp: "10:15 AM",
-        status: "read",
-      },
-      {
-        id: "m-2",
-        sender: "advocate",
-        text: "Yes Mr. Gopakumar. Division Bench 2A has accepted our motion slip. Our stay extension matter is listed tomorrow as Item No. 18.",
-        timestamp: "10:48 AM",
-        status: "read",
-      },
-      {
-        id: "m-3",
-        sender: "client",
-        text: "Thank you counsel, will the certified order copy be presented?",
-        timestamp: "11:20 AM",
-        status: "delivered",
-      },
-    ],
-  },
-  {
-    id: "thread-junior-anand",
-    type: "direct",
-    name: "Adv. Anand (Junior Associate)",
-    role: "Chamber Associate • High Court",
-    matter: "WP(C) 19482/2024",
-    avatarText: "AA",
-    avatarBgColor: "bg-[#6B1728] text-white",
-    online: true,
-    lastMessage: "Registry motion slip submitted for tomorrow. Paper books paginated.",
-    lastTime: "09:30 AM",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "j-1",
-        sender: "advocate",
-        text: "Anand, please ensure all 3 sets of paper books for DB-2A contain the certified survey sketch as Exhibit P-4.",
-        timestamp: "09:05 AM",
-        status: "read",
-      },
-      {
-        id: "j-2",
-        sender: "associate",
-        senderName: "Adv. Anand",
-        text: "Registry motion slip submitted for tomorrow. Paper books paginated and delivered to Court Hall 2A bench clerk.",
-        timestamp: "09:30 AM",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "thread-team-db2a",
-    type: "group",
-    name: "High Court Bench 2A Counsel Team",
-    role: "Chamber Litigation Taskforce",
-    matter: "WP(C) 19482/2024 Defense",
-    avatarText: "HC",
-    avatarBgColor: "bg-zinc-800 text-white",
-    online: true,
-    lastMessage: "Adv. Sarah: Caveat search completed. No caveat filed by KSEB.",
-    lastTime: "Yesterday",
-    unreadCount: 0,
-    participants: ["Adv. Meera Krishnan", "Adv. Anand", "Adv. Sarah Jenkins"],
-    messages: [
-      {
-        id: "g-1",
-        sender: "associate",
-        senderName: "Adv. Sarah Jenkins",
-        text: "Adv. Sarah: Caveat search completed. No caveat filed by KSEB as on 4 PM today.",
-        timestamp: "Yesterday",
-        status: "read",
-      },
-    ],
-  },
-  {
-    id: "thread-client-david",
-    type: "direct",
-    name: "David Chen",
-    role: "Corporate Client • Employment Law",
-    matter: "Executive Agreement Review",
-    avatarText: "DC",
-    avatarBgColor: "bg-zinc-700 text-white",
-    online: false,
-    lastMessage: "Received legal opinion with non-compete clause modifications.",
-    lastTime: "24 Oct",
-    unreadCount: 0,
-    messages: [
-      {
-        id: "d-1",
-        sender: "advocate",
-        text: "David, the revised executive employment agreement and non-compete indemnity opinion has been uploaded to your portal vault.",
-        timestamp: "24 Oct",
-        status: "read",
-      },
-      {
-        id: "d-2",
-        sender: "client",
-        text: "Received legal opinion with non-compete clause modifications. Thank you Meera.",
-        timestamp: "24 Oct",
-        status: "read",
-      },
-    ],
-  },
-];
-
-const INITIAL_CHAMBER_NOTIFICATIONS: ChamberNotificationItem[] = [];
+const getInitials = (name: string) =>
+  String(name || "CL")
+    .replace(/^adv\.?\s*/i, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0] || "")
+    .join("")
+    .toUpperCase() || "CL";
 
 interface AdvocateInboxViewProps {
   token?: string;
   advocateName?: string;
+  advocateEmail?: string;
   initialMode?: InboxMode;
   onOpenConsultation?: () => void;
   onNavigateTab?: (tab: string) => void;
@@ -411,7 +124,8 @@ interface AdvocateInboxViewProps {
 
 export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
   token,
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "Advocate",
+  advocateEmail = "",
   initialMode = "mails",
   onOpenConsultation,
   onNavigateTab,
@@ -419,17 +133,24 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
 }) => {
   const [inboxMode, setInboxMode] = useState<InboxMode>(initialMode);
 
+  useEffect(() => {
+    setInboxMode(initialMode);
+  }, [initialMode]);
+
   // ==========================================
   // MODE 1: MAIL BOX STATE
   // ==========================================
-  const [emails, setEmails] = useState<ChamberEmailItem[]>(INITIAL_CHAMBER_EMAILS);
+  const [emails, setEmails] = useState<ChamberEmailItem[]>([]);
+  const [isLoadingMails, setIsLoadingMails] = useState<boolean>(false);
   const [selectedFolder, setSelectedFolder] = useState<MailFolder>("inbox");
   const [selectedMailCategory, setSelectedMailCategory] = useState<ChamberMailCategory>("all");
-  const [selectedEmailId, setSelectedEmailId] = useState<string>(INITIAL_CHAMBER_EMAILS[0]?.id || "");
+  const [selectedEmailId, setSelectedEmailId] = useState<string>("");
   const [mailSearchQuery, setMailSearchQuery] = useState("");
   const [replyInput, setReplyInput] = useState("");
   const [replySuccess, setReplySuccess] = useState(false);
+  const [isSendingMail, setIsSendingMail] = useState(false);
   const [composeModalOpen, setComposeModalOpen] = useState(false);
+  const [composeRecipientId, setComposeRecipientId] = useState("");
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
   const [composeMatter, setComposeMatter] = useState("");
@@ -438,18 +159,23 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
   // ==========================================
   // MODE 2: INSTANT MESSAGES STATE
   // ==========================================
-  const [chatThreads, setChatThreads] = useState<AdvocateChatThread[]>(INITIAL_CHAMBER_THREADS);
-  const [selectedChatId, setSelectedChatId] = useState<string>(INITIAL_CHAMBER_THREADS[0]?.id || "");
+  const [chatThreads, setChatThreads] = useState<AdvocateChatThread[]>([]);
+  const [isLoadingChats, setIsLoadingChats] = useState<boolean>(false);
+  const [selectedChatId, setSelectedChatId] = useState<string>("");
   const [chatSearchQuery, setChatSearchQuery] = useState("");
   const [chatSegment, setChatSegment] = useState<"all" | "direct" | "group">("all");
   const [chatInputText, setChatInputText] = useState("");
-  const [isWsConnected, setIsWsConnected] = useState<boolean>(true);
+  const [isSendingChat, setIsSendingChat] = useState(false);
+  const [isWsConnected] = useState<boolean>(true);
+  const [clients, setClients] = useState<AdvocateClientItem[]>([]);
+  const [newDiscussionOpen, setNewDiscussionOpen] = useState(false);
+  const [statusNotice, setStatusNotice] = useState<string>("");
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
 
   // ==========================================
   // MODE 3: NOTIFICATIONS STATE
   // ==========================================
-  const [notifications, setNotifications] = useState<ChamberNotificationItem[]>(INITIAL_CHAMBER_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<ChamberNotificationItem[]>([]);
   const [selectedNotifFilter, setSelectedNotifFilter] = useState<string>("all");
   const [isLoadingNotifications, setIsLoadingNotifications] = useState<boolean>(false);
 
@@ -536,6 +262,95 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
     }
   }, [selectedChatId, chatThreads, inboxMode]);
 
+  const loadMails = useCallback(async () => {
+    setIsLoadingMails(true);
+    try {
+      const res = await advocateApi.getMails(token);
+      if (res?.success && Array.isArray(res.mails)) {
+        setEmails(res.mails);
+      }
+    } catch (err) {
+      console.warn("Failed to load chamber mails:", err);
+    } finally {
+      setIsLoadingMails(false);
+    }
+  }, [token]);
+
+  const loadChatThreads = useCallback(async () => {
+    setIsLoadingChats(true);
+    try {
+      const [msgRes, clientRes] = await Promise.all([
+        advocateApi.getAdvocateMessages(token),
+        advocateApi.getClients(token),
+      ]);
+      if (clientRes?.success && Array.isArray(clientRes.clients)) {
+        setClients(clientRes.clients);
+      }
+      if (msgRes?.success && Array.isArray(msgRes.threads)) {
+        const mapped: AdvocateChatThread[] = msgRes.threads.map((t: any) => {
+          const msgs: ChatMessage[] = (Array.isArray(t.messages) ? t.messages : [])
+            .slice()
+            .sort(
+              (a: any, b: any) =>
+                new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+            )
+            .map((m: any) => ({
+              id: String(m.id || m._id || Math.random()),
+              sender: m.senderRole === "advocate" ? "advocate" : "client",
+              senderName:
+                m.senderRole === "advocate" ? undefined : m.senderName || t.citizenName,
+              text: String(m.content || ""),
+              timestamp: m.createdAt
+                ? new Date(m.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "Just now",
+              status: m.isRead ? "read" : "delivered",
+            }));
+          const last = t.lastMessage || msgs[msgs.length - 1];
+          const displayName = t.citizenName || "Registered Client";
+          return {
+            id: String(t.citizenId || ""),
+            citizenId: String(t.citizenId || ""),
+            matterId: String(t.matterId || ""),
+            type: "direct",
+            name: displayName,
+            role: t.citizenEmail ? `Client • ${t.citizenEmail}` : "Client",
+            matter: t.matterTitle || "Direct Counsel Communication",
+            avatarText: getInitials(displayName),
+            online: true,
+            lastMessage: String(last?.content || last?.text || ""),
+            lastTime: last?.createdAt
+              ? new Date(last.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : last?.timestamp || "",
+            unreadCount: Number(t.unreadCount || 0),
+            messages: msgs,
+          };
+        });
+        setChatThreads((prev) => {
+          const existingIds = new Set(mapped.map((m) => m.id));
+          const pendingEmpty = prev.filter(
+            (p) => !existingIds.has(p.id) && p.messages.length === 0
+          );
+          return [...pendingEmpty, ...mapped];
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to load chamber chats:", err);
+    } finally {
+      setIsLoadingChats(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadMails();
+    loadChatThreads();
+  }, [loadMails, loadChatThreads, inboxMode]);
+
   // ==========================================
   // COMPUTED MAIL DATA
   // ==========================================
@@ -543,7 +358,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
     return emails.filter((mail) => {
       const matchFolder =
         selectedFolder === "starred"
-          ? mail.isStarred
+          ? mail.isStarred && mail.folder !== "trash"
           : mail.folder === selectedFolder;
 
       const matchCategory =
@@ -562,66 +377,113 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
   }, [emails, selectedFolder, selectedMailCategory, mailSearchQuery]);
 
   const activeEmail =
-    emails.find((e) => e.id === selectedEmailId) || filteredEmails[0] || emails[0];
+    filteredEmails.find((e) => e.id === selectedEmailId) || filteredEmails[0];
 
-  const unreadMailCount = emails.filter((e) => !e.isRead).length;
+  const unreadMailCount = emails.filter((e) => !e.isRead && e.folder === "inbox").length;
   const unreadChatCount = chatThreads.reduce((sum, t) => sum + (t.unreadCount || 0), 0);
   const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
 
-  // Toggle Star
-  const handleToggleStar = (emailId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setEmails((prev) =>
-      prev.map((m) => (m.id === emailId ? { ...m, isStarred: !m.isStarred } : m))
-    );
+  // Select Email & Mark Read
+  const handleSelectEmail = async (mail: ChamberEmailItem) => {
+    setSelectedEmailId(mail.id);
+    if (!mail.isRead) {
+      setEmails((prev) =>
+        prev.map((m) => (m.id === mail.id ? { ...m, isRead: true } : m))
+      );
+      try {
+        await advocateApi.updateMail(mail.id, { isRead: true }, token);
+      } catch (err) {
+        console.warn("Failed to mark mail read:", err);
+      }
+    }
   };
 
-  // Trash Email
-  const handleDeleteEmail = (emailId: string) => {
+  // Toggle Star
+  const handleToggleStar = async (emailId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const target = emails.find((m) => m.id === emailId);
+    const nextStar = !target?.isStarred;
     setEmails((prev) =>
-      prev.map((m) => (m.id === emailId ? { ...m, folder: "trash" as MailFolder } : m))
+      prev.map((m) => (m.id === emailId ? { ...m, isStarred: nextStar } : m))
     );
+    try {
+      await advocateApi.updateMail(emailId, { isStarred: nextStar }, token);
+    } catch (err) {
+      console.warn("Failed to toggle mail star:", err);
+    }
+  };
+
+  // Trash / Delete Email
+  const handleDeleteEmail = async (emailId: string) => {
+    const target = emails.find((m) => m.id === emailId);
+    const isAlreadyTrash = target?.folder === "trash";
+    setEmails((prev) =>
+      isAlreadyTrash
+        ? prev.filter((m) => m.id !== emailId)
+        : prev.map((m) => (m.id === emailId ? { ...m, folder: "trash" as MailFolder } : m))
+    );
+    try {
+      await advocateApi.deleteMail(emailId, token);
+    } catch (err) {
+      console.warn("Failed to delete mail:", err);
+    }
   };
 
   // Send Quick Reply
-  const handleSendMailReply = () => {
-    if (!replyInput.trim()) return;
-    setReplySuccess(true);
-    setReplyInput("");
-    setTimeout(() => setReplySuccess(false), 2500);
+  const handleSendMailReply = async () => {
+    if (!replyInput.trim() || !activeEmail || isSendingMail) return;
+    const text = replyInput.trim();
+    setIsSendingMail(true);
+    try {
+      const res = await advocateApi.replyMail(activeEmail.id, text, token);
+      if (res?.success && res.mail) {
+        setEmails((prev) => prev.map((m) => (m.id === activeEmail.id ? res.mail : m)));
+        setReplySuccess(true);
+        setReplyInput("");
+        setTimeout(() => setReplySuccess(false), 2500);
+      }
+    } catch (err) {
+      console.warn("Failed to send mail reply:", err);
+    } finally {
+      setIsSendingMail(false);
+    }
   };
 
   // Send New Composed Email
-  const handleSendComposedEmail = (e: React.FormEvent) => {
+  const handleSendComposedEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!composeTo.trim() || !composeSubject.trim()) return;
-
-    const newEmail: ChamberEmailItem = {
-      id: "mail-" + Date.now(),
-      senderName: advocateName,
-      senderEmail: "meera.krishnan@keralabar.org",
-      senderAvatarText: "MK",
-      recipientName: composeTo,
-      recipientEmail: composeTo.toLowerCase().replace(/\s+/g, ".") + "@keralabar.org",
-      matterTitle: composeMatter || "General Chamber Brief",
-      subject: composeSubject,
-      snippet: composeBody.slice(0, 100) + "...",
-      body: composeBody.split("\n").filter(Boolean),
-      timestamp: "Just now",
-      fullDate: new Date().toLocaleString(),
-      folder: "sent",
-      category: "registry",
-      categoryLabel: "High Court Registry",
-      isRead: true,
-      isStarred: false,
-    };
-
-    setEmails((prev) => [newEmail, ...prev]);
-    setComposeModalOpen(false);
-    setComposeTo("");
-    setComposeSubject("");
-    setComposeMatter("");
-    setComposeBody("");
+    if (!composeTo.trim() || !composeSubject.trim() || isSendingMail) return;
+    setIsSendingMail(true);
+    try {
+      const res = await advocateApi.sendMail(
+        {
+          recipientId: composeRecipientId,
+          recipientName: composeTo.trim(),
+          recipientEmail: composeTo.includes("@") ? composeTo.trim() : "",
+          matterTitle: composeMatter.trim() || "General Chamber Brief",
+          subject: composeSubject.trim(),
+          body: composeBody.trim(),
+          category: "client",
+          categoryLabel: "Chamber Notice",
+        },
+        token
+      );
+      if (res?.success && res.mail) {
+        setEmails((prev) => [res.mail, ...prev]);
+        setSelectedFolder("sent");
+        setSelectedEmailId(res.mail.id);
+      }
+      setComposeModalOpen(false);
+      setComposeRecipientId("");
+      setComposeTo("");
+      setComposeSubject("");
+      setComposeMatter("");
+      setComposeBody("");
+    } catch (err) {
+      console.warn("Failed to dispatch chamber mail:", err);
+    } finally {
+      setIsSendingMail(false);
+    }
   };
 
   // ==========================================
@@ -643,64 +505,126 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
   }, [chatThreads, chatSegment, chatSearchQuery]);
 
   const activeChatThread =
+    filteredChatThreads.find((t) => t.id === selectedChatId) ||
     chatThreads.find((t) => t.id === selectedChatId) ||
     filteredChatThreads[0] ||
     chatThreads[0];
 
+  const handleSelectThread = async (thread: AdvocateChatThread) => {
+    setSelectedChatId(thread.id);
+    if (thread.unreadCount > 0 && (thread.citizenId || thread.id)) {
+      const targetCitizenId = thread.citizenId || thread.id;
+      setChatThreads((prev) =>
+        prev.map((t) =>
+          t.id === thread.id
+            ? {
+                ...t,
+                unreadCount: 0,
+                messages: t.messages.map((m) =>
+                  m.sender === "client" ? { ...m, status: "read" } : m
+                ),
+              }
+            : t
+        )
+      );
+      try {
+        await advocateApi.markAdvocateMessagesRead(targetCitizenId, token);
+      } catch (err) {
+        console.warn("Failed to mark thread read:", err);
+      }
+    }
+  };
+
+  const handleStartClientDiscussion = (client: AdvocateClientItem) => {
+    const targetId = String(client.citizenId || client._id || "");
+    if (!targetId) return;
+    const existing = chatThreads.find((t) => t.id === targetId || t.citizenId === targetId);
+    if (existing) {
+      handleSelectThread(existing);
+    } else {
+      const created: AdvocateChatThread = {
+        id: targetId,
+        citizenId: targetId,
+        type: "direct",
+        name: client.fullName,
+        role: client.email ? `Client • ${client.email}` : "Client",
+        matter: client.activeMatters?.[0] || "Direct Counsel Communication",
+        avatarText: getInitials(client.fullName),
+        online: true,
+        lastMessage: "Start a privileged consultation message...",
+        lastTime: "",
+        unreadCount: 0,
+        messages: [],
+      };
+      setChatThreads((prev) => [created, ...prev]);
+      setSelectedChatId(created.id);
+    }
+    setNewDiscussionOpen(false);
+  };
+
   // Send Instant Message
-  const handleSendChatMessage = () => {
-    if (!chatInputText.trim() || !activeChatThread) return;
+  const handleSendChatMessage = async () => {
+    if (!chatInputText.trim() || !activeChatThread || isSendingChat) return;
+    const text = chatInputText.trim();
+    const targetThreadId = activeChatThread.id;
+    const targetCitizenId = activeChatThread.citizenId || activeChatThread.id;
+    const tempId = "msg-" + Date.now();
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
     const newMsg: ChatMessage = {
-      id: "msg-" + Date.now(),
+      id: tempId,
       sender: "advocate",
-      text: chatInputText.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      text,
+      timestamp: nowTime,
       status: "sent",
     };
 
     setChatThreads((prev) =>
-      prev.map((thread) => {
-        if (thread.id === selectedChatId) {
-          return {
-            ...thread,
-            lastMessage: newMsg.text,
-            lastTime: newMsg.timestamp,
-            messages: [...thread.messages, newMsg],
-          };
-        }
-        return thread;
-      })
-    );
-
-    const sentText = chatInputText;
-    setChatInputText("");
-
-    // Simulate response after 1.5s
-    setTimeout(() => {
-      const autoReply: ChatMessage = {
-        id: "rep-" + Date.now(),
-        sender: activeChatThread.type === "group" ? "associate" : "client",
-        senderName: activeChatThread.type === "group" ? "Adv. Anand" : activeChatThread.name,
-        text: `Received counsel: "${sentText.slice(0, 40)}...". Attending to this instruction immediately.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        status: "read",
-      };
-
-      setChatThreads((prev) =>
-        prev.map((thread) => {
-          if (thread.id === selectedChatId) {
-            return {
+      prev.map((thread) =>
+        thread.id === targetThreadId
+          ? {
               ...thread,
-              lastMessage: autoReply.text,
-              lastTime: autoReply.timestamp,
-              messages: [...thread.messages, autoReply],
-            };
-          }
-          return thread;
-        })
+              lastMessage: newMsg.text,
+              lastTime: newMsg.timestamp,
+              messages: [...thread.messages, newMsg],
+            }
+          : thread
+      )
+    );
+    setChatInputText("");
+    setIsSendingChat(true);
+
+    try {
+      const res = await advocateApi.sendAdvocateMessage(
+        {
+          recipientId: targetCitizenId,
+          recipientName: activeChatThread.name,
+          matterId: activeChatThread.matterId || "",
+          matterTitle: activeChatThread.matter || "Direct Counsel Communication",
+          content: text,
+        },
+        token
       );
-    }, 1500);
+      if (res?.success && res.messageData) {
+        const savedId = String(res.messageData.id || res.messageData._id || tempId);
+        setChatThreads((prev) =>
+          prev.map((thread) =>
+            thread.id === targetThreadId
+              ? {
+                  ...thread,
+                  messages: thread.messages.map((m) =>
+                    m.id === tempId ? { ...m, id: savedId, status: "delivered" } : m
+                  ),
+                }
+              : thread
+          )
+        );
+      }
+    } catch (err) {
+      console.warn("Failed to send advocate chat message:", err);
+    } finally {
+      setIsSendingChat(false);
+    }
   };
 
   return (
@@ -804,11 +728,24 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
 
           {inboxMode === "notifications" && (
             <span className="text-xs font-mono text-zinc-500">
-              High Court &amp; Registry Alert Feed
+              Chamber Activity &amp; Client Feed
             </span>
           )}
         </div>
       </div>
+
+      {statusNotice && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300">
+          <span>{statusNotice}</span>
+          <button
+            type="button"
+            onClick={() => setStatusNotice("")}
+            className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* =========================================================================
           MODE 1: MAIL BOX (Court Notices, Registry Mails & Client Briefs)
@@ -833,11 +770,11 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
               </span>
               {[
                 { id: "inbox", label: "Inbox", icon: Mail, count: unreadMailCount },
-                { id: "starred", label: "Starred Notices", icon: Star, count: emails.filter((e) => e.isStarred).length },
-                { id: "drafts", label: "Draft Pleadings", icon: FileText, count: 2 },
-                { id: "sent", label: "Dispatched Mails", icon: Send, count: 8 },
-                { id: "archive", label: "Closed Briefs", icon: Archive, count: 14 },
-                { id: "trash", label: "Trash", icon: Trash2, count: 0 },
+                { id: "starred", label: "Starred Notices", icon: Star, count: emails.filter((e) => e.isStarred && e.folder !== "trash").length },
+                { id: "drafts", label: "Draft Pleadings", icon: FileText, count: emails.filter((e) => e.folder === "drafts").length },
+                { id: "sent", label: "Dispatched Mails", icon: Send, count: emails.filter((e) => e.folder === "sent").length },
+                { id: "archive", label: "Closed Briefs", icon: Archive, count: emails.filter((e) => e.folder === "archive").length },
+                { id: "trash", label: "Trash", icon: Trash2, count: emails.filter((e) => e.folder === "trash").length },
               ].map((folder) => {
                 const Icon = folder.icon;
                 const isActive = selectedFolder === folder.id;
@@ -913,12 +850,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 return (
                   <div
                     key={mail.id}
-                    onClick={() => {
-                      setSelectedEmailId(mail.id);
-                      setEmails((prev) =>
-                        prev.map((m) => (m.id === mail.id ? { ...m, isRead: true } : m))
-                      );
-                    }}
+                    onClick={() => handleSelectEmail(mail)}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-1.5 ${
                       isSelected
                         ? "bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-2xs"
@@ -968,9 +900,14 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 );
               })}
 
-              {filteredEmails.length === 0 && (
+              {filteredEmails.length === 0 && !isLoadingMails && (
                 <div className="p-8 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                  No emails in this view.
+                  No correspondence in this folder yet.
+                </div>
+              )}
+              {isLoadingMails && filteredEmails.length === 0 && (
+                <div className="p-8 text-center text-xs text-zinc-400">
+                  Syncing chamber mailbox...
                 </div>
               )}
             </div>
@@ -1069,7 +1006,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                           </div>
                           <button
                             type="button"
-                            onClick={() => alert(`Downloading verified document: ${att.name}`)}
+                            onClick={() => setStatusNotice(`Downloading attached document: ${att.name}`)}
                             className="p-1 rounded text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
                             title="Download document"
                           >
@@ -1083,35 +1020,39 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
               </div>
             ) : (
               <div className="p-12 text-center text-xs text-zinc-400">
-                Select an email to view full briefing.
+                {emails.length === 0
+                  ? "No mails in your chamber inbox yet. Click 'Compose Legal Notice' to send formal correspondence."
+                  : "Select an email to view full briefing."}
               </div>
             )}
 
             {/* Quick Reply Form */}
-            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={replyInput}
-                  onChange={(e) => setReplyInput(e.target.value)}
-                  placeholder="Type quick acknowledgement to registry or client..."
-                  className="flex-1 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleSendMailReply}
-                  disabled={!replyInput.trim()}
-                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90 disabled:opacity-40"
-                >
-                  Send
-                </button>
+            {activeEmail && (
+              <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={replyInput}
+                    onChange={(e) => setReplyInput(e.target.value)}
+                    placeholder="Type quick reply..."
+                    className="flex-1 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendMailReply}
+                    disabled={!replyInput.trim() || isSendingMail}
+                    className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90 disabled:opacity-40"
+                  >
+                    {isSendingMail ? "Sending..." : "Send"}
+                  </button>
+                </div>
+                {replySuccess && (
+                  <span className="text-[11px] font-mono text-emerald-600 block">
+                    ✓ Reply dispatched via chamber mail server.
+                  </span>
+                )}
               </div>
-              {replySuccess && (
-                <span className="text-[11px] font-mono text-emerald-600 block">
-                  ✓ Reply dispatched via chamber mail server.
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -1131,7 +1072,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 </h2>
                 <button
                   type="button"
-                  onClick={() => alert("Start new client consultation conversation")}
+                  onClick={() => setNewDiscussionOpen(true)}
                   className="w-7 h-7 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center cursor-pointer hover:opacity-85"
                   title="New discussion"
                 >
@@ -1180,7 +1121,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                   return (
                     <div
                       key={thread.id}
-                      onClick={() => setSelectedChatId(thread.id)}
+                      onClick={() => handleSelectThread(thread)}
                       className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all ${
                         isSelected
                           ? "bg-zinc-100 dark:bg-zinc-900"
@@ -1230,6 +1171,21 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                     </div>
                   );
                 })}
+
+                {filteredChatThreads.length === 0 && (
+                  <div className="p-6 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl space-y-2">
+                    <p>{isLoadingChats ? "Loading client threads..." : "No client discussions yet."}</p>
+                    {!isLoadingChats && (
+                      <button
+                        type="button"
+                        onClick={() => setNewDiscussionOpen(true)}
+                        className="px-3 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold cursor-pointer hover:opacity-90"
+                      >
+                        Start Client Chat
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1271,7 +1227,13 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                     )}
                     <button
                       type="button"
-                      onClick={() => alert(`Launching privileged consultation for ${activeChatThread.name}`)}
+                      onClick={() => {
+                        if (onNavigateTab) {
+                          onNavigateTab("video-meet");
+                        } else {
+                          setStatusNotice(`Video consultation session ready for ${activeChatThread.name}.`);
+                        }
+                      }}
                       className="p-2 rounded-xl bg-black text-white dark:bg-white dark:text-black cursor-pointer hover:opacity-90"
                       title="Launch Video Conference"
                     >
@@ -1328,9 +1290,9 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                   <div className="flex items-center gap-2 p-2 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs">
                     <button
                       type="button"
-                      onClick={() => alert("Upload case record exhibit to chat")}
+                      onClick={() => onNavigateTab?.("documents")}
                       className="p-1.5 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                      title="Attach file"
+                      title="Open Case Documents"
                     >
                       <Paperclip className="w-4 h-4" />
                     </button>
@@ -1615,16 +1577,51 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
             </div>
 
             <form onSubmit={handleSendComposedEmail} className="space-y-3 text-xs">
+              {clients.length > 0 && (
+                <div>
+                  <label className="font-bold block mb-1 text-black dark:text-white">
+                    Select Client from Chamber Roster (Optional)
+                  </label>
+                  <select
+                    value={composeRecipientId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setComposeRecipientId(val);
+                      const picked = clients.find(
+                        (c) => String(c.citizenId || c._id) === val
+                      );
+                      if (picked) {
+                        setComposeTo(picked.fullName);
+                        if (!composeMatter && picked.activeMatters?.[0]) {
+                          setComposeMatter(picked.activeMatters[0]);
+                        }
+                      }
+                    }}
+                    className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                  >
+                    <option value="">-- Enter recipient manually or select client --</option>
+                    {clients.map((c) => (
+                      <option key={c._id} value={String(c.citizenId || c._id)}>
+                        {c.fullName} {c.email ? `(${c.email})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="font-bold block mb-1 text-black dark:text-white">
-                  Recipient (Advocate / Registry / Client)
+                  Recipient (Client / Counsel / Registry)
                 </label>
                 <input
                   type="text"
                   required
                   value={composeTo}
-                  onChange={(e) => setComposeTo(e.target.value)}
-                  placeholder="e.g. Registrar (Judicial), High Court or Client Name"
+                  onChange={(e) => {
+                    setComposeTo(e.target.value);
+                    if (!e.target.value.trim()) setComposeRecipientId("");
+                  }}
+                  placeholder="Enter client name or email address"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -1637,7 +1634,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                   type="text"
                   value={composeMatter}
                   onChange={(e) => setComposeMatter(e.target.value)}
-                  placeholder="e.g. WP(C) 19482/2024 • High Court of Kerala"
+                  placeholder="e.g. Suit / Petition title or docket reference"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -1651,7 +1648,7 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                   required
                   value={composeSubject}
                   onChange={(e) => setComposeSubject(e.target.value)}
-                  placeholder="e.g. Objection representation under Section 16(1) of Telegraph Act"
+                  placeholder="Enter formal communication subject"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -1680,12 +1677,61 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 cursor-pointer shadow-2xs"
+                  disabled={isSendingMail}
+                  className="px-5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 cursor-pointer shadow-2xs disabled:opacity-40"
                 >
-                  Dispatch Formal Brief
+                  {isSendingMail ? "Dispatching..." : "Dispatch Formal Brief"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {newDiscussionOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+              <h3 className="font-bold text-sm text-black dark:text-white">
+                Start Privileged Client Discussion
+              </h3>
+              <button
+                type="button"
+                onClick={() => setNewDiscussionOpen(false)}
+                className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {clients.length === 0 ? (
+              <div className="p-6 text-center text-xs text-zinc-500 space-y-2">
+                <p>No active clients found in your chamber yet.</p>
+                <p className="text-[11px] text-zinc-400">
+                  Once a citizen engages you or you add a client in the Clients section, you can message them directly here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {clients.map((client) => (
+                  <button
+                    key={client._id}
+                    type="button"
+                    onClick={() => handleStartClientDiscussion(client)}
+                    className="w-full text-left p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white flex items-center justify-between gap-3 transition-all cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-bold text-xs text-black dark:text-white block truncate">
+                        {client.fullName}
+                      </span>
+                      <span className="text-[11px] text-zinc-500 font-mono block truncate">
+                        {client.activeMatters?.[0] || client.email || "Direct Counsel"}
+                      </span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

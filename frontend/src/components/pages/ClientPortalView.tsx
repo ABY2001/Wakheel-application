@@ -2536,7 +2536,9 @@ export function ClientPortalView() {
           {/* ============================================================== */}
           {(activeTab === "inbox" || activeTab === "messages" || activeTab === "notifications") && (
             <SecureInboxView
-              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
+              citizenName={citizenProfile.fullName}
+              citizenEmail={citizenProfile.email}
               initialMode={activeTab === "messages" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultationModal={() => {
                 setSelectedAdvocate(registeredAdvocates[0] || mockAdvocates[0]);

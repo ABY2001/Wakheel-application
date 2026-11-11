@@ -15,7 +15,7 @@ const messageSchema = new mongoose.Schema(
     senderName: {
       type: String,
       required: true,
-      default: "Gopakumar Nambiar",
+      default: "Registered Citizen",
     },
     recipientId: {
       type: mongoose.Schema.Types.Mixed,
@@ -29,7 +29,7 @@ const messageSchema = new mongoose.Schema(
     },
     recipientName: {
       type: String,
-      default: "Adv. Meera Krishnan",
+      default: "Counsel",
     },
     matterId: {
       type: String,

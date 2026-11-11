@@ -1247,10 +1247,10 @@ export const sendAdvocateMessage = async (req, res) => {
     const advocateId = getAdvocateId(req);
     const {
       content,
-      recipientId = "default_citizen",
-      recipientName = "Gopakumar Nambiar",
-      matterId = "mat_wpc_19482",
-      matterTitle = "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
+      recipientId = "",
+      recipientName = "",
+      matterId = "",
+      matterTitle = "Direct Counsel Communication",
       attachments = [],
       category = "general",
     } = req.body;
@@ -1258,14 +1258,25 @@ export const sendAdvocateMessage = async (req, res) => {
     if (!content || !content.trim()) {
       return res.status(400).json({ success: false, message: "Message content cannot be empty" });
     }
+    if (!recipientId && !recipientName && String(advocateId) !== "adv_1") {
+      return res.status(400).json({ success: false, message: "Recipient client is required" });
+    }
+
+    const identity = shouldUseDevStore() ? devStore.getAdvocateIdentities(advocateId) : null;
+    const senderName = req.user?.fullName || identity?.primaryName || "Counsel";
+    const resolvedRecipientId = String(recipientId || (String(advocateId) === "adv_1" ? "default_citizen" : "")).trim();
+    const resolvedRecipientName =
+      recipientName ||
+      (shouldUseDevStore() && resolvedRecipientId ? devStore.getCitizenDisplayInfo(resolvedRecipientId).citizenName : "") ||
+      "Client";
 
     const messageData = {
       senderId: advocateId,
       senderRole: "advocate",
-      senderName: req.user?.fullName || "Adv. Meera Krishnan",
-      recipientId,
+      senderName,
+      recipientId: resolvedRecipientId,
       recipientRole: "citizen",
-      recipientName,
+      recipientName: resolvedRecipientName,
       matterId,
       matterTitle,
       content: content.trim(),
@@ -1284,10 +1295,12 @@ export const sendAdvocateMessage = async (req, res) => {
     }
 
     // Real-time broadcast to recipient via WebSocket
-    broadcastMessageToUser(recipientId, {
-      type: "new_message",
-      message: createdMessage,
-    });
+    if (resolvedRecipientId) {
+      broadcastMessageToUser(resolvedRecipientId, {
+        type: "new_message",
+        message: createdMessage,
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -3057,6 +3070,130 @@ export const clearAllNotifications = async (req, res) => {
     res.json({ success: true, clearedCount: ids.length });
   } catch (error) {
     console.error("clearAllNotifications error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 27. CHAMBER MAILBOX & FORMAL NOTICES
+// ============================================================================
+export const getAdvocateMails = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const mails = devStore.getMailboxEmails(advocateId, "advocate");
+    res.json({
+      success: true,
+      mails,
+      unreadCount: mails.filter((m) => !m.isRead && m.folder === "inbox").length,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("getAdvocateMails error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const sendAdvocateMail = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const {
+      recipientId = "",
+      recipientName = "",
+      recipientEmail = "",
+      matterTitle = "General Chamber Brief",
+      subject = "",
+      body = "",
+      category = "notices",
+      categoryLabel = "Chamber Notice",
+      folder = "sent",
+      attachments = [],
+    } = req.body;
+
+    if (!subject.trim() && folder !== "drafts") {
+      return res.status(400).json({ success: false, message: "Subject line is required" });
+    }
+
+    const identity = devStore.getAdvocateIdentities(advocateId);
+    const senderName = req.user?.fullName || identity?.primaryName || "Counsel";
+    const senderEmail = req.user?.email || identity?.primaryEmail || "";
+
+    const mail = devStore.sendMailboxEmail({
+      senderId: advocateId,
+      senderRole: "advocate",
+      senderName,
+      senderEmail,
+      recipientId,
+      recipientRole: "citizen",
+      recipientName: recipientName || recipientEmail || "Recipient",
+      recipientEmail,
+      matterTitle,
+      subject,
+      body,
+      category,
+      categoryLabel,
+      folder,
+      attachments,
+    });
+
+    res.status(201).json({ success: true, mail });
+  } catch (error) {
+    console.error("sendAdvocateMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const replyAdvocateMail = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+    const { content = "" } = req.body;
+    if (!content.trim()) {
+      return res.status(400).json({ success: false, message: "Reply content cannot be empty" });
+    }
+    const identity = devStore.getAdvocateIdentities(advocateId);
+    const updated = devStore.replyMailboxEmail(
+      id,
+      advocateId,
+      "advocate",
+      content.trim(),
+      req.user?.fullName || identity?.primaryName || "Counsel"
+    );
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Mail item not found" });
+    }
+    res.json({ success: true, mail: updated });
+  } catch (error) {
+    console.error("replyAdvocateMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateAdvocateMail = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+    const updated = devStore.updateMailboxEmail(id, advocateId, "advocate", req.body || {});
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Mail item not found" });
+    }
+    res.json({ success: true, mail: updated });
+  } catch (error) {
+    console.error("updateAdvocateMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAdvocateMail = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+    const updated = devStore.deleteMailboxEmail(id, advocateId, "advocate");
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Mail item not found" });
+    }
+    res.json({ success: true, mail: updated });
+  } catch (error) {
+    console.error("deleteAdvocateMail error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

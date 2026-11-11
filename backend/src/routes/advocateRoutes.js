@@ -119,6 +119,11 @@ import {
   markAllNotificationsRead,
   dismissNotification,
   clearAllNotifications,
+  getAdvocateMails,
+  sendAdvocateMail,
+  replyAdvocateMail,
+  updateAdvocateMail,
+  deleteAdvocateMail,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -294,5 +299,12 @@ router.put("/notifications/read-all", protect, markAllNotificationsRead);
 router.put("/notifications/:id/read", protect, markNotificationRead);
 router.delete("/notifications/:id", protect, dismissNotification);
 router.delete("/notifications", protect, clearAllNotifications);
+
+// 27. Chamber Mailbox Suite
+router.get("/mails", protect, getAdvocateMails);
+router.post("/mails", protect, sendAdvocateMail);
+router.post("/mails/:id/reply", protect, replyAdvocateMail);
+router.put("/mails/:id", protect, updateAdvocateMail);
+router.delete("/mails/:id", protect, deleteAdvocateMail);
 
 export default router;

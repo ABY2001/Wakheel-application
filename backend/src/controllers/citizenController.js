@@ -2951,8 +2951,8 @@ export const sendCitizenMessage = async (req, res) => {
     const userId = getUserId(req);
     const {
       content,
-      recipientId = "adv_1",
-      recipientName = "Adv. Meera Krishnan",
+      recipientId = "",
+      recipientName = "",
       matterId = "",
       matterTitle = "General Legal Counsel",
       attachments = [],
@@ -2963,13 +2963,40 @@ export const sendCitizenMessage = async (req, res) => {
       return res.status(400).json({ success: false, message: "Message content cannot be empty" });
     }
 
+    const useDev = shouldUseDevStore();
+    const citizenInfo = useDev ? devStore.getCitizenDisplayInfo(userId) : null;
+    const senderName = req.user?.fullName || citizenInfo?.citizenName || "Registered Citizen";
+
+    let resolvedRecipientId = String(recipientId || "").trim();
+    let resolvedRecipientName = String(recipientName || "").trim();
+
+    if (useDev && (resolvedRecipientId || resolvedRecipientName)) {
+      const resolvedAdv = devStore.resolveAdvocateByIdOrName(resolvedRecipientId, resolvedRecipientName);
+      if (resolvedAdv?.advocateId) {
+        resolvedRecipientId = resolvedAdv.advocateId;
+        resolvedRecipientName = resolvedRecipientName || resolvedAdv.advocateName || "Counsel";
+      }
+    }
+
+    if (!resolvedRecipientId && !resolvedRecipientName) {
+      if (userId === "default_citizen") {
+        resolvedRecipientId = "adv_1";
+        resolvedRecipientName = "Counsel";
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Please select an advocate recipient before sending a message",
+        });
+      }
+    }
+
     const messageData = {
       senderId: userId,
       senderRole: "citizen",
-      senderName: req.user?.fullName || "Gopakumar Nambiar",
-      recipientId,
+      senderName,
+      recipientId: resolvedRecipientId,
       recipientRole: "advocate",
-      recipientName,
+      recipientName: resolvedRecipientName || "Counsel",
       matterId,
       matterTitle,
       content: content.trim(),
@@ -2980,23 +3007,25 @@ export const sendCitizenMessage = async (req, res) => {
     };
 
     let created = null;
-    if (shouldUseDevStore()) {
+    if (useDev) {
       created = devStore.sendMessage(messageData);
     } else {
       created = await Message.create(messageData);
     }
 
     // Broadcast in real-time to advocate via WebSocket
-    broadcastMessageToUser(recipientId || "adv_1", {
-      type: "new_message",
-      message: created,
-    });
+    if (resolvedRecipientId) {
+      broadcastMessageToUser(resolvedRecipientId, {
+        type: "new_message",
+        message: created,
+      });
+    }
 
     res.status(201).json({
       success: true,
       message: "Privileged legal instruction delivered to advocate chamber",
       messageData: created,
-      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+      mode: useDev ? "dummy_data" : "cloud_db",
     });
   } catch (error) {
     console.error("sendCitizenMessage error:", error);
@@ -3009,10 +3038,11 @@ export const sendCitizenMessage = async (req, res) => {
 // @access  Private (Citizen)
 export const markMessageRead = async (req, res) => {
   try {
+    const userId = getUserId(req);
     const { id } = req.params;
 
     if (shouldUseDevStore()) {
-      const updated = devStore.markMessageAsRead(id);
+      const updated = devStore.markMessageAsRead(id, userId);
       if (updated) {
         broadcastMessageToUser(updated.senderId, {
           type: "message_read",
@@ -3590,6 +3620,216 @@ export const verifyDigiLockerKyc = async (req, res) => {
     res.json({ success: true, message: "DigiLocker Aadhaar KYC verified successfully.", kyc });
   } catch (error) {
     console.error("verifyDigiLockerKyc error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 15. CITIZEN SECURE MAILBOX & NOTIFICATION FEED
+// ============================================================================
+export const getCitizenMails = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const mails = devStore.getMailboxEmails(userId, "citizen");
+    res.json({
+      success: true,
+      mails,
+      unreadCount: mails.filter((m) => !m.isRead && m.folder === "inbox").length,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("getCitizenMails error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const sendCitizenMail = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const {
+      recipientId = "",
+      recipientName = "",
+      recipientEmail = "",
+      matterTitle = "Client Correspondence",
+      subject = "",
+      body = "",
+      category = "counsel",
+      categoryLabel = "Client Correspondence",
+      categoryColor = "sky",
+      folder = "sent",
+      attachments = [],
+    } = req.body;
+
+    if (!subject.trim() && folder !== "drafts") {
+      return res.status(400).json({ success: false, message: "Subject line is required" });
+    }
+    if (
+      folder !== "drafts" &&
+      !String(recipientId || "").trim() &&
+      !String(recipientName || "").trim() &&
+      !String(recipientEmail || "").trim()
+    ) {
+      return res.status(400).json({ success: false, message: "Recipient is required" });
+    }
+
+    const citizenInfo = devStore.getCitizenDisplayInfo(userId);
+    const senderName = req.user?.fullName || citizenInfo?.citizenName || "Registered Citizen";
+    const senderEmail = req.user?.email || citizenInfo?.citizenEmail || "";
+
+    const mail = devStore.sendMailboxEmail({
+      senderId: userId,
+      senderRole: "citizen",
+      senderName,
+      senderEmail,
+      recipientId,
+      recipientRole: "advocate",
+      recipientName: recipientName || recipientEmail || "Counsel",
+      recipientEmail,
+      matterTitle,
+      subject,
+      body,
+      category,
+      categoryLabel,
+      categoryColor,
+      folder,
+      attachments,
+    });
+
+    res.status(201).json({ success: true, mail });
+  } catch (error) {
+    console.error("sendCitizenMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const replyCitizenMail = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const { content = "" } = req.body;
+    if (!content.trim()) {
+      return res.status(400).json({ success: false, message: "Reply content cannot be empty" });
+    }
+    const citizenInfo = devStore.getCitizenDisplayInfo(userId);
+    const updated = devStore.replyMailboxEmail(
+      id,
+      userId,
+      "citizen",
+      content.trim(),
+      req.user?.fullName || citizenInfo?.citizenName || "Registered Citizen"
+    );
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Mail item not found" });
+    }
+    res.json({ success: true, mail: updated });
+  } catch (error) {
+    console.error("replyCitizenMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateCitizenMail = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const updated = devStore.updateMailboxEmail(id, userId, "citizen", req.body || {});
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Mail item not found" });
+    }
+    res.json({ success: true, mail: updated });
+  } catch (error) {
+    console.error("updateCitizenMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCitizenMail = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const updated = devStore.deleteMailboxEmail(id, userId, "citizen");
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Mail item not found" });
+    }
+    res.json({ success: true, mail: updated });
+  } catch (error) {
+    console.error("deleteCitizenMail error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCitizenNotifications = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const notifications = devStore.getCitizenNotifications(userId);
+    res.json({
+      success: true,
+      notifications,
+      unreadCount: notifications.filter((n) => !n.isRead).length,
+      mode: shouldUseDevStore() ? "dummy_data" : "cloud_db",
+    });
+  } catch (error) {
+    console.error("getCitizenNotifications error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const markCitizenNotificationRead = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Notification ID is required" });
+    }
+    const state = devStore.markCitizenNotificationsRead(userId, [id]);
+    res.json({ success: true, state });
+  } catch (error) {
+    console.error("markCitizenNotificationRead error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const markAllCitizenNotificationsRead = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const current = devStore.getCitizenNotifications(userId);
+    const ids = Array.isArray(req.body?.ids) && req.body.ids.length
+      ? req.body.ids
+      : current.map((n) => n.id);
+    const state = devStore.markCitizenNotificationsRead(userId, ids);
+    res.json({ success: true, markedCount: ids.length, state });
+  } catch (error) {
+    console.error("markAllCitizenNotificationsRead error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const dismissCitizenNotification = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Notification ID is required" });
+    }
+    const state = devStore.dismissCitizenNotifications(userId, [id]);
+    res.json({ success: true, state });
+  } catch (error) {
+    console.error("dismissCitizenNotification error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const clearAllCitizenNotifications = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const current = devStore.getCitizenNotifications(userId);
+    const ids = Array.isArray(req.body?.ids) && req.body.ids.length
+      ? req.body.ids
+      : current.map((n) => n.id);
+    const state = devStore.dismissCitizenNotifications(userId, ids);
+    res.json({ success: true, clearedCount: ids.length, state });
+  } catch (error) {
+    console.error("clearAllCitizenNotifications error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

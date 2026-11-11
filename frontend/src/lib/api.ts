@@ -735,7 +735,7 @@ export const citizenApi = {
 
   // 10. Secure Client-Advocate Privileged Messaging & Inbox
   async getMessages(token: string, matterId?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
     const url = matterId
       ? `${API_BASE_URL}/citizen/messages?matterId=${encodeURIComponent(matterId)}`
       : `${API_BASE_URL}/citizen/messages`;
@@ -757,7 +757,7 @@ export const citizenApi = {
       category?: "general" | "hearing_update" | "document_request" | "urgent";
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/messages`, {
       method: "POST",
       headers: {
@@ -770,7 +770,7 @@ export const citizenApi = {
   },
 
   async markMessageAsRead(token: string, messageId: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/messages/${encodeURIComponent(messageId)}/read`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${t}` },
@@ -779,9 +779,137 @@ export const citizenApi = {
   },
 
   async getUnreadMessageCount(token: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
     const res = await fetch(`${API_BASE_URL}/citizen/messages/unread-count`, {
       headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  // 10b. Citizen Secure Mailbox & Notifications
+  async getMails(token?: string) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/mails`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async sendMail(
+    token: string | undefined,
+    data: {
+      recipientId?: string;
+      recipientName?: string;
+      recipientEmail?: string;
+      matterTitle?: string;
+      subject: string;
+      body: string | string[];
+      category?: string;
+      categoryLabel?: string;
+      categoryColor?: string;
+      folder?: "sent" | "drafts";
+      attachments?: { name: string; size: string; type: "pdf" | "doc" | "img" }[];
+    }
+  ) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/mails`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async replyMail(token: string | undefined, mailId: string, content: string) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/mails/${encodeURIComponent(mailId)}/reply`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
+    });
+    return await res.json();
+  },
+
+  async updateMail(
+    token: string | undefined,
+    mailId: string,
+    updates: { isRead?: boolean; isStarred?: boolean; folder?: "inbox" | "starred" | "sent" | "drafts" | "archive" | "trash" }
+  ) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/mails/${encodeURIComponent(mailId)}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteMail(token: string | undefined, mailId: string) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/mails/${encodeURIComponent(mailId)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async getNotifications(token?: string) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notifications`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async markNotificationRead(token: string | undefined, notificationId: string) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notifications/${encodeURIComponent(notificationId)}/read`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async markAllNotificationsRead(token?: string, ids?: string[]) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notifications/read-all`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ids ? { ids } : {}),
+    });
+    return await res.json();
+  },
+
+  async dismissNotification(token: string | undefined, notificationId: string) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notifications/${encodeURIComponent(notificationId)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    return await res.json();
+  },
+
+  async clearAllNotifications(token?: string, ids?: string[]) {
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const res = await fetch(`${API_BASE_URL}/citizen/notifications`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ids ? { ids } : {}),
     });
     return await res.json();
   },
@@ -1845,6 +1973,77 @@ export const advocateApi = {
     mode: string;
   }> {
     const res = await fetch(`${API_BASE_URL}/advocate/messages/unread-count`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  // 10b. Chamber Mailbox & Formal Notices
+  async getMails(token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/mails`, {
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async sendMail(
+    data: {
+      recipientId?: string;
+      recipientName?: string;
+      recipientEmail?: string;
+      matterTitle?: string;
+      subject: string;
+      body: string | string[];
+      category?: string;
+      categoryLabel?: string;
+      categoryColor?: string;
+      folder?: "sent" | "drafts";
+      attachments?: { name: string; size: string; type: "pdf" | "doc" | "img" }[];
+    },
+    token?: string
+  ) {
+    const res = await fetch(`${API_BASE_URL}/advocate/mails`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  async replyMail(mailId: string, content: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/mails/${encodeURIComponent(mailId)}/reply`, {
+      method: "POST",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
+    });
+    return await res.json();
+  },
+
+  async updateMail(
+    mailId: string,
+    updates: { isRead?: boolean; isStarred?: boolean; folder?: "inbox" | "starred" | "sent" | "drafts" | "archive" | "trash" },
+    token?: string
+  ) {
+    const res = await fetch(`${API_BASE_URL}/advocate/mails/${encodeURIComponent(mailId)}`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+    return await res.json();
+  },
+
+  async deleteMail(mailId: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/mails/${encodeURIComponent(mailId)}`, {
+      method: "DELETE",
       headers: advocateApi.getAuthHeader(token),
     });
     return await res.json();

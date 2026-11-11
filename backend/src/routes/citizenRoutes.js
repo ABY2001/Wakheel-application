@@ -72,6 +72,16 @@ import {
   getDigiLockerKyc,
   updateDigiLockerKyc,
   verifyDigiLockerKyc,
+  getCitizenMails,
+  sendCitizenMail,
+  replyCitizenMail,
+  updateCitizenMail,
+  deleteCitizenMail,
+  getCitizenNotifications,
+  markCitizenNotificationRead,
+  markAllCitizenNotificationsRead,
+  dismissCitizenNotification,
+  clearAllCitizenNotifications,
 } from "../controllers/citizenController.js";
 
 const router = express.Router();
@@ -156,5 +166,18 @@ router.route("/taskmite/notes/:id").put(protect, updateCitizenTaskMiteNote).dele
 // 14. DigiLocker & Aadhaar e-KYC Verification Suite
 router.route("/profile/kyc").get(protect, getDigiLockerKyc).put(protect, updateDigiLockerKyc);
 router.route("/profile/kyc/verify").post(protect, verifyDigiLockerKyc);
+
+// 15. Citizen Secure Mailbox & Notifications
+router.get("/mails", protect, getCitizenMails);
+router.post("/mails", protect, sendCitizenMail);
+router.post("/mails/:id/reply", protect, replyCitizenMail);
+router.put("/mails/:id", protect, updateCitizenMail);
+router.delete("/mails/:id", protect, deleteCitizenMail);
+
+router.get("/notifications", protect, getCitizenNotifications);
+router.put("/notifications/read-all", protect, markAllCitizenNotificationsRead);
+router.put("/notifications/:id/read", protect, markCitizenNotificationRead);
+router.delete("/notifications/:id", protect, dismissCitizenNotification);
+router.delete("/notifications", protect, clearAllCitizenNotifications);
 
 export default router;

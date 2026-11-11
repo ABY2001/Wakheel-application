@@ -2920,6 +2920,7 @@ export function AdvocateWorkspaceView() {
             <AdvocateInboxView
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               advocateName={displayFullName}
+              advocateEmail={(advocateProfileData as any)?.email || (advocateProfile as any)?.email || ""}
               initialMode={activeTab === "messages" || activeTab === "chats" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultation={() => setActiveTab("appointments")}
               onNavigateTab={(tab) => setActiveTab(tab)}

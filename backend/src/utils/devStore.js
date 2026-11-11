@@ -1714,10 +1714,26 @@ export const devStore = {
     if (index === -1) return null;
 
     const advocates = this.getAdvocates();
-    const advocate = advocates.find((a) => a.id === advocateId) || advocates[0];
+    const directAdv = advocates.find(
+      (a) => a.id === advocateId || a._id === advocateId || a.userId === advocateId
+    );
+    const resolvedAdv = directAdv
+      ? {
+          advocateId: directAdv.id || directAdv._id || directAdv.userId,
+          advocateName: directAdv.fullName,
+          primaryCourt: directAdv.primaryCourt,
+        }
+      : this.resolveAdvocateByIdOrName(advocateId);
+    const advocate = directAdv || {
+      id: resolvedAdv.advocateId,
+      fullName: resolvedAdv.advocateName,
+      primaryCourt: "High Court of Kerala (Ernakulam)",
+    };
+    const citizenInfo = this.getCitizenDisplayInfo(grvs[index].citizenId || citizenId);
 
     grvs[index].assignedAdvocateId = advocate.id;
     grvs[index].assignedAdvocateName = advocate.fullName;
+    if (!grvs[index].citizenName) grvs[index].citizenName = citizenInfo.citizenName;
     grvs[index].status = "matter_opened";
     writeFile("dev_grievances.json", grvs);
 
@@ -1735,6 +1751,8 @@ export const devStore = {
       const newMatter = {
         _id: "mat_" + Date.now().toString(),
         citizenId: grvs[index].citizenId || citizenId,
+        citizenName: grvs[index].citizenName || citizenInfo.citizenName,
+        citizenEmail: citizenInfo.citizenEmail,
         grievanceId: grvs[index]._id,
         advocateId: advocate.id,
         advocateName: advocate.fullName,
@@ -1978,18 +1996,21 @@ export const devStore = {
   addConsultation(data) {
     const cons = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
     const roomCode = Math.floor(1000 + Math.random() * 9000);
+    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
+    const citizenInfo = this.getCitizenDisplayInfo(data.citizenId);
+    const finalType = data.consultationType || "video";
     const newCon = {
       _id: "con_" + Date.now().toString(),
       id: "con_" + Date.now().toString(),
       citizenId: data.citizenId || "default_citizen",
-      advocateId: data.advocateId || "adv_1",
-      advocateName: data.advocateName || "Adv. Meera Krishnan",
-      barCouncilNumber: data.barCouncilNumber || "K/001429/2012",
-      consultationType: data.consultationType || "video",
+      citizenName: data.citizenName || citizenInfo.citizenName,
+      citizenEmail: data.citizenEmail || citizenInfo.citizenEmail,
+      barCouncilNumber: data.barCouncilNumber || resolvedAdv.barCouncilNumber || "K/001429/2012",
+      consultationType: finalType,
       scheduledDate: data.scheduledDate || new Date().toISOString(),
       timeSlot: data.timeSlot || "10:30 AM - 11:15 AM",
       durationMinutes: Number(data.durationMinutes) || 45,
-      meetingLink: data.consultationType === "video" ? `https://meet.wakheel.law/chambers-room-${roomCode}` : "",
+      meetingLink: finalType === "video" ? `https://meet.wakheel.law/chambers-room-${roomCode}` : "",
       chamberAddress: data.chamberAddress || "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Kochi 682031",
       subject: data.subject || "Legal Consultation & Strategy Session",
       clientNotes: data.clientNotes || "",
@@ -1999,6 +2020,8 @@ export const devStore = {
       status: "scheduled",
       createdAt: new Date().toISOString(),
       ...data,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName,
     };
     cons.unshift(newCon);
     writeFile("dev_consultations.json", cons);
@@ -2075,9 +2098,13 @@ export const devStore = {
   addDocument(data) {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
     const id = data.id || data._id || "doc_" + Date.now().toString();
+    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
+    const citizenInfo = this.getCitizenDisplayInfo(data.citizenId);
     const newDoc = {
       _id: id,
       id,
+      citizenName: data.citizenName || citizenInfo.citizenName,
+      citizenEmail: data.citizenEmail || citizenInfo.citizenEmail,
       name: data.name || data.fileName || "Document.pdf",
       fileName: data.fileName || data.name || "Document.pdf",
       category: data.category || "Evidence & Exhibits",
@@ -2094,10 +2121,10 @@ export const devStore = {
       details: data.details || data.remarks || "Uploaded to secure vault",
       filingStatus: data.filingStatus || data.status || "Ready in Vault",
       status: data.status || data.filingStatus || "Ready in Vault",
-      advocateName: data.advocateName || "Adv. Meera Krishnan",
-      advocateId: data.advocateId || "adv_1",
       remarks: data.remarks || "",
       ...data,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName,
       createdAt: new Date().toISOString(),
     };
     docs.unshift(newDoc);
@@ -2126,15 +2153,214 @@ export const devStore = {
     return false;
   },
 
+  normalizeAdvocateName(name = "") {
+    return String(name || "")
+      .toLowerCase()
+      .replace(/^adv\.?\s*/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  },
+
+  getAdvocateRegistry() {
+    const users = this.getUsers().filter(
+      (u) => u.role === "advocate" || u.accountType === "independent_advocate"
+    );
+    const profiles = readFile("dev_advocate_profiles.json", DEFAULT_ADVOCATE_PROFILES);
+    const directory = typeof this.getAdvocates === "function" ? this.getAdvocates() : [];
+    const entries = [];
+
+    for (const a of directory) {
+      entries.push({
+        id: String(a.id || a._id || a.userId || ""),
+        userId: String(a.userId || a.id || a._id || ""),
+        fullName: a.fullName || a.name || "",
+        email: (a.email || "").toLowerCase().trim(),
+        barCouncilNumber: a.barCouncilNumber || "",
+      });
+    }
+    for (const p of profiles) {
+      entries.push({
+        id: String(p.userId || p._id || ""),
+        userId: String(p.userId || p._id || ""),
+        fullName: p.fullName || p.name || "",
+        email: (p.email || "").toLowerCase().trim(),
+        barCouncilNumber: p.barCouncilNumber || "",
+      });
+    }
+    for (const u of users) {
+      entries.push({
+        id: String(u._id || u.id || ""),
+        userId: String(u._id || u.id || ""),
+        fullName: u.fullName || "",
+        email: (u.email || "").toLowerCase().trim(),
+        barCouncilNumber: u.barCouncilId || "",
+      });
+    }
+    return entries;
+  },
+
+  getAdvocateIdentities(advocateId = "adv_1") {
+    const ids = new Set([String(advocateId || "adv_1")]);
+    const names = new Set();
+    const emails = new Set();
+    let primaryName = "";
+    const registry = this.getAdvocateRegistry();
+
+    const matchedEntries = registry.filter(
+      (e) => e.id === String(advocateId) || e.userId === String(advocateId)
+    );
+    for (const entry of matchedEntries) {
+      if (entry.id) ids.add(entry.id);
+      if (entry.userId) ids.add(entry.userId);
+      if (entry.email) emails.add(entry.email);
+      const norm = this.normalizeAdvocateName(entry.fullName);
+      if (norm) names.add(norm);
+      if (!primaryName && entry.fullName) primaryName = entry.fullName;
+    }
+
+    // Match any sibling entries sharing the same normalized email or name
+    for (const entry of registry) {
+      const norm = this.normalizeAdvocateName(entry.fullName);
+      if ((entry.email && emails.has(entry.email)) || (norm && names.has(norm))) {
+        if (entry.id) ids.add(entry.id);
+        if (entry.userId) ids.add(entry.userId);
+      }
+    }
+
+    if (String(advocateId) === "adv_1") {
+      names.add("meera krishnan");
+      if (!primaryName) primaryName = "Adv. Meera Krishnan";
+    }
+
+    if (primaryName && !/^adv[\.\s]/i.test(primaryName)) {
+      primaryName = `Adv. ${primaryName}`;
+    }
+
+    return { ids, names, emails, primaryName: primaryName || "Adv. Counsel" };
+  },
+
+  resolveAdvocateByIdOrName(advocateId, advocateName) {
+    const registry = this.getAdvocateRegistry();
+    const cleanId = advocateId && String(advocateId).trim();
+    const normInputName = this.normalizeAdvocateName(advocateName);
+
+    // Prefer explicit non-default ID match, unless a distinct advocateName was explicitly chosen
+    if (cleanId && cleanId !== "adv_1") {
+      const byId = registry.find((e) => e.id === cleanId || e.userId === cleanId);
+      if (byId) {
+        let formattedName = advocateName || byId.fullName || "Advocate";
+        if (!/^adv[\.\s]/i.test(formattedName)) formattedName = `Adv. ${formattedName}`;
+        return {
+          advocateId: byId.id || cleanId,
+          advocateName: formattedName,
+          barCouncilNumber: byId.barCouncilNumber || "K/001429/2012",
+        };
+      }
+    }
+
+    if (normInputName) {
+      const byName = registry.find((e) => {
+        const norm = this.normalizeAdvocateName(e.fullName);
+        return norm && (norm === normInputName || norm.includes(normInputName) || normInputName.includes(norm));
+      });
+      if (byName) {
+        let formattedName = advocateName || byName.fullName;
+        if (!/^adv[\.\s]/i.test(formattedName)) formattedName = `Adv. ${formattedName}`;
+        return {
+          advocateId: byName.id || byName.userId || cleanId || "adv_1",
+          advocateName: formattedName,
+          barCouncilNumber: byName.barCouncilNumber || "K/001429/2012",
+        };
+      }
+      let formattedName = advocateName.trim();
+      if (!/^adv[\.\s]/i.test(formattedName)) formattedName = `Adv. ${formattedName}`;
+      return {
+        advocateId: cleanId && cleanId !== "adv_1" ? cleanId : `adv_name_${normInputName.replace(/\s+/g, "_")}`,
+        advocateName: formattedName,
+        barCouncilNumber: "K/001429/2012",
+      };
+    }
+
+    const fallback = this.getAdvocateIdentities(cleanId || "adv_1");
+    return {
+      advocateId: cleanId || "adv_1",
+      advocateName: fallback.primaryName || "Adv. Meera Krishnan",
+      barCouncilNumber: "K/001429/2012",
+    };
+  },
+
+  getCitizenDisplayInfo(citizenId) {
+    if (!citizenId || citizenId === "default_citizen") {
+      return { citizenName: "Registered Client", citizenEmail: "", citizenPhone: "" };
+    }
+    const profiles = readFile("dev_citizen_profiles.json", []);
+    const profile = profiles.find((p) => p.userId === citizenId || p._id === citizenId);
+    const user = this.getUsers().find((u) => u._id === citizenId || u.id === citizenId);
+    return {
+      citizenName: profile?.fullName || user?.fullName || (user?.username ? `@${user.username}` : citizenId),
+      citizenEmail: profile?.email || user?.email || "",
+      citizenPhone: profile?.phone || user?.phone || "",
+    };
+  },
+
+  enrichWithCitizenInfo(record) {
+    if (!record) return record;
+    const info = this.getCitizenDisplayInfo(record.citizenId || record.userId);
+    return {
+      ...record,
+      citizenName: record.citizenName || info.citizenName,
+      citizenEmail: record.citizenEmail || info.citizenEmail,
+      citizenPhone: record.citizenPhone || info.citizenPhone,
+    };
+  },
+
+  matchesAdvocate(record, advocateId = "adv_1") {
+    if (!record) return false;
+    const identity = this.getAdvocateIdentities(advocateId);
+    const recIds = [record.advocateId, record.assignedAdvocateId, record.matchedAdvocateId]
+      .filter(Boolean)
+      .map((v) => String(v));
+
+    if (recIds.some((id) => identity.ids.has(id))) {
+      // Guard against stale "adv_1" when record explicitly names a different advocate
+      const recNormName = this.normalizeAdvocateName(
+        record.advocateName || record.assignedAdvocateName || record.assignedAdvocate || ""
+      );
+      if (
+        String(advocateId) === "adv_1" &&
+        recIds.includes("adv_1") &&
+        recNormName &&
+        !recNormName.includes("meera")
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    const recNameNorm = this.normalizeAdvocateName(
+      record.advocateName || record.assignedAdvocateName || record.assignedAdvocate || ""
+    );
+    if (recNameNorm) {
+      for (const n of identity.names) {
+        if (recNameNorm === n || (n.length >= 3 && recNameNorm.includes(n))) {
+          return true;
+        }
+      }
+    }
+
+    const recEmail = (record.advocateEmail || "").toLowerCase().trim();
+    if (recEmail && identity.emails.has(recEmail)) {
+      return true;
+    }
+
+    return String(advocateId) === "adv_1" && (!recIds.length || recIds.includes("adv_1"));
+  },
+
   getAdvocateDocuments(advocateId = "adv_1") {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
-    return docs.filter(
-      (d) =>
-        d.advocateId === advocateId ||
-        (d.advocateName && d.advocateName.toLowerCase().includes("meera")) ||
-        d.subType === "document-filing" ||
-        advocateId === "adv_1"
-    );
+    return docs
+      .filter((d) => this.matchesAdvocate(d, advocateId))
+      .map((d) => this.enrichWithCitizenInfo(d));
   },
 
   // --- Legal Notices ---
@@ -2462,24 +2688,17 @@ export const devStore = {
   // --- Advocate Active Matters Pipeline ---
   getAdvocateMatters(advocateId = "adv_1") {
     const allMatters = readFile("dev_matters.json", DEFAULT_MATTERS);
-    // Return matters assigned to this advocate or matters involving Adv. Meera Krishnan
-    return allMatters.filter(
-      (m) =>
-        m.advocateId === advocateId ||
-        (m.advocateName && m.advocateName.toLowerCase().includes("meera")) ||
-        advocateId === "adv_1" // Default advocate has access to active test matters
-    );
+    return allMatters
+      .filter((m) => this.matchesAdvocate(m, advocateId))
+      .map((m) => this.enrichWithCitizenInfo(m));
   },
 
   // --- Advocate Consultations & Chamber Bookings ---
   getAdvocateConsultations(advocateId = "adv_1") {
     const allConsultations = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
-    return allConsultations.filter(
-      (c) =>
-        c.advocateId === advocateId ||
-        (c.advocateName && c.advocateName.toLowerCase().includes("meera")) ||
-        advocateId === "adv_1"
-    );
+    return allConsultations
+      .filter((c) => this.matchesAdvocate(c, advocateId))
+      .map((c) => this.enrichWithCitizenInfo(c));
   },
 
   updateConsultationStatus(id, updates) {
@@ -2597,7 +2816,13 @@ export const devStore = {
   // --- Incoming Leads / Grievances for Intake ---
   getIncomingGrievances(advocateId = "adv_1") {
     const grievances = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
-    return grievances;
+    return grievances
+      .filter((g) => {
+        if (this.matchesAdvocate(g, advocateId)) return true;
+        const isAssignedElsewhere = Boolean(g.assignedAdvocateId || g.assignedAdvocateName);
+        return !isAssignedElsewhere && ["pending_review", "Under AI Triage", "matched"].includes(g.status);
+      })
+      .map((g) => this.enrichWithCitizenInfo(g));
   },
 
   acceptGrievance(grievanceId, advocateId = "adv_1") {
@@ -2605,9 +2830,14 @@ export const devStore = {
     const grvIndex = grievances.findIndex((g) => g._id === grievanceId);
     if (grvIndex === -1) return null;
 
+    const resolvedAdv = this.resolveAdvocateByIdOrName(advocateId);
+    const citizenInfo = this.getCitizenDisplayInfo(grievances[grvIndex].citizenId);
+
     grievances[grvIndex].status = "matter_opened";
-    grievances[grvIndex].assignedAdvocateId = advocateId;
-    grievances[grvIndex].assignedAdvocateName = "Adv. Meera Krishnan";
+    grievances[grvIndex].assignedAdvocateId = resolvedAdv.advocateId;
+    grievances[grvIndex].assignedAdvocateName = resolvedAdv.advocateName;
+    if (!grievances[grvIndex].citizenName) grievances[grvIndex].citizenName = citizenInfo.citizenName;
+    grievances[grvIndex].updatedAt = new Date().toISOString();
     writeFile("dev_grievances.json", grievances);
 
     // Also auto-create a corresponding active matter if it doesn't already exist
@@ -2617,9 +2847,11 @@ export const devStore = {
       const newMatter = {
         _id: "mat_" + Date.now().toString(),
         citizenId: grievances[grvIndex].citizenId || "default_citizen",
+        citizenName: grievances[grvIndex].citizenName || citizenInfo.citizenName,
+        citizenEmail: citizenInfo.citizenEmail,
         grievanceId,
-        advocateId,
-        advocateName: "Adv. Meera Krishnan",
+        advocateId: resolvedAdv.advocateId,
+        advocateName: resolvedAdv.advocateName,
         matterTitle: grievances[grvIndex].title,
         matterType: grievances[grvIndex].category || "Civil Litigation",
         caseNumber: `WP(C) ${Math.floor(10000 + Math.random() * 90000)}/2026`,
@@ -2981,17 +3213,90 @@ export const devStore = {
 
   // --- Advocate Clients & Representation Roster ---
   getClients(advocateId = "adv_1") {
-    const clients = readFile("dev_clients.json", DEFAULT_CLIENTS);
-    if (!clients || clients.length === 0) {
-      writeFile("dev_clients.json", DEFAULT_CLIENTS);
-      return DEFAULT_CLIENTS;
+    const storedClients = readFile("dev_clients.json", DEFAULT_CLIENTS);
+    const matchingStored = storedClients.filter((c) => this.matchesAdvocate(c, advocateId));
+
+    const advMatters = this.getAdvocateMatters(advocateId);
+    const advConsultations = this.getAdvocateConsultations(advocateId);
+    const advDocs = this.getAdvocateDocuments(advocateId);
+    const advGrievances = readFile("dev_grievances.json", DEFAULT_GRIEVANCES).filter((g) =>
+      this.matchesAdvocate(g, advocateId)
+    );
+
+    const byCitizenId = new Map();
+    for (const c of matchingStored) {
+      const key = c.citizenId || c._id || c.id;
+      byCitizenId.set(String(key), { ...c });
     }
-    return clients;
+
+    const ensureDerivedClient = (citizenId, matterTitle) => {
+      if (!citizenId) return;
+      const key = String(citizenId);
+      const info = this.getCitizenDisplayInfo(citizenId);
+      const existing = byCitizenId.get(key);
+      if (existing) {
+        if (matterTitle && Array.isArray(existing.activeMatters) && !existing.activeMatters.includes(matterTitle)) {
+          existing.activeMatters.push(matterTitle);
+          existing.activeMattersCount = existing.activeMatters.length;
+        }
+        return;
+      }
+      const citMatters = advMatters.filter((m) => String(m.citizenId) === key);
+      const titles = citMatters.map((m) => m.matterTitle || m.title).filter(Boolean);
+      if (matterTitle && !titles.includes(matterTitle)) titles.push(matterTitle);
+      byCitizenId.set(key, {
+        _id: `cli_${key}`,
+        id: `cli_${key}`,
+        citizenId: key,
+        advocateId,
+        fullName: info.citizenName || "Registered Client",
+        category: "Individual Citizen",
+        email: info.citizenEmail || "",
+        phone: info.citizenPhone || "",
+        location: "Kerala, India",
+        kycVerified: false,
+        vakalatnamaExecuted: citMatters.length > 0,
+        status: citMatters.length > 0 ? "Active Matter" : "Consultation / Lead",
+        activeMatters: titles,
+        activeMattersCount: titles.length,
+        totalBilled: citMatters.reduce((s, m) => s + (m.totalFeesBilled || 0), 0),
+        totalPaid: citMatters.reduce((s, m) => s + (m.feesPaid || 0), 0),
+        nextHearing: citMatters[0]?.nextHearingDate || "Pending Chamber Review",
+        notes: "Synced from client petition / consultation engagement.",
+        createdAt: new Date().toISOString(),
+      });
+    };
+
+    advMatters.forEach((m) => ensureDerivedClient(m.citizenId, m.matterTitle || m.title));
+    advGrievances.forEach((g) => ensureDerivedClient(g.citizenId, g.title));
+    advConsultations.forEach((c) => ensureDerivedClient(c.citizenId, c.subject));
+    advDocs.forEach((d) => ensureDerivedClient(d.citizenId, d.matter));
+
+    return Array.from(byCitizenId.values());
   },
 
   getClientById(id) {
     const clients = readFile("dev_clients.json", DEFAULT_CLIENTS);
-    return clients.find((c) => c._id === id || c.id === id || c.citizenId === id) || null;
+    const direct = clients.find((c) => c._id === id || c.id === id || c.citizenId === id);
+    if (direct) return direct;
+
+    // Synthesize dossier header from derived citizenId if dynamically linked via matters/consultations
+    const citizenId = String(id).startsWith("cli_") ? String(id).slice(4) : String(id);
+    const info = this.getCitizenDisplayInfo(citizenId);
+    if (!info.citizenName || info.citizenName === "Registered Client") return null;
+    return {
+      _id: id,
+      id,
+      citizenId,
+      fullName: info.citizenName,
+      category: "Individual Citizen",
+      email: info.citizenEmail,
+      phone: info.citizenPhone,
+      location: "Kerala, India",
+      kycVerified: false,
+      vakalatnamaExecuted: false,
+      status: "Active Matter",
+    };
   },
 
   addClient(data) {

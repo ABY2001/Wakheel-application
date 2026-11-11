@@ -327,21 +327,17 @@ export function DocumentVaultView({
             details: d.details || d.notes || "",
             remarks: d.remarks || "",
             advocateName: d.advocateName || advocateName,
-            uploadedBy: d.uploadedBy || (d.advocateName ? d.advocateName : "Citizen Filing"),
+            uploadedBy: d.citizenName ? `${d.citizenName} (Client)` : d.uploadedBy || d.advocateName || "Citizen Filing",
             citizenId: d.citizenId || "default_citizen",
           };
         });
 
-        // Merge mapped with DEFAULT_VAULT_FILES to ensure full rich representation
-        const existingIds = new Set(mapped.map((m) => m.id));
-        const missingDefaults = DEFAULT_VAULT_FILES.filter((df) => !existingIds.has(df.id));
-        setFiles([...mapped, ...missingDefaults]);
+        setFiles(mapped);
       } else {
-        // Fallback to local defaults
-        setFiles(DEFAULT_VAULT_FILES);
+        setFiles([]);
       }
     } catch {
-      setFiles(DEFAULT_VAULT_FILES);
+      setFiles([]);
     } finally {
       setLoading(false);
       setRefreshing(false);

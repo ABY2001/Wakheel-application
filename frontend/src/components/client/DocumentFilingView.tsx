@@ -207,10 +207,11 @@ interface DocumentFilingViewProps {
 }
 
 export function DocumentFilingView({ onFilingSubmitted, initialMatter }: DocumentFilingViewProps) {
-  const [mattersList, setMattersList] = useState<string[]>(MATTERS_LIST);
-  const [selectedMatter, setSelectedMatter] = useState(initialMatter || MATTERS_LIST[0]);
+  const [mattersList, setMattersList] = useState<string[]>([]);
+  const [selectedMatter, setSelectedMatter] = useState(initialMatter || "__custom__");
+  const [customMatterTitle, setCustomMatterTitle] = useState("");
   const [advocatesList, setAdvocatesList] = useState<AdvocateOption[]>(DEFAULT_ADVOCATES);
-  const [selectedAdvocateId, setSelectedAdvocateId] = useState<string>(DEFAULT_ADVOCATES[0].id);
+  const [selectedAdvocateId, setSelectedAdvocateId] = useState<string>("");
 
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES_LIST[0]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -218,12 +219,12 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
   const [filingRemarks, setFilingRemarks] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  const [submittedHistory, setSubmittedHistory] = useState<SubmittedFiling[]>(DEFAULT_FILINGS);
+  const [submittedHistory, setSubmittedHistory] = useState<SubmittedFiling[]>([]);
 
   // Vault picker modal state
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
   const [vaultSearchQuery, setVaultSearchQuery] = useState("");
-  const [vaultDocuments, setVaultDocuments] = useState<VaultDocumentItem[]>(DEFAULT_VAULT_DOCUMENTS);
+  const [vaultDocuments, setVaultDocuments] = useState<VaultDocumentItem[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -239,19 +240,7 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
     }
   }, [initialMatter, mattersList]);
 
-  // Auto-align default advocate when matter changes, while still allowing manual override
-  useEffect(() => {
-    const m = selectedMatter.toLowerCase();
-    if (m.includes("nclt") || m.includes("malabar")) {
-      setSelectedAdvocateId("adv-rajesh");
-    } else if (m.includes("412") || m.includes("varghese")) {
-      setSelectedAdvocateId("adv-sarah");
-    } else {
-      setSelectedAdvocateId("adv-meera");
-    }
-  }, [selectedMatter]);
-
-  // Sync matters list, filings history, and documents from backend API
+  // Sync registered advocates, matters list, filings history, and documents from backend API
   useEffect(() => {
     let isMounted = true;
     async function loadData() {
@@ -260,49 +249,76 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
           ? localStorage.getItem("wakheel_token") || "dev_token"
           : "dev_token";
       try {
-        const [mattersRes, filingsRes, docsRes] = await Promise.all([
+        const [advRes, mattersRes, filingsRes, docsRes] = await Promise.allSettled([
+          citizenApi.getAdvocates(),
           citizenApi.getMatters(token),
           citizenApi.getFilings(token),
           citizenApi.getDocuments(token),
         ]);
-        if (isMounted) {
-          if (
-            mattersRes?.success &&
-            Array.isArray(mattersRes.matters) &&
-            mattersRes.matters.length > 0
-          ) {
-            const names: string[] = mattersRes.matters.map(
-              (m: any) => `${m.caseNumber} — ${m.title || m.matterTitle || m.caseTitle}`
-            );
-            const uniqueNames: string[] = Array.from(new Set<string>(names));
-            setMattersList(uniqueNames);
-          }
-          if (
-            filingsRes?.success &&
-            Array.isArray(filingsRes.filings) &&
-            filingsRes.filings.length > 0
-          ) {
-            setSubmittedHistory(filingsRes.filings);
-          }
-          if (
-            docsRes?.success &&
-            Array.isArray(docsRes.documents) &&
-            docsRes.documents.length > 0
-          ) {
-            const normalizedDocs: VaultDocumentItem[] = docsRes.documents.map((d: any) => ({
-              id: d.id || d._id,
-              name: d.name || d.title,
-              category: d.category || "Evidence Document",
-              matter: d.matter || selectedMatter,
-              size: d.size || "1.5 MB",
-              uploadDate: d.uploadDate || "Recent",
-              details: d.details || "",
-            }));
-            setVaultDocuments((prev) => {
-              const ids = new Set(normalizedDocs.map((x) => x.id));
-              return [...normalizedDocs, ...prev.filter((x) => !ids.has(x.id))];
-            });
-          }
+        if (!isMounted) return;
+
+        if (advRes.status === "fulfilled" && advRes.value?.advocates && Array.isArray(advRes.value.advocates) && advRes.value.advocates.length > 0) {
+          const mappedAdvs: AdvocateOption[] = advRes.value.advocates.map((a: any) => {
+            let name = (a.fullName || a.name || "Advocate").trim();
+            if (!name.toLowerCase().startsWith("adv.") && !name.toLowerCase().startsWith("adv ")) {
+              name = `Adv. ${name}`;
+            }
+            const specs = Array.isArray(a.specializations) && a.specializations.length > 0
+              ? a.specializations.join(", ")
+              : a.specialization || "Litigation & Advisory";
+            return {
+              id: a.id || a._id || a.userId,
+              name,
+              enrolment: a.barCouncilNumber || "Bar Council Verified",
+              chamber: a.primaryCourt || a.chamberAddress || "High Court of Kerala",
+              specialization: specs,
+            };
+          });
+          setAdvocatesList(mappedAdvs);
+          setSelectedAdvocateId((prev) =>
+            prev && mappedAdvs.some((a) => a.id === prev) ? prev : mappedAdvs[0].id
+          );
+        } else {
+          setSelectedAdvocateId((prev) => prev || DEFAULT_ADVOCATES[0].id);
+        }
+
+        if (
+          mattersRes.status === "fulfilled" &&
+          mattersRes.value?.success &&
+          Array.isArray(mattersRes.value.matters) &&
+          mattersRes.value.matters.length > 0
+        ) {
+          const names: string[] = mattersRes.value.matters.map(
+            (m: any) => `${m.caseNumber} — ${m.title || m.matterTitle || m.caseTitle}`
+          );
+          const uniqueNames: string[] = Array.from(new Set<string>(names));
+          setMattersList(uniqueNames);
+          setSelectedMatter((prev) => (prev === "__custom__" && !customMatterTitle ? uniqueNames[0] : prev));
+        }
+
+        if (
+          filingsRes.status === "fulfilled" &&
+          filingsRes.value?.success &&
+          Array.isArray(filingsRes.value.filings)
+        ) {
+          setSubmittedHistory(filingsRes.value.filings);
+        }
+
+        if (
+          docsRes.status === "fulfilled" &&
+          docsRes.value?.success &&
+          Array.isArray(docsRes.value.documents)
+        ) {
+          const normalizedDocs: VaultDocumentItem[] = docsRes.value.documents.map((d: any) => ({
+            id: d.id || d._id,
+            name: d.name || d.title,
+            category: d.category || "Evidence Document",
+            matter: d.matter || "",
+            size: d.size || "1.5 MB",
+            uploadDate: d.uploadDate || "Recent",
+            details: d.details || "",
+          }));
+          setVaultDocuments(normalizedDocs);
         }
       } catch (err) {
         console.warn("Could not load backend data for document filing:", err);
@@ -312,10 +328,10 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
     return () => {
       isMounted = false;
     };
-  }, [selectedMatter]);
+  }, []);
 
   const currentAdvocate =
-    advocatesList.find((a) => a.id === selectedAdvocateId) || DEFAULT_ADVOCATES[0];
+    advocatesList.find((a) => a.id === selectedAdvocateId) || advocatesList[0] || DEFAULT_ADVOCATES[0];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -369,14 +385,20 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
       fileSize = "1.8 MB";
     }
 
+    const effectiveMatter =
+      selectedMatter === "__custom__"
+        ? customMatterTitle.trim() || `${selectedCategory} Petition Filing`
+        : selectedMatter;
+
     try {
       const res = await citizenApi.fileDocument(token, {
         fileName,
         category: selectedCategory,
-        matter: selectedMatter,
+        matter: effectiveMatter,
         size: fileSize,
         fileSize,
         remarks: filingRemarks,
+        advocateId: currentAdvocate.id,
         advocateName: currentAdvocate.name,
       });
 
@@ -503,7 +525,17 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
                   {m}
                 </option>
               ))}
+              <option value="__custom__">+ Enter New Petition / Custom Matter Title</option>
             </select>
+            {selectedMatter === "__custom__" && (
+              <input
+                type="text"
+                value={customMatterTitle}
+                onChange={(e) => setCustomMatterTitle(e.target.value)}
+                placeholder="e.g., Mutual Consent Divorce Petition under Sec. 13B HMA"
+                className="w-full mt-2 px-4 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-xs sm:text-sm text-black dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
+              />
+            )}
           </div>
 
           {/* Field 2: Select Advocate / Counsel (Requirement 5.1: Field or dropdown to select advocates) */}

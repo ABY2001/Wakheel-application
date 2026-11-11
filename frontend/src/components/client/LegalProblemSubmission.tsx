@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CheckCircle2,
   ArrowRight,
@@ -62,9 +62,7 @@ export function LegalProblemSubmission({
   const [selectedCategory, setSelectedCategory] = useState<string>("Property & Real Estate");
   const [stateCountry] = useState<string>("Kerala, India");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("Ernakulam");
-  const [issueDescription, setIssueDescription] = useState<string>(
-    "Property demarcation and route alignment dispute."
-  );
+  const [issueDescription, setIssueDescription] = useState<string>("");
   const [urgencyLevel, setUrgencyLevel] = useState<string>("Medium");
 
   // Submission & AI Triage State
@@ -72,6 +70,23 @@ export function LegalProblemSubmission({
   const [submissionSuccess, setSubmissionSuccess] = useState<any | null>(null);
   const [engagedAdvocateId, setEngagedAdvocateId] = useState<string | null>(null);
   const [isEngaging, setIsEngaging] = useState(false);
+  const [allRegisteredAdvocates, setAllRegisteredAdvocates] = useState<any[]>([]);
+  const [showAllAdvocates, setShowAllAdvocates] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    citizenApi
+      .getAdvocates()
+      .then((res) => {
+        if (mounted && res?.advocates && Array.isArray(res.advocates)) {
+          setAllRegisteredAdvocates(res.advocates);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Navigation handlers
   const handleNextToStep2 = () => {
@@ -185,6 +200,8 @@ export function LegalProblemSubmission({
 
   const handleEngageAdvocate = async (advocate: any) => {
     if (!submissionSuccess?.grievanceId) return;
+    const advId = advocate.id || advocate._id || advocate.userId;
+    if (!advId) return;
     setIsEngaging(true);
     const token =
       typeof window !== "undefined"
@@ -195,15 +212,15 @@ export function LegalProblemSubmission({
       const res = await citizenApi.matchAdvocateForGrievance(
         token,
         submissionSuccess.grievanceId,
-        advocate.id
+        advId
       );
       if (res?.success) {
-        setEngagedAdvocateId(advocate.id);
+        setEngagedAdvocateId(advId);
         onSubmitted?.();
       }
     } catch (err) {
       console.warn("Could not engage advocate via API, using fallback state:", err);
-      setEngagedAdvocateId(advocate.id);
+      setEngagedAdvocateId(advId);
       onSubmitted?.();
     } finally {
       setIsEngaging(false);
@@ -215,9 +232,10 @@ export function LegalProblemSubmission({
     setCurrentStep(1);
     setSelectedCategory("Property & Real Estate");
     setSelectedDistrict("Ernakulam");
-    setIssueDescription("Property demarcation and route alignment dispute.");
+    setIssueDescription("");
     setSubmissionSuccess(null);
     setEngagedAdvocateId(null);
+    setShowAllAdvocates(false);
   };
 
   return (
@@ -611,10 +629,19 @@ export function LegalProblemSubmission({
               </div>
             </div>
 
-            {/* Matched Verified Kerala Advocates */}
-            {submissionSuccess.matchedAdvocates && submissionSuccess.matchedAdvocates.length > 0 && (
+            {/* Matched Verified Kerala Advocates + All Registered Advocates */}
+            {((submissionSuccess.matchedAdvocates && submissionSuccess.matchedAdvocates.length > 0) ||
+              allRegisteredAdvocates.length > 0) && (() => {
+              const matchedList: any[] = submissionSuccess.matchedAdvocates || [];
+              const matchedIds = new Set(matchedList.map((a: any) => String(a.id || a._id || "")));
+              const extraAdvocates = allRegisteredAdvocates.filter(
+                (a: any) => !matchedIds.has(String(a.id || a._id || ""))
+              );
+              const displayList = showAllAdvocates ? [...matchedList, ...extraAdvocates] : matchedList.length > 0 ? matchedList : extraAdvocates;
+
+              return (
               <div className="space-y-3.5 pt-1">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800 gap-2 flex-wrap">
                   <div>
                     <h4 className="text-sm font-bold text-black dark:text-white flex items-center gap-2">
                       <UserCheck className="w-4 h-4 text-black dark:text-white" />
@@ -624,38 +651,51 @@ export function LegalProblemSubmission({
                       Bar Council of Kerala verified advocates specialized in {submissionSuccess.category}.
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-bold text-zinc-400">
-                    {submissionSuccess.matchedAdvocates.length} Matched
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-zinc-400">
+                      {displayList.length} Available
+                    </span>
+                    {extraAdvocates.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllAdvocates((v) => !v)}
+                        className="px-3 py-1 rounded-full border border-zinc-300 dark:border-zinc-700 text-[11px] font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                      >
+                        {showAllAdvocates ? "Show Recommended Only" : `Show All Registered (${extraAdvocates.length} more)`}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
-                  {submissionSuccess.matchedAdvocates.map((adv: any) => {
-                    const isEngaged = engagedAdvocateId === adv.id;
+                  {displayList.map((adv: any) => {
+                    const advId = adv.id || adv._id || adv.userId;
+                    const isEngaged = engagedAdvocateId === advId;
+                    const displayName = (adv.fullName || adv.name || "Advocate").trim();
                     return (
                       <div
-                        key={adv.id}
+                        key={advId}
                         className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs"
                       >
                         <div className="flex items-start gap-3.5">
                           <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center font-bold text-black dark:text-white text-xs shrink-0 mt-0.5">
-                            {adv.fullName.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
+                            {displayName.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h5 className="font-bold text-sm text-black dark:text-white">
-                                {adv.fullName}
+                                {displayName}
                               </h5>
                               <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
-                                {adv.barCouncilNumber}
+                                {adv.barCouncilNumber || "Verified Counsel"}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
                               <span className="text-black dark:text-white font-medium">
-                                {adv.primaryCourt}
+                                {adv.primaryCourt || "High Court of Kerala"}
                               </span>
                               <span>•</span>
-                              <span>{adv.experienceYears || 10}+ Years Exp</span>
+                              <span>{adv.experienceYears || 8}+ Years Exp</span>
                               <span>•</span>
                               <span className="flex items-center gap-1 text-black dark:text-white font-semibold">
                                 <Star className="w-3 h-3 fill-current text-black dark:text-white" />
@@ -691,7 +731,8 @@ export function LegalProblemSubmission({
                   })}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* Bottom Action Row */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-900">

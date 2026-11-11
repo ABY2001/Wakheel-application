@@ -249,8 +249,42 @@ export function ClientPortalView() {
 
   // Advocate Booking Modal State
   const [selectedAdvocate, setSelectedAdvocate] = useState<Advocate | null>(null);
+  const [registeredAdvocates, setRegisteredAdvocates] = useState<Advocate[]>([]);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [bookingDefaultTab, setBookingDefaultTab] = useState<"booking" | "consultation">("booking");
+
+  useEffect(() => {
+    let active = true;
+    citizenApi
+      .getAdvocates()
+      .then((res) => {
+        if (active && res?.advocates && Array.isArray(res.advocates) && res.advocates.length > 0) {
+          const mapped: Advocate[] = res.advocates.map((a: any) => {
+            let name = (a.fullName || a.name || "Advocate").trim();
+            if (!/^adv[\.\s]/i.test(name)) name = `Adv. ${name}`;
+            return {
+              id: a.id || a._id || a.userId,
+              name,
+              title: a.primaryCourt ? `Advocate • ${a.primaryCourt}` : "Advocate, High Court of Kerala",
+              location: a.chamberAddress || "Ernakulam, Kerala",
+              experience: typeof a.experienceYears === "number" ? `${a.experienceYears}+ Years Experience` : "8+ Years Experience",
+              rating: typeof a.rating === "number" ? a.rating : 4.9,
+              reviewsCount: a.reviewCount || 16,
+              matchScore: 98,
+              specialties: Array.isArray(a.specializations) ? a.specializations : ["Civil Law", "Litigation"],
+              fee: typeof a.consultationFee === "number" ? `₹${a.consultationFee.toLocaleString()} / session` : "₹1,500 / session",
+              email: a.email,
+              barCouncilNumber: a.barCouncilNumber,
+            };
+          });
+          setRegisteredAdvocates(mapped);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleOpenBooking = (advocate: Advocate) => {
     setSelectedAdvocate(advocate);
@@ -2490,7 +2524,7 @@ export function ClientPortalView() {
             <ConsultationsManagementView
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
               onOpenBookingModal={() => {
-                setSelectedAdvocate(mockAdvocates[0]);
+                setSelectedAdvocate(registeredAdvocates[0] || mockAdvocates[0]);
                 setBookingDefaultTab("booking");
                 setBookingModalOpen(true);
               }}
@@ -2505,7 +2539,7 @@ export function ClientPortalView() {
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "" : ""}
               initialMode={activeTab === "messages" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultationModal={() => {
-                setSelectedAdvocate(mockAdvocates[0]);
+                setSelectedAdvocate(registeredAdvocates[0] || mockAdvocates[0]);
                 setBookingDefaultTab("booking");
                 setBookingModalOpen(true);
               }}
@@ -2537,7 +2571,7 @@ export function ClientPortalView() {
               onSelectMatter={(matterTitle) => setSelectedMatter(matterTitle)}
               onNavigateTab={(tab) => setActiveTab(tab)}
               onOpenConsultation={() => {
-                setSelectedAdvocate(mockAdvocates[0]);
+                setSelectedAdvocate(registeredAdvocates[0] || mockAdvocates[0]);
                 setBookingDefaultTab("booking");
                 setBookingModalOpen(true);
               }}
@@ -3403,8 +3437,13 @@ export function ClientPortalView() {
             <CaseTimelineView
               initialMatter={selectedMatter}
               onOpenBookingModal={(counsel) => {
-                const adv = mockAdvocates[0];
-                handleOpenConsultation(adv);
+                const matched =
+                  registeredAdvocates.find((a) =>
+                    counsel && a.name.toLowerCase().includes(String(counsel).toLowerCase().replace(/^adv\.?\s*/i, ""))
+                  ) ||
+                  registeredAdvocates[0] ||
+                  mockAdvocates[0];
+                handleOpenConsultation(matched);
               }}
             />
           )}

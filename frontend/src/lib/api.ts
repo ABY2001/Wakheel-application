@@ -1335,6 +1335,8 @@ export const advocateApi = {
     kpis: AdvocateKpis;
     todayHearings: CauseListItem[];
     recentMatters: any[];
+    incomingLeads?: any[];
+    upcomingConsultations?: any[];
     recentInvoices: AdvocateInvoice[];
     mode: string;
   }> {
@@ -1405,26 +1407,11 @@ export const advocateApi = {
       if (!res.ok) throw new Error("Status " + res.status);
       return await res.json();
     } catch (err: any) {
-      console.warn("advocateApi.getMatters fallback:", err?.message || err);
+      console.warn("advocateApi.getMatters error:", err?.message || err);
       return {
-        success: true,
-        matters: [
-          {
-            _id: "mat_wpc_19482",
-            caseNumber: "WP(C) 19482/2024",
-            matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-            matterType: "Writ Petition (Civil)",
-            courtForum: "High Court of Kerala (Ernakulam)",
-            courtHall: "Court Hall 2A",
-            status: "active",
-            nextHearingDate: new Date(Date.now() + 5 * 86400000).toISOString(),
-            timeline: [
-              { date: "18-Oct-2024", title: "Writ Petition E-Filed", remarks: "Filed before registry", stage: "Completed" },
-              { date: "22-Oct-2024", title: "Notice Before Admission", remarks: "Counter-affidavit ordered", stage: "Completed" },
-            ],
-          },
-        ],
-        count: 1,
+        success: false,
+        matters: [],
+        count: 0,
       };
     }
   },
@@ -1705,23 +1692,11 @@ export const advocateApi = {
       if (!res.ok) throw new Error("Status " + res.status);
       return await res.json();
     } catch (err: any) {
-      console.warn("advocateApi.getIncomingLeads fallback:", err?.message || err);
+      console.warn("advocateApi.getIncomingLeads error:", err?.message || err);
       return {
-        success: true,
-        leads: [
-          {
-            _id: "lead_sample_1",
-            citizenName: "Gopakumar Nambiar",
-            contactPhone: "+91 94471 28910",
-            category: "Land & Property Rights",
-            subject: "KSEB Route Alignment Objection under S.16 Telegraph Act",
-            description: "High-tension transmission line passing over homestead. Seeks interim stay from Kerala High Court.",
-            urgency: "urgent",
-            status: "pending_review",
-            createdAt: new Date().toISOString(),
-          },
-        ],
-        mode: "offline_fallback",
+        success: false,
+        leads: [],
+        mode: "error",
       };
     }
   },

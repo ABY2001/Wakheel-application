@@ -43,6 +43,9 @@ export function ERPDashboardView({
   const [loading, setLoading] = useState<boolean>(true);
   const [kpis, setKpis] = useState<AdvocateKpis | null>(null);
   const [todayHearings, setTodayHearings] = useState<CauseListItem[]>([]);
+  const [recentMatters, setRecentMatters] = useState<any[]>([]);
+  const [incomingLeads, setIncomingLeads] = useState<any[]>([]);
+  const [upcomingConsultations, setUpcomingConsultations] = useState<any[]>([]);
   const [recentInvoices, setRecentInvoices] = useState<AdvocateInvoice[]>([]);
 
   useEffect(() => {
@@ -50,10 +53,17 @@ export function ERPDashboardView({
     async function fetchDashboardData() {
       try {
         setLoading(true);
-        const data = await advocateApi.getDashboard();
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
+            : undefined;
+        const data = await advocateApi.getDashboard(token);
         if (isMounted && data.success) {
           setKpis(data.kpis);
           setTodayHearings(data.todayHearings || []);
+          setRecentMatters(data.recentMatters || []);
+          setIncomingLeads(data.incomingLeads || []);
+          setUpcomingConsultations(data.upcomingConsultations || []);
           setRecentInvoices(data.recentInvoices || []);
         }
       } catch (err) {
@@ -70,29 +80,28 @@ export function ERPDashboardView({
 
   const statCards = [
     {
-      label: "Modules Active",
-      value: kpis ? String(kpis.erpModulesCount) : "46",
-      trend: "↑ Chamber OS",
-      trendPositive: true,
-      icon: Layers,
-    },
-    {
-      label: "Active Matters & Clients",
-      value: kpis ? String(kpis.activeMattersCount) : "2",
-      trend: "Live",
+      label: "Assigned Matters",
+      value: kpis ? String(kpis.activeMattersCount) : "0",
+      trend: "Live Pipeline",
       trendPositive: true,
       icon: Briefcase,
     },
     {
-      label: "Court Hearings",
-      value: kpis ? String(kpis.totalHearingsListed) : "4",
-      subtext: `${kpis?.todayHearingsCount ?? 2} listed today`,
+      label: "Client Leads & Petitions",
+      value: kpis ? String(kpis.incomingLeadsCount ?? incomingLeads.length) : String(incomingLeads.length),
+      subtext: "Click Matter intelligence",
+      icon: Users,
+    },
+    {
+      label: "Client Consultations",
+      value: kpis ? String(kpis.upcomingConsultationsCount ?? upcomingConsultations.length) : String(upcomingConsultations.length),
+      subtext: `${kpis?.todayHearingsCount ?? 0} hearings today`,
       icon: Calendar,
     },
     {
       label: "Fee Billings Collected",
-      value: kpis ? `₹${kpis.totalRevenueCollected.toLocaleString("en-IN")}` : "₹37,760",
-      subtext: `${kpis?.pendingInvoicesCount ?? 2} pending fee bills`,
+      value: kpis ? `₹${kpis.totalRevenueCollected.toLocaleString("en-IN")}` : "₹0",
+      subtext: `${kpis?.pendingInvoicesCount ?? 0} pending fee bills`,
       icon: CreditCard,
     },
   ];
@@ -284,6 +293,152 @@ export function ERPDashboardView({
       </div>
 
       {/* =========================================================================
+          CLIENT PETITIONS, ASSIGNED MATTERS & CONSULTATIONS (Live Feed)
+      ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Assigned Client Matters & Incoming Petitions */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-black dark:text-white" />
+              <h3 className="text-sm font-bold text-black dark:text-white">
+                Assigned Client Petitions &amp; Matters
+              </h3>
+            </div>
+            <button
+              onClick={() => onNavigateTab && onNavigateTab("matters")}
+              className="text-xs font-bold text-black dark:text-white hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>Open Matter Intelligence</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="p-6 text-center text-xs text-zinc-500">Loading assigned client matters...</div>
+          ) : recentMatters.length === 0 && incomingLeads.length === 0 ? (
+            <div className="p-6 text-center text-xs text-zinc-500">
+              No client petitions or active matters assigned to your chamber yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentMatters.slice(0, 5).map((m) => (
+                <div
+                  key={m._id}
+                  onClick={() => onNavigateTab && onNavigateTab("matters")}
+                  className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all cursor-pointer flex items-start justify-between gap-3 text-xs"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono font-bold px-2 py-0.5 rounded bg-black text-white dark:bg-white dark:text-black text-[10px]">
+                        {m.caseNumber || "NEW MATTER"}
+                      </span>
+                      <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                        Client: {m.citizenName || "Registered Client"}
+                      </span>
+                    </div>
+                    <div className="text-sm font-bold text-black dark:text-white">
+                      {m.matterTitle || m.title}
+                    </div>
+                    <div className="text-[11px] text-zinc-500">
+                      {m.matterType || "Legal Matter"} • {m.courtForum || "Court / Chamber"}
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white shrink-0">
+                    {m.status || "active"}
+                  </span>
+                </div>
+              ))}
+
+              {incomingLeads
+                .filter((l) => !recentMatters.some((m) => m.grievanceId === l._id))
+                .slice(0, 4)
+                .map((lead) => (
+                  <div
+                    key={lead._id}
+                    onClick={() => onNavigateTab && onNavigateTab("matters")}
+                    className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all cursor-pointer flex items-start justify-between gap-3 text-xs"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono font-bold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-[10px]">
+                          INCOMING PETITION
+                        </span>
+                        <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                          Client: {lead.citizenName || "Registered Client"}
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-black dark:text-white">{lead.title}</div>
+                      <div className="text-[11px] text-zinc-500">{lead.category || "Legal Intake"}</div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-black text-white dark:bg-white dark:text-black shrink-0">
+                      {lead.status || "pending"}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming Client Consultations */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-black dark:text-white" />
+              <h3 className="text-sm font-bold text-black dark:text-white">
+                Client Consultations &amp; Chamber Bookings
+              </h3>
+            </div>
+            <button
+              onClick={() => onNavigateTab && onNavigateTab("appointments")}
+              className="text-xs font-bold text-black dark:text-white hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>Open Appointments</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="p-6 text-center text-xs text-zinc-500">Loading client consultations...</div>
+          ) : upcomingConsultations.length === 0 ? (
+            <div className="p-6 text-center text-xs text-zinc-500">
+              No client consultations booked with your chamber yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcomingConsultations.slice(0, 6).map((c) => (
+                <div
+                  key={c._id || c.id}
+                  onClick={() => onNavigateTab && onNavigateTab("appointments")}
+                  className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 hover:border-black dark:hover:border-white transition-all cursor-pointer flex items-start justify-between gap-3 text-xs"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-black dark:text-white">
+                        {c.citizenName || "Registered Client"}
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                        • {c.consultationType || "video"}
+                      </span>
+                    </div>
+                    <div className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                      {c.subject}
+                    </div>
+                    <div className="text-[11px] text-zinc-500">
+                      {new Date(c.scheduledDate).toLocaleDateString("en-IN")} • {c.timeSlot}
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white shrink-0">
+                    {c.status || "scheduled"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* =========================================================================
           TODAY'S CAUSE LIST & COURT BOARD (Live High Court & NCLT feed)
       ========================================================================= */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4">
@@ -375,41 +530,53 @@ export function ERPDashboardView({
           </div>
 
           <div className="space-y-3">
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
-                  <CheckCheck className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-black dark:text-white font-medium">
-                  Listed Item #14 in Court Hall 2A for WP(C) 19482/2024
-                </span>
+            {recentMatters.length === 0 && upcomingConsultations.length === 0 && todayHearings.length === 0 ? (
+              <div className="p-5 text-center text-xs text-zinc-500">
+                No chamber activity recorded yet. Client petitions and appointments will stream here live.
               </div>
-              <span className="text-zinc-500 text-[11px] font-mono shrink-0">Today</span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
-                  <User className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-black dark:text-white font-medium">
-                  Client Video Consultation with Gopakumar Nambiar confirmed
-                </span>
-              </div>
-              <span className="text-zinc-500 text-[11px] font-mono shrink-0">3d away</span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-black dark:text-white font-medium">
-                  Precedent Note on Valsamma v. KSEB compiled for Writ Petition
-                </span>
-              </div>
-              <span className="text-zinc-500 text-[11px] font-mono shrink-0">4d ago</span>
-            </div>
+            ) : (
+              <>
+                {recentMatters.slice(0, 2).map((m) => (
+                  <div key={m._id} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
+                        <Briefcase className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-black dark:text-white font-medium">
+                        Assigned matter {m.matterTitle || m.title} ({m.citizenName || "Client"})
+                      </span>
+                    </div>
+                    <span className="text-zinc-500 text-[11px] font-mono shrink-0">{m.status || "active"}</span>
+                  </div>
+                ))}
+                {upcomingConsultations.slice(0, 2).map((c) => (
+                  <div key={c._id || c.id} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
+                        <User className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-black dark:text-white font-medium">
+                        Consultation: {c.subject} with {c.citizenName || "Client"}
+                      </span>
+                    </div>
+                    <span className="text-zinc-500 text-[11px] font-mono shrink-0">{c.timeSlot}</span>
+                  </div>
+                ))}
+                {todayHearings.slice(0, 1).map((h) => (
+                  <div key={h._id} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0">
+                        <CheckCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-black dark:text-white font-medium">
+                        Listed Item #{h.itemNumber} in {h.courtHall} for {h.caseNumber}
+                      </span>
+                    </div>
+                    <span className="text-zinc-500 text-[11px] font-mono shrink-0">Today</span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
 

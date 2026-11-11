@@ -630,14 +630,38 @@ export const matchAdvocateForGrievance = async (req, res) => {
     }
 
     const advocate = await User.findById(advocateId).select("-password");
+    const advDisplayName = advocate?.fullName
+      ? (/^adv[\.\s]/i.test(advocate.fullName) ? advocate.fullName : `Adv. ${advocate.fullName}`)
+      : "Assigned Advocate";
+
     grievance.assignedAdvocateId = advocateId;
     grievance.status = "matter_opened";
     await grievance.save();
+
+    let matter = await Matter.findOne({ grievanceId: grievance._id });
+    if (!matter) {
+      const year = new Date().getFullYear();
+      const caseNumber = `OS ${Math.floor(10000 + Math.random() * 90000)}/${year}`;
+      matter = await Matter.create({
+        citizenId: grievance.citizenId || userId,
+        grievanceId: grievance._id,
+        advocateId,
+        advocateName: advDisplayName,
+        matterTitle: `${caseNumber} - ${grievance.title}`,
+        matterType: grievance.category || "Civil Litigation",
+        caseNumber,
+        cnrNumber: `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${year}`,
+        courtForum: grievance.preferredCourt || "High Court of Kerala / Family Court",
+        status: "active",
+        nextHearingDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      });
+    }
 
     res.json({
       success: true,
       message: "Advocate successfully engaged for grievance",
       grievance,
+      matter,
       advocate,
       mode: "cloud_db",
     });
@@ -926,8 +950,11 @@ export const createMatter = async (req, res) => {
       caseNumber,
       title,
       matterTitle,
+      matterType,
+      description,
       court,
       courtForum,
+      advocateId,
       assignedAdvocate,
       advocateName,
       cnrNumber,
@@ -944,15 +971,23 @@ export const createMatter = async (req, res) => {
     const finalAdvocate = assignedAdvocate || advocateName || "Adv. Meera Krishnan";
     const finalCnr = cnrNumber || `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-2026`;
 
+    const requestedAdvName = advocateName || assignedAdvocate || "";
+    const resolvedAdv = shouldUseDevStore()
+      ? devStore.resolveAdvocateByIdOrName(advocateId, requestedAdvName)
+      : { advocateId: advocateId || undefined, advocateName: requestedAdvName || finalAdvocate };
+
     const matterData = {
       citizenId: userId,
       caseNumber: finalCaseNumber,
       matterTitle: finalTitle,
       title: finalTitle,
+      matterType: matterType || "Legal Petition",
+      description: description || "",
       courtForum: finalCourt,
       court: finalCourt,
-      advocateName: finalAdvocate,
-      assignedAdvocate: finalAdvocate,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName || finalAdvocate,
+      assignedAdvocate: resolvedAdv.advocateName || finalAdvocate,
       cnrNumber: finalCnr,
       courtHall: courtHall || "Court Hall 2A",
       status: status || "Admitted",
@@ -1640,16 +1675,28 @@ export const getAdvocatesDirectory = async (req, res) => {
 export const bookConsultation = async (req, res) => {
   try {
     const userId = getUserId(req);
-    const { advocateName, consultationType, scheduledDate, timeSlot, subject, clientNotes, feeAmount } = req.body;
+    const {
+      advocateId,
+      advocateName,
+      consultationType,
+      scheduledDate,
+      timeSlot,
+      subject,
+      clientNotes,
+      feeAmount,
+    } = req.body;
 
     if (!scheduledDate || !timeSlot || !subject) {
       return res.status(400).json({ success: false, message: "Date, time slot, and subject are required" });
     }
 
     if (shouldUseDevStore()) {
+      const resolvedAdv = devStore.resolveAdvocateByIdOrName(advocateId, advocateName);
       const consultation = devStore.addConsultation({
         citizenId: userId,
-        advocateName: advocateName || "Adv. Meera Krishnan",
+        advocateId: resolvedAdv.advocateId,
+        advocateName: resolvedAdv.advocateName,
+        barCouncilNumber: resolvedAdv.barCouncilNumber,
         consultationType: consultationType || "video",
         scheduledDate,
         timeSlot: timeSlot || "10:30 AM - 11:15 AM",
@@ -1663,15 +1710,27 @@ export const bookConsultation = async (req, res) => {
 
       return res.status(201).json({
         success: true,
-        message: "Consultation booked successfully with Adv. Meera Krishnan. Virtual chamber room link generated.",
+        message: `Consultation booked successfully with ${resolvedAdv.advocateName}. Virtual chamber room link generated.`,
         consultation,
         mode: "dummy_data",
       });
     }
 
+    let finalAdvocateId = advocateId;
+    let finalAdvocateName = advocateName || "Adv. Meera Krishnan";
+    if (!finalAdvocateId && advocateName) {
+      const clean = advocateName.replace(/^adv\.?\s*/i, "").trim();
+      const matchedProf = await AdvocateProfile.findOne({ fullName: new RegExp(clean, "i") });
+      if (matchedProf) {
+        finalAdvocateId = matchedProf.userId;
+        finalAdvocateName = matchedProf.fullName;
+      }
+    }
+
     const consultation = await Consultation.create({
       citizenId: userId,
-      advocateName: advocateName || "Adv. Meera Krishnan",
+      advocateId: finalAdvocateId,
+      advocateName: finalAdvocateName,
       consultationType: consultationType || "video",
       scheduledDate: new Date(scheduledDate),
       timeSlot: timeSlot || "10:30 AM - 11:15 AM",
@@ -2073,8 +2132,14 @@ export const fileDocument = async (req, res) => {
     } = req.body;
 
     const finalFileName = fileName || `${(category || "Pleading").replace(/[\s/]/g, "_")}_Filing.pdf`;
-    const finalMatter = matter || "WP(C) 19482/2024 — Gopakumar Nambiar v. KSEB";
-    const finalAdvocate = advocateName || "Adv. Meera Krishnan";
+    const finalMatter = matter || "General Legal Filing";
+    const resolvedAdv = shouldUseDevStore()
+      ? devStore.resolveAdvocateByIdOrName(advocateId, advocateName)
+      : {
+          advocateId: advocateId || undefined,
+          advocateName: advocateName || "Adv. Meera Krishnan",
+        };
+    const finalAdvocate = resolvedAdv.advocateName;
     const generatedHash = `sha256:${Array.from({ length: 28 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
 
     const filingData = {
@@ -2085,7 +2150,7 @@ export const fileDocument = async (req, res) => {
       category: category || "Pleading Draft / Affidavit Counter",
       subType: "document-filing",
       matter: finalMatter,
-      matterId: matterId || "mat_wpc_19482",
+      matterId: matterId || "",
       size: size || fileSize || "1.8 MB",
       fileSize: size || fileSize || "1.8 MB",
       date: "Just now",
@@ -2097,7 +2162,7 @@ export const fileDocument = async (req, res) => {
       filingStatus: "Transmitted to Advocate",
       status: "Transmitted to Advocate",
       advocateName: finalAdvocate,
-      advocateId: advocateId || "adv_1",
+      advocateId: resolvedAdv.advocateId,
       remarks: remarks || "",
       details: remarks || `Transmitted to ${finalAdvocate} for judicial scrutiny & court submission.`,
     };

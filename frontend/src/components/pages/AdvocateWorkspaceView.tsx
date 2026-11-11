@@ -144,7 +144,7 @@ interface FloatingTooltipData {
 
 export function AdvocateWorkspaceView() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>("audit-history");
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [sidebarSearch, setSidebarSearch] = useState("");
   const [selectedMatter, setSelectedMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
   const [lang, setLang] = useState<"en" | "ml">("en");
@@ -348,9 +348,13 @@ export function AdvocateWorkspaceView() {
     let isMounted = true;
     async function loadMattersAndLeads() {
       try {
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
+            : undefined;
         const [leadsRes, mattersRes] = await Promise.allSettled([
-          advocateApi.getIncomingLeads(),
-          advocateApi.getMatters(),
+          advocateApi.getIncomingLeads(token),
+          advocateApi.getMatters(token),
         ]);
         if (isMounted) {
           if (leadsRes.status === "fulfilled" && leadsRes.value?.success) {
@@ -3022,9 +3026,9 @@ export function AdvocateWorkspaceView() {
                         <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">
                           {lead.aiTriage?.summary || lead.description}
                         </p>
-                        <div className="pt-2 flex items-center justify-between">
+                        <div className="pt-2 flex items-center justify-between gap-2">
                           <span className="text-xs text-zinc-700 dark:text-zinc-300 font-semibold">
-                            Citizen ID: {lead.citizenId || "default"}
+                            Client: {lead.citizenName || lead.citizenId || "Registered Client"}
                           </span>
                           {lead.status === "matter_opened" ? (
                             <span className="text-[11px] font-bold text-black dark:text-white flex items-center gap-1">

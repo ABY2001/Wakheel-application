@@ -152,11 +152,91 @@ export function MyLegalMattersView({
   const [liveTrackedResult, setLiveTrackedResult] = useState<any | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
+  // Create New Petition / Matter Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreatingMatter, setIsCreatingMatter] = useState(false);
+  const [registeredAdvocates, setRegisteredAdvocates] = useState<any[]>([]);
+  const [newPetitionTitle, setNewPetitionTitle] = useState("");
+  const [newPetitionCategory, setNewPetitionCategory] = useState("Family & Matrimonial");
+  const [newPetitionCourt, setNewPetitionCourt] = useState("Family Court / High Court of Kerala");
+  const [newPetitionSummary, setNewPetitionSummary] = useState("");
+  const [newPetitionAdvocateId, setNewPetitionAdvocateId] = useState("");
+
   useEffect(() => {
     if (initialShowCnrTracker) {
       setShowCnrTracker(true);
     }
   }, [initialShowCnrTracker]);
+
+  useEffect(() => {
+    let active = true;
+    citizenApi
+      .getAdvocates()
+      .then((res) => {
+        if (active && res?.advocates && Array.isArray(res.advocates)) {
+          setRegisteredAdvocates(res.advocates);
+          if (res.advocates.length > 0) {
+            setNewPetitionAdvocateId((prev) => prev || res.advocates[0].id || res.advocates[0]._id || "");
+          }
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleCreateNewPetition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPetitionTitle.trim()) return;
+    setIsCreatingMatter(true);
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || "dev_token"
+        : "dev_token";
+    const chosenAdv = registeredAdvocates.find(
+      (a) => (a.id || a._id || a.userId) === newPetitionAdvocateId
+    );
+    const advName = chosenAdv?.fullName || chosenAdv?.name || "Pending Counsel Assignment";
+    try {
+      const res = await citizenApi.createMatter(token, {
+        matterTitle: newPetitionTitle.trim(),
+        title: newPetitionTitle.trim(),
+        matterType: newPetitionCategory,
+        description: newPetitionSummary.trim(),
+        courtForum: newPetitionCourt.trim() || "Family Court / High Court of Kerala",
+        advocateId: chosenAdv ? (chosenAdv.id || chosenAdv._id || chosenAdv.userId) : undefined,
+        advocateName: advName,
+        assignedAdvocate: advName,
+        status: "Pre Filing",
+      });
+      if (res?.success && res.matter) {
+        const m = res.matter;
+        const createdItem: LegalMatter = {
+          id: m._id || m.id || `mat_${Date.now()}`,
+          caseNumber: m.caseNumber || "PETITION DRAFT",
+          title: m.matterTitle || m.title || newPetitionTitle.trim(),
+          court: m.courtForum || m.court || newPetitionCourt,
+          assignedAdvocate: m.advocateName || m.assignedAdvocate || advName,
+          nextHearing: m.nextHearingDate || "Pending Registry Filing",
+          filingDate: m.filingDate || new Date().toISOString().split("T")[0],
+          status: "Pre Filing",
+          cnrNumber: m.cnrNumber || "",
+          courtHall: m.courtHall || "Filing Counter",
+          statutoryActs: m.statutoryActs || [],
+          timeline: m.timeline || [],
+        };
+        setMatters((prev) => [createdItem, ...prev]);
+        setShowCreateModal(false);
+        setNewPetitionTitle("");
+        setNewPetitionSummary("");
+      }
+    } catch (err) {
+      console.error("Failed to create new petition/matter:", err);
+    } finally {
+      setIsCreatingMatter(false);
+    }
+  };
 
   // Sync matters from backend API on mount
   useEffect(() => {
@@ -244,7 +324,8 @@ export function MyLegalMattersView({
         caseNumber: caseData.caseNumber,
         matterTitle: caseData.title || caseData.caseTitle,
         courtForum: caseData.court,
-        assignedAdvocate: caseData.assignedAdvocate || "Adv. Meera Krishnan",
+        advocateId: caseData.advocateId,
+        assignedAdvocate: caseData.assignedAdvocate || "Pending Counsel Assignment",
         cnrNumber: caseData.cnrNumber,
         courtHall: caseData.courtHall,
         status: caseData.status || "Admitted",
@@ -314,6 +395,14 @@ export function MyLegalMattersView({
 
         {/* Optional Search / CNR Toggle */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="px-3.5 py-1.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>New Petition / Matter</span>
+          </button>
           <button
             type="button"
             onClick={() => setShowCnrTracker(!showCnrTracker)}
@@ -526,8 +615,16 @@ export function MyLegalMattersView({
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setShowCnrTracker(true)}
+                onClick={() => setShowCreateModal(true)}
                 className="px-4 py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center gap-2 cursor-pointer hover:opacity-90 shadow-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Petition / Assign Advocate</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCnrTracker(true)}
+                className="px-4 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-black dark:text-white font-bold text-xs flex items-center gap-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800"
               >
                 <Activity className="w-4 h-4" />
                 <span>Track Case via 16-Digit CNR</span>
@@ -788,6 +885,139 @@ export function MyLegalMattersView({
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Petition / Matter Modal */}
+      {showCreateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-2xl p-6 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-black dark:text-white">
+                  Create Petition / Legal Matter
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Assign directly to a verified advocate so it appears in their chamber pipeline immediately.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewPetition} className="space-y-4 text-xs sm:text-sm">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                  Petition / Matter Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newPetitionTitle}
+                  onChange={(e) => setNewPetitionTitle(e.target.value)}
+                  placeholder="e.g., Mutual Consent Divorce Petition under Sec. 13B HMA"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                    Case Category
+                  </label>
+                  <select
+                    value={newPetitionCategory}
+                    onChange={(e) => setNewPetitionCategory(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                  >
+                    <option value="Family & Matrimonial">Family &amp; Matrimonial</option>
+                    <option value="Property & Real Estate">Property &amp; Real Estate</option>
+                    <option value="Civil Litigation">Civil Litigation</option>
+                    <option value="Criminal Defense & Bail">Criminal Defense &amp; Bail</option>
+                    <option value="Corporate & Commercial">Corporate &amp; Commercial</option>
+                    <option value="Constitutional Writs">Constitutional Writs</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                    Court / Forum
+                  </label>
+                  <input
+                    type="text"
+                    value={newPetitionCourt}
+                    onChange={(e) => setNewPetitionCourt(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                  Select Assigned Advocate
+                </label>
+                <select
+                  value={newPetitionAdvocateId}
+                  onChange={(e) => setNewPetitionAdvocateId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                >
+                  {registeredAdvocates.length === 0 ? (
+                    <option value="">No registered advocates loaded yet</option>
+                  ) : (
+                    registeredAdvocates.map((adv) => {
+                      const advId = adv.id || adv._id || adv.userId;
+                      return (
+                        <option key={advId} value={advId}>
+                          {adv.fullName || adv.name} ({adv.barCouncilNumber || "Verified"})
+                        </option>
+                      );
+                    })
+                  )}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                  Petition Facts / Relief Sought
+                </label>
+                <textarea
+                  rows={3}
+                  value={newPetitionSummary}
+                  onChange={(e) => setNewPetitionSummary(e.target.value)}
+                  placeholder="Briefly state key dates, mutual settlement terms, or urgency..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingMatter || !newPetitionTitle.trim()}
+                  className="px-5 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs shadow-xs hover:opacity-90 cursor-pointer disabled:opacity-50"
+                >
+                  {isCreatingMatter ? "Submitting Petition..." : "Submit Petition to Advocate"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

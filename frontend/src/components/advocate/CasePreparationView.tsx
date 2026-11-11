@@ -113,10 +113,10 @@ interface CasePrepDossier {
 }
 
 export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
-  currentMatter = "WP(C) 19482/2024 - Gopakumar Nambiar v. KSEB",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
-  token = "advocate_token",
+  currentMatter = "",
+  advocateName = "Advocate",
+  barCouncilNumber = "",
+  token,
   onNavigateTab,
 }) => {
   // Navigation & Sub-tabs
@@ -126,13 +126,14 @@ export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
 
   // Dossier state
   const [dossier, setDossier] = useState<CasePrepDossier | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMatters, setLoadingMatters] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [isAiGenerating, setIsAiGenerating] = useState<boolean>(false);
 
   // Available matters list
   const [availableMatters, setAvailableMatters] = useState<any[]>([]);
-  const [selectedMatterId, setSelectedMatterId] = useState<string>("mat_wpc_19482");
+  const [selectedMatterId, setSelectedMatterId] = useState<string>("");
 
   // Toast & Notifications
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -149,6 +150,24 @@ export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
   const [newBenchExhibits, setNewBenchExhibits] = useState("");
   const [showAddInquiryModal, setShowAddInquiryModal] = useState(false);
 
+  const [newPrecCitation, setNewPrecCitation] = useState("");
+  const [newPrecCaseName, setNewPrecCaseName] = useState("");
+  const [newPrecCourt, setNewPrecCourt] = useState("");
+  const [newPrecRatio, setNewPrecRatio] = useState("");
+  const [newPrecApply, setNewPrecApply] = useState("");
+  const [showAddPrecedentModal, setShowAddPrecedentModal] = useState(false);
+
+  const [newNoteTimeMark, setNewNoteTimeMark] = useState("");
+  const [newNoteHeading, setNewNoteHeading] = useState("");
+  const [newNoteContent, setNewNoteContent] = useState("");
+  const [newNoteExhibit, setNewNoteExhibit] = useState("");
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+
+  const [newExhibitMark, setNewExhibitMark] = useState("");
+  const [newExhibitTitle, setNewExhibitTitle] = useState("");
+  const [newExhibitAdmissibility, setNewExhibitAdmissibility] = useState("");
+  const [showAddExhibitModal, setShowAddExhibitModal] = useState(false);
+
   const [aiPrompt, setAiPrompt] = useState("");
 
   const showToast = (msg: string) => {
@@ -158,38 +177,79 @@ export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
 
   // 1. Fetch available matters for quick switching
   useEffect(() => {
+    let active = true;
     const fetchMatters = async () => {
+      setLoadingMatters(true);
       try {
         const res = await advocateApi.getMatters(token);
-        if (res && res.matters && res.matters.length > 0) {
-          setAvailableMatters(res.matters);
-          // Check if currentMatter matches any
-          const match = res.matters.find(
-            (m: any) =>
-              m._id === currentMatter ||
-              m.caseNumber === currentMatter ||
-              m.matterTitle.includes(currentMatter.split(" - ")[0])
-          );
-          if (match) setSelectedMatterId(match._id);
+        if (!active) return;
+        const matters = Array.isArray(res?.matters) ? res.matters : [];
+        setAvailableMatters(matters);
+
+        if (matters.length > 0) {
+          const normalizedCurrent = (currentMatter || "").trim();
+          const matterPrefix = normalizedCurrent.split(/\s+[—-]\s+/)[0]?.trim() || "";
+          const match = normalizedCurrent
+            ? matters.find(
+                (m: any) =>
+                  m._id === normalizedCurrent ||
+                  m.id === normalizedCurrent ||
+                  (m.caseNumber && m.caseNumber === normalizedCurrent) ||
+                  (m.matterTitle && m.matterTitle === normalizedCurrent) ||
+                  (m.title && m.title === normalizedCurrent) ||
+                  (matterPrefix &&
+                    ((m.caseNumber && m.caseNumber === matterPrefix) ||
+                      (m.matterTitle && m.matterTitle.includes(matterPrefix))))
+              )
+            : null;
+          const chosen = match || matters[0];
+          const nextId = chosen?._id || chosen?.id || "";
+          setSelectedMatterId(nextId);
+          if (!nextId) {
+            setDossier(null);
+            setLoading(false);
+          }
+        } else {
+          setSelectedMatterId("");
+          setDossier(null);
+          setLoading(false);
         }
       } catch (err) {
+        if (!active) return;
         console.warn("Could not load matters list:", err);
+        setAvailableMatters([]);
+        setSelectedMatterId("");
+        setDossier(null);
+        setLoading(false);
+      } finally {
+        if (active) setLoadingMatters(false);
       }
     };
     fetchMatters();
+    return () => {
+      active = false;
+    };
   }, [currentMatter, token]);
 
   // 2. Load Dossier for Selected Matter
   const loadDossier = async (matterId: string) => {
+    if (!matterId) {
+      setDossier(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await advocateApi.getCasePrep(matterId, token);
-      if (res && res.success && res.dossier) {
-        setDossier(res.dossier);
+      if (res && res.success) {
+        setDossier(res.dossier ?? null);
+      } else {
+        setDossier(null);
       }
     } catch (err) {
       console.error("Error loading case prep dossier:", err);
-      showToast("Using local chamber briefing data.");
+      setDossier(null);
+      showToast("Unable to load case preparation dossier.");
     } finally {
       setLoading(false);
     }
@@ -198,8 +258,11 @@ export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
   useEffect(() => {
     if (selectedMatterId) {
       loadDossier(selectedMatterId);
+    } else {
+      setDossier(null);
+      setLoading(false);
     }
-  }, [selectedMatterId]);
+  }, [selectedMatterId, token]);
 
   // 3. Save Dossier to Backend
   const handleSaveDossier = async (updated = dossier) => {
@@ -323,6 +386,75 @@ export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
     setShowAddInquiryModal(false);
   };
 
+  // 6b. Add Custom Precedent
+  const handleAddPrecedent = async () => {
+    if (!dossier || (!newPrecCitation.trim() && !newPrecCaseName.trim())) return;
+    const newPrec: BindingPrecedent = {
+      id: "prec-custom-" + Date.now().toString(),
+      citation: newPrecCitation.trim() || "Citation Pending",
+      caseName: newPrecCaseName.trim() || newPrecCitation.trim(),
+      court: newPrecCourt.trim() || dossier.courtForum || "Judicial Authority",
+      benchCoram: dossier.coram || "Bench",
+      ratio: newPrecRatio.trim() || "Recorded binding ratio decidendi for oral submissions.",
+      keyParagraphs: "Cited by Counsel",
+      howToApply: newPrecApply.trim() || "Applied to support primary relief and legal submissions.",
+      isBookmarked: true,
+    };
+    const updated = {
+      ...dossier,
+      precedents: [...dossier.precedents, newPrec],
+    };
+    await handleSaveDossier(updated);
+    setNewPrecCitation("");
+    setNewPrecCaseName("");
+    setNewPrecCourt("");
+    setNewPrecRatio("");
+    setNewPrecApply("");
+    setShowAddPrecedentModal(false);
+  };
+
+  // 6c. Add Custom Speaking Note
+  const handleAddSpeakingNote = async () => {
+    if (!dossier || (!newNoteHeading.trim() && !newNoteContent.trim())) return;
+    const newNote: SpeakingNote = {
+      order: dossier.speakingNotes.length + 1,
+      timeMark: newNoteTimeMark.trim() || `${dossier.speakingNotes.length * 5}-${(dossier.speakingNotes.length + 1) * 5} min`,
+      heading: newNoteHeading.trim() || `Submission Point ${dossier.speakingNotes.length + 1}`,
+      content: newNoteContent.trim() || newNoteHeading.trim(),
+      focusExhibit: newNoteExhibit.trim() || "Case Paperbook",
+    };
+    const updated = {
+      ...dossier,
+      speakingNotes: [...dossier.speakingNotes, newNote],
+    };
+    await handleSaveDossier(updated);
+    setNewNoteTimeMark("");
+    setNewNoteHeading("");
+    setNewNoteContent("");
+    setNewNoteExhibit("");
+    setShowAddNoteModal(false);
+  };
+
+  // 6d. Add Custom Evidence Exhibit
+  const handleAddExhibit = async () => {
+    if (!dossier || (!newExhibitMark.trim() && !newExhibitTitle.trim())) return;
+    const newEx: EvidenceExhibit = {
+      mark: newExhibitMark.trim() || `Doc-${dossier.evidenceExhibits.length + 1}`,
+      title: newExhibitTitle.trim() || newExhibitMark.trim(),
+      verified: true,
+      admissibility: newExhibitAdmissibility.trim() || "Primary Documentary Record",
+    };
+    const updated = {
+      ...dossier,
+      evidenceExhibits: [...dossier.evidenceExhibits, newEx],
+    };
+    await handleSaveDossier(updated);
+    setNewExhibitMark("");
+    setNewExhibitTitle("");
+    setNewExhibitAdmissibility("");
+    setShowAddExhibitModal(false);
+  };
+
   // 7. Toggle Bookmark Precedent
   const toggleBookmarkPrecedent = async (precId: string) => {
     if (!dossier) return;
@@ -347,16 +479,17 @@ export const CasePreparationView: React.FC<CasePreparationViewProps> = ({
   const handlePushToVault = async () => {
     if (!dossier) return;
     try {
+      const safeCaseNumber = dossier.caseNumber || dossier.matterTitle || "Matter_Brief";
       const summaryContent = `COURT LECTERN BENCH DOSSIER
 MATTER: ${dossier.matterTitle}
 BENCH: ${dossier.courtForum} | ${dossier.bench}
-HEARING STAGE: ${dossier.hearingStage} (${dossier.itemNumber})
-CORAM: ${dossier.coram}
+HEARING STAGE: ${dossier.hearingStage}${dossier.itemNumber ? ` (${dossier.itemNumber})` : ""}
+CORAM: ${dossier.coram || "Presiding Bench"}
 
 FRAMED ISSUES FOR DETERMINATION:
 ${dossier.issues.map((iss) => `${iss.issueNumber}. ${iss.title}\n   ${iss.question}\n   [Governing: ${iss.governingLaw}]`).join("\n\n")}
 
-BINDING HIGH COURT & SUPREME COURT CITATIONS:
+BINDING JUDICIAL CITATIONS & PRECEDENTS:
 ${dossier.precedents.map((p) => `• ${p.citation} - ${p.caseName}\n  Ratio: ${p.ratio}\n  How to Apply: ${p.howToApply}`).join("\n\n")}
 
 ANTICIPATED BENCH INQUIRIES & ORAL REBUTTALS:
@@ -366,15 +499,15 @@ SENIOR COUNSEL SPEAKING FLOW:
 ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.content}\nFocus: ${sn.focusExhibit}`).join("\n\n")}`;
 
       const payload = {
-        title: `Bench Dossier & Argument Brief — ${dossier.caseNumber}`,
-        fileName: `Bench_Dossier_${dossier.caseNumber.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
+        title: `Bench Dossier & Argument Brief — ${safeCaseNumber}`,
+        fileName: `Bench_Dossier_${safeCaseNumber.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
         category: "Bench Dossier / Argument Brief",
         subType: "document-filing",
         matter: dossier.matterTitle,
         fileSize: "185 KB",
         filingStatus: "Ready in Vault",
         advocateName,
-        details: `Senior Advocate Lectern Argument Dossier prepared for hearing in ${dossier.bench}. Contains framed issues, Valsamma ratio mapping, and bench rebuttals.`,
+        details: `Lectern Argument Dossier prepared for hearing in ${dossier.bench || dossier.courtForum || "court"}. Contains framed issues, precedent mapping, and bench rebuttals.`,
         contentSummary: summaryContent.slice(0, 300) + "...",
       };
 
@@ -391,6 +524,10 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
   // 10. Copy Speaking Points
   const handleCopySpeakingPoints = () => {
     if (!dossier) return;
+    if (dossier.speakingNotes.length === 0) {
+      showToast("No speaking notes recorded for this matter yet.");
+      return;
+    }
     const text = dossier.speakingNotes
       .map(
         (sn) =>
@@ -398,7 +535,7 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
       )
       .join("\n\n--------------------------------------------\n\n");
     navigator.clipboard.writeText(text);
-    showToast("Senior Counsel speaking notes copied to clipboard.");
+    showToast("Counsel speaking notes copied to clipboard.");
   };
 
   // 11. Print Lectern Argument Sheet
@@ -409,10 +546,11 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
       window.print();
       return;
     }
+    const benchMeta = [dossier.bench, dossier.itemNumber].filter(Boolean).join(" • ") || "Bench";
     printWindow.document.write(`
       <html>
         <head>
-          <title>Bench Lectern Dossier — ${dossier.caseNumber}</title>
+          <title>Bench Lectern Dossier — ${dossier.caseNumber || dossier.matterTitle}</title>
           <style>
             @page { size: A4 portrait; margin: 20mm 20mm 20mm 25mm; }
             body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.5; color: #000; margin: 0; padding: 15px; }
@@ -427,11 +565,11 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
         </head>
         <body>
           <div class="header">
-            <div class="title">${dossier.courtForum}</div>
+            <div class="title">${dossier.courtForum || "Court Forum"}</div>
             <div class="meta">
-              <span>${dossier.bench} • ${dossier.itemNumber}</span>
-              <span>LISTED: ${dossier.listedDate}</span>
-              <span>CORAM: ${dossier.coram}</span>
+              <span>${benchMeta}</span>
+              <span>LISTED: ${dossier.listedDate || "Pending Listing"}</span>
+              <span>CORAM: ${dossier.coram || "Presiding Bench"}</span>
             </div>
           </div>
 
@@ -458,12 +596,12 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
     printWindow.print();
   };
 
-  if (loading && !dossier) {
+  if ((loadingMatters || loading) && !dossier) {
     return (
       <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto p-12 text-center">
         <RefreshCw className="w-8 h-8 animate-spin mx-auto text-zinc-400 mb-3" />
         <span className="text-xs font-mono text-zinc-500">
-          Loading High Court Bench Dossier &amp; Argument Outlines...
+          Loading Case Preparation Dossier &amp; Argument Outlines...
         </span>
       </div>
     );
@@ -483,61 +621,86 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
                 Bench Argument Studio
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500">
-                Kerala High Court Practice
+                {dossier?.courtForum || (barCouncilNumber ? `Enrol. ${barCouncilNumber}` : "Practice Brief Studio")}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-black dark:text-white">
               Case Preparation &amp; Argument Brief
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Prepare trial strategies, formulate framed issues, analyze binding Division Bench precedents, and rehearse oral bench inquiries before arguing at the lectern.
+              Prepare trial strategies, formulate framed issues, analyze binding judicial precedents, and rehearse oral bench inquiries before arguing at the lectern.
             </p>
           </div>
 
-          {/* Top Quick Actions */}
+          {/* Top Quick Actions & Matter Switcher */}
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleCopySpeakingPoints}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-black dark:text-white transition-colors border border-zinc-200 dark:border-zinc-800"
-            >
-              <Copy className="w-3.5 h-3.5" />
-              <span>Copy Speaking Points</span>
-            </button>
+            {availableMatters.length > 0 && (
+              <select
+                value={selectedMatterId}
+                onChange={(e) => setSelectedMatterId(e.target.value)}
+                aria-label="Select Matter for Case Preparation"
+                className="px-3 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 max-w-[260px] focus:outline-none cursor-pointer"
+              >
+                {availableMatters.map((m: any) => {
+                  const mId = m._id || m.id || "";
+                  const label = m.matterTitle || m.title || m.caseNumber || mId;
+                  return (
+                    <option key={mId} value={mId}>
+                      {m.caseNumber && !String(label).includes(m.caseNumber)
+                        ? `${m.caseNumber} — ${label}`
+                        : label}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
 
-            <button
-              onClick={handlePrintLecternSheet}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-black dark:text-white transition-colors border border-zinc-200 dark:border-zinc-800"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Lectern Brief</span>
-            </button>
+            {dossier && (
+              <>
+                <button
+                  onClick={handleCopySpeakingPoints}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-black dark:text-white transition-colors border border-zinc-200 dark:border-zinc-800"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy Speaking Points</span>
+                </button>
 
-            <button
-              onClick={handlePushToVault}
-              disabled={vaultPushed}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                vaultPushed
-                  ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700"
-                  : "bg-black text-white dark:bg-white dark:text-black hover:opacity-90"
-              }`}
-            >
-              {vaultPushed ? (
-                <>
-                  <Check className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
-                  <span>Pushed to Vault</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Save to Vault (AES-256)</span>
-                </>
-              )}
-            </button>
+                <button
+                  onClick={handlePrintLecternSheet}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-black dark:text-white transition-colors border border-zinc-200 dark:border-zinc-800"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Lectern Brief</span>
+                </button>
+
+                <button
+                  onClick={handlePushToVault}
+                  disabled={vaultPushed}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    vaultPushed
+                      ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700"
+                      : "bg-black text-white dark:bg-white dark:text-black hover:opacity-90"
+                  }`}
+                >
+                  {vaultPushed ? (
+                    <>
+                      <Check className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                      <span>Pushed to Vault</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Save to Vault (AES-256)</span>
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -549,7 +712,7 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                 Active Matter &amp; Case No
               </span>
               <div className="font-bold text-xs text-black dark:text-white truncate">
-                {dossier.caseNumber}
+                {dossier.caseNumber || "Unassigned Case No."}
               </div>
               <div className="text-[11px] text-zinc-500 truncate" title={dossier.matterTitle}>
                 {dossier.matterTitle}
@@ -561,10 +724,10 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                 Court Forum &amp; Bench Hall
               </span>
               <div className="font-bold text-xs text-black dark:text-white truncate">
-                {dossier.bench}
+                {dossier.bench || "Bench Pending"}
               </div>
               <div className="text-[11px] text-zinc-500 truncate">
-                {dossier.courtForum}
+                {dossier.courtForum || "Forum Not Specified"}
               </div>
             </div>
 
@@ -573,67 +736,95 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                 Hearing Stage &amp; Item #
               </span>
               <div className="font-bold text-xs text-black dark:text-white truncate">
-                {dossier.itemNumber} • {dossier.listedDate}
+                {[dossier.itemNumber, dossier.listedDate].filter(Boolean).join(" • ") || "Pending Listing"}
               </div>
               <div className="text-[11px] text-zinc-500 truncate">
-                {dossier.hearingStage}
+                {dossier.hearingStage || "Initial Preparation"}
               </div>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-[10px] uppercase font-mono text-zinc-400 block">
-                Hon&apos;ble Coram &amp; Senior Counsel
+                Hon&apos;ble Coram &amp; Counsel
               </span>
               <div className="font-bold text-xs text-black dark:text-white truncate">
                 {advocateName}
               </div>
               <div className="text-[11px] text-zinc-500 truncate" title={dossier.coram}>
-                {dossier.coram}
+                {dossier.coram || "Coram to be notified"}
               </div>
             </div>
           </div>
         )}
 
         {/* Section Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          {[
-            { id: "issues", label: "Framed Issues", icon: Scale, count: dossier?.issues.length },
-            { id: "precedents", label: "Binding Precedents", icon: BookOpen, count: dossier?.precedents.length },
-            { id: "inquiries", label: "Bench Inquiries & Rebuttals", icon: HelpCircle, count: dossier?.benchInquiries.length },
-            { id: "speakingNotes", label: "Speaking Notes (Lectern)", icon: MessageSquare, count: dossier?.speakingNotes.length },
-            { id: "witnessCross", label: "Witness Cross-Exam", icon: Users, count: dossier?.witnessQuestions.reduce((acc, g) => acc + g.questions.length, 0) },
-            { id: "exhibits", label: "Evidence Checklist", icon: FileCheck, count: dossier?.evidenceExhibits.length },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeSection === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSection(tab.id as any)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 border ${
-                  isActive
-                    ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs"
-                    : "bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-                {tab.count !== undefined && (
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                      isActive
-                        ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black"
-                        : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {dossier && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-zinc-200 dark:border-zinc-800">
+            {[
+              { id: "issues", label: "Framed Issues", icon: Scale, count: dossier.issues.length },
+              { id: "precedents", label: "Binding Precedents", icon: BookOpen, count: dossier.precedents.length },
+              { id: "inquiries", label: "Bench Inquiries & Rebuttals", icon: HelpCircle, count: dossier.benchInquiries.length },
+              { id: "speakingNotes", label: "Speaking Notes (Lectern)", icon: MessageSquare, count: dossier.speakingNotes.length },
+              { id: "witnessCross", label: "Witness Cross-Exam", icon: Users, count: dossier.witnessQuestions.reduce((acc, g) => acc + g.questions.length, 0) },
+              { id: "exhibits", label: "Evidence Checklist", icon: FileCheck, count: dossier.evidenceExhibits.length },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeSection === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSection(tab.id as any)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 border ${
+                    isActive
+                      ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-xs"
+                      : "bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                  {tab.count !== undefined && (
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                        isActive
+                          ? "bg-zinc-800 text-white dark:bg-zinc-200 dark:text-black"
+                          : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Empty State when no matter / dossier exists */}
+      {!loadingMatters && !loading && !dossier && (
+        <div className="p-10 sm:p-12 rounded-3xl bg-white dark:bg-black border border-dashed border-zinc-300 dark:border-zinc-700 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto">
+            <FolderOpen className="w-5 h-5 text-zinc-500" />
+          </div>
+          <div className="space-y-1 max-w-md mx-auto">
+            <h3 className="text-sm font-bold text-black dark:text-white">
+              No Active Matter Selected for Case Preparation
+            </h3>
+            <p className="text-xs text-zinc-500">
+              Create or accept a client matter first to prepare framed legal issues, binding precedents, anticipated bench inquiries, speaking notes, and exhibit checklists.
+            </p>
+          </div>
+          {onNavigateTab && (
+            <button
+              onClick={() => onNavigateTab("matters")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity"
+            >
+              <span>Go to Active Matters</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Main Content Area by Tab */}
       {dossier && (
@@ -734,63 +925,162 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
               )}
 
               {/* Issue Cards */}
-              <div className="grid grid-cols-1 gap-3">
-                {dossier.issues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white text-xs font-bold flex items-center justify-center font-mono border border-zinc-200 dark:border-zinc-800">
-                          {issue.issueNumber}
+              {dossier.issues.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white dark:bg-black border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500">
+                  No framed legal issues yet. Click <span className="font-semibold text-black dark:text-white">Add Custom Issue</span> or <span className="font-semibold text-black dark:text-white">AI Formulate Issue</span> above to begin your brief.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {dossier.issues.map((issue) => (
+                    <div
+                      key={issue.id}
+                      className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white text-xs font-bold flex items-center justify-center font-mono border border-zinc-200 dark:border-zinc-800">
+                            {issue.issueNumber}
+                          </span>
+                          <h4 className="font-bold text-sm text-black dark:text-white">
+                            {issue.title}
+                          </h4>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
+                          {issue.status}
                         </span>
-                        <h4 className="font-bold text-sm text-black dark:text-white">
-                          {issue.title}
-                        </h4>
                       </div>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
-                        {issue.status}
-                      </span>
-                    </div>
 
-                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif pl-8">
-                      &ldquo;{issue.question}&rdquo;
-                    </p>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-serif pl-8">
+                        &ldquo;{issue.question}&rdquo;
+                      </p>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-900 text-[11px] text-zinc-500 pl-8">
-                      <span className="font-mono">Governing: {issue.governingLaw}</span>
-                      {issue.isCore && (
-                        <span className="font-semibold text-black dark:text-white">
-                          ★ Core Determination Issue
-                        </span>
-                      )}
+                      <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-900 text-[11px] text-zinc-500 pl-8">
+                        <span className="font-mono">Governing: {issue.governingLaw}</span>
+                        {issue.isCore && (
+                          <span className="font-semibold text-black dark:text-white">
+                            ★ Core Determination Issue
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {/* TAB 2: BINDING PRECEDENTS & RATIO MAPPING */}
           {activeSection === "precedents" && (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-black dark:text-white">
                     Binding Judicial Concordance &amp; Precedents
                   </h3>
                   <p className="text-[11px] text-zinc-500">
-                    High Court Division Bench and Supreme Court rulings with operative ratio decidendi.
+                    Judicial authorities and binding rulings with operative ratio decidendi.
                   </p>
                 </div>
-                <div className="text-xs font-mono text-zinc-400">
-                  {dossier.precedents.filter((p) => p.isBookmarked).length} Bookmarked for Lectern
+                <div className="flex items-center gap-3">
+                  <div className="text-xs font-mono text-zinc-400">
+                    {dossier.precedents.filter((p) => p.isBookmarked).length} Bookmarked for Lectern
+                  </div>
+                  <button
+                    onClick={() => setShowAddPrecedentModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Precedent</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                {dossier.precedents.map((prec) => (
+              {showAddPrecedentModal && (
+                <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 shadow-md space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                    <span className="text-xs font-bold text-black dark:text-white uppercase">
+                      Record Binding Precedent
+                    </span>
+                    <button
+                      onClick={() => setShowAddPrecedentModal(false)}
+                      className="text-xs text-zinc-400 hover:text-black dark:hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Citation</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. (2023) 4 SCC 120"
+                        value={newPrecCitation}
+                        onChange={(e) => setNewPrecCitation(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Case Title</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Petitioner v. Respondent"
+                        value={newPrecCaseName}
+                        onChange={(e) => setNewPrecCaseName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Court</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Supreme Court / High Court"
+                        value={newPrecCourt}
+                        onChange={(e) => setNewPrecCourt(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-xs space-y-2">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Ratio Decidendi</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Operative legal principle laid down in this ruling..."
+                        value={newPrecRatio}
+                        onChange={(e) => setNewPrecRatio(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Counsel Argument Application</label>
+                      <input
+                        type="text"
+                        placeholder="How this ruling applies to the present matter..."
+                        value={newPrecApply}
+                        onChange={(e) => setNewPrecApply(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddPrecedent}
+                      disabled={!newPrecCitation.trim() && !newPrecCaseName.trim()}
+                      className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 disabled:opacity-50"
+                    >
+                      Save Precedent
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {dossier.precedents.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white dark:bg-black border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500">
+                  No binding precedents recorded yet. Click <span className="font-semibold text-black dark:text-white">Add Precedent</span> above to record authorities for this matter.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {dossier.precedents.map((prec) => (
                   <div
                     key={prec.id}
                     className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
@@ -844,7 +1134,8 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -942,96 +1233,184 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
               )}
 
               {/* Inquiry Cards */}
-              <div className="grid grid-cols-1 gap-4">
-                {dossier.benchInquiries.map((inq, idx) => (
-                  <div
-                    key={inq.id}
-                    className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white text-[11px] font-bold flex items-center justify-center font-mono border border-zinc-200 dark:border-zinc-800 shrink-0">
-                          Q{idx + 1}
+              {dossier.benchInquiries.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white dark:bg-black border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500">
+                  No anticipated bench inquiries recorded yet. Click <span className="font-semibold text-black dark:text-white">Add Bench Query</span> or <span className="font-semibold text-black dark:text-white">AI Anticipate Queries</span> above.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {dossier.benchInquiries.map((inq, idx) => (
+                    <div
+                      key={inq.id}
+                      className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white text-[11px] font-bold flex items-center justify-center font-mono border border-zinc-200 dark:border-zinc-800 shrink-0">
+                            Q{idx + 1}
+                          </span>
+                          <h4 className="font-bold text-sm text-black dark:text-white">
+                            {inq.question}
+                          </h4>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-800">
+                          {inq.difficulty} Difficulty
                         </span>
-                        <h4 className="font-bold text-sm text-black dark:text-white">
-                          {inq.question}
-                        </h4>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-800">
-                        {inq.difficulty} Difficulty
-                      </span>
-                    </div>
 
-                    <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/70 border-l-3 border-zinc-800 dark:border-zinc-200 pl-4 space-y-1.5 ml-2">
-                      <div className="text-[10px] font-bold uppercase font-mono tracking-wider text-zinc-400">
-                        Prepared Verbal Rebuttal (For the Lectern)
-                      </div>
-                      <p className="text-xs text-zinc-800 dark:text-zinc-200 font-serif leading-relaxed">
-                        &ldquo;{inq.rebuttalAnswer}&rdquo;
-                      </p>
-                      <div className="text-[11px] text-zinc-500 font-mono pt-1">
-                        Immediate Exhibits: <span className="font-bold text-black dark:text-white">{inq.supportingExhibits}</span>
+                      <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/70 border-l-3 border-zinc-800 dark:border-zinc-200 pl-4 space-y-1.5 ml-2">
+                        <div className="text-[10px] font-bold uppercase font-mono tracking-wider text-zinc-400">
+                          Prepared Verbal Rebuttal (For the Lectern)
+                        </div>
+                        <p className="text-xs text-zinc-800 dark:text-zinc-200 font-serif leading-relaxed">
+                          &ldquo;{inq.rebuttalAnswer}&rdquo;
+                        </p>
+                        <div className="text-[11px] text-zinc-500 font-mono pt-1">
+                          Immediate Exhibits: <span className="font-bold text-black dark:text-white">{inq.supportingExhibits}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {/* TAB 4: SENIOR COUNSEL SPEAKING NOTES */}
           {activeSection === "speakingNotes" && (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-black dark:text-white">
                     Chronological Oral Speaking Sequence (Lectern Order)
                   </h3>
                   <p className="text-[11px] text-zinc-500">
-                    High Court oral argument progression timed for opening, statutory bar, and interim prayer.
+                    Structured oral argument progression timed for opening submissions, legal grounds, and relief.
                   </p>
                 </div>
-                <button
-                  onClick={handleCopySpeakingPoints}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-black dark:text-white transition-colors"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Sequence</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopySpeakingPoints}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-black dark:text-white transition-colors"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Sequence</span>
+                  </button>
+                  <button
+                    onClick={() => setShowAddNoteModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Speaking Note</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="relative border-l-2 border-dashed border-zinc-200 dark:border-zinc-800 ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-6">
-                {dossier.speakingNotes.map((note) => (
-                  <div key={note.order} className="relative space-y-2">
-                    {/* Step marker */}
-                    <div className="absolute -left-[35px] sm:-left-[43px] top-1 w-6 h-6 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center text-[10px] font-bold font-mono shadow-xs">
-                      {note.order}
+              {showAddNoteModal && (
+                <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 shadow-md space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                    <span className="text-xs font-bold text-black dark:text-white uppercase">
+                      Add Oral Submission Note
+                    </span>
+                    <button
+                      onClick={() => setShowAddNoteModal(false)}
+                      className="text-xs text-zinc-400 hover:text-black dark:hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Time Mark</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 0-3 min"
+                        value={newNoteTimeMark}
+                        onChange={(e) => setNewNoteTimeMark(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
                     </div>
-
-                    <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                          <span className="text-[11px] font-mono font-bold text-zinc-500">
-                            {note.timeMark}
-                          </span>
-                          <span className="text-xs text-zinc-400">•</span>
-                          <h4 className="font-bold text-xs text-black dark:text-white uppercase tracking-wider">
-                            {note.heading}
-                          </h4>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-semibold">
-                          {note.focusExhibit}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-zinc-700 dark:text-zinc-200 font-serif leading-relaxed">
-                        {note.content}
-                      </p>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Section Heading</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Opening Jurisdiction Ground"
+                        value={newNoteHeading}
+                        onChange={(e) => setNewNoteHeading(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Focus Exhibit / Record</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Annexure A / Page 14"
+                        value={newNoteExhibit}
+                        onChange={(e) => setNewNoteExhibit(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="text-xs">
+                    <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Oral Submission Script / Talking Points</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Draft the oral submissions and relief points to present before the Bench..."
+                      value={newNoteContent}
+                      onChange={(e) => setNewNoteContent(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddSpeakingNote}
+                      disabled={!newNoteHeading.trim() && !newNoteContent.trim()}
+                      className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 disabled:opacity-50"
+                    >
+                      Save Speaking Note
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {dossier.speakingNotes.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white dark:bg-black border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500">
+                  No speaking notes drafted yet. Click <span className="font-semibold text-black dark:text-white">Add Speaking Note</span> above to build your oral argument sequence.
+                </div>
+              ) : (
+                <div className="relative border-l-2 border-dashed border-zinc-200 dark:border-zinc-800 ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-6">
+                  {dossier.speakingNotes.map((note) => (
+                    <div key={note.order} className="relative space-y-2">
+                      {/* Step marker */}
+                      <div className="absolute -left-[35px] sm:-left-[43px] top-1 w-6 h-6 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center text-[10px] font-bold font-mono shadow-xs">
+                        {note.order}
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                            <span className="text-[11px] font-mono font-bold text-zinc-500">
+                              {note.timeMark}
+                            </span>
+                            <span className="text-xs text-zinc-400">•</span>
+                            <h4 className="font-bold text-xs text-black dark:text-white uppercase tracking-wider">
+                              {note.heading}
+                            </h4>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-semibold">
+                            {note.focusExhibit}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-zinc-700 dark:text-zinc-200 font-serif leading-relaxed">
+                          {note.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -1044,7 +1423,7 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                     Witness Deposition &amp; Cross-Examination Bank
                   </h3>
                   <p className="text-[11px] text-zinc-500">
-                    Structured cross questions categorized to establish statutory omissions and impeach official witnesses.
+                    Structured cross questions categorized to establish statutory omissions and test witness credibility.
                   </p>
                 </div>
                 <button
@@ -1057,87 +1436,159 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                 </button>
               </div>
 
-              {dossier.witnessQuestions.map((group, gIdx) => (
-                <div
-                  key={group.id}
-                  className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4"
-                >
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-                      <h4 className="font-bold text-sm text-black dark:text-white">
-                        {group.witnessName}
-                      </h4>
+              {dossier.witnessQuestions.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white dark:bg-black border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500">
+                  No witness cross-examination questions added yet. Click <span className="font-semibold text-black dark:text-white">AI Generate Questions</span> above to draft structured examination points.
+                </div>
+              ) : (
+                dossier.witnessQuestions.map((group, gIdx) => (
+                  <div
+                    key={group.id}
+                    className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4"
+                  >
+                    <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+                        <h4 className="font-bold text-sm text-black dark:text-white">
+                          {group.witnessName}
+                        </h4>
+                      </div>
+                      <span className="text-xs font-mono text-zinc-400">
+                        {group.witnessRole}
+                      </span>
                     </div>
-                    <span className="text-xs font-mono text-zinc-400">
-                      {group.witnessRole}
-                    </span>
-                  </div>
 
-                  <div className="space-y-3">
-                    {group.questions.map((q, qIdx) => (
-                      <div
-                        key={q.qNo}
-                        className={`p-4 rounded-xl transition-all border ${
-                          q.isAsked
-                            ? "bg-zinc-100/70 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 opacity-60"
-                            : "bg-zinc-50 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-2.5">
-                            <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-[10px] font-bold flex items-center justify-center font-mono shrink-0 mt-0.5">
-                              {q.qNo}
-                            </span>
-                            <div className="space-y-1">
-                              <p className="text-xs font-medium text-black dark:text-white font-serif leading-relaxed">
-                                {q.questionText}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500 font-mono">
-                                <span>Objective: {q.objective}</span>
-                                <span>•</span>
-                                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                                  Target: {q.targetAdmission}
-                                </span>
+                    <div className="space-y-3">
+                      {group.questions.map((q, qIdx) => (
+                        <div
+                          key={q.qNo}
+                          className={`p-4 rounded-xl transition-all border ${
+                            q.isAsked
+                              ? "bg-zinc-100/70 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 opacity-60"
+                              : "bg-zinc-50 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-2.5">
+                              <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-[10px] font-bold flex items-center justify-center font-mono shrink-0 mt-0.5">
+                                {q.qNo}
+                              </span>
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-black dark:text-white font-serif leading-relaxed">
+                                  {q.questionText}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500 font-mono">
+                                  <span>Objective: {q.objective}</span>
+                                  <span>•</span>
+                                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                                    Target: {q.targetAdmission}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <button
-                            onClick={() => toggleQuestionAsked(gIdx, qIdx)}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-colors border ${
-                              q.isAsked
-                                ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
-                                : "bg-white dark:bg-black text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:text-black dark:hover:text-white"
-                            }`}
-                          >
-                            {q.isAsked ? "✓ Asked" : "Mark Asked"}
-                          </button>
+                            <button
+                              onClick={() => toggleQuestionAsked(gIdx, qIdx)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-colors border ${
+                                q.isAsked
+                                  ? "bg-black text-white dark:bg-white dark:text-black border-black dark:border-white"
+                                  : "bg-white dark:bg-black text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:text-black dark:hover:text-white"
+                              }`}
+                            >
+                              {q.isAsked ? "✓ Asked" : "Mark Asked"}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
 
           {/* TAB 6: EVIDENCE & EXHIBIT CHECKLIST */}
           {activeSection === "exhibits" && (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-black dark:text-white">
                     Marked Evidence &amp; Exhibit Verification List
                   </h3>
                   <p className="text-[11px] text-zinc-500">
-                    Cross-referenced true copies marked as Ext. P-1 to Ext. P-6 filed with the High Court paperbook.
+                    Cross-referenced documentary exhibits and admissibility status recorded for this matter.
                   </p>
                 </div>
-                <span className="text-xs font-mono text-zinc-400">
-                  {dossier.evidenceExhibits.length} Document Exhibits
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono text-zinc-400">
+                    {dossier.evidenceExhibits.length} Document Exhibits
+                  </span>
+                  <button
+                    onClick={() => setShowAddExhibitModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Exhibit</span>
+                  </button>
+                </div>
               </div>
+
+              {showAddExhibitModal && (
+                <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 shadow-md space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                    <span className="text-xs font-bold text-black dark:text-white uppercase">
+                      Add Documentary Exhibit
+                    </span>
+                    <button
+                      onClick={() => setShowAddExhibitModal(false)}
+                      className="text-xs text-zinc-400 hover:text-black dark:hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Exhibit Mark</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Ext. A1"
+                        value={newExhibitMark}
+                        onChange={(e) => setNewExhibitMark(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Document Title / Particulars</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Certified copy of agreement / notice"
+                        value={newExhibitTitle}
+                        onChange={(e) => setNewExhibitTitle(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-zinc-500 mb-1">Admissibility Status</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Primary Documentary Record"
+                        value={newExhibitAdmissibility}
+                        onChange={(e) => setNewExhibitAdmissibility(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleAddExhibit}
+                      disabled={!newExhibitMark.trim() && !newExhibitTitle.trim()}
+                      className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 disabled:opacity-50"
+                    >
+                      Save Exhibit
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs">
                 <table className="w-full text-left border-collapse text-xs">
@@ -1150,25 +1601,33 @@ ${dossier.speakingNotes.map((sn) => `[${sn.timeMark}] ${sn.heading}\n${sn.conten
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                    {dossier.evidenceExhibits.map((ex) => (
-                      <tr key={ex.mark} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
-                        <td className="p-3 font-mono font-bold text-black dark:text-white whitespace-nowrap">
-                          {ex.mark}
-                        </td>
-                        <td className="p-3 font-medium text-zinc-800 dark:text-zinc-200">
-                          {ex.title}
-                        </td>
-                        <td className="p-3 text-zinc-500 font-mono">
-                          {ex.admissibility}
-                        </td>
-                        <td className="p-3 text-right">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
-                            <Check className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
-                            <span>True Copy</span>
-                          </span>
+                    {dossier.evidenceExhibits.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-xs text-zinc-500">
+                          No documentary exhibits listed yet. Click <span className="font-semibold text-black dark:text-white">Add Exhibit</span> above to track paperbook marks and admissibility.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      dossier.evidenceExhibits.map((ex) => (
+                        <tr key={ex.mark} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
+                          <td className="p-3 font-mono font-bold text-black dark:text-white whitespace-nowrap">
+                            {ex.mark}
+                          </td>
+                          <td className="p-3 font-medium text-zinc-800 dark:text-zinc-200">
+                            {ex.title}
+                          </td>
+                          <td className="p-3 text-zinc-500 font-mono">
+                            {ex.admissibility}
+                          </td>
+                          <td className="p-3 text-right">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
+                              <Check className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
+                              <span>True Copy</span>
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

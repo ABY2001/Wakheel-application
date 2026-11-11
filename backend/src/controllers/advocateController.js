@@ -1817,7 +1817,8 @@ export const generateChamberReport = async (req, res) => {
 export const getCasePrep = async (req, res) => {
   try {
     const { matterId } = req.params;
-    const dossier = devStore.getCasePrepDossier(matterId);
+    const advocateId = getAdvocateId(req);
+    const dossier = devStore.getCasePrepDossier(matterId, advocateId);
     res.json({
       success: true,
       dossier,
@@ -1832,7 +1833,8 @@ export const getCasePrep = async (req, res) => {
 export const saveCasePrep = async (req, res) => {
   try {
     const { matterId } = req.params;
-    const dossier = devStore.saveCasePrepDossier(matterId, req.body);
+    const advocateId = getAdvocateId(req);
+    const dossier = devStore.saveCasePrepDossier(matterId, req.body, advocateId);
     res.json({
       success: true,
       message: "Case preparation dossier preserved for Bench presentation",
@@ -1877,27 +1879,32 @@ export const generateAiBenchStrategy = async (req, res) => {
           }
         }
       } catch (geminiErr) {
-        console.warn("Gemini API call failed in generateAiBenchStrategy, falling back to local concordance:", geminiErr.message);
+        console.warn("Gemini API call failed in generateAiBenchStrategy, falling back to context synthesis:", geminiErr.message);
       }
     }
 
     if (!strategyResult) {
+      const matterLabel = context.matterTitle || context.caseNumber || matterId || "the present proceeding";
+      const forumLabel = context.courtForum || "this Hon'ble Court";
+      const stageLabel = context.stage || "current hearing stage";
+      const topic = prompt ? prompt.trim() : `the relief sought in ${matterLabel}`;
+
       if (action === "generate_inquiries") {
         strategyResult = {
           inquiries: [
             {
               id: "bi-dyn-" + Date.now().toString(),
-              question: prompt ? `Counsel, regarding ${prompt}, what is the statutory authority?` : "Counsel, why did your client not avail the statutory appeal remedy before the Appellate Tribunal under Electricity Act Section 111?",
-              rebuttalAnswer: "My Lord, Section 111 appeal is restricted to tariff/regulatory orders of the Regulatory Commission. Transmission line alignment and crop destruction under Telegraph Act Section 16 is solely subject to the District Magistrate's jurisdiction. An alternative remedy bar does not apply where jurisdiction is fundamentally absent.",
+              question: `Counsel, in ${matterLabel}, what jurisdictional and statutory foundation justifies the relief sought at the ${stageLabel}?`,
+              rebuttalAnswer: `Your Honour, the record before ${forumLabel} establishes both maintainability and a prima facie entitlement concerning ${topic}. The reliefs sought are strictly grounded in the pleadings and documentary exhibits on file.`,
               difficulty: "High",
-              supportingExhibits: "Exhibit P-4 & Division Bench ruling in Valsamma (2024)",
+              supportingExhibits: "Pleadings & Annexed Documentary Exhibits",
             },
             {
               id: "bi-dyn-2-" + Date.now().toString(),
-              question: "Will granting an interim stay cause power disruption to the industrial corridor?",
-              rebuttalAnswer: "My Lord, the 110kV feeder can easily be routed along the existing 12-meter PWD road corridor situated 40 meters west, requiring zero tree felling and causing zero grid disruption.",
+              question: `How does the balance of convenience favour the applicant in ${matterLabel} pending final adjudication?`,
+              rebuttalAnswer: `Without protective orders during the pendency before ${forumLabel}, irreparable prejudice will ensue regarding ${topic}, whereas preserving status quo safeguards the rights of all parties.`,
               difficulty: "Medium",
-              supportingExhibits: "Exhibit P-5 (PWD Road Alignment Sketch)",
+              supportingExhibits: "Verified Affidavit & Supporting Annexures",
             },
           ],
         };
@@ -1906,16 +1913,16 @@ export const generateAiBenchStrategy = async (req, res) => {
           crossExamQuestions: [
             {
               qNo: 1,
-              questionText: "Is it not true that the survey report prepared by your team did not mention the rubber trees in tapping stage on the western boundary?",
-              objective: "Impeach veracity of official site inspection report",
-              targetAdmission: "Report omitted yielding trees",
+              questionText: `With reference to ${matterLabel}, did you verify the primary documentary record before contesting ${topic}?`,
+              objective: "Establish whether the witness examined contemporaneous records",
+              targetAdmission: "Admissions on knowledge and record verification",
               isAsked: false,
             },
             {
               qNo: 2,
-              questionText: "Did you verify whether the petitioner's land is registered under Thandapper No. 4921 before cutting the boundary markers?",
-              objective: "Establish reckless entry without verifying revenue records",
-              targetAdmission: "Did not check revenue ledger",
+              questionText: `Is it correct that written communication regarding ${topic} was served prior to the institution of proceedings before ${forumLabel}?`,
+              objective: "Confirm notice and timeline consistency",
+              targetAdmission: "Confirmation of service and dates",
               isAsked: false,
             },
           ],
@@ -1924,11 +1931,11 @@ export const generateAiBenchStrategy = async (req, res) => {
         strategyResult = {
           issue: {
             id: "iss-dyn-" + Date.now().toString(),
-            issueNumber: "IV",
-            title: prompt || "Breach of Statutory Proportionality & Minimization of Damage",
-            question: "Whether the refusal of the authorities to divert the line along the public highway margin violates the doctrine of proportionality under Article 14?",
-            status: "Strong Favourable",
-            governingLaw: "Constitution of India (Article 14) & Telegraph Act S.10(d)",
+            issueNumber: String(Date.now()).slice(-2),
+            title: prompt ? prompt.trim() : `Maintainability & Entitlement to Relief in ${matterLabel}`,
+            question: `Whether on the facts and documentary record in ${matterLabel}, the petitioner/applicant is entitled to the relief claimed before ${forumLabel} concerning ${topic}?`,
+            status: "Framed for Submission",
+            governingLaw: "Applicable Statutory & Procedural Provisions",
             isCore: true,
           },
         };

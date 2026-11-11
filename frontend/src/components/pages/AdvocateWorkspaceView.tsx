@@ -146,7 +146,7 @@ export function AdvocateWorkspaceView() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [sidebarSearch, setSidebarSearch] = useState("");
-  const [selectedMatter, setSelectedMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+  const [selectedMatter, setSelectedMatter] = useState("");
   const [lang, setLang] = useState<"en" | "ml">("en");
 
   // Modals
@@ -382,6 +382,20 @@ export function AdvocateWorkspaceView() {
       isMounted = false;
     };
   }, [activeTab, notificationsOpen]);
+
+  useEffect(() => {
+    if (liveMatters.length === 0) {
+      if (selectedMatter) setSelectedMatter("");
+      return;
+    }
+    const stillExists = liveMatters.some(
+      (m: any) => (m.matterTitle || m.title || m.caseNumber || m._id || "") === selectedMatter
+    );
+    if (!selectedMatter || !stillExists) {
+      const first = liveMatters[0];
+      setSelectedMatter(first.matterTitle || first.title || first.caseNumber || first._id || "");
+    }
+  }, [liveMatters, selectedMatter]);
 
   const handleNotificationMarkRead = async (id: string) => {
     setLiveNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
@@ -1506,12 +1520,32 @@ export function AdvocateWorkspaceView() {
               <span className="font-bold">Active Matter:</span>
               <select
                 value={selectedMatter}
-                onChange={(e) => setSelectedMatter(e.target.value)}
-                className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "new") {
+                    setNewMatterModalOpen(true);
+                    return;
+                  }
+                  setSelectedMatter(val);
+                }}
+                className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-black dark:text-white max-w-[240px]"
               >
-                <option value="WP(C) 19482/2024 — Gopakumar v. KSEB">WP(C) 19482/2024 — Gopakumar ...</option>
-                <option value="ARB/NCLT/KOCHI/2024/041 — Malabar Infotech">ARB/NCLT/KOCHI/2024/041 — Malabar ...</option>
-                <option value="new">+ Intake New Legal Issue</option>
+                {liveMatters.length === 0 && (
+                  <option value="">No active matters yet</option>
+                )}
+                {liveMatters.map((m: any) => {
+                  const matterValue = m.matterTitle || m.title || m.caseNumber || m._id || "";
+                  const label =
+                    m.caseNumber && !String(matterValue).includes(m.caseNumber)
+                      ? `${m.caseNumber} — ${matterValue}`
+                      : matterValue;
+                  return (
+                    <option key={m._id || matterValue} value={matterValue}>
+                      {label}
+                    </option>
+                  );
+                })}
+                <option value="new">+ Open New Matter</option>
               </select>
             </div>
 
@@ -3163,7 +3197,7 @@ export function AdvocateWorkspaceView() {
                             </button>
                             <button
                               onClick={() => {
-                                setSelectedMatter(matter.matterTitle);
+                                setSelectedMatter(matter.matterTitle || matter.title || matter.caseNumber || matter._id || "");
                                 setActiveTab("case-preparation");
                               }}
                               className="px-3 py-1 bg-black text-white dark:bg-white dark:text-black font-bold text-xs rounded-full hover:opacity-85 cursor-pointer"
@@ -3254,7 +3288,7 @@ export function AdvocateWorkspaceView() {
             <CasePreparationView
               currentMatter={selectedMatter}
               advocateName={displayFullName}
-              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+              barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
               token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               onNavigateTab={(tab) => setActiveTab(tab)}
             />

@@ -1317,6 +1317,27 @@ export interface ChamberReportItem {
   createdAt?: string;
 }
 
+export interface AdvocateNotificationItem {
+  id: string;
+  sourceId?: string;
+  sourceType?: "lead" | "matter" | "consultation" | "document" | "message" | "causelist" | string;
+  type: "info" | "success" | "warning" | "danger";
+  category: "client_interest" | "causelist" | "orders" | "notices" | "filings" | string;
+  categoryLabel: string;
+  title: string;
+  summary: string;
+  clientName?: string;
+  clientEmail?: string;
+  caseRef?: string;
+  priority: "high" | "normal";
+  actionLabel?: string;
+  targetTab?: string;
+  timestamp: string;
+  createdAt?: string;
+  epochMs?: number;
+  isRead: boolean;
+}
+
 export const advocateApi = {
   getAuthHeader(token?: string) {
     const activeToken =
@@ -2722,6 +2743,72 @@ export const advocateApi = {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+    });
+    return await res.json();
+  },
+
+  // 26. Chamber & Client Interest Notifications
+  async getNotifications(token?: string): Promise<{
+    success: boolean;
+    notifications: AdvocateNotificationItem[];
+    unreadCount: number;
+    clientInterestCount: number;
+    totalCount: number;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/notifications`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("Status " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getNotifications error:", err?.message || err);
+      return {
+        success: false,
+        notifications: [],
+        unreadCount: 0,
+        clientInterestCount: 0,
+        totalCount: 0,
+      };
+    }
+  },
+
+  async markNotificationRead(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/notifications/${encodeURIComponent(id)}/read`, {
+      method: "PUT",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async markAllNotificationsRead(ids?: string[], token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/notifications/read-all`, {
+      method: "PUT",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ids }),
+    });
+    return await res.json();
+  },
+
+  async dismissNotification(id: string, token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/notifications/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: advocateApi.getAuthHeader(token),
+    });
+    return await res.json();
+  },
+
+  async clearAllNotifications(ids?: string[], token?: string) {
+    const res = await fetch(`${API_BASE_URL}/advocate/notifications`, {
+      method: "DELETE",
+      headers: {
+        ...advocateApi.getAuthHeader(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ids }),
     });
     return await res.json();
   },

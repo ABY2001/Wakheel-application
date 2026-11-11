@@ -15,7 +15,7 @@ import { NetworkActivity } from "../models/NetworkActivity.js";
 import { TaskMiteTask } from "../models/TaskMiteTask.js";
 import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { getIsMongoConnected } from "../config/db.js";
-import { devStore } from "../utils/devStore.js";
+import { devStore, buildAdvocateNotifications } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
 import { broadcastMessageToUser, broadcastMatterEvent } from "../socket.js";
 
@@ -2948,6 +2948,108 @@ export const verifyBciCredentials = async (req, res) => {
     res.json({ success: true, message: "Bar Council credentials authenticated successfully.", credentials });
   } catch (error) {
     console.error("verifyBciCredentials error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// CHAMBER & CLIENT INTEREST NOTIFICATIONS
+// ============================================================================
+const fetchNotificationsForAdvocate = async (advocateId) => {
+  if (shouldUseDevStore()) {
+    return devStore.getAdvocateNotifications(advocateId);
+  }
+
+  const state = devStore.getNotificationState(advocateId);
+  const [leads, matters, consultations, documents, messages, causeList] = await Promise.all([
+    Grievance.find({
+      $or: [{ assignedAdvocateId: advocateId }, { matchedAdvocateIds: advocateId }, { status: { $in: ["submitted", "triage_analyzed"] } }],
+    }).sort({ createdAt: -1 }),
+    Matter.find({ advocateId }).sort({ updatedAt: -1 }),
+    Consultation.find({ advocateId }).sort({ createdAt: -1 }),
+    CitizenDocument.find({ $or: [{ advocateId }, { subType: "document-filing" }] }).sort({ createdAt: -1 }),
+    Message.find({ recipientId: advocateId, isRead: false }).sort({ createdAt: -1 }),
+    CauseList.find({ advocateId }).sort({ courtDate: 1 }),
+  ]);
+
+  return buildAdvocateNotifications({
+    leads,
+    matters,
+    consultations,
+    documents,
+    messages,
+    causeList,
+    readIds: state.readIds,
+    dismissedIds: state.dismissedIds,
+  });
+};
+
+export const getNotifications = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const notifications = await fetchNotificationsForAdvocate(advocateId);
+    const unreadCount = notifications.filter((n) => !n.isRead).length;
+    const clientInterestCount = notifications.filter((n) => n.category === "client_interest").length;
+
+    res.json({
+      success: true,
+      notifications,
+      unreadCount,
+      clientInterestCount,
+      totalCount: notifications.length,
+    });
+  } catch (error) {
+    console.error("getNotifications error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const markNotificationRead = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+    devStore.markAdvocateNotificationsRead(advocateId, [id]);
+    res.json({ success: true, id });
+  } catch (error) {
+    console.error("markNotificationRead error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const markAllNotificationsRead = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const current = await fetchNotificationsForAdvocate(advocateId);
+    const ids = Array.isArray(req.body?.ids) && req.body.ids.length ? req.body.ids : current.map((n) => n.id);
+    devStore.markAdvocateNotificationsRead(advocateId, ids);
+    res.json({ success: true, markedCount: ids.length });
+  } catch (error) {
+    console.error("markAllNotificationsRead error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const dismissNotification = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const { id } = req.params;
+    devStore.dismissAdvocateNotifications(advocateId, [id]);
+    res.json({ success: true, id });
+  } catch (error) {
+    console.error("dismissNotification error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const clearAllNotifications = async (req, res) => {
+  try {
+    const advocateId = getAdvocateId(req);
+    const current = await fetchNotificationsForAdvocate(advocateId);
+    const ids = Array.isArray(req.body?.ids) && req.body.ids.length ? req.body.ids : current.map((n) => n.id);
+    devStore.dismissAdvocateNotifications(advocateId, ids);
+    res.json({ success: true, clearedCount: ids.length });
+  } catch (error) {
+    console.error("clearAllNotifications error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

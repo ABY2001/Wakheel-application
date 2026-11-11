@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { advocateApi } from "@/lib/api";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { advocateApi, AdvocateNotificationItem } from "@/lib/api";
 import {
   Mail,
   Send,
@@ -98,19 +98,7 @@ export interface AdvocateChatThread {
   participants?: string[];
 }
 
-export interface ChamberNotificationItem {
-  id: string;
-  type: "info" | "success" | "warning" | "danger";
-  title: string;
-  category: "all" | "causelist" | "orders" | "notices" | "filings";
-  categoryLabel: string;
-  summary: string;
-  timestamp: string;
-  caseRef?: string;
-  isRead: boolean;
-  priority: "high" | "normal";
-  actionLabel?: string;
-}
+export type ChamberNotificationItem = AdvocateNotificationItem;
 
 const INITIAL_CHAMBER_EMAILS: ChamberEmailItem[] = [
   {
@@ -410,114 +398,15 @@ const INITIAL_CHAMBER_THREADS: AdvocateChatThread[] = [
   },
 ];
 
-const INITIAL_CHAMBER_NOTIFICATIONS: ChamberNotificationItem[] = [
-  {
-    id: "notif-info-1",
-    type: "info",
-    title: "This is informative message",
-    category: "causelist",
-    categoryLabel: "Info Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "Just now",
-    isRead: false,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-success-1",
-    type: "success",
-    title: "This is success message",
-    category: "orders",
-    categoryLabel: "Success Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "5 min ago",
-    isRead: false,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-warning-1",
-    type: "warning",
-    title: "This is warning message",
-    category: "causelist",
-    categoryLabel: "Warning Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "20 min ago",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-danger-1",
-    type: "danger",
-    title: "This is danger message",
-    category: "notices",
-    categoryLabel: "Danger Alert",
-    summary: "Lorem ipsum dolor sit amet, consectetur.",
-    timestamp: "1 hour ago",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-c1",
-    type: "warning",
-    title: "High Court Causelist Alert: Item No. 18 in Court Hall 2A Tomorrow",
-    category: "causelist",
-    categoryLabel: "Court Causelist",
-    summary: "WP(C) 19482/2024 scheduled before Hon'ble Division Bench 2A at 10:30 AM. Lead appearance confirmed.",
-    timestamp: "15 min ago",
-    caseRef: "WP(C) 19482/2024",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-c2",
-    type: "success",
-    title: "Certified True Copy Issued by High Court Copying Section",
-    category: "orders",
-    categoryLabel: "Certified Order",
-    summary: "Hon'ble DB-2A daily order granting interim stay on tree felling is ready for collection and delivery.",
-    timestamp: "45 min ago",
-    caseRef: "WP(C) 19482/2024",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-c3",
-    type: "danger",
-    title: "Section 138 Statutory 15-Day Cure Notice Expiring on 08 Nov",
-    category: "notices",
-    categoryLabel: "Statutory Deadline",
-    summary: "India Post confirmed notice delivered on 24 Oct. Criminal complaint must be filed before JFCM if unpaid.",
-    timestamp: "2 hours ago",
-    caseRef: "Sec. 138 NI Act Notice",
-    isRead: false,
-    priority: "high",
-    actionLabel: "Action",
-  },
-  {
-    id: "notif-c4",
-    type: "info",
-    title: "Advocate Commissioner Notice in OS 412/2023",
-    category: "notices",
-    categoryLabel: "Commission Notice",
-    summary: "Court Advocate Commissioner fixed spot inspection for 30 Oct at 10:00 AM with Village Surveyor.",
-    timestamp: "Yesterday",
-    caseRef: "OS 412/2023",
-    isRead: true,
-    priority: "normal",
-    actionLabel: "Action",
-  },
-];
+const INITIAL_CHAMBER_NOTIFICATIONS: ChamberNotificationItem[] = [];
 
 interface AdvocateInboxViewProps {
   token?: string;
   advocateName?: string;
   initialMode?: InboxMode;
   onOpenConsultation?: () => void;
+  onNavigateTab?: (tab: string) => void;
+  onNotificationsChange?: (notifications: ChamberNotificationItem[]) => void;
 }
 
 export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
@@ -525,6 +414,8 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
   advocateName = "Adv. Meera Krishnan",
   initialMode = "mails",
   onOpenConsultation,
+  onNavigateTab,
+  onNotificationsChange,
 }) => {
   const [inboxMode, setInboxMode] = useState<InboxMode>(initialMode);
 
@@ -560,6 +451,78 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
   // ==========================================
   const [notifications, setNotifications] = useState<ChamberNotificationItem[]>(INITIAL_CHAMBER_NOTIFICATIONS);
   const [selectedNotifFilter, setSelectedNotifFilter] = useState<string>("all");
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState<boolean>(false);
+
+  const loadNotifications = useCallback(async () => {
+    setIsLoadingNotifications(true);
+    try {
+      const res = await advocateApi.getNotifications(token);
+      if (res?.success && Array.isArray(res.notifications)) {
+        setNotifications(res.notifications);
+        onNotificationsChange?.(res.notifications);
+      }
+    } catch (err) {
+      console.warn("Failed to load advocate notifications:", err);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [token, onNotificationsChange]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications, inboxMode]);
+
+  const handleMarkNotifRead = async (id: string) => {
+    setNotifications((prev) => {
+      const next = prev.map((n) => (n.id === id ? { ...n, isRead: true } : n));
+      onNotificationsChange?.(next);
+      return next;
+    });
+    try {
+      await advocateApi.markNotificationRead(id, token);
+    } catch {}
+  };
+
+  const handleMarkAllNotifsRead = async () => {
+    const ids = notifications.map((n) => n.id);
+    setNotifications((prev) => {
+      const next = prev.map((n) => ({ ...n, isRead: true }));
+      onNotificationsChange?.(next);
+      return next;
+    });
+    try {
+      await advocateApi.markAllNotificationsRead(ids, token);
+    } catch {}
+  };
+
+  const handleDismissNotif = async (id: string) => {
+    setNotifications((prev) => {
+      const next = prev.filter((n) => n.id !== id);
+      onNotificationsChange?.(next);
+      return next;
+    });
+    try {
+      await advocateApi.dismissNotification(id, token);
+    } catch {}
+  };
+
+  const handleClearAllNotifs = async () => {
+    const ids = notifications.map((n) => n.id);
+    setNotifications([]);
+    onNotificationsChange?.([]);
+    try {
+      await advocateApi.clearAllNotifications(ids, token);
+    } catch {}
+  };
+
+  const handleNotifAction = (notif: ChamberNotificationItem) => {
+    if (!notif.isRead) handleMarkNotifRead(notif.id);
+    if (notif.targetTab && onNavigateTab) {
+      onNavigateTab(notif.targetTab);
+    } else if (notif.targetTab === "appointments" && onOpenConsultation) {
+      onOpenConsultation();
+    }
+  };
 
   // Sync mode if initialMode changes
   useEffect(() => {
@@ -1427,23 +1390,29 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 )}
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                Real-time alerts from High Court registries, causelists, Speed Post tracking, and commission hearings.
+                Real-time client interest leads, divorce &amp; civil petitions, consultation requests, filed pleadings, and chamber alerts.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-                }}
+                onClick={loadNotifications}
+                className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-black dark:text-white cursor-pointer transition-colors flex items-center gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingNotifications ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleMarkAllNotifsRead}
                 className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-black dark:text-white cursor-pointer transition-colors"
               >
                 Mark all as read
               </button>
               <button
                 type="button"
-                onClick={() => setNotifications([])}
+                onClick={handleClearAllNotifs}
                 className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer transition-colors"
               >
                 Clear all
@@ -1455,10 +1424,26 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {[
               { id: "all", label: "All Alerts", count: notifications.length },
-              { id: "causelist", label: "Causelist Calls", count: notifications.filter((n) => n.category === "causelist").length },
-              { id: "orders", label: "Certified Orders", count: notifications.filter((n) => n.category === "orders").length },
-              { id: "notices", label: "Statutory Deadlines", count: notifications.filter((n) => n.category === "notices").length },
-              { id: "filings", label: "Registry Filings", count: notifications.filter((n) => n.category === "filings").length },
+              {
+                id: "client_interest",
+                label: "Client Interest",
+                count: notifications.filter((n) => n.category === "client_interest").length,
+              },
+              {
+                id: "filings",
+                label: "Client & Registry Filings",
+                count: notifications.filter((n) => n.category === "filings").length,
+              },
+              {
+                id: "causelist",
+                label: "Causelist Calls",
+                count: notifications.filter((n) => n.category === "causelist").length,
+              },
+              {
+                id: "notices",
+                label: "Deadlines & Orders",
+                count: notifications.filter((n) => n.category === "notices" || n.category === "orders").length,
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1476,10 +1461,16 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
             ))}
           </div>
 
-          {/* Notifications Horizontal Strip List matching user screenshot */}
+          {/* Notifications Horizontal Strip List */}
           <div className="space-y-2.5">
             {notifications
-              .filter((n) => selectedNotifFilter === "all" || n.category === selectedNotifFilter)
+              .filter((n) => {
+                if (selectedNotifFilter === "all") return true;
+                if (selectedNotifFilter === "notices") {
+                  return n.category === "notices" || n.category === "orders";
+                }
+                return n.category === selectedNotifFilter;
+              })
               .map((notif) => {
                 const itemType = notif.type || "info";
                 const typeConfig = {
@@ -1512,8 +1503,11 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 return (
                   <div
                     key={notif.id}
-                    className={`relative overflow-hidden flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs transition-all hover:shadow-xs ${
-                      notif.isRead ? "opacity-75" : ""
+                    onClick={() => {
+                      if (!notif.isRead) handleMarkNotifRead(notif.id);
+                    }}
+                    className={`relative overflow-hidden flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200/90 dark:border-zinc-800 shadow-2xs transition-all hover:shadow-xs cursor-pointer ${
+                      notif.isRead ? "opacity-70" : ""
                     }`}
                   >
                     {/* Left vertical color stripe in burgundy */}
@@ -1525,38 +1519,55 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                     />
 
                     {/* Content: Icon + Title + Description */}
-                    <div className="relative flex items-center gap-3 min-w-0 flex-1 pl-1">
+                    <div className="relative flex items-start sm:items-center gap-3 min-w-0 flex-1 pl-1">
                       {typeConfig.icon}
 
-                      <div className="flex flex-wrap sm:flex-nowrap items-baseline sm:items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
-                        <span className="font-bold text-xs sm:text-sm text-black dark:text-white shrink-0">
-                          {notif.title}
-                        </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 shrink-0">
+                          {!notif.isRead && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#6B1728] shrink-0" />
+                          )}
+                          <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                            {notif.categoryLabel || "Alert"}
+                          </span>
+                          <span className="font-bold text-xs sm:text-sm text-black dark:text-white">
+                            {notif.title}
+                          </span>
+                        </div>
                         <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate font-normal">
                           {notif.summary}
                         </span>
                         {notif.caseRef && (
-                          <span className="hidden md:inline-block text-[10px] font-mono font-semibold text-zinc-400 ml-1">
+                          <span className="hidden md:inline-block text-[10px] font-mono font-semibold text-zinc-400 shrink-0">
                             ({notif.caseRef})
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Right side: Action link + Dismiss button */}
-                    <div className="relative flex items-center gap-3.5 shrink-0 ml-2">
+                    {/* Right side: Timestamp + Action link + Dismiss button */}
+                    <div className="relative flex items-center gap-3 shrink-0 ml-2">
+                      {notif.timestamp && (
+                        <span className="hidden sm:inline text-[10px] font-mono text-zinc-400">
+                          {notif.timestamp}
+                        </span>
+                      )}
                       <button
                         type="button"
-                        onClick={() => alert(`Action launched for: ${notif.title}`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNotifAction(notif);
+                        }}
                         className={`text-xs font-semibold ${typeConfig.textAccent} hover:underline cursor-pointer transition-colors`}
                       >
-                        {notif.actionLabel || "Action"}
+                        {notif.actionLabel || "Open"}
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDismissNotif(notif.id);
                         }}
                         className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer transition-colors rounded"
                         title="Dismiss"
@@ -1568,11 +1579,18 @@ export const AdvocateInboxView: React.FC<AdvocateInboxViewProps> = ({
                 );
               })}
 
-            {notifications.filter((n) => selectedNotifFilter === "all" || n.category === selectedNotifFilter).length === 0 && (
-              <div className="p-12 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                No notifications found in this category.
-              </div>
-            )}
+            {!isLoadingNotifications &&
+              notifications.filter((n) => {
+                if (selectedNotifFilter === "all") return true;
+                if (selectedNotifFilter === "notices") {
+                  return n.category === "notices" || n.category === "orders";
+                }
+                return n.category === selectedNotifFilter;
+              }).length === 0 && (
+                <div className="p-12 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                  No notifications found in this category. New client inquiries, petitions, consultations, and filings will appear here automatically.
+                </div>
+              )}
           </div>
         </div>
       )}

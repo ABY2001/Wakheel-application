@@ -45,7 +45,7 @@ import AdvocateProfileModal, {
   DEFAULT_ADVOCATE_PROFILE,
 } from "@/components/advocate/AdvocateProfileModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { advocateApi, copilotApi } from "@/lib/api";
+import { advocateApi, AdvocateNotificationItem, copilotApi } from "@/lib/api";
 import {
   FirmProfile,
   ActiveWorkspace,
@@ -180,10 +180,15 @@ export function AdvocateWorkspaceView() {
     } catch {}
   };
 
-  // Live matters & leads state from advocateApi
+  // Live matters, leads & notifications state from advocateApi
   const [liveLeads, setLiveLeads] = useState<any[]>([]);
   const [liveMatters, setLiveMatters] = useState<any[]>([]);
+  const [liveNotifications, setLiveNotifications] = useState<AdvocateNotificationItem[]>([]);
   const [acceptingLeadId, setAcceptingLeadId] = useState<string | null>(null);
+  const unreadNotifCount = liveNotifications.filter((n) => !n.isRead).length;
+  const clientInterestNotifCount = liveNotifications.filter(
+    (n) => n.category === "client_interest" && !n.isRead
+  ).length;
 
   // Milestone 2 Sync: Timeline update modal state
   const [timelineModalMatter, setTimelineModalMatter] = useState<any | null>(null);
@@ -343,7 +348,7 @@ export function AdvocateWorkspaceView() {
     else if (activeTab === "wakheel-digest") setResearchSegment("digest");
   }, [activeTab]);
 
-  // Load live matters and incoming intake leads for advocate workspace
+  // Load live matters, incoming intake leads, and chamber notifications
   useEffect(() => {
     let isMounted = true;
     async function loadMattersAndLeads() {
@@ -352,9 +357,10 @@ export function AdvocateWorkspaceView() {
           typeof window !== "undefined"
             ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
             : undefined;
-        const [leadsRes, mattersRes] = await Promise.allSettled([
+        const [leadsRes, mattersRes, notifRes] = await Promise.allSettled([
           advocateApi.getIncomingLeads(token),
           advocateApi.getMatters(token),
+          advocateApi.getNotifications(token),
         ]);
         if (isMounted) {
           if (leadsRes.status === "fulfilled" && leadsRes.value?.success) {
@@ -362,6 +368,9 @@ export function AdvocateWorkspaceView() {
           }
           if (mattersRes.status === "fulfilled" && mattersRes.value?.success) {
             setLiveMatters(mattersRes.value.matters || []);
+          }
+          if (notifRes.status === "fulfilled" && notifRes.value?.success) {
+            setLiveNotifications(notifRes.value.notifications || []);
           }
         }
       } catch (err) {
@@ -372,7 +381,41 @@ export function AdvocateWorkspaceView() {
     return () => {
       isMounted = false;
     };
-  }, [activeTab]);
+  }, [activeTab, notificationsOpen]);
+
+  const handleNotificationMarkRead = async (id: string) => {
+    setLiveNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
+          : undefined;
+      await advocateApi.markNotificationRead(id, token);
+    } catch {}
+  };
+
+  const handleNotificationMarkAllRead = async () => {
+    const ids = liveNotifications.map((n) => n.id);
+    setLiveNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
+          : undefined;
+      await advocateApi.markAllNotificationsRead(ids, token);
+    } catch {}
+  };
+
+  const handleNotificationDismiss = async (id: string) => {
+    setLiveNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
+          : undefined;
+      await advocateApi.dismissNotification(id, token);
+    } catch {}
+  };
 
   const handleAcceptLead = async (leadId: string) => {
     try {
@@ -729,6 +772,13 @@ export function AdvocateWorkspaceView() {
           subtitle: "HD encrypted client consults",
           whatItDoes: "Launches encrypted virtual chamber consultations with screen sharing and recording.",
           icon: Video,
+        },
+        {
+          id: "notifications",
+          label: "Notifications",
+          subtitle: "Client interest, petitions & alerts",
+          whatItDoes: "Shows live client representation requests, filed petitions, consultation bookings, and causelist alerts.",
+          icon: Bell,
         },
         {
           id: "recordings",
@@ -1388,10 +1438,17 @@ export function AdvocateWorkspaceView() {
                     >
                       <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${isActive ? "text-white dark:text-black" : "text-zinc-500"}`} />
                       {sidebarOpen && (
-                        <div className="flex flex-col overflow-hidden">
-                          <span className="text-xs font-semibold leading-tight truncate">
-                            {item.label}
-                          </span>
+                        <div className="flex flex-col overflow-hidden flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold leading-tight truncate">
+                              {item.label}
+                            </span>
+                            {item.id === "notifications" && unreadNotifCount > 0 && (
+                              <span className="px-1.5 py-0.5 rounded-full bg-[#800020] text-white text-[9px] font-mono font-bold shrink-0">
+                                {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
+                              </span>
+                            )}
+                          </div>
                           <span className={`text-[10px] leading-tight truncate mt-0.5 ${isActive ? "text-zinc-300 dark:text-zinc-600 font-normal" : "text-zinc-400"}`}>
                             {item.subtitle}
                           </span>
@@ -1518,14 +1575,18 @@ export function AdvocateWorkspaceView() {
               </button>
             </div>
 
-            {/* Notification Bell with micro-burgundy dot */}
+            {/* Notification Bell with unread indicator */}
             <button
               onClick={() => setNotificationsOpen(true)}
               className="p-2 rounded-full border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors relative cursor-pointer"
-              title="Notifications"
+              title={unreadNotifCount > 0 ? `${unreadNotifCount} Unread Notifications` : "Notifications"}
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#800020]" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#800020] text-white text-[9px] font-mono font-bold flex items-center justify-center">
+                  {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                </span>
+              )}
             </button>
 
             {/* User Profile Pill */}
@@ -2827,6 +2888,8 @@ export function AdvocateWorkspaceView() {
               advocateName={displayFullName}
               initialMode={activeTab === "messages" || activeTab === "chats" ? "messages" : activeTab === "notifications" ? "notifications" : "mails"}
               onOpenConsultation={() => setActiveTab("appointments")}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+              onNotificationsChange={setLiveNotifications}
             />
           )}
 
@@ -3386,16 +3449,18 @@ export function AdvocateWorkspaceView() {
               onMouseEnter={(e) =>
                 showTooltip(
                   e,
-                  "Court Alerts & Causelist",
-                  "3 Alerts",
-                  "Opens live causelist hearing calls and e-filing alerts."
+                  "Client & Court Alerts",
+                  unreadNotifCount > 0 ? `${unreadNotifCount} Unread` : `${liveNotifications.length} Alerts`,
+                  "Opens live client interest requests, petitions, consultations, and causelist alerts."
                 )
               }
               onMouseLeave={hideTooltip}
               className="w-10 h-10 rounded-xl text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center transition-colors cursor-pointer relative"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#800020]" />
+              {unreadNotifCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#800020]" />
+              )}
             </button>
           </div>
 
@@ -3509,28 +3574,128 @@ export function AdvocateWorkspaceView() {
       {/* Notifications Modal */}
       {notificationsOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-black dark:text-white" />
-                <h3 className="text-sm font-bold text-black dark:text-white">Chamber Court Alerts</h3>
+                <Bell className="w-4 h-4 text-[#800020] dark:text-[#F3A5B5]" />
+                <h3 className="text-sm font-bold text-black dark:text-white">
+                  Chamber &amp; Client Notifications
+                </h3>
+                {unreadNotifCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#800020] text-white">
+                    {unreadNotifCount} Unread
+                  </span>
+                )}
               </div>
-              <button
-                onClick={() => setNotificationsOpen(false)}
-                className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {liveNotifications.length > 0 && unreadNotifCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleNotificationMarkAllRead}
+                    className="text-[11px] font-semibold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
+                  >
+                    Mark all read
+                  </button>
+                )}
+                <button
+                  onClick={() => setNotificationsOpen(false)}
+                  className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="divide-y divide-zinc-100 dark:divide-zinc-900 text-xs">
-              <div className="py-2.5">
-                <span className="font-bold text-black dark:text-white block">WP(C) 19482/2024 listed for Monday</span>
-                <span className="text-zinc-500">Item No. 12 before Hon'ble High Court Division Bench 2A.</span>
+
+            {clientInterestNotifCount > 0 && (
+              <div className="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
+                <span>
+                  <strong className="text-black dark:text-white">{clientInterestNotifCount}</strong>{" "}
+                  unread client interest {clientInterestNotifCount === 1 ? "alert" : "alerts"} awaiting review
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotificationsOpen(false);
+                    setActiveTab("matters");
+                  }}
+                  className="font-bold text-[#800020] dark:text-[#E07A8B] hover:underline cursor-pointer"
+                >
+                  Open Matter Pipeline
+                </button>
               </div>
-              <div className="py-2.5">
-                <span className="font-bold text-black dark:text-white block">New Citizen Representation Lead</span>
-                <span className="text-zinc-500">Alex Morgan requested tenancy dispute consultation.</span>
-              </div>
+            )}
+
+            <div className="divide-y divide-zinc-100 dark:divide-zinc-900 text-xs max-h-80 overflow-y-auto pr-1">
+              {liveNotifications.length === 0 ? (
+                <div className="py-8 text-center text-zinc-500">
+                  No new client interest alerts, petition filings, or court notifications.
+                </div>
+              ) : (
+                liveNotifications.slice(0, 12).map((notif) => (
+                  <div
+                    key={notif.id}
+                    className={`py-3 flex items-start justify-between gap-3 ${notif.isRead ? "opacity-65" : ""}`}
+                  >
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {!notif.isRead && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#800020] shrink-0" />
+                        )}
+                        <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[9px] font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                          {notif.categoryLabel}
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-400">
+                          {notif.timestamp}
+                        </span>
+                      </div>
+                      <span className="font-bold text-black dark:text-white block">
+                        {notif.title}
+                      </span>
+                      <span className="text-zinc-500 dark:text-zinc-400 block line-clamp-2">
+                        {notif.summary}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!notif.isRead) handleNotificationMarkRead(notif.id);
+                          setNotificationsOpen(false);
+                          if (notif.targetTab) setActiveTab(notif.targetTab);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-black text-white dark:bg-white dark:text-black text-[10px] font-bold hover:opacity-85 cursor-pointer"
+                      >
+                        {notif.actionLabel || "Open"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationDismiss(notif.id)}
+                        className="p-1 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                        title="Dismiss"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-zinc-400 font-mono">
+                {liveNotifications.length} total alerts
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setNotificationsOpen(false);
+                  setActiveTab("notifications");
+                }}
+                className="px-4 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer flex items-center gap-1.5"
+              >
+                <span>View All in Notifications</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>

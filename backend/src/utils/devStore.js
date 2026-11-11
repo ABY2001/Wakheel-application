@@ -1513,6 +1513,269 @@ const DEFAULT_CHAMBER_REPORTS = [
   },
 ];
 
+export const parseNotificationEpoch = (record) => {
+  const candidates = [
+    record?.updatedAt,
+    record?.createdAt,
+    record?.scheduledDate,
+    record?.courtDate,
+    record?.date,
+  ];
+  for (const c of candidates) {
+    if (c) {
+      const t = new Date(c).getTime();
+      if (!Number.isNaN(t) && t > 0) return t;
+    }
+  }
+  const rawId = String(record?._id || record?.id || "");
+  const m = rawId.match(/(\d{10,13})/);
+  if (m) {
+    const num = Number(m[1]);
+    if (!Number.isNaN(num) && num > 0) return m[1].length === 10 ? num * 1000 : num;
+  }
+  return Date.now();
+};
+
+export const formatRelativeTime = (epochMs) => {
+  if (!epochMs) return "Recently";
+  const diffMs = Math.max(0, Date.now() - epochMs);
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(epochMs).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
+
+/** Build sorted, deduplicated chamber notifications covering client leads, petitions, consultations, filings, messages, and causelist items. */
+export const buildAdvocateNotifications = ({
+  leads = [],
+  matters = [],
+  consultations = [],
+  documents = [],
+  messages = [],
+  causeList = [],
+  readIds = [],
+  dismissedIds = [],
+}) => {
+  const readSet = new Set((readIds || []).map(String));
+  const dismissedSet = new Set((dismissedIds || []).map(String));
+  const matterById = new Map();
+  const matterByGrievanceId = new Map();
+
+  for (const m of matters) {
+    const mid = String(m._id || m.id || "");
+    if (mid) matterById.set(mid, m);
+    if (m.grievanceId) matterByGrievanceId.set(String(m.grievanceId), m);
+  }
+
+  const items = [];
+  const pushItem = (item) => {
+    if (!item?.id || dismissedSet.has(String(item.id))) return;
+    items.push({
+      ...item,
+      isRead: readSet.has(String(item.id)),
+      timestamp: formatRelativeTime(item.epochMs),
+    });
+  };
+
+  for (const g of leads) {
+    const gid = String(g._id || g.id || "");
+    if (!gid) continue;
+    const hasLinkedMatter =
+      matterByGrievanceId.has(gid) || (g.linkedMatterId && matterById.has(String(g.linkedMatterId)));
+    if (hasLinkedMatter && g.status === "matter_opened") continue;
+
+    const clientName = g.citizenName || g.clientName || "Citizen Client";
+    const isDirectInterest = Boolean(g.assignedAdvocateId || g.assignedAdvocateName);
+    const epochMs = parseNotificationEpoch(g);
+
+    pushItem({
+      id: `notif_lead_${gid}`,
+      sourceId: gid,
+      sourceType: "lead",
+      type: isDirectInterest ? "warning" : "info",
+      category: "client_interest",
+      categoryLabel: isDirectInterest ? "Client Engaged You" : "Client Interest Lead",
+      title: isDirectInterest
+        ? `Client Interest: ${clientName} selected you`
+        : `New Client Lead: ${clientName}`,
+      summary: `${g.title || "Legal representation request"} • ${g.category || "General Legal"} (${g.preferredCourt || "Kerala Courts"})`,
+      clientName,
+      clientEmail: g.citizenEmail || "",
+      caseRef: g.category || "Intake Lead",
+      priority: String(g.urgencyLevel || "").toLowerCase() === "high" ? "high" : "normal",
+      actionLabel: "Review Lead",
+      targetTab: "matters",
+      epochMs,
+      createdAt: new Date(epochMs).toISOString(),
+    });
+  }
+
+  for (const m of matters) {
+    const mid = String(m._id || m.id || "");
+    if (!mid) continue;
+    const clientName = m.citizenName || m.clientName || m.petitioner || "Citizen Client";
+    const titleText = m.matterTitle || m.title || m.caseTitle || m.caseNumber || "Client Petition";
+    const epochMs = parseNotificationEpoch(m);
+
+    pushItem({
+      id: `notif_matter_${mid}`,
+      sourceId: mid,
+      sourceType: "matter",
+      type: "success",
+      category: "client_interest",
+      categoryLabel: m.grievanceId ? "Client Engaged You" : "Client Petition",
+      title: `Client Petition: ${clientName} — ${titleText}`,
+      summary: `${m.matterType || "Civil / Family Litigation"} • ${m.courtForum || "Court Registry"}${m.caseNumber ? ` (${m.caseNumber})` : ""}`,
+      clientName,
+      clientEmail: m.citizenEmail || "",
+      caseRef: m.caseNumber || m.cnrNumber || m.matterType || "Petition",
+      priority: "high",
+      actionLabel: "View Petition",
+      targetTab: "matters",
+      epochMs,
+      createdAt: new Date(epochMs).toISOString(),
+    });
+  }
+
+  for (const c of consultations) {
+    const cid = String(c._id || c.id || "");
+    if (!cid || c.status === "cancelled") continue;
+    const clientName = c.citizenName || c.clientName || "Citizen Client";
+    const epochMs = parseNotificationEpoch(c);
+    const dateLabel = c.scheduledDate
+      ? new Date(c.scheduledDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+      : "Upcoming";
+    const modeLabel =
+      c.consultationType === "video"
+        ? "Video Consult"
+        : c.consultationType === "chamber"
+        ? "Chamber Visit"
+        : "Phone Consult";
+
+    pushItem({
+      id: `notif_cons_${cid}`,
+      sourceId: cid,
+      sourceType: "consultation",
+      type: "warning",
+      category: "client_interest",
+      categoryLabel: "Consultation Interest",
+      title: `Consultation Request: ${clientName}`,
+      summary: `${c.subject || "Legal Consultation"} • ${dateLabel}${c.timeSlot ? ` (${c.timeSlot})` : ""}`,
+      clientName,
+      clientEmail: c.citizenEmail || "",
+      caseRef: modeLabel,
+      priority: "high",
+      actionLabel: "Open Appointments",
+      targetTab: "appointments",
+      epochMs,
+      createdAt: new Date(epochMs).toISOString(),
+    });
+  }
+
+  for (const d of documents) {
+    const did = String(d._id || d.id || "");
+    if (!did) continue;
+    const isClientFiling =
+      Boolean(d.citizenId) || d.subType === "document-filing" || Boolean(d.citizenName);
+    if (!isClientFiling) continue;
+    const clientName = d.citizenName || "Citizen Client";
+    const docName = d.name || d.fileName || "Filed Document";
+    const epochMs = parseNotificationEpoch(d);
+
+    pushItem({
+      id: `notif_doc_${did}`,
+      sourceId: did,
+      sourceType: "document",
+      type: "info",
+      category: "filings",
+      categoryLabel: d.subType === "document-filing" ? "Client Document Filing" : "Client Vault Upload",
+      title: `Client Filing: ${docName}`,
+      summary: `Submitted by ${clientName} • ${d.matter || d.category || "Case Filing"}`,
+      clientName,
+      clientEmail: d.citizenEmail || "",
+      caseRef: d.matter || d.category || "Document Filing",
+      priority: "normal",
+      actionLabel: "Open Vault",
+      targetTab: "vault",
+      epochMs,
+      createdAt: new Date(epochMs).toISOString(),
+    });
+  }
+
+  const unreadByCitizen = new Map();
+  for (const msg of messages) {
+    const isInbound = msg.recipientRole === "advocate" || !msg.senderRole || msg.senderRole === "citizen";
+    if (!isInbound || msg.isRead) continue;
+    const cid = String(msg.citizenId || msg.senderId || "unknown");
+    const epochMs = parseNotificationEpoch(msg);
+    const existing = unreadByCitizen.get(cid);
+    if (!existing) {
+      unreadByCitizen.set(cid, { latest: msg, count: 1, epochMs });
+    } else {
+      existing.count += 1;
+      if (epochMs > existing.epochMs) {
+        existing.latest = msg;
+        existing.epochMs = epochMs;
+      }
+    }
+  }
+  for (const [cid, entry] of unreadByCitizen.entries()) {
+    const msg = entry.latest;
+    const clientName = msg.citizenName || msg.senderName || "Citizen Client";
+    const msgId = String(msg._id || msg.id || cid);
+    const bodyText = String(msg.text || msg.content || msg.message || "Sent a message").trim();
+
+    pushItem({
+      id: `notif_msg_${msgId}`,
+      sourceId: msgId,
+      sourceType: "message",
+      type: "info",
+      category: "client_interest",
+      categoryLabel: entry.count > 1 ? `${entry.count} Unread Client Messages` : "Client Message",
+      title: `Message from ${clientName}`,
+      summary: `${msg.matterTitle ? `${msg.matterTitle}: ` : ""}${bodyText.slice(0, 110)}`,
+      clientName,
+      caseRef: msg.matterTitle || "Direct Message",
+      priority: "high",
+      actionLabel: "Reply",
+      targetTab: "messages",
+      epochMs: entry.epochMs,
+      createdAt: new Date(entry.epochMs).toISOString(),
+    });
+  }
+
+  for (const c of causeList) {
+    const cid = String(c._id || c.id || "");
+    if (!cid) continue;
+    const epochMs = parseNotificationEpoch(c);
+
+    pushItem({
+      id: `notif_cl_${cid}`,
+      sourceId: cid,
+      sourceType: "causelist",
+      type: "warning",
+      category: "causelist",
+      categoryLabel: "Court Causelist",
+      title: `Causelist: ${c.caseNumber || c.matterTitle || "Listed Hearing"}`,
+      summary: `${c.courtHall || c.courtName || "Court Registry"} • ${c.stage || c.callingStatus || "Listed for Hearing"}`,
+      clientName: c.petitioner || "",
+      caseRef: c.caseNumber || c.cnrNumber || "Causelist",
+      priority: "high",
+      actionLabel: "View Causelist",
+      targetTab: "causelist",
+      epochMs,
+      createdAt: new Date(epochMs).toISOString(),
+    });
+  }
+
+  items.sort((a, b) => (b.epochMs || 0) - (a.epochMs || 0));
+  return items;
+};
+
 // ============================================================================
 // DEV STORE REPOSITORY
 // ============================================================================
@@ -3209,6 +3472,65 @@ export const devStore = {
   getAdvocateUnreadCount(advocateId = "adv_1") {
     const messages = this.getAdvocateMessages(advocateId);
     return messages.filter((m) => m.recipientRole === "advocate" && !m.isRead).length;
+  },
+
+  // --- Advocate Notifications (Client Interest, Petitions, Consultations, Filings & Causelist) ---
+  getNotificationState(advocateId = "adv_1") {
+    const store = readFile("dev_notification_state.json", {});
+    const key = String(advocateId || "adv_1");
+    const entry = store && typeof store === "object" && !Array.isArray(store) ? store[key] : null;
+    return entry || { readIds: [], dismissedIds: [] };
+  },
+
+  updateNotificationState(advocateId = "adv_1", field, notificationIds = []) {
+    const raw = readFile("dev_notification_state.json", {});
+    const store = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const key = String(advocateId || "adv_1");
+    const current = store[key] || { readIds: [], dismissedIds: [] };
+    const merged = new Set([...(current[field] || []).map(String), ...(notificationIds || []).map(String)]);
+    store[key] = { ...current, [field]: Array.from(merged), updatedAt: new Date().toISOString() };
+    writeFile("dev_notification_state.json", store);
+    return store[key];
+  },
+
+  markAdvocateNotificationsRead(advocateId = "adv_1", notificationIds = []) {
+    return this.updateNotificationState(advocateId, "readIds", notificationIds);
+  },
+
+  dismissAdvocateNotifications(advocateId = "adv_1", notificationIds = []) {
+    return this.updateNotificationState(advocateId, "dismissedIds", notificationIds);
+  },
+
+  getAdvocateNotifications(advocateId = "adv_1") {
+    const leads = this.getIncomingGrievances(advocateId);
+    const matters = this.getAdvocateMatters(advocateId);
+    const consultations = this.getAdvocateConsultations(advocateId);
+    const documents = this.getAdvocateDocuments(advocateId);
+    const allMessages = readFile("dev_messages.json", DEFAULT_MESSAGES);
+    const messages = allMessages
+      .filter(
+        (m) =>
+          String(m.senderId) === String(advocateId) ||
+          String(m.recipientId) === String(advocateId) ||
+          this.matchesAdvocate(
+            { advocateId: m.recipientId || m.advocateId, advocateName: m.recipientName || m.advocateName },
+            advocateId
+          )
+      )
+      .map((m) => this.enrichWithCitizenInfo(m));
+    const causeList = this.getCauseList(advocateId).filter((c) => this.matchesAdvocate(c, advocateId));
+    const state = this.getNotificationState(advocateId);
+
+    return buildAdvocateNotifications({
+      leads,
+      matters,
+      consultations,
+      documents,
+      messages,
+      causeList,
+      readIds: state.readIds,
+      dismissedIds: state.dismissedIds,
+    });
   },
 
   // --- Advocate Clients & Representation Roster ---

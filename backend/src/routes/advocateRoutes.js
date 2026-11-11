@@ -114,6 +114,11 @@ import {
   getBciCredentials,
   updateBciCredentials,
   verifyBciCredentials,
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  dismissNotification,
+  clearAllNotifications,
 } from "../controllers/advocateController.js";
 
 const router = express.Router();
@@ -282,5 +287,12 @@ router.route("/taskmite/notes/:id")
 router.get("/profile/bci", protect, getBciCredentials);
 router.put("/profile/bci", protect, updateBciCredentials);
 router.post("/profile/bci/verify", protect, verifyBciCredentials);
+
+// 26. Chamber & Client Interest Notifications
+router.get("/notifications", protect, getNotifications);
+router.put("/notifications/read-all", protect, markAllNotificationsRead);
+router.put("/notifications/:id/read", protect, markNotificationRead);
+router.delete("/notifications/:id", protect, dismissNotification);
+router.delete("/notifications", protect, clearAllNotifications);
 
 export default router;

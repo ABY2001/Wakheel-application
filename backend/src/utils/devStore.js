@@ -2993,31 +2993,40 @@ export const devStore = {
   // --- Advocate Invoices & Fee Billing ---
   getInvoices(advocateId = "adv_1") {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
-    if (!advocateId || advocateId === "adv_1" || advocateId === "default_citizen") return invoices;
-    return invoices.filter((inv) => !inv.advocateId || inv.advocateId === advocateId || inv.advocateId === "adv_1");
+    return invoices.filter((inv) => this.matchesAdvocate(inv, advocateId));
   },
 
   createInvoice(data) {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
-    const subtotal = data.items ? data.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0) : Number(data.subtotal) || 0;
+    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
+    const subtotal = data.items
+      ? data.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+      : Number(data.subtotal) || 0;
     const gstRate = data.gstRate !== undefined ? Number(data.gstRate) : 18;
-    const gstAmount = Math.round((subtotal * gstRate) / 100);
-    const totalAmount = subtotal + gstAmount;
+    const gstAmount = data.gstAmount !== undefined ? Number(data.gstAmount) : Math.round((subtotal * gstRate) / 100);
+    const totalAmount = data.totalAmount !== undefined ? Number(data.totalAmount) : subtotal + gstAmount;
 
     const newInvoice = {
+      ...data,
       _id: "inv_" + Date.now().toString(),
-      invoiceNumber: data.invoiceNumber || `INV-${new Date().getFullYear()}/KL-${String(invoices.length + 1).padStart(3, "0")}`,
-      advocateId: data.advocateId || "adv_1",
-      advocateName: data.advocateName || "Adv. Meera Krishnan",
+      invoiceNumber:
+        data.invoiceNumber || `INV-${new Date().getFullYear()}/KL-${String(invoices.length + 1).padStart(3, "0")}`,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName,
+      barCouncilNumber: data.barCouncilNumber || resolvedAdv.barCouncilNumber || "",
       citizenId: data.citizenId || "default_citizen",
       clientName: data.clientName || "Client",
       clientPhone: data.clientPhone || "",
       matterId: data.matterId || "",
       matterTitle: data.matterTitle || "General Legal Retainer",
-      items: data.items || [{ description: "Legal Consultation & Drafting", amount: subtotal }],
+      items: data.items || [
+        { description: "Legal Consultation & Drafting", amount: subtotal, category: "Professional Fee", sacCode: "9982" },
+      ],
       subtotal,
       gstRate,
       gstAmount,
+      cgstAmount: Math.round(gstAmount / 2),
+      sgstAmount: Math.round(gstAmount / 2),
       totalAmount,
       status: data.status || "unpaid",
       dueDate: data.dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
@@ -3156,47 +3165,6 @@ export const devStore = {
   getInvoiceById(invoiceId) {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
     return invoices.find((i) => i._id === invoiceId || i.invoiceNumber === invoiceId) || null;
-  },
-
-  createInvoice(data) {
-    const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
-    const now = new Date();
-    const count = invoices.length + 1;
-    const invNum = data.invoiceNumber || `INV-${now.getFullYear()}/KL-${String(count).padStart(3, "0")}`;
-    const subtotal = Number(data.subtotal) || (data.items ? data.items.reduce((s, it) => s + (Number(it.amount) || 0), 0) : 0);
-    const gstRate = Number(data.gstRate) || 18;
-    const gstAmount = Math.round(subtotal * (gstRate / 100));
-    const totalAmount = subtotal + gstAmount;
-
-    const newInvoice = {
-      _id: "inv_" + Date.now().toString(),
-      invoiceNumber: invNum,
-      advocateId: data.advocateId || "adv_1",
-      advocateName: data.advocateName || "Adv. Meera Krishnan",
-      barCouncilNumber: data.barCouncilNumber || "K/001429/2012",
-      chamberAddress: data.chamberAddress || "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
-      citizenId: data.citizenId || "default_citizen",
-      clientName: data.clientName || "Gopakumar Nambiar",
-      clientPhone: data.clientPhone || "+91 94471 28400",
-      clientAddress: data.clientAddress || "Panampilly Nagar, Ernakulam, Kerala 682036",
-      matterId: data.matterId || "",
-      matterTitle: data.matterTitle || "Legal Representation & Retainer",
-      items: data.items || [{ description: "Legal Retainer Consultation", amount: subtotal, category: "Professional Fee", sacCode: "9982" }],
-      subtotal,
-      gstRate,
-      gstAmount,
-      cgstAmount: Math.round(gstAmount / 2),
-      sgstAmount: Math.round(gstAmount / 2),
-      totalAmount,
-      status: data.status || "unpaid",
-      dueDate: data.dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-      paymentMethod: data.paymentMethod || "UPI",
-      createdAt: now.toISOString(),
-      ...data,
-    };
-    invoices.unshift(newInvoice);
-    writeFile("dev_invoices.json", invoices);
-    return newInvoice;
   },
 
   payInvoice(invoiceId, paymentMethod = "UPI", transactionId = "") {
@@ -3739,32 +3707,30 @@ export const devStore = {
   // --- ERP: Trust / IOLTA Escrow Accounting ---
   getTrustTransactions(advocateId = "adv_1") {
     const transactions = readFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
-    if (!transactions || transactions.length === 0) {
-      writeFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
-      return DEFAULT_TRUST_TRANSACTIONS;
-    }
-    return transactions;
+    return transactions.filter((t) => this.matchesAdvocate(t, advocateId));
   },
 
   addTrustTransaction(data) {
     const transactions = readFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
+    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.verifiedBy || data.advocateName);
     const newTx = {
       _id: "tru_" + Date.now().toString(),
       id: "tru_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
       type: data.type || "deposit",
       clientName: data.clientName || "Client Deposit",
       citizenId: data.citizenId || "default_citizen",
       matterTitle: data.matterTitle || "General Client Escrow",
       matterId: data.matterId || "",
-      amount: Number(data.amount) || 0,
       purpose: data.purpose || "Advance Retainer Escrow",
       referenceNumber: data.referenceNumber || `TXN/${Date.now()}`,
-      verifiedBy: data.verifiedBy || "Adv. Meera Krishnan",
       date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
       status: "cleared",
       createdAt: new Date().toISOString(),
       ...data,
+      amount: Number(data.amount) || 0,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName,
+      verifiedBy: data.verifiedBy || resolvedAdv.advocateName,
     };
     transactions.unshift(newTx);
     writeFile("dev_trust.json", transactions);
@@ -3774,24 +3740,19 @@ export const devStore = {
   // --- ERP: Chamber Disbursements & Expenses ---
   getExpenses(advocateId = "adv_1") {
     const expenses = readFile("dev_expenses.json", DEFAULT_EXPENSES);
-    if (!expenses || expenses.length === 0) {
-      writeFile("dev_expenses.json", DEFAULT_EXPENSES);
-      return DEFAULT_EXPENSES;
-    }
-    return expenses;
+    return expenses.filter((e) => this.matchesAdvocate(e, advocateId));
   },
 
   addExpense(data) {
     const expenses = readFile("dev_expenses.json", DEFAULT_EXPENSES);
+    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
     const newExp = {
       _id: "exp_" + Date.now().toString(),
       id: "exp_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
       matterTitle: data.matterTitle || "Chamber Operations",
       matterId: data.matterId || "general",
       clientName: data.clientName || "Chamber Expense",
       category: data.category || "Court Fee Stamps & Welfare",
-      amount: Number(data.amount) || 0,
       description: data.description || "Chamber operating disbursement",
       paidBy: data.paidBy || "Chamber Petty Cash",
       date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
@@ -3800,6 +3761,9 @@ export const devStore = {
       status: "approved",
       createdAt: new Date().toISOString(),
       ...data,
+      amount: Number(data.amount) || 0,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName,
     };
     expenses.unshift(newExp);
     writeFile("dev_expenses.json", expenses);
@@ -3809,19 +3773,15 @@ export const devStore = {
   // --- ERP: Human Resource Management (Huremaso) ---
   getAssociates(advocateId = "adv_1") {
     const associates = readFile("dev_associates.json", DEFAULT_ASSOCIATES);
-    if (!associates || associates.length === 0) {
-      writeFile("dev_associates.json", DEFAULT_ASSOCIATES);
-      return DEFAULT_ASSOCIATES;
-    }
-    return associates;
+    return associates.filter((a) => this.matchesAdvocate(a, advocateId));
   },
 
   addAssociate(data) {
     const associates = readFile("dev_associates.json", DEFAULT_ASSOCIATES);
+    const resolvedAdv = this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName);
     const newAsc = {
       _id: "asc_" + Date.now().toString(),
       id: "asc_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
       fullName: data.fullName,
       role: data.role || "Litigation Junior",
       enrollmentNumber: data.enrollmentNumber || "Bar Enrollment Pending",
@@ -3833,6 +3793,8 @@ export const devStore = {
       attendanceToday: "Present — Chamber Desk",
       createdAt: new Date().toISOString(),
       ...data,
+      advocateId: resolvedAdv.advocateId,
+      advocateName: resolvedAdv.advocateName,
     };
     associates.unshift(newAsc);
     writeFile("dev_associates.json", associates);
@@ -3857,7 +3819,7 @@ export const devStore = {
       .filter((t) => t.type === "deposit")
       .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     const totalTrustDisbursements = trust
-      .filter((t) => t.type === "disbursement")
+      .filter((t) => t.type === "disbursement" || t.type === "drawdown")
       .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     const trustEscrowBalance = totalTrustDeposits - totalTrustDisbursements;
 

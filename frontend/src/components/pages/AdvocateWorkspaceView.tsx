@@ -3290,7 +3290,7 @@ export function AdvocateWorkspaceView() {
             <div className="w-full max-w-7xl 2xl:max-w-[1440px] mx-auto">
               <AdvocateTrustBillingView
                 advocateName={displayFullName}
-                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || "K/1429/2016"}
+                barCouncilNumber={(advocateProfile as any)?.enrollmentNumber || ""}
                 token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "advocate_token" : "advocate_token"}
               />
             </div>

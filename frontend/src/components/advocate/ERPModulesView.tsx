@@ -52,7 +52,7 @@ export function ERPModulesView({
   activeModule = "acmaso",
   onSelectModule,
   token,
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "Advocate",
 }: ERPModulesViewProps) {
   // Normalize initial tab
   const getInitialTab = (mod: string) => {
@@ -72,6 +72,7 @@ export function ERPModulesView({
   const [trustTransactions, setTrustTransactions] = useState<TrustTransactionItem[]>([]);
   const [expenses, setExpenses] = useState<ChamberExpenseItem[]>([]);
   const [associates, setAssociates] = useState<AssociateItem[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
 
   // Filtering states
   const [invoiceFilter, setInvoiceFilter] = useState<string>("all");
@@ -143,32 +144,28 @@ export function ERPModulesView({
   const loadErpData = async () => {
     try {
       setRefreshing(true);
-      const [overviewRes, invoicesRes, trustRes, expensesRes, associatesRes] = await Promise.all([
-        advocateApi.getErpOverview(token),
-        advocateApi.getInvoices(token),
-        advocateApi.getTrustTransactions(token),
-        advocateApi.getExpenses(token),
-        advocateApi.getAssociates(token),
+      const [overviewRes, invoicesRes, trustRes, expensesRes, associatesRes, clientsRes] = await Promise.all([
+        advocateApi.getErpOverview(token).catch(() => null),
+        advocateApi.getInvoices(token).catch(() => null),
+        advocateApi.getTrustTransactions(token).catch(() => null),
+        advocateApi.getExpenses(token).catch(() => null),
+        advocateApi.getAssociates(token).catch(() => null),
+        advocateApi.getClients(token).catch(() => null),
       ]);
 
-      if (overviewRes.success) {
+      if (overviewRes?.success) {
         setErpOverview({
           financials: overviewRes.financials,
           counts: overviewRes.counts,
         });
+      } else {
+        setErpOverview(null);
       }
-      if (invoicesRes.success && Array.isArray(invoicesRes.invoices)) {
-        setInvoices(invoicesRes.invoices);
-      }
-      if (trustRes.success && Array.isArray(trustRes.transactions)) {
-        setTrustTransactions(trustRes.transactions);
-      }
-      if (expensesRes.success && Array.isArray(expensesRes.expenses)) {
-        setExpenses(expensesRes.expenses);
-      }
-      if (associatesRes.success && Array.isArray(associatesRes.associates)) {
-        setAssociates(associatesRes.associates);
-      }
+      setInvoices(invoicesRes?.success && Array.isArray(invoicesRes.invoices) ? invoicesRes.invoices : []);
+      setTrustTransactions(trustRes?.success && Array.isArray(trustRes.transactions) ? trustRes.transactions : []);
+      setExpenses(expensesRes?.success && Array.isArray(expensesRes.expenses) ? expensesRes.expenses : []);
+      setAssociates(associatesRes?.success && Array.isArray(associatesRes.associates) ? associatesRes.associates : []);
+      setClients(clientsRes?.success && Array.isArray(clientsRes.clients) ? clientsRes.clients : []);
     } catch (err) {
       console.error("Error loading chamber ERP data:", err);
     } finally {
@@ -374,9 +371,53 @@ export function ERPModulesView({
   // Financial aggregates
   const totalBilled = erpOverview?.financials?.totalBilled ?? invoices.reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
   const totalCollected = erpOverview?.financials?.totalCollected ?? invoices.filter((i) => i.status === "paid").reduce((s, i) => s + (Number(i.totalAmount) || 0), 0);
-  const trustBalance = erpOverview?.financials?.trustEscrowBalance ?? 650000;
+  const trustBalance =
+    erpOverview?.financials?.trustEscrowBalance ??
+    (trustTransactions.filter((t) => t.type === "deposit").reduce((s, t) => s + (Number(t.amount) || 0), 0) -
+      trustTransactions
+        .filter((t) => t.type === "disbursement" || t.type === "drawdown")
+        .reduce((s, t) => s + (Number(t.amount) || 0), 0));
   const totalExpenses = erpOverview?.financials?.totalExpenses ?? expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const totalGst = erpOverview?.financials?.totalGstBilled ?? 15840;
+  const totalGst = erpOverview?.financials?.totalGstBilled ?? invoices.reduce((s, i) => s + (Number(i.gstAmount) || 0), 0);
+
+  // Derive live client & retainer accounts from advocate clients and invoices
+  const crmAccounts = (() => {
+    const accountMap = new Map<
+      string,
+      { client: string; contact: string; scope: string; totalValue: number; status: string }
+    >();
+    for (const c of clients) {
+      const name = c.fullName || c.clientName || c.name || "Client";
+      accountMap.set(name, {
+        client: name,
+        contact: c.email || c.phone || "Client on Record",
+        scope:
+          c.activeMatterTitle ||
+          (c.matterCount ? `${c.matterCount} Active Legal Matter${c.matterCount === 1 ? "" : "s"}` : "Chamber Brief / Retainer"),
+        totalValue: 0,
+        status: c.status || "Active",
+      });
+    }
+    for (const inv of invoices) {
+      const name = inv.clientName || "Client";
+      const existing = accountMap.get(name);
+      if (existing) {
+        existing.totalValue += Number(inv.totalAmount) || 0;
+        if (existing.scope === "Chamber Brief / Retainer" && inv.matterTitle) {
+          existing.scope = inv.matterTitle;
+        }
+      } else {
+        accountMap.set(name, {
+          client: name,
+          contact: inv.clientPhone || "Billed Client",
+          scope: inv.matterTitle || "Legal Representation",
+          totalValue: Number(inv.totalAmount) || 0,
+          status: "Active",
+        });
+      }
+    }
+    return Array.from(accountMap.values());
+  })();
 
   // Filter invoices
   const filteredInvoices = invoices.filter((inv) => {
@@ -692,6 +733,11 @@ export function ERPModulesView({
               </div>
 
               <div className="rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                {trustTransactions.length === 0 && (
+                  <div className="p-8 text-center text-xs text-zinc-500">
+                    No client trust escrow entries recorded yet.
+                  </div>
+                )}
                 {trustTransactions.map((tx) => (
                   <div
                     key={tx._id}
@@ -734,6 +780,11 @@ export function ERPModulesView({
           {acmasoSubTab === "expenses" && (
             <div className="space-y-4">
               <div className="rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                {expenses.length === 0 && (
+                  <div className="p-8 text-center text-xs text-zinc-500">
+                    No chamber disbursements or stamp expenses recorded yet.
+                  </div>
+                )}
                 {expenses.map((exp) => (
                   <div
                     key={exp._id}
@@ -803,11 +854,15 @@ export function ERPModulesView({
                 <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between font-mono text-xs">
                   <div>
                     <span className="text-zinc-500 block text-[10px] uppercase">Chamber GSTIN Status</span>
-                    <span className="font-bold text-black dark:text-white">32AABFK1429K1Z4 (Ernakulam Ward 2)</span>
+                    <span className="font-bold text-black dark:text-white">
+                      {invoices.length > 0 ? "SAC 9982 Active (RCM / Forward)" : "No Taxable Supply Billed"}
+                    </span>
                   </div>
                   <div>
                     <span className="text-zinc-500 block text-[10px] uppercase">GSTR-3B Period</span>
-                    <span className="font-bold text-black dark:text-white">Oct 2026 (Due Nov 20)</span>
+                    <span className="font-bold text-black dark:text-white">
+                      {new Date().toLocaleDateString("en-IN", { month: "short", year: "numeric" })} Cycle
+                    </span>
                   </div>
                   <div>
                     <span className="text-zinc-500 block text-[10px] uppercase">Total GST Billed</span>
@@ -833,17 +888,23 @@ export function ERPModulesView({
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Court Registry Passes</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">100% Active</div>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                {associates.filter((a) => Boolean(a.courtPass)).length} Active
+              </div>
               <span className="text-[10px] text-zinc-500">High Court complex passes</span>
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Attendance Today</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">3 on Court Duty</div>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                {associates.filter((a) => /present|court|tribunal|filing/i.test(a.attendanceToday || "")).length} on Duty
+              </div>
               <span className="text-[10px] text-zinc-500">Court halls &amp; registry</span>
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Stipend &amp; Payroll</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">Due 31st Oct</div>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                {associates.length > 0 ? `${associates.length} Rostered` : "No Active Roster"}
+              </div>
               <span className="text-[10px] text-zinc-500">Direct account transfer</span>
             </div>
           </div>
@@ -868,6 +929,11 @@ export function ERPModulesView({
             </div>
 
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+              {associates.length === 0 && (
+                <div className="p-8 text-center text-xs text-zinc-500">
+                  No chamber associates or registry personnel added yet.
+                </div>
+              )}
               {associates.map((asc) => (
                 <div
                   key={asc._id}
@@ -908,24 +974,32 @@ export function ERPModulesView({
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-              <span className="text-xs text-zinc-500">Corporate Retainers</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">4 Accounts</div>
-              <span className="text-[10px] text-zinc-500">Annual legal advisory</span>
+              <span className="text-xs text-zinc-500">Client &amp; Retainer Accounts</span>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                {crmAccounts.length} {crmAccounts.length === 1 ? "Account" : "Accounts"}
+              </div>
+              <span className="text-[10px] text-zinc-500">Tracked legal representation</span>
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-              <span className="text-xs text-zinc-500">Retainer ARR</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">₹ 54.5 Lakhs</div>
-              <span className="text-[10px] text-zinc-500">Recurring contract value</span>
+              <span className="text-xs text-zinc-500">Billed Client Value</span>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                ₹{totalBilled.toLocaleString("en-IN")}
+              </div>
+              <span className="text-[10px] text-zinc-500">Across active accounts</span>
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Conflict Checks</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">100% Cleared</div>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                {crmAccounts.length > 0 ? "Screened" : "0 Pending"}
+              </div>
               <span className="text-[10px] text-zinc-500">Adverse party screen</span>
             </div>
             <div className="p-4 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
-              <span className="text-xs text-zinc-500">Client Retention</span>
-              <div className="text-xl font-bold text-black dark:text-white font-mono">98.2%</div>
-              <span className="text-[10px] text-zinc-500">High Court chamber benchmark</span>
+              <span className="text-xs text-zinc-500">Active Briefs</span>
+              <div className="text-xl font-bold text-black dark:text-white font-mono">
+                {crmAccounts.filter((a) => a.status === "Active").length} Active
+              </div>
+              <span className="text-[10px] text-zinc-500">Ongoing representation</span>
             </div>
           </div>
 
@@ -933,62 +1007,41 @@ export function ERPModulesView({
             <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-black dark:text-white">
-                  Corporate Retainer Accounts &amp; Representation Scope
+                  Client &amp; Corporate Retainer Accounts
                 </h3>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Long-term institutional briefs with monthly advance advisory retainers.
+                  Active clients and institutional briefs connected to your practice.
                 </p>
               </div>
             </div>
 
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-              {[
-                {
-                  client: "Malabar Infotech Solutions Pvt Ltd",
-                  contact: "Rajeev Menon (MD)",
-                  scope: "Infopark IT Contracts, Vendor Arbitration & NCLT Disputes",
-                  value: "₹ 12,00,000 / yr",
-                  status: "Active Retainer",
-                },
-                {
-                  client: "Vanguard Infrastructure Ltd",
-                  contact: "K. S. Narayanan (VP Legal)",
-                  scope: "NHAI Highway Concessions, Land Acquisition Writs & EPC Claims",
-                  value: "₹ 24,00,000 / yr",
-                  status: "Active Retainer",
-                },
-                {
-                  client: "Coastal Logistics & Export Terminal LLP",
-                  contact: "Capt. Vivek Mohan",
-                  scope: "Port Trust Demurrage & Section 138 NI Act Recovery Proceedings",
-                  value: "₹ 10,50,000 / yr",
-                  status: "Active Retainer",
-                },
-                {
-                  client: "Cochin Spices & Plantations Consortium",
-                  contact: "Smt. Jayasree Nair",
-                  scope: "Cardamom Board Export Regulations & Revenue Recovery Writs",
-                  value: "₹ 8,00,000 / yr",
-                  status: "Active Retainer",
-                },
-              ].map((row, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-colors"
-                >
-                  <div className="space-y-1">
-                    <span className="font-bold text-black dark:text-white">{row.client}</span>
-                    <span className="text-zinc-500 text-[11px] ml-2 font-mono">({row.contact})</span>
-                    <p className="text-zinc-600 dark:text-zinc-300 text-xs">{row.scope}</p>
-                  </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <span className="font-mono font-bold text-black dark:text-white">{row.value}</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                      {row.status}
-                    </span>
-                  </div>
+              {crmAccounts.length === 0 ? (
+                <div className="p-8 text-center text-xs text-zinc-500">
+                  No client or corporate retainer accounts recorded yet.
                 </div>
-              ))}
+              ) : (
+                crmAccounts.map((row, idx) => (
+                  <div
+                    key={`${row.client}-${idx}`}
+                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950 transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <span className="font-bold text-black dark:text-white">{row.client}</span>
+                      <span className="text-zinc-500 text-[11px] ml-2 font-mono">({row.contact})</span>
+                      <p className="text-zinc-600 dark:text-zinc-300 text-xs">{row.scope}</p>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="font-mono font-bold text-black dark:text-white">
+                        {row.totalValue > 0 ? `₹${row.totalValue.toLocaleString("en-IN")}` : "Active Brief"}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
+                        {row.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

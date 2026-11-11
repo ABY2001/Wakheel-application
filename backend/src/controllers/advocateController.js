@@ -485,7 +485,7 @@ export const getInvoices = async (req, res) => {
 export const createInvoice = async (req, res) => {
   try {
     const advocateId = getAdvocateId(req);
-    const data = { ...req.body, advocateId, advocateName: req.user?.fullName || "Adv. Meera Krishnan" };
+    const data = { ...req.body, advocateId, advocateName: req.user?.fullName || req.body?.advocateName || "" };
 
     if (shouldUseDevStore()) {
       const invoice = devStore.createInvoice(data);

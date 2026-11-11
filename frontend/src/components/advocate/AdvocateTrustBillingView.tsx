@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   CreditCard,
   Clock,
@@ -58,8 +58,8 @@ export interface BillableLogItem {
 }
 
 export function AdvocateTrustBillingView({
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/001429/2012",
+  advocateName = "Advocate",
+  barCouncilNumber = "",
   token,
 }: AdvocateTrustBillingViewProps) {
   // Active Navigation Tab
@@ -71,6 +71,8 @@ export function AdvocateTrustBillingView({
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<AdvocateInvoice[]>([]);
   const [trustTransactions, setTrustTransactions] = useState<TrustTransactionItem[]>([]);
+  const [matters, setMatters] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [escrowFilter, setEscrowFilter] = useState<"all" | "deposit" | "statutory" | "court" | "drawdown">("all");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -80,110 +82,59 @@ export function AdvocateTrustBillingView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const formatMatterLabel = (m: any) =>
+    m?.caseNumber ? `${m.caseNumber} — ${m.title || "Matter"}` : m?.title || "General Chamber Matter";
+
   // Live Courtroom Appearance Stopwatch State
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [selectedMatterForTimer, setSelectedMatterForTimer] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+  const [selectedMatterForTimer, setSelectedMatterForTimer] = useState("General Chamber Matter");
   const [selectedActivityForTimer, setSelectedActivityForTimer] = useState("High Court Division Bench Appearance");
   const [selectedRateForTimer, setSelectedRateForTimer] = useState(25000); // INR per hour
 
-  // Billable Hours Logs
-  const [billableLogs, setBillableLogs] = useState<BillableLogItem[]>([
-    {
-      id: "log_1",
-      matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-      caseNumber: "WP(C) 19482/2024",
-      clientName: "Gopakumar Nambiar",
-      activityType: "High Court Division Bench Oral Arguments (Notice Before Admission)",
-      hourlyRate: 25000,
-      durationMinutes: 72,
-      billableAmount: 30000,
-      lawyerName: "Adv. Meera Krishnan",
-      date: "Today, 10:45 AM",
-      status: "unbilled",
-    },
-    {
-      id: "log_2",
-      matterTitle: "ARB/NCLT/KOCHI/2024/041 — Apex Logistics v. Marine Exports",
-      caseNumber: "ARB/NCLT/KOCHI/2024/041",
-      clientName: "Apex Logistics Ltd",
-      activityType: "Section 9 Commercial Injunction Application Drafting & Compilation",
-      hourlyRate: 8000,
-      durationMinutes: 180,
-      billableAmount: 24000,
-      lawyerName: "Adv. Ananya Iyer",
-      date: "Yesterday, 03:30 PM",
-      status: "unbilled",
-    },
-    {
-      id: "log_3",
-      matterTitle: "ARB/NCLT/KOCHI/2024/041 — Apex Logistics v. Marine Exports",
-      caseNumber: "ARB/NCLT/KOCHI/2024/041",
-      clientName: "Apex Logistics Ltd",
-      activityType: "Chamber Strategy Conference with Managing Director & CFO",
-      hourlyRate: 10000,
-      durationMinutes: 60,
-      billableAmount: 10000,
-      lawyerName: "Adv. Meera Krishnan",
-      date: "26 Oct 2026",
-      status: "invoiced",
-      invoiceRef: "INV/2026/041",
-    },
-    {
-      id: "log_4",
-      matterTitle: "Bail Appl. 8920/2026 — Muhammed Shafi v. State",
-      caseNumber: "Bail Appl. 8920/2026",
-      clientName: "Muhammed Shafi",
-      activityType: "Single Bench (Criminal) Regular Hearing Attendance",
-      hourlyRate: 15000,
-      durationMinutes: 45,
-      billableAmount: 11250,
-      lawyerName: "Adv. Rahul Deshmukh",
-      date: "25 Oct 2026",
-      status: "unbilled",
-    },
-  ]);
+  // Billable Hours Logs (populated dynamically as the advocate logs appearance sessions)
+  const [billableLogs, setBillableLogs] = useState<BillableLogItem[]>([]);
 
   // Modals state
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositData, setDepositData] = useState({
-    clientName: "Malabar Infotech Solutions Pvt Ltd",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041 - Commercial Arbitration Claim",
-    amount: "150000",
-    purpose: "Arbitrator Fee & Stenographer Escrow Advance",
-    referenceNumber: "NEFT/SBIN/2026/99410",
+    clientName: "",
+    matterTitle: "",
+    amount: "",
+    purpose: "",
+    referenceNumber: "",
   });
 
   const [showDisburseModal, setShowDisburseModal] = useState(false);
   const [disburseData, setDisburseData] = useState({
-    clientName: "Gopakumar Nambiar",
-    matterTitle: "WP(C) 19482/2024 - Gopakumar v. KSEB",
-    amount: "50000",
-    purpose: "Court Registry Section 19 Pre-Deposit / Stay Security",
-    challanNumber: "KL-HC-CHALLAN-2026-8812",
+    clientName: "",
+    matterTitle: "",
+    amount: "",
+    purpose: "",
+    challanNumber: "",
   });
 
   const [showDrawdownModal, setShowDrawdownModal] = useState(false);
   const [drawdownData, setDrawdownData] = useState({
-    clientName: "Apex Logistics Ltd",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041",
-    amount: "40000",
-    invoiceNumber: "INV/2026/041",
-    reason: "Rule 28 Adjustment against Tax Invoice INV/2026/041 (Notice Served)",
+    clientName: "",
+    matterTitle: "",
+    amount: "",
+    invoiceNumber: "",
+    reason: "",
   });
 
   const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
   const [newInvoiceData, setNewInvoiceData] = useState({
-    clientName: "Gopakumar Nambiar",
-    matterTitle: "WP(C) 19482/2024 - Gopakumar v. KSEB",
-    description: "High Court Division Bench Professional Appearance & Interim Stay Arguments",
-    subtotal: "45000",
+    clientName: "",
+    matterTitle: "",
+    description: "",
+    subtotal: "",
     gstRate: "18",
     applyTds: "true",
   });
 
   // Statement Client Selector
-  const [selectedStatementClient, setSelectedStatementClient] = useState("Malabar Infotech Solutions Pvt Ltd");
+  const [selectedStatementClient, setSelectedStatementClient] = useState("");
 
   // Stopwatch interval
   useEffect(() => {
@@ -209,167 +160,88 @@ export function AdvocateTrustBillingView({
   // Stopwatch current accrual in Rupees
   const currentAccruedFee = Math.round((timerSeconds / 3600) * selectedRateForTimer);
 
-  // Load Initial ERP & Trust Data
+  // Load Initial ERP, Trust, Matter & Client Data scoped to this Advocate
   const loadData = async () => {
     try {
       setLoading(true);
-      const [erpRes, invRes] = await Promise.all([
-        advocateApi.getErpOverview(token),
-        advocateApi.getInvoices(token),
+      const [trustRes, invRes, matRes, cliRes] = await Promise.all([
+        advocateApi.getTrustTransactions(token).catch(() => null),
+        advocateApi.getInvoices(token).catch(() => null),
+        advocateApi.getMatters(token).catch(() => null),
+        advocateApi.getClients(token).catch(() => null),
       ]);
-      if (invRes && invRes.success && invRes.invoices && invRes.invoices.length > 0) {
-        setInvoices(invRes.invoices);
-      }
-      if (erpRes && erpRes.success && (erpRes as any).trust && (erpRes as any).trust.length > 0) {
-        setTrustTransactions((erpRes as any).trust);
+
+      setInvoices(invRes?.success && Array.isArray(invRes.invoices) ? invRes.invoices : []);
+      setTrustTransactions(trustRes?.success && Array.isArray(trustRes.transactions) ? trustRes.transactions : []);
+
+      const loadedMatters = matRes?.success && Array.isArray(matRes.matters) ? matRes.matters : [];
+      setMatters(loadedMatters);
+      if (loadedMatters.length > 0) {
+        setSelectedMatterForTimer((prev) =>
+          prev && loadedMatters.some((m) => formatMatterLabel(m) === prev) ? prev : formatMatterLabel(loadedMatters[0])
+        );
       } else {
-        loadDefaultFallback();
+        setSelectedMatterForTimer("General Chamber Matter");
       }
+
+      setClients(cliRes?.success && Array.isArray(cliRes.clients) ? cliRes.clients : []);
     } catch (err) {
-      console.warn("Failed to load ERP data, using standard defaults:", err);
-      loadDefaultFallback();
+      console.warn("Failed to load advocate billing & trust ledger:", err);
+      setInvoices([]);
+      setTrustTransactions([]);
+      setMatters([]);
+      setClients([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadDefaultFallback = () => {
-    setTrustTransactions([
-      {
-        _id: "tru_101",
-        id: "tru_101",
-        type: "deposit",
-        clientName: "Malabar Infotech Solutions Pvt Ltd",
-        citizenId: "client_malabar",
-        matterTitle: "ARB/NCLT/KOCHI/2024/041 - Commercial Arbitration Claim",
-        amount: 350000,
-        purpose: "Arbitrator Hearing Fee & Stenographer Advance Escrow",
-        referenceNumber: "NEFT/KLB2026/091244",
-        verifiedBy: "Adv. Meera Krishnan",
-        date: "14 Oct 2026",
-        status: "cleared",
-      },
-      {
-        _id: "tru_102",
-        id: "tru_102",
-        type: "deposit",
-        clientName: "Gopakumar Nambiar",
-        citizenId: "default_citizen",
-        matterTitle: "WP(C) 19482/2024 - Gopakumar v. KSEB",
-        amount: 175000,
-        purpose: "High Court Registry Stay Security & Senior Counsel Retainer",
-        referenceNumber: "UPI/YESB/901284",
-        verifiedBy: "Adv. Meera Krishnan",
-        date: "20 Oct 2026",
-        status: "cleared",
-      },
-      {
-        _id: "tru_103",
-        id: "tru_103",
-        type: "disbursement",
-        clientName: "Gopakumar Nambiar",
-        citizenId: "default_citizen",
-        matterTitle: "WP(C) 19482/2024 - Gopakumar v. KSEB",
-        amount: 50000,
-        purpose: "High Court Registry Security Deposit (Interim Order Compliance)",
-        referenceNumber: "CHALLAN/HC/2026/7821",
-        verifiedBy: "Adv. Meera Krishnan",
-        date: "22 Oct 2026",
-        status: "cleared",
-      },
-      {
-        _id: "tru_104",
-        id: "tru_104",
-        type: "disbursement",
-        clientName: "Malabar Infotech Solutions Pvt Ltd",
-        citizenId: "client_malabar",
-        matterTitle: "ARB/NCLT/KOCHI/2024/041",
-        amount: 75000,
-        purpose: "Sole Arbitrator Sitting Fee (Day 1 Preliminary Session)",
-        referenceNumber: "RTGS/HDFC/2026/0119",
-        verifiedBy: "Adv. Meera Krishnan",
-        date: "27 Oct 2026",
-        status: "cleared",
-      },
-      {
-        _id: "tru_105",
-        id: "tru_105",
-        type: "drawdown",
-        clientName: "Apex Logistics Ltd",
-        citizenId: "client_apex",
-        matterTitle: "CC 412/2023 - S.138 NI Act Prosecution",
-        amount: 25000,
-        purpose: "BCI Rule 28 Fee Drawdown against Tax Invoice INV/2026/039",
-        referenceNumber: "INTRA-BANK/DRAWDOWN/882",
-        verifiedBy: "Adv. Meera Krishnan",
-        date: "28 Oct 2026",
-        status: "cleared",
-      },
-    ]);
-
-    setInvoices([
-      {
-        _id: "inv_101",
-        invoiceNumber: "INV/2026/041",
-        clientName: "Apex Logistics Ltd",
-        clientPhone: "+91 98460 44120",
-        matterTitle: "ARB/NCLT/KOCHI/2024/041 — Commercial Injunction",
-        items: [
-          { description: "Section 9 Commercial Arbitration Interim Injunction Drafting", amount: 45000 },
-          { description: "Senior Counsel NCLT Dais Appearance", amount: 25000 },
-        ],
-        subtotal: 70000,
-        gstRate: 18,
-        gstAmount: 12600,
-        totalAmount: 82600,
-        status: "paid",
-        dueDate: "10 Nov 2026",
-        paymentMethod: "Trust Escrow Drawdown",
-        createdAt: "2026-10-14T05:15:00.000Z",
-      },
-      {
-        _id: "inv_102",
-        invoiceNumber: "INV/2026/042",
-        clientName: "Gopakumar Nambiar",
-        clientPhone: "+91 94471 28930",
-        matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-        items: [
-          { description: "High Court Division Bench Admission Arguments", amount: 35000 },
-          { description: "Stay Petition (IA 1/2024) Preparation", amount: 15000 },
-        ],
-        subtotal: 50000,
-        gstRate: 18,
-        gstAmount: 9000,
-        totalAmount: 59000,
-        status: "unpaid",
-        dueDate: "15 Nov 2026",
-        paymentMethod: "Pending Client Remittance",
-        createdAt: "2026-10-20T08:30:00.000Z",
-      },
-      {
-        _id: "inv_103",
-        invoiceNumber: "INV/2026/043",
-        clientName: "Malabar Infotech Solutions Pvt Ltd",
-        clientPhone: "+91 94460 12890",
-        matterTitle: "Corporate Retainer & MCA Compliance (Q3)",
-        items: [
-          { description: "Monthly Corporate Legal Advisory & Contract Redlining", amount: 120000 },
-        ],
-        subtotal: 120000,
-        gstRate: 18,
-        gstAmount: 21600,
-        totalAmount: 141600,
-        status: "paid",
-        dueDate: "01 Nov 2026",
-        paymentMethod: "NEFT / RTGS Direct",
-        createdAt: "2026-10-25T11:00:00.000Z",
-      },
-    ]);
-  };
-
   useEffect(() => {
     loadData();
   }, [token]);
+
+  const statementClientOptions = useMemo(() => {
+    const names = new Set<string>();
+    for (const tx of trustTransactions) {
+      if (tx.clientName) names.add(tx.clientName);
+    }
+    for (const inv of invoices) {
+      if (inv.clientName) names.add(inv.clientName);
+    }
+    for (const c of clients) {
+      const name = c.fullName || c.clientName || c.name;
+      if (name) names.add(name);
+    }
+    return Array.from(names);
+  }, [trustTransactions, invoices, clients]);
+
+  useEffect(() => {
+    if (statementClientOptions.length === 0) {
+      if (selectedStatementClient) setSelectedStatementClient("");
+    } else if (!statementClientOptions.includes(selectedStatementClient)) {
+      setSelectedStatementClient(statementClientOptions[0]);
+    }
+  }, [statementClientOptions, selectedStatementClient]);
+
+  const tdsLedgerRows = useMemo(() => {
+    const byClient = new Map<string, { company: string; gross: number; invoiceCount: number; reconciled: boolean }>();
+    for (const inv of invoices) {
+      const company = inv.clientName || "Client";
+      const existing = byClient.get(company) || { company, gross: 0, invoiceCount: 0, reconciled: true };
+      existing.gross += Number(inv.subtotal) || Number(inv.totalAmount) || 0;
+      existing.invoiceCount += 1;
+      if (inv.status !== "paid") existing.reconciled = false;
+      byClient.set(company, existing);
+    }
+    return Array.from(byClient.values()).map((entry) => ({
+      company: entry.company,
+      invoiceCount: entry.invoiceCount,
+      gross: entry.gross,
+      rate: "10% (194J)",
+      tds: Math.round(entry.gross * 0.1),
+      reconciled: entry.reconciled,
+    }));
+  }, [invoices]);
 
   // Compute Financial Aggregates
   const totalTrustDeposits = trustTransactions
@@ -404,60 +276,90 @@ export function AdvocateTrustBillingView({
     .filter((t) => isStatutoryTransaction(t))
     .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
+  const unbilledLogCount = billableLogs.filter((l) => l.status === "unbilled").length;
+
   const totalUnbilledFees = billableLogs
     .filter((l) => l.status === "unbilled")
     .reduce((sum, l) => sum + l.billableAmount, 0);
 
-  const totalBilledInvoices = invoices.reduce((sum, i) => sum + i.totalAmount, 0);
+  const totalBilledInvoices = invoices.reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
 
   const totalCollectedInvoices = invoices
     .filter((i) => i.status === "paid")
-    .reduce((sum, i) => sum + i.totalAmount, 0);
+    .reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0);
+
+  const filteredTrustTransactions = useMemo(
+    () =>
+      trustTransactions.filter((t) => {
+        const q = searchQuery.toLowerCase();
+        const matchesQuery =
+          !q ||
+          (t.clientName || "").toLowerCase().includes(q) ||
+          (t.matterTitle || "").toLowerCase().includes(q) ||
+          (t.purpose || "").toLowerCase().includes(q) ||
+          (t.referenceNumber || "").toLowerCase().includes(q);
+        if (!matchesQuery) return false;
+
+        if (escrowFilter === "deposit") return t.type === "deposit";
+        if (escrowFilter === "statutory") return isStatutoryTransaction(t);
+        if (escrowFilter === "court") return t.type === "disbursement" && !isStatutoryTransaction(t);
+        if (escrowFilter === "drawdown") return t.type === "drawdown";
+        return true;
+      }),
+    [trustTransactions, searchQuery, escrowFilter]
+  );
+
+  const totalTdsClaimed = Math.round(
+    invoices
+      .filter((i) => i.status === "paid")
+      .reduce((sum, i) => sum + (Number(i.subtotal) || Number(i.totalAmount) || 0), 0) * 0.1
+  );
 
   // Submit Escrow Deposit
   const handleSaveDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = Number(depositData.amount) || 0;
-    if (amountNum <= 0) return;
+    if (amountNum <= 0 || !depositData.clientName.trim()) return;
 
     try {
       const res = await advocateApi.addTrustTransaction(
         {
           type: "deposit",
-          clientName: depositData.clientName,
-          matterTitle: depositData.matterTitle,
+          clientName: depositData.clientName.trim(),
+          matterTitle: depositData.matterTitle.trim() || "General Client Escrow",
           amount: amountNum,
-          purpose: depositData.purpose,
-          referenceNumber: depositData.referenceNumber,
+          purpose: depositData.purpose.trim() || "Advance Retainer Escrow",
+          referenceNumber: depositData.referenceNumber.trim() || `TXN/${Date.now()}`,
           verifiedBy: advocateName,
         },
         token
       );
 
       if (res && res.success && res.transaction) {
-        setTrustTransactions([res.transaction, ...trustTransactions]);
+        setTrustTransactions((prev) => [res.transaction, ...prev]);
       } else {
-        setTrustTransactions([
+        setTrustTransactions((prev) => [
           {
             _id: "tru_" + Date.now(),
             id: "tru_" + Date.now(),
             type: "deposit",
-            clientName: depositData.clientName,
-            matterTitle: depositData.matterTitle,
+            clientName: depositData.clientName.trim(),
+            matterTitle: depositData.matterTitle.trim() || "General Client Escrow",
             amount: amountNum,
-            purpose: depositData.purpose,
-            referenceNumber: depositData.referenceNumber,
+            purpose: depositData.purpose.trim() || "Advance Retainer Escrow",
+            referenceNumber: depositData.referenceNumber.trim() || `TXN/${Date.now()}`,
             verifiedBy: advocateName,
             date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
             status: "cleared",
           },
-          ...trustTransactions,
+          ...prev,
         ]);
       }
+      setDepositData({ clientName: "", matterTitle: "", amount: "", purpose: "", referenceNumber: "" });
       setShowDepositModal(false);
       showToast(`Escrow deposit of ₹${amountNum.toLocaleString("en-IN")} credited to segregated trust ledger.`);
     } catch (err) {
-      showToast("Deposit recorded in local segregated trust ledger.");
+      showToast("Deposit could not reach server; recorded locally in trust ledger.");
       setShowDepositModal(false);
     }
   };
@@ -466,62 +368,124 @@ export function AdvocateTrustBillingView({
   const handleSaveDisburse = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = Number(disburseData.amount) || 0;
-    if (amountNum <= 0) return;
+    if (amountNum <= 0 || !disburseData.clientName.trim()) return;
 
-    setTrustTransactions([
-      {
-        _id: "tru_" + Date.now(),
-        id: "tru_" + Date.now(),
-        type: "disbursement",
-        clientName: disburseData.clientName,
-        matterTitle: disburseData.matterTitle,
-        amount: amountNum,
-        purpose: `${disburseData.purpose} (Challan: ${disburseData.challanNumber})`,
-        referenceNumber: disburseData.challanNumber,
-        verifiedBy: advocateName,
-        date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-        status: "cleared",
-      },
-      ...trustTransactions,
-    ]);
-    setShowDisburseModal(false);
-    showToast(`Court deposit of ₹${amountNum.toLocaleString("en-IN")} debited from client escrow.`);
+    const purposeText = disburseData.challanNumber.trim()
+      ? `${disburseData.purpose.trim() || "Court Registry Disbursal"} (Challan: ${disburseData.challanNumber.trim()})`
+      : disburseData.purpose.trim() || "Court Registry Disbursal";
+    const refText = disburseData.challanNumber.trim() || `CHALLAN/${Date.now()}`;
+
+    try {
+      const res = await advocateApi.addTrustTransaction(
+        {
+          type: "disbursement",
+          clientName: disburseData.clientName.trim(),
+          matterTitle: disburseData.matterTitle.trim() || "General Client Escrow",
+          amount: amountNum,
+          purpose: purposeText,
+          referenceNumber: refText,
+          verifiedBy: advocateName,
+        },
+        token
+      );
+
+      if (res && res.success && res.transaction) {
+        setTrustTransactions((prev) => [res.transaction, ...prev]);
+      } else {
+        setTrustTransactions((prev) => [
+          {
+            _id: "tru_" + Date.now(),
+            id: "tru_" + Date.now(),
+            type: "disbursement",
+            clientName: disburseData.clientName.trim(),
+            matterTitle: disburseData.matterTitle.trim() || "General Client Escrow",
+            amount: amountNum,
+            purpose: purposeText,
+            referenceNumber: refText,
+            verifiedBy: advocateName,
+            date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+            status: "cleared",
+          },
+          ...prev,
+        ]);
+      }
+      setDisburseData({ clientName: "", matterTitle: "", amount: "", purpose: "", challanNumber: "" });
+      setShowDisburseModal(false);
+      showToast(`Court deposit of ₹${amountNum.toLocaleString("en-IN")} debited from client escrow.`);
+    } catch (err) {
+      showToast("Court disbursal recorded locally; check server connection.");
+      setShowDisburseModal(false);
+    }
   };
 
   // Submit Authorized Fee Drawdown
   const handleSaveDrawdown = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = Number(drawdownData.amount) || 0;
-    if (amountNum <= 0) return;
+    if (amountNum <= 0 || !drawdownData.clientName.trim()) return;
 
-    setTrustTransactions([
-      {
-        _id: "tru_" + Date.now(),
-        id: "tru_" + Date.now(),
-        type: "drawdown",
-        clientName: drawdownData.clientName,
-        matterTitle: drawdownData.matterTitle,
-        amount: amountNum,
-        purpose: `BCI Rule 28 Drawdown against Invoice ${drawdownData.invoiceNumber} (${drawdownData.reason})`,
-        referenceNumber: `DRAWDOWN/${Date.now().toString().slice(-6)}`,
-        verifiedBy: advocateName,
-        date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-        status: "cleared",
-      },
-      ...trustTransactions,
-    ]);
+    const invNum = drawdownData.invoiceNumber.trim();
+    const purposeText = `BCI Rule 28 Drawdown${invNum ? ` against Invoice ${invNum}` : ""}${
+      drawdownData.reason.trim() ? ` (${drawdownData.reason.trim()})` : ""
+    }`;
+    const refText = `DRAWDOWN/${Date.now().toString().slice(-6)}`;
 
-    // Update corresponding invoice if matching
-    setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.invoiceNumber === drawdownData.invoiceNumber
-          ? { ...inv, status: "paid", paymentMethod: "Trust Escrow Drawdown" }
-          : inv
-      )
-    );
+    try {
+      const res = await advocateApi.addTrustTransaction(
+        {
+          type: "drawdown",
+          clientName: drawdownData.clientName.trim(),
+          matterTitle: drawdownData.matterTitle.trim() || "Fee Drawdown Adjustment",
+          amount: amountNum,
+          purpose: purposeText,
+          referenceNumber: refText,
+          verifiedBy: advocateName,
+        },
+        token
+      );
 
-    setShowDrawdownModal(false);
-    showToast(`₹${amountNum.toLocaleString("en-IN")} drawn into operating account per Rule 28 intimation.`);
+      if (res && res.success && res.transaction) {
+        setTrustTransactions((prev) => [res.transaction, ...prev]);
+      } else {
+        setTrustTransactions((prev) => [
+          {
+            _id: "tru_" + Date.now(),
+            id: "tru_" + Date.now(),
+            type: "drawdown",
+            clientName: drawdownData.clientName.trim(),
+            matterTitle: drawdownData.matterTitle.trim() || "Fee Drawdown Adjustment",
+            amount: amountNum,
+            purpose: purposeText,
+            referenceNumber: refText,
+            verifiedBy: advocateName,
+            date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+            status: "cleared",
+          },
+          ...prev,
+        ]);
+      }
+
+      if (invNum) {
+        const matchingInvoice = invoices.find((inv) => inv.invoiceNumber === invNum);
+        if (matchingInvoice?._id) {
+          await advocateApi.updateInvoiceStatus(matchingInvoice._id, "paid", "Trust Escrow Drawdown", token).catch(() => null);
+        }
+        setInvoices((prev) =>
+          prev.map((inv) =>
+            inv.invoiceNumber === invNum
+              ? { ...inv, status: "paid", paymentMethod: "Trust Escrow Drawdown" }
+              : inv
+          )
+        );
+      }
+
+      setDrawdownData({ clientName: "", matterTitle: "", amount: "", invoiceNumber: "", reason: "" });
+      setShowDrawdownModal(false);
+      showToast(`₹${amountNum.toLocaleString("en-IN")} drawn into operating account per Rule 28 intimation.`);
+    } catch (err) {
+      showToast("Fee drawdown recorded locally; check server connection.");
+      setShowDrawdownModal(false);
+    }
   };
 
   // Log Stopwatch Session to Billable Hours
@@ -532,16 +496,18 @@ export function AdvocateTrustBillingView({
     }
     const minutes = Math.ceil(timerSeconds / 60);
     const fee = Math.round((minutes / 60) * selectedRateForTimer);
+    const matchedMatter = matters.find((m) => formatMatterLabel(m) === selectedMatterForTimer);
+    const resolvedClient =
+      matchedMatter?.clientName ||
+      matchedMatter?.petitionerName ||
+      matchedMatter?.citizenName ||
+      "Client on Record";
 
     const newLog: BillableLogItem = {
       id: `log_${Date.now()}`,
-      matterTitle: selectedMatterForTimer,
-      caseNumber: selectedMatterForTimer.split(" — ")[0] || "WP(C)",
-      clientName: selectedMatterForTimer.includes("Gopakumar")
-        ? "Gopakumar Nambiar"
-        : selectedMatterForTimer.includes("Apex")
-        ? "Apex Logistics Ltd"
-        : "Client on Record",
+      matterTitle: selectedMatterForTimer || "General Chamber Matter",
+      caseNumber: matchedMatter?.caseNumber || selectedMatterForTimer.split(" — ")[0] || "CHAMBER",
+      clientName: resolvedClient,
       activityType: selectedActivityForTimer,
       hourlyRate: selectedRateForTimer,
       durationMinutes: minutes,
@@ -551,22 +517,24 @@ export function AdvocateTrustBillingView({
       status: "unbilled",
     };
 
-    setBillableLogs([newLog, ...billableLogs]);
+    setBillableLogs((prev) => [newLog, ...prev]);
     setIsTimerRunning(false);
     setTimerSeconds(0);
     showToast(`Logged ${minutes} mins billable appearance (₹${fee.toLocaleString("en-IN")}) to matter.`);
   };
 
   // Convert Unbilled Hours to Tax Invoice
-  const handleConvertHoursToInvoice = (log: BillableLogItem) => {
+  const handleConvertHoursToInvoice = async (log: BillableLogItem) => {
     const subtotal = log.billableAmount;
     const gstRate = 18;
     const gstAmount = Math.round((subtotal * gstRate) / 100);
     const totalAmount = subtotal + gstAmount;
+    const dueDate = new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
+    const generatedNumber = `INV/${new Date().getFullYear()}/${String(invoices.length + 1).padStart(3, "0")}`;
 
-    const newInv: AdvocateInvoice = {
+    let createdInv: AdvocateInvoice = {
       _id: `inv_${Date.now()}`,
-      invoiceNumber: `INV/2026/0${invoices.length + 45}`,
+      invoiceNumber: generatedNumber,
       clientName: log.clientName,
       matterTitle: log.matterTitle,
       items: [{ description: log.activityType, amount: subtotal }],
@@ -575,46 +543,104 @@ export function AdvocateTrustBillingView({
       gstAmount,
       totalAmount,
       status: "unpaid",
-      dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
+      dueDate,
       paymentMethod: "Pending Client Remittance",
       createdAt: new Date().toISOString(),
     };
 
-    setInvoices([newInv, ...invoices]);
+    try {
+      const res = await advocateApi.createInvoice(
+        {
+          invoiceNumber: generatedNumber,
+          clientName: log.clientName,
+          matterTitle: log.matterTitle,
+          items: [{ description: log.activityType, amount: subtotal }],
+          subtotal,
+          gstRate,
+          gstAmount,
+          totalAmount,
+          dueDate,
+          paymentMethod: "Pending Client Remittance",
+        },
+        token
+      );
+      if (res?.success && res.invoice) {
+        createdInv = res.invoice;
+      }
+    } catch (err) {
+      console.warn("Could not persist converted invoice to backend:", err);
+    }
+
+    setInvoices((prev) => [createdInv, ...prev]);
     setBillableLogs((prev) =>
-      prev.map((l) => (l.id === log.id ? { ...l, status: "invoiced", invoiceRef: newInv.invoiceNumber } : l))
+      prev.map((l) => (l.id === log.id ? { ...l, status: "invoiced", invoiceRef: createdInv.invoiceNumber } : l))
     );
-    showToast(`Generated Tax Invoice ${newInv.invoiceNumber} for ₹${totalAmount.toLocaleString("en-IN")}.`);
+    showToast(`Generated Tax Invoice ${createdInv.invoiceNumber} for ₹${totalAmount.toLocaleString("en-IN")}.`);
     setActiveTab("invoices");
   };
 
   // Create Manual Invoice
-  const handleCreateTaxInvoice = (e: React.FormEvent) => {
+  const handleCreateTaxInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     const sub = Number(newInvoiceData.subtotal) || 0;
+    if (sub <= 0 || !newInvoiceData.clientName.trim()) return;
+
     const gstR = Number(newInvoiceData.gstRate) || 18;
     const gstAmt = Math.round((sub * gstR) / 100);
     const tot = sub + gstAmt;
+    const dueDate = new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
+    const generatedNumber = `INV/${new Date().getFullYear()}/${String(invoices.length + 1).padStart(3, "0")}`;
 
-    const newInv: AdvocateInvoice = {
+    let createdInv: AdvocateInvoice = {
       _id: `inv_${Date.now()}`,
-      invoiceNumber: `INV/2026/0${invoices.length + 45}`,
-      clientName: newInvoiceData.clientName,
-      matterTitle: newInvoiceData.matterTitle,
-      items: [{ description: newInvoiceData.description, amount: sub }],
+      invoiceNumber: generatedNumber,
+      clientName: newInvoiceData.clientName.trim(),
+      matterTitle: newInvoiceData.matterTitle.trim() || "Legal Advisory & Representation",
+      items: [{ description: newInvoiceData.description.trim() || "Professional Legal Services", amount: sub }],
       subtotal: sub,
       gstRate: gstR,
       gstAmount: gstAmt,
       totalAmount: tot,
       status: "unpaid",
-      dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0],
+      dueDate,
       paymentMethod: "Pending Remittance",
       createdAt: new Date().toISOString(),
     };
 
-    setInvoices([newInv, ...invoices]);
+    try {
+      const res = await advocateApi.createInvoice(
+        {
+          invoiceNumber: generatedNumber,
+          clientName: createdInv.clientName,
+          matterTitle: createdInv.matterTitle,
+          items: createdInv.items,
+          subtotal: sub,
+          gstRate: gstR,
+          gstAmount: gstAmt,
+          totalAmount: tot,
+          dueDate,
+          paymentMethod: "Pending Remittance",
+        },
+        token
+      );
+      if (res?.success && res.invoice) {
+        createdInv = res.invoice;
+      }
+    } catch (err) {
+      console.warn("Could not persist invoice to backend:", err);
+    }
+
+    setInvoices((prev) => [createdInv, ...prev]);
+    setNewInvoiceData({
+      clientName: "",
+      matterTitle: "",
+      description: "",
+      subtotal: "",
+      gstRate: "18",
+      applyTds: "true",
+    });
     setShowCreateInvoiceModal(false);
-    showToast(`Tax Invoice ${newInv.invoiceNumber} generated.`);
+    showToast(`Tax Invoice ${createdInv.invoiceNumber} generated.`);
   };
 
   return (
@@ -696,7 +722,7 @@ export function AdvocateTrustBillingView({
               <span className="text-[11px] text-zinc-500">Unencumbered Client Funds</span>
             </div>
             <div className="text-[11px] text-zinc-500 flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-900">
-              <span>SBI High Court Branch • A/c 98210041289</span>
+              <span>Segregated Fiduciary Escrow Account</span>
               <span className="font-mono text-zinc-400">Zero Commingling</span>
             </div>
           </div>
@@ -719,7 +745,7 @@ export function AdvocateTrustBillingView({
               <span className="text-[11px] text-zinc-500">Realized Collections</span>
             </div>
             <div className="text-[11px] text-zinc-500 flex items-center justify-between pt-1 border-t border-zinc-100 dark:border-zinc-900">
-              <span>HDFC Marine Drive • A/c 44102981023</span>
+              <span>Chamber Fee &amp; Disbursement Ledger</span>
               <span className="font-mono text-zinc-400">Tax Audited</span>
             </div>
           </div>
@@ -744,7 +770,9 @@ export function AdvocateTrustBillingView({
             <div className="text-xl sm:text-2xl font-black text-black dark:text-white">
               ₹{totalUnbilledFees.toLocaleString("en-IN")}
             </div>
-            <span className="text-[11px] text-zinc-500">3 unbilled session logs ready to invoice</span>
+            <span className="text-[11px] text-zinc-500">
+              {unbilledLogCount} {unbilledLogCount === 1 ? "unbilled session log" : "unbilled session logs"} ready to invoice
+            </span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
@@ -762,7 +790,7 @@ export function AdvocateTrustBillingView({
               Section 194J TDS Claimed
             </span>
             <div className="text-xl sm:text-2xl font-black text-black dark:text-white">
-              ₹{(totalCollectedInvoices * 0.1).toLocaleString("en-IN")}
+              ₹{totalTdsClaimed.toLocaleString("en-IN")}
             </div>
             <span className="text-[11px] text-zinc-500">Form 26AS / AIS Traces Verified</span>
           </div>
@@ -961,7 +989,7 @@ export function AdvocateTrustBillingView({
                   Statutory Trust Escrow Register
                 </h3>
                 <p className="text-xs text-zinc-500">
-                  State Bank of India Segregated Client Escrow A/c 98210041289 (High Court Branch)
+                  BCI Rule 24 Segregated Client Trust Escrow Register
                 </p>
               </div>
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold border border-[#6B1728]/40 bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a8]">
@@ -982,24 +1010,7 @@ export function AdvocateTrustBillingView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                  {trustTransactions
-                    .filter((t) => {
-                      const q = searchQuery.toLowerCase();
-                      const matchesQuery =
-                        !q ||
-                        t.clientName.toLowerCase().includes(q) ||
-                        t.matterTitle.toLowerCase().includes(q) ||
-                        t.purpose.toLowerCase().includes(q) ||
-                        t.referenceNumber.toLowerCase().includes(q);
-                      if (!matchesQuery) return false;
-
-                      if (escrowFilter === "deposit") return t.type === "deposit";
-                      if (escrowFilter === "statutory") return isStatutoryTransaction(t);
-                      if (escrowFilter === "court") return t.type === "disbursement" && !isStatutoryTransaction(t);
-                      if (escrowFilter === "drawdown") return t.type === "drawdown";
-                      return true;
-                    })
-                    .map((item) => {
+                  {filteredTrustTransactions.map((item) => {
                       const isDeposit = item.type === "deposit";
                       const isDrawdown = item.type === "drawdown";
                       const isStatutory = isStatutoryTransaction(item);
@@ -1008,7 +1019,7 @@ export function AdvocateTrustBillingView({
                         <tr key={item._id} className="hover:bg-zinc-50 dark:hover:bg-zinc-950 transition">
                           <td className="py-3.5 px-4">
                             <span className="font-bold text-black dark:text-white block">
-                              {item.date || "29 Oct 2026"}
+                              {item.date || "Recorded"}
                             </span>
                             <span className="font-mono text-[10px] text-zinc-400">
                               {item.referenceNumber}
@@ -1105,6 +1116,15 @@ export function AdvocateTrustBillingView({
                         </tr>
                       );
                     })}
+                  {filteredTrustTransactions.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-10 px-4 text-center text-xs text-zinc-500">
+                        {loading
+                          ? "Loading trust escrow register..."
+                          : "No trust escrow transactions recorded yet. Record a client escrow deposit to begin."}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1148,9 +1168,15 @@ export function AdvocateTrustBillingView({
                   onChange={(e) => setSelectedMatterForTimer(e.target.value)}
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-black dark:text-white focus:outline-none cursor-pointer"
                 >
-                  <option value="WP(C) 19482/2024 — Gopakumar v. KSEB">WP(C) 19482/2024 — Gopakumar v. KSEB</option>
-                  <option value="ARB/NCLT/KOCHI/2024/041 — Apex Logistics v. Marine Exports">ARB/NCLT/KOCHI/2024/041 — Apex Logistics</option>
-                  <option value="Bail Appl. 8920/2026 — Muhammed Shafi v. State">Bail Appl. 8920/2026 — Muhammed Shafi</option>
+                  {matters.map((m) => {
+                    const label = formatMatterLabel(m);
+                    return (
+                      <option key={m._id || m.id || label} value={label}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                  <option value="General Chamber Matter">General Chamber Matter</option>
                 </select>
               </div>
 
@@ -1322,6 +1348,13 @@ export function AdvocateTrustBillingView({
                       </td>
                     </tr>
                   ))}
+                  {billableLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-10 px-4 text-center text-xs text-zinc-500">
+                        No billable appearance or consultation logs recorded yet. Start the courtroom timer above to record billable hours.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1334,6 +1367,14 @@ export function AdvocateTrustBillingView({
       {/* ============================================================== */}
       {activeTab === "invoices" && (
         <div className="space-y-5">
+          {invoices.length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center space-y-2">
+              <p className="text-sm font-bold text-black dark:text-white">No tax invoices generated yet</p>
+              <p className="text-xs text-zinc-500">
+                Use &ldquo;+ Tax Invoice&rdquo; above or convert a logged appearance session to create an invoice.
+              </p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {invoices.map((inv) => {
               const isPaid = inv.status === "paid";
@@ -1392,6 +1433,7 @@ export function AdvocateTrustBillingView({
               );
             })}
           </div>
+          )}
         </div>
       )}
 
@@ -1448,39 +1490,13 @@ export function AdvocateTrustBillingView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                  {[
-                    {
-                      company: "Malabar Infotech Solutions Pvt Ltd",
-                      tan: "CHEP12094B",
-                      gross: 350000,
-                      rate: "10% (194J)",
-                      tds: 35000,
-                      cert: "16A-Q2-2026-9018",
-                      match: true,
-                    },
-                    {
-                      company: "Apex Logistics Ltd",
-                      tan: "BLRE09128A",
-                      gross: 120000,
-                      rate: "10% (194J)",
-                      tds: 12000,
-                      cert: "16A-Q2-2026-4412",
-                      match: true,
-                    },
-                    {
-                      company: "Vanguard Infrastructure Ltd",
-                      tan: "MUMP00129C",
-                      gross: 240000,
-                      rate: "10% (194J)",
-                      tds: 24000,
-                      cert: "16A-Q1-2026-1189",
-                      match: true,
-                    },
-                  ].map((row, idx) => (
+                  {tdsLedgerRows.map((row, idx) => (
                     <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-zinc-950 transition">
                       <td className="py-3.5 px-4">
                         <span className="font-bold text-black dark:text-white block">{row.company}</span>
-                        <span className="font-mono text-[10px] text-zinc-400">TAN: {row.tan}</span>
+                        <span className="font-mono text-[10px] text-zinc-400">
+                          {row.invoiceCount} Billed {row.invoiceCount === 1 ? "Invoice" : "Invoices"}
+                        </span>
                       </td>
 
                       <td className="py-3.5 px-4 font-mono font-bold">
@@ -1496,17 +1512,24 @@ export function AdvocateTrustBillingView({
                       </td>
 
                       <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-500">
-                        {row.cert}
+                        {row.reconciled ? "Sec. 194J Eligible" : "Awaiting Settlement"}
                       </td>
 
                       <td className="py-3.5 px-4 text-center">
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#6B1728]/10 text-[#6B1728] dark:text-[#ff94a8] border border-[#6B1728]/30">
                           <CheckCircle2 className="w-3 h-3" />
-                          Reconciled
+                          {row.reconciled ? "Reconciled" : "Pending"}
                         </span>
                       </td>
                     </tr>
                   ))}
+                  {tdsLedgerRows.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-10 px-4 text-center text-xs text-zinc-500">
+                        No billed client invoices recorded yet for Section 194J TDS reconciliation.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1527,9 +1550,15 @@ export function AdvocateTrustBillingView({
                 onChange={(e) => setSelectedStatementClient(e.target.value)}
                 className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-black dark:text-white focus:outline-none cursor-pointer"
               >
-                <option value="Malabar Infotech Solutions Pvt Ltd">Malabar Infotech Solutions Pvt Ltd</option>
-                <option value="Gopakumar Nambiar">Gopakumar Nambiar</option>
-                <option value="Apex Logistics Ltd">Apex Logistics Ltd</option>
+                {statementClientOptions.length === 0 ? (
+                  <option value="">No client accounts recorded yet</option>
+                ) : (
+                  statementClientOptions.map((clientName) => (
+                    <option key={clientName} value={clientName}>
+                      {clientName}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -1553,10 +1582,10 @@ export function AdvocateTrustBillingView({
                 CHAMBERS OF {advocateName}
               </h2>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                Advocate, High Court of Kerala • Roll No: {barCouncilNumber}
+                {barCouncilNumber ? `Advocate • Roll No: ${barCouncilNumber}` : "Advocate Practice"}
               </p>
               <p className="text-[11px] text-zinc-500">
-                Chamber 402, High Court Advocates Association Building, Marine Drive, Kochi — 682031
+                Rule 24 Segregated Client Trust &amp; Disbursements Account Statement
               </p>
             </div>
 
@@ -1567,7 +1596,7 @@ export function AdvocateTrustBillingView({
                   Statement Furnished To:
                 </span>
                 <strong className="text-sm font-bold text-black dark:text-white block">
-                  {selectedStatementClient}
+                  {selectedStatementClient || "No Client Selected"}
                 </strong>
                 <span className="text-zinc-500 block">
                   Re: Entrusted Client Moneys &amp; Professional Disbursements Account
@@ -1600,10 +1629,10 @@ export function AdvocateTrustBillingView({
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
                   {trustTransactions
-                    .filter((t) => t.clientName === selectedStatementClient)
+                    .filter((t) => selectedStatementClient && t.clientName === selectedStatementClient)
                     .map((item) => (
                       <tr key={item._id}>
-                        <td className="py-2.5 px-4 font-mono text-[11px]">{item.date || "29 Oct 2026"}</td>
+                        <td className="py-2.5 px-4 font-mono text-[11px]">{item.date || "Recorded"}</td>
                         <td className="py-2.5 px-4">
                           <span className="font-semibold text-black dark:text-white block">
                             {item.purpose}
@@ -1620,6 +1649,16 @@ export function AdvocateTrustBillingView({
                         </td>
                       </tr>
                     ))}
+                  {trustTransactions.filter((t) => selectedStatementClient && t.clientName === selectedStatementClient)
+                    .length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-8 px-4 text-center text-xs text-zinc-500">
+                        {selectedStatementClient
+                          ? "No trust escrow entries recorded for this client yet."
+                          : "Select or record a client trust account entry to generate a Rule 24 statement."}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1627,16 +1666,20 @@ export function AdvocateTrustBillingView({
             {/* Statutory Declaration & Closing Balance */}
             <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
               <div className="flex justify-between items-center text-sm font-bold text-black dark:text-white">
-                <span>Unexpended Balance Held in Segregated SBI Trust Escrow:</span>
+                <span>Unexpended Balance Held in Segregated Trust Escrow:</span>
                 <span className="font-mono text-base text-[#6B1728] dark:text-[#ff94a8]">
                   ₹
                   {(
                     trustTransactions
-                      .filter((t) => t.clientName === selectedStatementClient && t.type === "deposit")
-                      .reduce((s, t) => s + t.amount, 0) -
+                      .filter(
+                        (t) => selectedStatementClient && t.clientName === selectedStatementClient && t.type === "deposit"
+                      )
+                      .reduce((s, t) => s + Number(t.amount || 0), 0) -
                     trustTransactions
-                      .filter((t) => t.clientName === selectedStatementClient && t.type !== "deposit")
-                      .reduce((s, t) => s + t.amount, 0)
+                      .filter(
+                        (t) => selectedStatementClient && t.clientName === selectedStatementClient && t.type !== "deposit"
+                      )
+                      .reduce((s, t) => s + Number(t.amount || 0), 0)
                   ).toLocaleString("en-IN")}
                 </span>
               </div>

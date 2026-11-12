@@ -155,47 +155,71 @@ export interface PenaltyCalculatorResult {
   summary: string;
 }
 
-const DUMMY_AUDIT = {
-  id: "dd-fallback-1",
-  auditId: "WAK-DD-FALLBACK",
-  userId: "cs_1",
+function getAuthToken(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+}
+
+function getAuthHeaders(includeJson = false): Record<string, string> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (includeJson) headers["Content-Type"] = "application/json";
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
+const EMPTY_AUDIT: DueDiligenceAuditItem = {
+  id: "",
+  auditId: "",
+  userId: "",
   clientEntity: {
-    name: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    pan: "AAECS1234F",
-    gstin: "07AAECS1234F1Z8",
-    authorizedCapital: 50000000,
-    paidUpCapital: 25000000,
-    annualTurnover: 485000000,
+    name: "",
+    cin: "",
+    pan: "",
+    gstin: "",
+    authorizedCapital: 0,
+    paidUpCapital: 0,
+    annualTurnover: 0,
   },
-  auditScope: "Statutory Health & Due Diligence Audit",
+  auditScope: "",
   transactionContext: {
-    targetType: "Corporate Health Audit",
-    proposedValuation: 2500000000,
-    financialPeriodAudited: "FY 2024-25 & FY 2025-26",
+    targetType: "",
+    proposedValuation: 0,
+    financialPeriodAudited: "",
     reportingStandard: "Companies Act 2013 & ICAI/ICSI Standards",
   },
   penaltyExposure: {
-    totalMaximumExposure: 0,
-    mitigatedExposure: 0,
-    exposures: [],
+    totalCalculatedPenalty: 0,
+    totalMitigatedPenalty: 0,
+    items: [],
   },
   compoundingRoadmap: {
     hasCompoundableOffenses: false,
-    competentAuthority: "Regional Director (RD)" as const,
-    thresholdBasis: "Statutory threshold",
+    competentAuthority: "Regional Director (RD)",
+    thresholdBasis: "",
     identifiedDefaults: [],
+    petitionDraft: {
+      formNumber: "Form GNL-1",
+      prayerSummary: "",
+      factualGrounds: [],
+      legalPrecedents: [],
+    },
   },
-  overallScore: 88,
-  grade: "Grade A",
-  riskCategory: "low_risk" as const,
-  totalCheckpoints: 100,
-  passedCheckpoints: 88,
-  failedCheckpoints: 12,
+  attestation: {
+    leadCs: { name: "", membershipNo: "", cpNumber: "", firm: "", digitalSigned: false },
+    leadCa: { name: "", membershipNo: "", firmRegNo: "", firm: "", udin: "", digitalSigned: false },
+    status: "Draft",
+  },
+  overallScore: 0,
+  grade: "Grade B (Conditional)",
+  riskCategory: "moderate_risk",
+  totalCheckpoints: 0,
+  passedCheckpoints: 0,
+  failedCheckpoints: 0,
   checkpoints: [],
   redFlags: [],
-  status: "draft" as const,
-} as unknown as DueDiligenceAuditItem;
+  status: "draft",
+};
 
 export const dueDiligenceApi = {
   // Get all audits
@@ -204,40 +228,53 @@ export const dueDiligenceApi = {
     count: number;
     audits: DueDiligenceAuditItem[];
   }> {
+    if (!getAuthToken()) {
+      return { success: true, count: 0, audits: [] };
+    }
     try {
       const query = new URLSearchParams();
       if (params.entityName) query.append("entityName", params.entityName);
       if (params.riskCategory) query.append("riskCategory", params.riskCategory);
 
-      const res = await fetch(`${API_BASE_URL}/due-diligence?${query.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/due-diligence?${query.toString()}`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         return await res.json();
       }
     } catch (e) {
       console.warn("dueDiligenceApi.getAudits fallback:", (e as Error)?.message);
     }
-    return { success: true, count: 0, audits: [] };
+    return { success: false, count: 0, audits: [] };
   },
 
   // Get audit by ID
   async getAuditById(id: string): Promise<{ success: boolean; audit: DueDiligenceAuditItem }> {
+    if (!getAuthToken()) {
+      return { success: false, audit: EMPTY_AUDIT };
+    }
     try {
-      const res = await fetch(`${API_BASE_URL}/due-diligence/${id}`);
+      const res = await fetch(`${API_BASE_URL}/due-diligence/${id}`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         return await res.json();
       }
     } catch (e) {
       console.warn("dueDiligenceApi.getAuditById fallback:", (e as Error)?.message);
     }
-    return { success: false, audit: DUMMY_AUDIT };
+    return { success: false, audit: EMPTY_AUDIT };
   },
 
   // Create audit
   async createAudit(data: Partial<DueDiligenceAuditItem>): Promise<{ success: boolean; audit: DueDiligenceAuditItem }> {
+    if (!getAuthToken()) {
+      return { success: false, audit: EMPTY_AUDIT };
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/due-diligence`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(data),
       });
       if (res.ok) {
@@ -246,7 +283,7 @@ export const dueDiligenceApi = {
     } catch (e) {
       console.warn("dueDiligenceApi.createAudit fallback:", (e as Error)?.message);
     }
-    return { success: false, audit: { ...DUMMY_AUDIT, ...data } };
+    return { success: false, audit: EMPTY_AUDIT };
   },
 
   // Update specific checkpoint status
@@ -259,10 +296,13 @@ export const dueDiligenceApi = {
       remedialAction?: string;
     }
   ): Promise<{ success: boolean; audit: DueDiligenceAuditItem }> {
+    if (!getAuthToken()) {
+      return { success: false, audit: EMPTY_AUDIT };
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/due-diligence/${id}/checkpoint`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(data),
       });
       if (res.ok) {
@@ -271,7 +311,7 @@ export const dueDiligenceApi = {
     } catch (e) {
       console.warn("dueDiligenceApi.updateCheckpoint fallback:", (e as Error)?.message);
     }
-    return { success: false, audit: DUMMY_AUDIT };
+    return { success: false, audit: EMPTY_AUDIT };
   },
 
   // Calculate live statutory penalties
@@ -282,17 +322,19 @@ export const dueDiligenceApi = {
     underReportedIncome?: number;
     gstTaxDisputed?: number;
   }): Promise<{ success: boolean; calculation: PenaltyCalculatorResult }> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/due-diligence/calculate-penalties`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      if (res.ok) {
-        return await res.json();
+    if (getAuthToken()) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/due-diligence/calculate-penalties`, {
+          method: "POST",
+          headers: getAuthHeaders(true),
+          body: JSON.stringify(params),
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("dueDiligenceApi.calculatePenalties fallback:", (e as Error)?.message);
       }
-    } catch (e) {
-      console.warn("dueDiligenceApi.calculatePenalties fallback:", (e as Error)?.message);
     }
     return {
       success: false,
@@ -303,7 +345,7 @@ export const dueDiligenceApi = {
         gstSection122: { taxDisputed: 0, total: 0, rule: "" },
         totalMaximumExposure: 0,
         mitigatedExposure: 0,
-        summary: "Calculation unavailable in offline mode.",
+        summary: "Authentication required or server unavailable.",
       },
     };
   },
@@ -325,17 +367,19 @@ export const dueDiligenceApi = {
       draftText: string;
     };
   }> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/due-diligence/compounding-petition`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        return await res.json();
+    if (getAuthToken()) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/due-diligence/compounding-petition`, {
+          method: "POST",
+          headers: getAuthHeaders(true),
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("dueDiligenceApi.generateCompoundingPetition fallback:", (e as Error)?.message);
       }
-    } catch (e) {
-      console.warn("dueDiligenceApi.generateCompoundingPetition fallback:", (e as Error)?.message);
     }
     return {
       success: false,
@@ -343,7 +387,7 @@ export const dueDiligenceApi = {
         form: "Form GNL-1",
         jurisdiction: "Regional Director / NCLT",
         competentForum: "National Company Law Tribunal",
-        draftText: "Draft compounding petition under Section 441 of the Companies Act, 2013.",
+        draftText: "",
       },
     };
   },
@@ -356,10 +400,13 @@ export const dueDiligenceApi = {
       caSigner?: { name?: string; membershipNo?: string; udin?: string };
     } = {}
   ): Promise<{ success: boolean; audit: DueDiligenceAuditItem }> {
+    if (!getAuthToken()) {
+      return { success: false, audit: EMPTY_AUDIT };
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/due-diligence/${id}/attest`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(signers),
       });
       if (res.ok) {
@@ -368,14 +415,18 @@ export const dueDiligenceApi = {
     } catch (e) {
       console.warn("dueDiligenceApi.attestAudit fallback:", (e as Error)?.message);
     }
-    return { success: false, audit: DUMMY_AUDIT };
+    return { success: false, audit: EMPTY_AUDIT };
   },
 
   // Delete audit
   async deleteAudit(id: string): Promise<{ success: boolean; message: string }> {
+    if (!getAuthToken()) {
+      return { success: false, message: "Authentication required." };
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/due-diligence/${id}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         return await res.json();
@@ -383,7 +434,7 @@ export const dueDiligenceApi = {
     } catch (e) {
       console.warn("dueDiligenceApi.deleteAudit fallback:", (e as Error)?.message);
     }
-    return { success: true, message: "Audit deleted" };
+    return { success: false, message: "Unable to delete audit." };
   },
 };
 

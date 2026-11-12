@@ -6,13 +6,20 @@ const isMongoConnected = () => {
   return mongoose.connection.readyState === 1;
 };
 
+const getUserId = (req) => {
+  const id = req.user?.id || req.user?._id;
+  return id ? String(id) : "";
+};
+
 // 1. Get all statutory notices with filters
 export const getStatutoryNotices = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { portal, status, search } = req.query;
 
     if (isMongoConnected()) {
-      let query = {};
+      let query = { userId };
       if (portal && portal !== "ALL") query.portal = portal;
       if (status && status !== "ALL") query.status = status;
       if (search) {
@@ -27,8 +34,7 @@ export const getStatutoryNotices = async (req, res) => {
       return res.json({ success: true, count: notices.length, notices });
     }
 
-    // Fallback to devStore
-    const notices = devStore.getStatutoryNotices({ portal, status, search });
+    const notices = devStore.getStatutoryNotices({ userId, portal, status, search });
     return res.json({ success: true, count: notices.length, notices, isFallback: true });
   } catch (error) {
     console.error("Error in getStatutoryNotices:", error);
@@ -39,17 +45,20 @@ export const getStatutoryNotices = async (req, res) => {
 // 2. Get notice by ID
 export const getStatutoryNoticeById = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
 
     if (isMongoConnected()) {
       const notice = await StatutoryNotice.findOne({
+        userId,
         $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }, { referenceNumber: id }],
       });
       if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
       return res.json({ success: true, notice });
     }
 
-    const notice = devStore.getStatutoryNoticeById(id);
+    const notice = devStore.getStatutoryNoticeById(id, userId);
     if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
     return res.json({ success: true, notice, isFallback: true });
   } catch (error) {
@@ -61,12 +70,15 @@ export const getStatutoryNoticeById = async (req, res) => {
 // 3. Ingest / Create a new Statutory Notice
 export const createStatutoryNotice = async (req, res) => {
   try {
-    const noticeData = req.body;
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
+    const noticeData = req.body || {};
     const noticeId = noticeData.noticeId || `WAK-SCN-${Date.now()}`;
 
     if (isMongoConnected()) {
       const newNotice = new StatutoryNotice({
         ...noticeData,
+        userId,
         noticeId,
       });
       await newNotice.save();
@@ -75,6 +87,7 @@ export const createStatutoryNotice = async (req, res) => {
 
     const newNotice = devStore.createStatutoryNotice({
       ...noticeData,
+      userId,
       noticeId,
     });
     return res.status(201).json({ success: true, notice: newNotice, isFallback: true });
@@ -87,19 +100,21 @@ export const createStatutoryNotice = async (req, res) => {
 // 4. Update Notice Status
 export const updateNoticeStatus = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
     const { status, note, performedBy } = req.body;
 
     const auditEntry = {
       action: `STATUS_CHANGE_TO_${status}`,
-      performedBy: performedBy || "Practicing Professional",
+      performedBy: performedBy || req.user?.fullName || "Practicing Professional",
       timestamp: new Date().toISOString(),
       notes: note || `Notice status updated to ${status}`,
     };
 
     if (isMongoConnected()) {
       const notice = await StatutoryNotice.findOneAndUpdate(
-        { $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
+        { userId, $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
         {
           $set: { status },
           $push: { auditTrail: auditEntry },
@@ -110,11 +125,10 @@ export const updateNoticeStatus = async (req, res) => {
       return res.json({ success: true, notice });
     }
 
-    const notice = devStore.getStatutoryNoticeById(id);
+    const notice = devStore.getStatutoryNoticeById(id, userId);
     if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
-    const auditTrail = notice.auditTrail || [];
-    auditTrail.push(auditEntry);
-    const updated = devStore.updateStatutoryNotice(id, { status, auditTrail });
+    const auditTrail = [...(notice.auditTrail || []), auditEntry];
+    const updated = devStore.updateStatutoryNotice(id, { status, auditTrail }, userId);
     return res.json({ success: true, notice: updated, isFallback: true });
   } catch (error) {
     console.error("Error in updateNoticeStatus:", error);
@@ -125,28 +139,30 @@ export const updateNoticeStatus = async (req, res) => {
 // 5. Generate Legal Reply & Jurisdictional Rebuttal
 export const generateNoticeReply = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
     const { authorName, customJurisdictionalObjection, customFacts } = req.body;
 
     let notice = null;
     if (isMongoConnected()) {
       notice = await StatutoryNotice.findOne({
+        userId,
         $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }],
       });
     } else {
-      notice = devStore.getStatutoryNoticeById(id);
+      notice = devStore.getStatutoryNoticeById(id, userId);
     }
 
     if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
 
-    // Build targeted legal draft based on statutory portal and section
     let jurisdictionalObjections = [
       "The impugned notice suffers from non-application of mind and lacks valid Document Identification Number (DIN).",
       "Violation of principles of natural justice as mandatory pre-notice opportunity was not granted.",
     ];
     let statutoryPrecedents = [];
     let factualSubmissions = [
-      `The Assessee ${notice.clientEntity?.name || "Company"} is an honest, tax-compliant corporate entity.`,
+      `The Assessee ${notice.clientEntity?.name || "Company"} is a compliant corporate entity.`,
       "All relevant transactions have been accounted for in the audited books of accounts and filed on statutory portals.",
     ];
 
@@ -200,8 +216,10 @@ export const generateNoticeReply = async (req, res) => {
     const formalPrayer =
       "In light of the statutory facts and binding judicial precedents cited herein, it is respectfully prayed that the proposed proceedings / demand be dropped in its entirety. An opportunity of personal hearing through Virtual Video Conference is requested before any adverse order is passed.";
 
-    const draftText = `BEFORE THE ${notice.issuingAuthority.toUpperCase()}
-IN THE MATTER OF: ${notice.clientEntity?.name?.toUpperCase()}
+    const resolvedAuthor = authorName || req.user?.fullName || "Authorized Legal Representative";
+
+    const draftText = `BEFORE THE ${(notice.issuingAuthority || "COMPETENT AUTHORITY").toUpperCase()}
+IN THE MATTER OF: ${(notice.clientEntity?.name || "COMPANY").toUpperCase()}
 NOTICE REFERENCE: ${notice.referenceNumber} DATED ${notice.dateOfNotice}
 STATUTORY SECTION: ${notice.statutorySection}
 
@@ -220,7 +238,7 @@ ${statutoryPrecedents.map((p, i) => `3.${i + 1} ${p}`).join("\n")}
 ${formalPrayer}
 
 Respectfully submitted,
-${authorName || "CS Rajesh Sharma (FCS-8921) & CA Ramanathan Iyer (M.No 054921)"}
+${resolvedAuthor}
 Counsel for the Assessee / Company`;
 
     const rebuttalDraft = {
@@ -231,19 +249,19 @@ Counsel for the Assessee / Company`;
       formalPrayer,
       draftText,
       generatedAt: new Date().toISOString(),
-      authorName: authorName || "CS Rajesh Sharma & CA Ramanathan Iyer",
+      authorName: resolvedAuthor,
     };
 
     const auditEntry = {
       action: "LEGAL_REPLY_DRAFTED",
-      performedBy: authorName || "Practicing Professional",
+      performedBy: resolvedAuthor,
       timestamp: new Date().toISOString(),
       notes: "Generated comprehensive legal rebuttal with preliminary objections and case laws.",
     };
 
     if (isMongoConnected()) {
       const updated = await StatutoryNotice.findOneAndUpdate(
-        { $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
+        { userId, $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
         {
           $set: { rebuttalDraft, status: "REPLY_DRAFTED" },
           $push: { auditTrail: auditEntry },
@@ -253,13 +271,16 @@ Counsel for the Assessee / Company`;
       return res.json({ success: true, notice: updated });
     }
 
-    const auditTrail = notice.auditTrail || [];
-    auditTrail.push(auditEntry);
-    const updated = devStore.updateStatutoryNotice(id, {
-      rebuttalDraft,
-      status: "REPLY_DRAFTED",
-      auditTrail,
-    });
+    const auditTrail = [...(notice.auditTrail || []), auditEntry];
+    const updated = devStore.updateStatutoryNotice(
+      id,
+      {
+        rebuttalDraft,
+        status: "REPLY_DRAFTED",
+        auditTrail,
+      },
+      userId
+    );
     return res.json({ success: true, notice: updated, isFallback: true });
   } catch (error) {
     console.error("Error in generateNoticeReply:", error);
@@ -270,6 +291,8 @@ Counsel for the Assessee / Company`;
 // 6. Attach Evidence Document / Annexure
 export const attachEvidenceDocument = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
     const { label, documentTitle, fileName, sha256Hash } = req.body;
 
@@ -284,14 +307,14 @@ export const attachEvidenceDocument = async (req, res) => {
 
     const auditEntry = {
       action: "ANNEXURE_ATTACHED",
-      performedBy: "Assigned Counsel",
+      performedBy: req.user?.fullName || "Assigned Counsel",
       timestamp: new Date().toISOString(),
       notes: `Attached ${annexure.label}: ${annexure.documentTitle}`,
     };
 
     if (isMongoConnected()) {
       const notice = await StatutoryNotice.findOneAndUpdate(
-        { $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
+        { userId, $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
         {
           $push: { annexures: annexure, auditTrail: auditEntry },
         },
@@ -301,13 +324,11 @@ export const attachEvidenceDocument = async (req, res) => {
       return res.json({ success: true, notice, annexure });
     }
 
-    const notice = devStore.getStatutoryNoticeById(id);
+    const notice = devStore.getStatutoryNoticeById(id, userId);
     if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
-    const annexures = notice.annexures || [];
-    annexures.push(annexure);
-    const auditTrail = notice.auditTrail || [];
-    auditTrail.push(auditEntry);
-    const updated = devStore.updateStatutoryNotice(id, { annexures, auditTrail });
+    const annexures = [...(notice.annexures || []), annexure];
+    const auditTrail = [...(notice.auditTrail || []), auditEntry];
+    const updated = devStore.updateStatutoryNotice(id, { annexures, auditTrail }, userId);
     return res.json({ success: true, notice: updated, annexure, isFallback: true });
   } catch (error) {
     console.error("Error in attachEvidenceDocument:", error);
@@ -318,14 +339,16 @@ export const attachEvidenceDocument = async (req, res) => {
 // 7. Sign Notice Reply with Class 3 DSC USB Token
 export const signNoticeReplyWithDsc = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
-    const { dscSignatory, dscSerialNumber, role } = req.body;
+    const { dscSignatory, dscSerialNumber } = req.body;
 
     const filingReceipt = {
       acknowledgmentNumber: `ACK-${Date.now().toString().slice(-8)}`,
       filedOn: new Date().toISOString(),
-      dscSignatory: dscSignatory || "CS Rajesh Sharma / CA Ramanathan Iyer",
-      dscSerialNumber: dscSerialNumber || "7A 4B 91 02 C8 3F E1 2D",
+      dscSignatory: dscSignatory || req.user?.fullName || "Authorized Signatory",
+      dscSerialNumber: dscSerialNumber || "",
       portalSubmissionStatus: "DIGITALLY_SIGNED_AND_SUBMITTED",
     };
 
@@ -333,12 +356,12 @@ export const signNoticeReplyWithDsc = async (req, res) => {
       action: "DSC_SIGNED_AND_SUBMITTED",
       performedBy: filingReceipt.dscSignatory,
       timestamp: new Date().toISOString(),
-      notes: `Reply digitally signed using Class 3 USB Crypto Token (Serial #${filingReceipt.dscSerialNumber}) and submitted to portal.`,
+      notes: `Reply digitally signed using Class 3 USB Crypto Token${filingReceipt.dscSerialNumber ? ` (Serial #${filingReceipt.dscSerialNumber})` : ""} and submitted to portal.`,
     };
 
     if (isMongoConnected()) {
       const notice = await StatutoryNotice.findOneAndUpdate(
-        { $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
+        { userId, $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
         {
           $set: { status: "REPLY_FILED", filingReceipt },
           $push: { auditTrail: auditEntry },
@@ -349,15 +372,18 @@ export const signNoticeReplyWithDsc = async (req, res) => {
       return res.json({ success: true, notice, filingReceipt });
     }
 
-    const notice = devStore.getStatutoryNoticeById(id);
+    const notice = devStore.getStatutoryNoticeById(id, userId);
     if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
-    const auditTrail = notice.auditTrail || [];
-    auditTrail.push(auditEntry);
-    const updated = devStore.updateStatutoryNotice(id, {
-      status: "REPLY_FILED",
-      filingReceipt,
-      auditTrail,
-    });
+    const auditTrail = [...(notice.auditTrail || []), auditEntry];
+    const updated = devStore.updateStatutoryNotice(
+      id,
+      {
+        status: "REPLY_FILED",
+        filingReceipt,
+        auditTrail,
+      },
+      userId
+    );
     return res.json({ success: true, notice: updated, filingReceipt, isFallback: true });
   } catch (error) {
     console.error("Error in signNoticeReplyWithDsc:", error);
@@ -368,29 +394,31 @@ export const signNoticeReplyWithDsc = async (req, res) => {
 // 8. Schedule Virtual Hearing / VC
 export const scheduleVirtualHearing = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
     const { hearingDate, hearingTime, hearingMode, meetingLink, assignedCounsel, benchOrOfficer } = req.body;
 
     const hearingSchedule = {
-      hearingDate: hearingDate || "2026-11-20",
+      hearingDate: hearingDate || new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
       hearingTime: hearingTime || "11:30 AM",
       hearingMode: hearingMode || "VIRTUAL_VC",
-      meetingLink: meetingLink || "https://delhigst.webex.com/meet/adjudication",
+      meetingLink: meetingLink || "",
       benchOrOfficer: benchOrOfficer || "Adjudicating Authority",
-      assignedCounsel: assignedCounsel || "Adv. Vikram Mehra / CS Rajesh Sharma",
+      assignedCounsel: assignedCounsel || req.user?.fullName || "Authorized Counsel",
       status: "SCHEDULED",
     };
 
     const auditEntry = {
       action: "HEARING_SCHEDULED",
-      performedBy: "Registry / Mailroom",
+      performedBy: req.user?.fullName || "Registry / Mailroom",
       timestamp: new Date().toISOString(),
       notes: `Hearing fixed on ${hearingSchedule.hearingDate} at ${hearingSchedule.hearingTime} via ${hearingSchedule.hearingMode}`,
     };
 
     if (isMongoConnected()) {
       const notice = await StatutoryNotice.findOneAndUpdate(
-        { $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
+        { userId, $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }] },
         {
           $set: { status: "HEARING_SCHEDULED", hearingSchedule },
           $push: { auditTrail: auditEntry },
@@ -401,15 +429,18 @@ export const scheduleVirtualHearing = async (req, res) => {
       return res.json({ success: true, notice, hearingSchedule });
     }
 
-    const notice = devStore.getStatutoryNoticeById(id);
+    const notice = devStore.getStatutoryNoticeById(id, userId);
     if (!notice) return res.status(404).json({ success: false, error: "Notice not found" });
-    const auditTrail = notice.auditTrail || [];
-    auditTrail.push(auditEntry);
-    const updated = devStore.updateStatutoryNotice(id, {
-      status: "HEARING_SCHEDULED",
-      hearingSchedule,
-      auditTrail,
-    });
+    const auditTrail = [...(notice.auditTrail || []), auditEntry];
+    const updated = devStore.updateStatutoryNotice(
+      id,
+      {
+        status: "HEARING_SCHEDULED",
+        hearingSchedule,
+        auditTrail,
+      },
+      userId
+    );
     return res.json({ success: true, notice: updated, hearingSchedule, isFallback: true });
   } catch (error) {
     console.error("Error in scheduleVirtualHearing:", error);
@@ -420,16 +451,19 @@ export const scheduleVirtualHearing = async (req, res) => {
 // 9. Delete notice
 export const deleteStatutoryNotice = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, error: "Authentication required." });
     const { id } = req.params;
 
     if (isMongoConnected()) {
       await StatutoryNotice.findOneAndDelete({
+        userId,
         $or: [{ noticeId: id }, { _id: mongoose.isValidObjectId(id) ? id : null }],
       });
       return res.json({ success: true, message: "Notice deleted from database" });
     }
 
-    devStore.deleteStatutoryNotice(id);
+    devStore.deleteStatutoryNotice(id, userId);
     return res.json({ success: true, message: "Notice deleted from devStore" });
   } catch (error) {
     console.error("Error in deleteStatutoryNotice:", error);

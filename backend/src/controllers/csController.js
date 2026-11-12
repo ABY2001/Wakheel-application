@@ -15,7 +15,7 @@ const shouldUseDevStore = () => {
 };
 
 const getUserId = (req) => {
-  return req.user?._id || req.user?.id || "cs_1";
+  return String(req.user?._id || req.user?.id || "");
 };
 
 // ============================================================================
@@ -31,7 +31,7 @@ export const getBoardMeetings = async (req, res) => {
     }
 
     const meetings = await BoardMeeting.find({
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     }).sort({ date: -1 });
 
     res.json({
@@ -71,14 +71,17 @@ export const createBoardMeeting = async (req, res) => {
 
 export const updateBoardMeeting = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const meeting = devStore.updateBoardMeeting(req.params.id, req.body);
+      const meeting = devStore.updateBoardMeeting(req.params.id, req.body, userId);
       if (!meeting) return res.status(404).json({ success: false, message: "Meeting not found" });
       return res.json({ success: true, meeting });
     }
 
     const meeting = await BoardMeeting.findOneAndUpdate(
-      { $or: [{ meetingId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ meetingId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -96,12 +99,16 @@ export const updateBoardMeeting = async (req, res) => {
 
 export const deleteBoardMeeting = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteBoardMeeting(req.params.id);
+      devStore.deleteBoardMeeting(req.params.id, userId);
       return res.json({ success: true, message: "Meeting deleted" });
     }
 
     await BoardMeeting.deleteOne({
+      userId,
       $or: [{ meetingId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Meeting deleted" });
@@ -124,7 +131,7 @@ export const getBoardResolutions = async (req, res) => {
     }
 
     const resolutions = await BoardResolution.find({
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -164,14 +171,17 @@ export const createBoardResolution = async (req, res) => {
 
 export const updateBoardResolution = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const resolution = devStore.updateBoardResolution(req.params.id, req.body);
+      const resolution = devStore.updateBoardResolution(req.params.id, req.body, userId);
       if (!resolution) return res.status(404).json({ success: false, message: "Resolution not found" });
       return res.json({ success: true, resolution });
     }
 
     const resolution = await BoardResolution.findOneAndUpdate(
-      { $or: [{ resolutionId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ resolutionId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -189,12 +199,16 @@ export const updateBoardResolution = async (req, res) => {
 
 export const deleteBoardResolution = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteBoardResolution(req.params.id);
+      devStore.deleteBoardResolution(req.params.id, userId);
       return res.json({ success: true, message: "Resolution deleted" });
     }
 
     await BoardResolution.deleteOne({
+      userId,
       $or: [{ resolutionId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Resolution deleted" });
@@ -206,19 +220,23 @@ export const deleteBoardResolution = async (req, res) => {
 
 export const generateCtcResolution = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     const { certifiedBy } = req.body;
+    const certifier = (certifiedBy || req.user?.name || "").trim();
     if (shouldUseDevStore()) {
-      const resolution = devStore.generateCtcResolution(req.params.id, certifiedBy);
+      const resolution = devStore.generateCtcResolution(req.params.id, certifier, userId);
       if (!resolution) return res.status(404).json({ success: false, message: "Resolution not found" });
       return res.json({ success: true, message: "Certified True Copy (CTC) generated successfully", resolution });
     }
 
     const resolution = await BoardResolution.findOneAndUpdate(
-      { $or: [{ resolutionId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ resolutionId: req.params.id }, { _id: req.params.id }] },
       {
         $set: {
           isCtcGenerated: true,
-          ctcCertifiedBy: certifiedBy || "CS Rajesh Sharma (FCS 8492, CP 10294)",
+          ctcCertifiedBy: certifier,
           ctcCertifiedAt: new Date().toISOString().split("T")[0],
         },
       },
@@ -250,7 +268,7 @@ export const getCorporateEntities = async (req, res) => {
     }
 
     const entities = await CorporateEntity.find({
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     }).sort({ companyName: 1 });
 
     res.json({
@@ -290,14 +308,17 @@ export const createCorporateEntity = async (req, res) => {
 
 export const updateCorporateEntity = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const entity = devStore.updateCorporateEntity(req.params.id, req.body);
+      const entity = devStore.updateCorporateEntity(req.params.id, req.body, userId);
       if (!entity) return res.status(404).json({ success: false, message: "Entity not found" });
       return res.json({ success: true, entity });
     }
 
     const entity = await CorporateEntity.findOneAndUpdate(
-      { $or: [{ entityId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ entityId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -315,12 +336,16 @@ export const updateCorporateEntity = async (req, res) => {
 
 export const deleteCorporateEntity = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteCorporateEntity(req.params.id);
+      devStore.deleteCorporateEntity(req.params.id, userId);
       return res.json({ success: true, message: "Entity deleted successfully" });
     }
 
     await CorporateEntity.findOneAndDelete({
+      userId,
       $or: [{ entityId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Entity deleted successfully" });
@@ -345,7 +370,7 @@ export const getRocFilings = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (companyName) query.companyName = companyName;
     if (status && status !== "ALL") query.status = status;
@@ -390,14 +415,17 @@ export const createRocFiling = async (req, res) => {
 
 export const updateRocFiling = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const filing = devStore.updateRocFiling(req.params.id, req.body);
+      const filing = devStore.updateRocFiling(req.params.id, req.body, userId);
       if (!filing) return res.status(404).json({ success: false, message: "Filing not found" });
       return res.json({ success: true, filing });
     }
 
     const filing = await RocFiling.findOneAndUpdate(
-      { $or: [{ filingId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ filingId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -415,12 +443,16 @@ export const updateRocFiling = async (req, res) => {
 
 export const deleteRocFiling = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteRocFiling(req.params.id);
+      devStore.deleteRocFiling(req.params.id, userId);
       return res.json({ success: true, message: "Filing deleted successfully" });
     }
 
     await RocFiling.findOneAndDelete({
+      userId,
       $or: [{ filingId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Filing deleted successfully" });
@@ -445,7 +477,7 @@ export const getStatutoryRegisters = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (companyName) query.companyName = companyName;
     if (registerType && registerType !== "ALL") query.registerType = registerType;
@@ -489,14 +521,17 @@ export const createRegisterEntry = async (req, res) => {
 
 export const updateRegisterEntry = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const entry = devStore.updateRegisterEntry(req.params.id, req.body);
+      const entry = devStore.updateRegisterEntry(req.params.id, req.body, userId);
       if (!entry) return res.status(404).json({ success: false, message: "Register entry not found" });
       return res.json({ success: true, entry });
     }
 
     const entry = await StatutoryRegister.findOneAndUpdate(
-      { $or: [{ registerEntryId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ registerEntryId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -514,12 +549,16 @@ export const updateRegisterEntry = async (req, res) => {
 
 export const deleteRegisterEntry = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteRegisterEntry(req.params.id);
+      devStore.deleteRegisterEntry(req.params.id, userId);
       return res.json({ success: true, message: "Register entry deleted successfully" });
     }
 
     await StatutoryRegister.findOneAndDelete({
+      userId,
       $or: [{ registerEntryId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Register entry deleted successfully" });
@@ -537,7 +576,7 @@ export const getSecretarialAuditReport = async (req, res) => {
   try {
     const userId = getUserId(req);
     const { companyName } = req.query;
-    const report = devStore.getSecretarialAuditReport(userId, companyName || "CyberCorp Technologies Pvt Ltd");
+    const report = devStore.getSecretarialAuditReport(userId, companyName || "");
     res.json({ success: true, report });
   } catch (error) {
     console.error("getSecretarialAuditReport error:", error);
@@ -560,7 +599,7 @@ export const getCorporateContracts = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (companyName) query.companyName = companyName;
     if (contractType && contractType !== "ALL") query.contractType = contractType;
@@ -604,14 +643,17 @@ export const createCorporateContract = async (req, res) => {
 
 export const updateCorporateContract = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const contract = devStore.updateCorporateContract(req.params.id, req.body);
+      const contract = devStore.updateCorporateContract(req.params.id, req.body, userId);
       if (!contract) return res.status(404).json({ success: false, message: "Contract not found" });
       return res.json({ success: true, contract });
     }
 
     const contract = await CorporateContract.findOneAndUpdate(
-      { $or: [{ contractId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ contractId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -629,12 +671,16 @@ export const updateCorporateContract = async (req, res) => {
 
 export const deleteCorporateContract = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteCorporateContract(req.params.id);
+      devStore.deleteCorporateContract(req.params.id, userId);
       return res.json({ success: true, message: "Contract deleted successfully" });
     }
 
     await CorporateContract.findOneAndDelete({
+      userId,
       $or: [{ contractId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Contract deleted successfully" });
@@ -659,7 +705,7 @@ export const getRetainerAdvocates = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (status && status !== "ALL") query.status = status;
 
@@ -702,14 +748,17 @@ export const createRetainerAdvocate = async (req, res) => {
 
 export const updateRetainerAdvocate = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const advocate = devStore.updateRetainerAdvocate(req.params.id, req.body);
+      const advocate = devStore.updateRetainerAdvocate(req.params.id, req.body, userId);
       if (!advocate) return res.status(404).json({ success: false, message: "Advocate not found" });
       return res.json({ success: true, advocate });
     }
 
     const advocate = await RetainerAdvocate.findOneAndUpdate(
-      { $or: [{ advocateId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ advocateId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -727,12 +776,16 @@ export const updateRetainerAdvocate = async (req, res) => {
 
 export const deleteRetainerAdvocate = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteRetainerAdvocate(req.params.id);
+      devStore.deleteRetainerAdvocate(req.params.id, userId);
       return res.json({ success: true, message: "Advocate deleted successfully" });
     }
 
     await RetainerAdvocate.findOneAndDelete({
+      userId,
       $or: [{ advocateId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Advocate deleted successfully" });
@@ -757,7 +810,7 @@ export const getCorporateVaultItems = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (companyName) query.companyName = companyName;
     if (docType && docType !== "ALL") query.docType = docType;
@@ -801,14 +854,17 @@ export const createCorporateVaultItem = async (req, res) => {
 
 export const updateCorporateVaultItem = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const item = devStore.updateCorporateVaultItem(req.params.id, req.body);
+      const item = devStore.updateCorporateVaultItem(req.params.id, req.body, userId);
       if (!item) return res.status(404).json({ success: false, message: "Vault item not found" });
       return res.json({ success: true, item });
     }
 
     const item = await CorporateVaultItem.findOneAndUpdate(
-      { $or: [{ vaultId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ vaultId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -826,12 +882,16 @@ export const updateCorporateVaultItem = async (req, res) => {
 
 export const deleteCorporateVaultItem = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteCorporateVaultItem(req.params.id);
+      devStore.deleteCorporateVaultItem(req.params.id, userId);
       return res.json({ success: true, message: "Vault item deleted successfully" });
     }
 
     await CorporateVaultItem.findOneAndDelete({
+      userId,
       $or: [{ vaultId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Vault item deleted successfully" });
@@ -856,7 +916,7 @@ export const getSecretarialInvoices = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "cs_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (status && status !== "ALL") query.status = status;
 
@@ -881,7 +941,7 @@ export const createSecretarialInvoice = async (req, res) => {
       return res.status(201).json({ success: true, invoice });
     }
 
-    const subtotal = Number(req.body.subtotal) || 50000;
+    const subtotal = Number(req.body.subtotal) || 0;
     const gstRate = Number(req.body.gstRate) || 18;
     const gstAmount = Math.round((subtotal * gstRate) / 100);
     const totalAmount = subtotal + gstAmount;
@@ -908,14 +968,17 @@ export const createSecretarialInvoice = async (req, res) => {
 
 export const updateSecretarialInvoice = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const invoice = devStore.updateSecretarialInvoice(req.params.id, req.body);
+      const invoice = devStore.updateSecretarialInvoice(req.params.id, req.body, userId);
       if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found" });
       return res.json({ success: true, invoice });
     }
 
     const invoice = await SecretarialInvoice.findOneAndUpdate(
-      { $or: [{ invoiceId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ invoiceId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -933,12 +996,16 @@ export const updateSecretarialInvoice = async (req, res) => {
 
 export const deleteSecretarialInvoice = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteSecretarialInvoice(req.params.id);
+      devStore.deleteSecretarialInvoice(req.params.id, userId);
       return res.json({ success: true, message: "Invoice deleted successfully" });
     }
 
     await SecretarialInvoice.findOneAndDelete({
+      userId,
       $or: [{ invoiceId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Invoice deleted successfully" });

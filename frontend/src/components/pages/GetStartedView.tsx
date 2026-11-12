@@ -401,7 +401,11 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
         role: loginRole,
       };
 
-      localStorage.setItem("wakheel_token", res.token || "dev_token");
+      if (res.token) {
+        localStorage.setItem("wakheel_token", res.token);
+      } else {
+        localStorage.removeItem("wakheel_token");
+      }
       localStorage.setItem("wakheel_user", JSON.stringify({ ...userPayload, role: loginRole }));
 
       setTimeout(() => {
@@ -421,16 +425,16 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
             const loggedInAdvItem = {
               id: userPayload.id || `adv_${Date.now()}`,
               name: cleanAdvName,
-              title: "Advocate • High Court of Kerala (Ernakulam)",
-              location: "Ernakulam, Kerala",
-              experience: prof?.experienceYears ? `${prof.experienceYears}+ Years Experience` : "10+ Years Experience",
+              title: prof?.industry || "Advocate",
+              location: prof?.headquarters || "",
+              experience: prof?.experienceYears ? `${prof.experienceYears}+ Years Experience` : "",
               rating: 5.0,
-              reviewsCount: 1,
+              reviewsCount: 0,
               matchScore: 99,
-              specialties: prof?.practiceAreas || ["Civil Litigation", "Constitutional Writs", "Commercial Law"],
-              fee: "₹1,500 / session",
+              specialties: prof?.practiceAreas || [],
+              fee: prof?.fee || "",
               email: email.trim(),
-              barCouncilNumber: (userPayload as any).barCouncilId || prof?.barCouncilNumber || "K/001429/2024",
+              barCouncilNumber: (userPayload as any).barCouncilId || prof?.barCouncilNumber || "",
               isCurrentUser: true,
             };
             const updatedList = [loggedInAdvItem, ...registered.filter((a: any) => a.email !== email.trim())];
@@ -441,13 +445,13 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
           router.push("/advocate-workspace");
         } else {
           let hasFirm = localStorage.getItem("wakheel_firm_profile");
-          if (!hasFirm && (loginRole === "cs" || loginRole === "ca")) {
+          if (!hasFirm && (loginRole === "cs" || loginRole === "ca") && (userPayload as any).firmName) {
             const firmProfile = {
-              name: (userPayload as any).firmName || (loginRole === "ca" ? "Apex Tax Advisors & Chartered Accountants LLP" : "Apex Law & Corporate Partners LLP"),
-              founderName: userPayload.fullName || (loginRole === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma"),
+              name: (userPayload as any).firmName,
+              founderName: userPayload.fullName || "",
               category: loginRole,
-              registrationCin: (userPayload as any).firmRegistration || "LLPIN-AAR-4192 / D/1942/2012",
-              isAccredited: true,
+              registrationCin: (userPayload as any).firmRegistration || "",
+              isAccredited: Boolean((userPayload as any).firmRegistration),
             };
             localStorage.setItem("wakheel_firm_profile", JSON.stringify(firmProfile));
             hasFirm = JSON.stringify(firmProfile);
@@ -891,7 +895,7 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                             required
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="e.g. Adv. Vikram Mehra / CS Rajesh Sharma / CA Suresh Singhania"
+                            placeholder="Enter your full professional name"
                             className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                           />
                         </div>

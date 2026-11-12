@@ -9,14 +9,14 @@ const taxAudit3CDSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "ca_1",
+      required: true,
       index: true,
     },
     clientName: {
       type: String,
       required: true,
       trim: true,
-      default: "CyberCorp Technologies Pvt Ltd",
+      default: "",
     },
     pan: {
       type: String,
@@ -43,15 +43,15 @@ const taxAudit3CDSchema = new mongoose.Schema(
     },
     turnover: {
       type: Number,
-      default: 85000000, // ₹8.50 Cr
+      default: 0,
     },
     grossProfitRatio: {
       type: Number,
-      default: 24.5, // 24.5%
+      default: 0,
     },
     netProfitRatio: {
       type: Number,
-      default: 11.2, // 11.2%
+      default: 0,
     },
     disallowanceSec43B: {
       type: Number,
@@ -70,25 +70,25 @@ const taxAudit3CDSchema = new mongoose.Schema(
       default: 0,
     },
     udin: {
-      type: String, // 18-digit ICAI Unique Document Identification Number
+      type: String,
       trim: true,
       uppercase: true,
     },
     caFirmName: {
       type: String,
-      default: "Singhania & Verma Associates, Chartered Accountants",
+      default: "",
     },
     caPartnerName: {
       type: String,
-      default: "CA Rajesh Singhania (FCA)",
+      default: "",
     },
     caMembershipNumber: {
       type: String,
-      default: "054921",
+      default: "",
     },
     caFirmRegistrationNumber: {
       type: String,
-      default: "014920N",
+      default: "",
     },
     auditOpinion: {
       type: String,

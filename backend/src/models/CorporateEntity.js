@@ -9,7 +9,7 @@ const corporateEntitySchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     companyName: {
@@ -26,7 +26,7 @@ const corporateEntitySchema = new mongoose.Schema(
     },
     rocJurisdiction: {
       type: String,
-      default: "RoC Delhi & Haryana",
+      default: "",
       trim: true,
     },
     entityType: {
@@ -37,19 +37,19 @@ const corporateEntitySchema = new mongoose.Schema(
     },
     incorporationDate: {
       type: String,
-      default: "2022-04-12",
+      default: "",
     },
     authorizedCapital: {
       type: Number,
-      default: 5000000, // 50 Lakhs
+      default: 0,
     },
     paidUpCapital: {
       type: Number,
-      default: 2500000, // 25 Lakhs
+      default: 0,
     },
     registeredAddress: {
       type: String,
-      default: "Plot 42, Okhla Industrial Area Phase-III, New Delhi, DL 110020",
+      default: "",
     },
     email: {
       type: String,

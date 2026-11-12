@@ -10,7 +10,7 @@ const dscCertificateSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     holderName: {
@@ -56,11 +56,11 @@ const dscCertificateSchema = new mongoose.Schema(
     },
     validFrom: {
       type: String,
-      default: "2024-05-10",
+      default: "",
     },
     validTo: {
       type: String,
-      default: "2027-05-09",
+      default: "",
     },
     keyAlgorithm: {
       type: String,
@@ -77,7 +77,7 @@ const dscCertificateSchema = new mongoose.Schema(
     },
     totalSignaturesAffixed: {
       type: Number,
-      default: 142,
+      default: 0,
     },
     lastUsedAt: {
       type: String,

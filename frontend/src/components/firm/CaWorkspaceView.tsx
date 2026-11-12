@@ -152,8 +152,8 @@ interface CaWorkspaceViewProps {
 }
 
 export function CaWorkspaceView({
-  firmName = "Apex Tax Advisors & Chartered Accountants LLP",
-  caName = "CA Ramanathan Iyer & Partners",
+  firmName = "",
+  caName = "",
   initialTab = "income-tax",
 }: CaWorkspaceViewProps) {
   const [activeTab, setActiveTab] = useState<"income-tax" | "gst" | "tax-audit" | "financial-recon">(initialTab);
@@ -1506,11 +1506,11 @@ export function CaWorkspaceView({
                     category: "ca",
                     clientName: selectedAuditForUdin.clientName,
                     clientCinOrPan: `PAN: ${selectedAuditForUdin.pan}`,
-                    clientGstin: "32AABCI9812G1Z2",
-                    assignedProfessional: "CA Ramanathan Iyer, FCA",
+                    clientGstin: "—",
+                    assignedProfessional: selectedAuditForUdin.caName || caName || "Statutory Tax Auditor",
                     professionalRole: "Statutory Tax Auditor • Fellow Chartered Accountant (ICAI)",
-                    membershipNumber: "ICAI M.No 240189 • FRN 019482C",
-                    firmName: "Wakheel Multi-Disciplinary Practice LLP",
+                    membershipNumber: selectedAuditForUdin.caMembershipNo ? `ICAI M.No ${selectedAuditForUdin.caMembershipNo}` : "ICAI Verified Member",
+                    firmName: firmName || "Chartered Accountancy Practice",
                     udinOrSrn: selectedAuditForUdin.udin,
                     filingDate: `AY ${selectedAuditForUdin.assessmentYear}`,
                     status: "OFFICIALLY FILED",
@@ -1740,7 +1740,7 @@ export function CaWorkspaceView({
                 <input
                   name="clientName"
                   required
-                  placeholder="e.g. Anand Mahindra / CyberCorp Technologies Pvt Ltd"
+                  placeholder="Enter taxpayer / client entity name"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
                 />
               </div>
@@ -2006,9 +2006,9 @@ export function CaWorkspaceView({
                         status: "in_progress",
                         clausesReviewed: 44,
                         totalClauses: 44,
-                        caName: "CA Ramanathan Iyer",
-                        caMembershipNo: "401928",
-                        caFirmRegNo: "018241N",
+                        caName: caName || "Statutory Tax Auditor",
+                        caMembershipNo: "",
+                        caFirmRegNo: "",
                       })
                     : { success: false };
                   if (res.success && res.report) {
@@ -2145,7 +2145,7 @@ export function CaWorkspaceView({
                         currentRatio: 1.85,
                         debtEquityRatio: 0.65,
                         status: "reconciled",
-                        reconciledBy: "CA Ramanathan Iyer",
+                        reconciledBy: caName || "Statutory Auditor",
                       })
                     : { success: false };
                   if (res.success && res.recon) {

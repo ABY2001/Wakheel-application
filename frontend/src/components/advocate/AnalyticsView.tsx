@@ -5,24 +5,15 @@ import {
   BarChart3,
   FileSpreadsheet,
   Download,
-  Calendar,
-  Filter,
-  TrendingUp,
   Scale,
   Award,
   CheckCircle2,
   Clock,
-  Briefcase,
   RefreshCw,
   Plus,
-  Shield,
   X,
-  FileText,
   UserCheck,
   Check,
-  ArrowRight,
-  Sparkles,
-  ExternalLink,
 } from "lucide-react";
 import {
   advocateApi,
@@ -41,7 +32,7 @@ export function AnalyticsView({
   activeModule = "ai-analytics",
   onSelectModule,
   token,
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "",
 }: AnalyticsViewProps) {
   const [currentTab, setCurrentTab] = useState<string>(activeModule);
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,7 +48,7 @@ export function AnalyticsView({
   const [generating, setGenerating] = useState<boolean>(false);
   const [newReportTitle, setNewReportTitle] = useState<string>("");
   const [newReportCategory, setNewReportCategory] = useState<string>("Quarterly Audit");
-  const [newReportPeriod, setNewReportPeriod] = useState<string>("Q4 2026 (Oct – Dec)");
+  const [newReportPeriod, setNewReportPeriod] = useState<string>("");
 
   // Toast alert
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -78,21 +69,33 @@ export function AnalyticsView({
     if (onSelectModule) onSelectModule(id);
   };
 
+  const resolveToken = () =>
+    token ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+      : "");
+
   // Load analytics & reports
   const loadData = async () => {
+    const activeToken = resolveToken();
+    if (!activeToken) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       setRefreshing(true);
       const [benchRes, reportsRes, leadsRes] = await Promise.all([
-        advocateApi.getBenchAnalytics(token),
-        advocateApi.getChamberReports(token),
-        advocateApi.getIncomingLeads(token),
+        advocateApi.getBenchAnalytics(activeToken),
+        advocateApi.getChamberReports(activeToken),
+        advocateApi.getIncomingLeads(activeToken),
       ]);
 
       if (benchRes.success) {
         setAnalytics({
           kpis: benchRes.kpis,
-          practiceAreas: benchRes.practiceAreas,
-          courtBenches: benchRes.courtBenches,
+          practiceAreas: benchRes.practiceAreas || [],
+          courtBenches: benchRes.courtBenches || [],
         });
       }
       if (reportsRes.success && Array.isArray(reportsRes.reports)) {
@@ -102,7 +105,7 @@ export function AnalyticsView({
         setIncomingLeads(leadsRes.leads);
       }
     } catch (err) {
-      console.error("Failed to load practice analytics:", err);
+      console.warn("Failed to load practice analytics:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -117,6 +120,11 @@ export function AnalyticsView({
   const handleGenerateReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReportTitle.trim()) return;
+    const activeToken = resolveToken();
+    if (!activeToken) {
+      showToast("Please sign in to generate a certified practice report.");
+      return;
+    }
 
     try {
       setGenerating(true);
@@ -124,14 +132,14 @@ export function AnalyticsView({
         {
           title: newReportTitle.trim(),
           category: newReportCategory,
-          period: newReportPeriod,
+          period: newReportPeriod.trim() || "Current Period",
           metrics: {
-            winRate: analytics?.kpis.winRate || "89.2%",
-            totalDispositions: analytics?.kpis.judgmentsAnalyzed || 148,
-            certifiedBy: advocateName,
+            winRate: analytics?.kpis.winRate || "0%",
+            totalDispositions: analytics?.kpis.judgmentsAnalyzed || 0,
+            certifiedBy: advocateName || "Registered User",
           },
         },
-        token
+        activeToken
       );
 
       if (res.success && res.report) {
@@ -141,7 +149,7 @@ export function AnalyticsView({
         setNewReportTitle("");
       }
     } catch (err) {
-      console.error("Error generating report:", err);
+      console.warn("Error generating report:", err);
       showToast("Failed to generate report.");
     } finally {
       setGenerating(false);
@@ -150,19 +158,30 @@ export function AnalyticsView({
 
   // Accept incoming grievance / lead
   const handleAcceptLead = async (leadId: string) => {
+    const activeToken = resolveToken();
+    if (!activeToken) return;
     try {
-      const res = await advocateApi.acceptLead(leadId, token);
+      const res = await advocateApi.acceptLead(leadId, activeToken);
       if (res.success) {
         setIncomingLeads((prev) => prev.filter((l) => l._id !== leadId));
         showToast("Lead accepted and brief converted to active chamber docket.");
       }
     } catch (err) {
-      console.error("Error accepting lead:", err);
+      console.warn("Error accepting lead:", err);
     }
   };
 
-  // Download Report simulation (downloads text report)
+  // Download Report export
   const handleDownloadReport = (rep: ChamberReportItem) => {
+    const practiceAreaLines =
+      (analytics?.practiceAreas || []).length > 0
+        ? (analytics?.practiceAreas || []).map((p) => `• ${p.area}: ${p.rate} (${p.count})`).join("\n")
+        : "• No recorded practice domain metrics yet.";
+    const benchLines =
+      (analytics?.courtBenches || []).length > 0
+        ? (analytics?.courtBenches || []).map((b) => `• ${b.bench} (${b.judge}): ${b.disposition}`).join("\n")
+        : "• No recorded court bench appearances yet.";
+
     const reportContent = `======================================================
 WAKHEEL LEGAL OS — CERTIFIED CHAMBER PRACTICE REPORT
 ======================================================
@@ -170,27 +189,23 @@ Report Title: ${rep.title}
 Category:     ${rep.category}
 Period:       ${rep.period}
 Date Issued:  ${rep.generatedDate}
-Advocate:     ${advocateName}
+Account:      ${advocateName || "Registered User"}
 Status:       ${rep.status}
 
 EXECUTIVE PERFORMANCE SUMMARY:
-- Win Rate / Favorable Relief: ${analytics?.kpis.winRate || "89.2%"}
-- Average Case Disposal Time:  ${analytics?.kpis.avgDisposalMonths || "4.1 Months"}
-- Precedent Citation Power:    ${analytics?.kpis.citationEfficacy || "99.4%"}
-- Adverse Citations on Record: ZERO (100% Clean Precedential Compliance)
+- Relief / Disposition Rate:   ${analytics?.kpis.winRate || "0%"}
+- Average Case Disposal Time:  ${analytics?.kpis.avgDisposalMonths || "—"}
+- Precedent Authority:         ${analytics?.kpis.citationEfficacy || "—"}
+- Disposed Matters Analyzed:   ${analytics?.kpis.judgmentsAnalyzed ?? 0}
 
 PRACTICE AREA BENCHMARKS:
-${(analytics?.practiceAreas || [])
-  .map((p) => `• ${p.area}: ${p.rate} (${p.count})`)
-  .join("\n")}
+${practiceAreaLines}
 
 COURT BENCHES & DISPOSITION RECORD:
-${(analytics?.courtBenches || [])
-  .map((b) => `• ${b.bench} (${b.judge}): ${b.disposition}`)
-  .join("\n")}
+${benchLines}
 
 ======================================================
-Digitally certified and generated via Wakheel Practice Intelligence.
+Generated via Wakheel Practice Intelligence.
 ======================================================`;
 
     const blob = new Blob([reportContent], { type: "text/plain" });
@@ -210,7 +225,9 @@ Digitally certified and generated via Wakheel Practice Intelligence.
   ];
 
   const normalizedActive = activeModule === "ai-reports" ? "reports" : activeModule;
-  const effectiveTab = (normalizedActive && tabs.some((t) => t.id === normalizedActive)) ? normalizedActive : currentTab;
+  const effectiveTab = normalizedActive && tabs.some((t) => t.id === normalizedActive) ? normalizedActive : currentTab;
+  const practiceAreas = analytics?.practiceAreas || [];
+  const courtBenches = analytics?.courtBenches || [];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -235,11 +252,11 @@ Digitally certified and generated via Wakheel Practice Intelligence.
               Bench Analytics &amp; Practice Intelligence
             </h2>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-              Kerala High Court &amp; Tribunals
+              Live Practice Telemetry
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-1">
-            Bench disposition win-rates, precedent citation authority, statutory audit reports, and prospective brief intake CRM.
+            Bench disposition rates, precedent tracking, audit reports, and prospective brief intake CRM.
           </p>
         </div>
 
@@ -295,10 +312,10 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                 <Scale className="w-4 h-4" />
               </div>
               <p className="text-2xl font-black text-black dark:text-white font-mono">
-                {analytics?.kpis.winRate || "89.2%"}
+                {analytics?.kpis.winRate || "0%"}
               </p>
               <p className="text-[10px] text-zinc-500 font-mono">
-                {analytics?.kpis.judgmentsAnalyzed || 148} appellate judgments &amp; stay orders
+                {analytics?.kpis.judgmentsAnalyzed ?? 0} disposed matters &amp; orders
               </p>
             </div>
 
@@ -308,10 +325,10 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                 <Clock className="w-4 h-4" />
               </div>
               <p className="text-2xl font-black text-black dark:text-white font-mono">
-                {analytics?.kpis.avgDisposalMonths || "4.1 Mos"}
+                {analytics?.kpis.avgDisposalMonths || "—"}
               </p>
               <p className="text-[10px] text-zinc-500 font-mono">
-                Across Kerala High Court Division &amp; Single Benches
+                Derived from completed matter timelines
               </p>
             </div>
 
@@ -321,10 +338,10 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                 <Award className="w-4 h-4" />
               </div>
               <p className="text-2xl font-black text-black dark:text-white font-mono">
-                {analytics?.kpis.citationEfficacy || "99.4%"}
+                {analytics?.kpis.citationEfficacy || "—"}
               </p>
               <p className="text-[10px] text-zinc-500 font-mono">
-                Zero adverse citations or overruled precedents
+                Citation tracking across logged orders
               </p>
             </div>
 
@@ -334,10 +351,10 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <p className="text-2xl font-black text-black dark:text-white font-mono">
-                {analytics?.kpis.favorableSettlementRatio || "78.5%"}
+                {analytics?.kpis.favorableSettlementRatio || "0%"}
               </p>
               <p className="text-[10px] text-zinc-500 font-mono">
-                Pre-trial mediation &amp; Lok Adalat settlements
+                Mediation &amp; settled matter ratio
               </p>
             </div>
           </div>
@@ -350,61 +367,64 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                 <h3 className="text-sm font-bold text-black dark:text-white">
                   Bench Disposition by Practice Domain
                 </h3>
-                <span className="text-[11px] font-mono text-zinc-400">Kerala Jurisdiction</span>
+                <span className="text-[11px] font-mono text-zinc-400">Recorded Dockets</span>
               </div>
 
-              <div className="space-y-3.5 text-xs">
-                {(analytics?.practiceAreas || [
-                  { area: "Constitutional & Writ Petitions (Art. 226)", rate: "93%", count: "16 matters" },
-                  { area: "Commercial Arbitration & S.34 Appeals", rate: "88%", count: "6 matters" },
-                  { area: "Land Property, Boundary & Telegraph Injunctions", rate: "86%", count: "8 matters" },
-                  { area: "Corporate Retainer & MCA Compliance", rate: "95%", count: "5 matters" },
-                  { area: "Cheque Dishonour (S. 138 NI Act) & Summary Suits", rate: "84%", count: "4 matters" },
-                ]).map((item, idx) => (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex justify-between font-medium">
-                      <span className="text-black dark:text-white">{item.area}</span>
-                      <span className="font-mono font-bold">{item.rate} ({item.count})</span>
+              {practiceAreas.length === 0 ? (
+                <div className="py-8 text-center text-xs text-zinc-500">
+                  {loading ? "Loading domain analytics..." : "No matter categories recorded yet."}
+                </div>
+              ) : (
+                <div className="space-y-3.5 text-xs">
+                  {practiceAreas.map((item, idx) => (
+                    <div key={idx} className="space-y-1.5">
+                      <div className="flex justify-between font-medium">
+                        <span className="text-black dark:text-white">{item.area}</span>
+                        <span className="font-mono font-bold">
+                          {item.rate} ({item.count})
+                        </span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
+                        <div
+                          className="h-full bg-black dark:bg-white rounded-full transition-all duration-500"
+                          style={{ width: item.rate }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                      <div
-                        className="h-full bg-black dark:bg-white rounded-full transition-all duration-500"
-                        style={{ width: item.rate }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Most Frequented Court Benches */}
             <div className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-900 pb-3">
                 <h3 className="text-sm font-bold text-black dark:text-white">
-                  Most Frequented Court Benches (2026)
+                  Most Frequented Court Benches
                 </h3>
-                <span className="text-[11px] font-mono text-zinc-400">High Court Complex</span>
+                <span className="text-[11px] font-mono text-zinc-400">Appearance Log</span>
               </div>
 
-              <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-                {(analytics?.courtBenches || [
-                  { bench: "Court Hall 2A • Division Bench (High Court of Kerala)", judge: "Hon'ble Division Bench", matters: "14 hearings", disposition: "92% Favorable Relief" },
-                  { bench: "Court Hall 3B • Single Bench (Writ Jurisdiction)", judge: "Hon'ble Single Bench", matters: "11 hearings", disposition: "88% Interim Relief" },
-                  { bench: "Sub Court Ernakulam (Civil Suits & Injunctions)", judge: "Principal Sub Judge", matters: "6 hearings", disposition: "85% Favorable Orders" },
-                  { bench: "Arbitral Tribunal • Infopark Kakkanad", judge: "Sole Arbitrator", matters: "4 hearings", disposition: "90% Favorable Discovery" },
-                ]).map((row, idx) => (
-                  <div key={idx} className="py-3 space-y-1">
-                    <div className="flex justify-between font-bold text-black dark:text-white">
-                      <span>{row.bench}</span>
-                      <span className="font-mono text-[11px]">{row.disposition}</span>
+              {courtBenches.length === 0 ? (
+                <div className="py-8 text-center text-xs text-zinc-500">
+                  {loading ? "Loading court bench activity..." : "No court benches or causelist records logged yet."}
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
+                  {courtBenches.map((row, idx) => (
+                    <div key={idx} className="py-3 space-y-1">
+                      <div className="flex justify-between font-bold text-black dark:text-white">
+                        <span>{row.bench}</span>
+                        <span className="font-mono text-[11px]">{row.disposition}</span>
+                      </div>
+                      <div className="text-[11px] text-zinc-500 flex justify-between">
+                        <span>{row.judge}</span>
+                        <span className="font-mono">{row.matters}</span>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-zinc-500 flex justify-between">
-                      <span>{row.judge}</span>
-                      <span className="font-mono">{row.matters}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -429,53 +449,70 @@ Digitally certified and generated via Wakheel Practice Intelligence.
               className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer hover:opacity-90 transition-opacity"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>+ Generate Certified Report</span>
+              <span>Generate Certified Report</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {reports.map((rep) => (
-              <div
-                key={rep._id}
-                className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3.5 shadow-xs flex flex-col justify-between hover:border-black dark:hover:border-white transition-all"
+          {reports.length === 0 ? (
+            <div className="p-12 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
+              <FileSpreadsheet className="w-8 h-8 mx-auto text-zinc-400" />
+              <h4 className="text-sm font-bold text-black dark:text-white">No Chamber Reports Generated Yet</h4>
+              <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                Generate a certified practice audit or causelist summary from your recorded matters and hearings.
+              </p>
+              <button
+                onClick={() => setShowGenerateModal(true)}
+                className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold uppercase tracking-wider inline-flex items-center space-x-1.5 cursor-pointer hover:opacity-90"
               >
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center font-bold text-black dark:text-white">
-                    <FileSpreadsheet className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-bold uppercase text-zinc-400 block">
-                      {rep.category} • {rep.period}
-                    </span>
-                    <h4 className="text-sm font-bold text-black dark:text-white mt-0.5">
-                      {rep.title}
-                    </h4>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-zinc-600 dark:text-zinc-400 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Status:</span>
-                      <span className="font-bold text-black dark:text-white">{rep.status}</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Create First Report</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {reports.map((rep) => (
+                <div
+                  key={rep._id}
+                  className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3.5 shadow-xs flex flex-col justify-between hover:border-black dark:hover:border-white transition-all"
+                >
+                  <div className="space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center font-bold text-black dark:text-white">
+                      <FileSpreadsheet className="w-5 h-5" />
                     </div>
-                    <div className="flex justify-between">
-                      <span>Generated:</span>
-                      <span>{rep.generatedDate}</span>
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase text-zinc-400 block">
+                        {rep.category} • {rep.period}
+                      </span>
+                      <h4 className="text-sm font-bold text-black dark:text-white mt-0.5">
+                        {rep.title}
+                      </h4>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-[11px] text-zinc-600 dark:text-zinc-400 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Status:</span>
+                        <span className="font-bold text-black dark:text-white">{rep.status}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Generated:</span>
+                        <span>{rep.generatedDate}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between text-[11px] text-zinc-500">
-                  <span className="font-mono">{rep.fileSize}</span>
-                  <button
-                    onClick={() => handleDownloadReport(rep)}
-                    className="px-3 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold flex items-center space-x-1 cursor-pointer hover:opacity-90"
-                  >
-                    <Download className="w-3 h-3" />
-                    <span>Download</span>
-                  </button>
+                  <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between text-[11px] text-zinc-500">
+                    <span className="font-mono">{rep.fileSize}</span>
+                    <button
+                      onClick={() => handleDownloadReport(rep)}
+                      className="px-3 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold flex items-center space-x-1 cursor-pointer hover:opacity-90"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Download</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -564,7 +601,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
             <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-black dark:text-white">Generate Certified Practice Report</h3>
-                <p className="text-xs text-zinc-500 mt-0.5">High Court compliance &amp; performance certification</p>
+                <p className="text-xs text-zinc-500 mt-0.5">Practice compliance &amp; performance certification</p>
               </div>
               <button
                 onClick={() => setShowGenerateModal(false)}
@@ -582,7 +619,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                   required
                   value={newReportTitle}
                   onChange={(e) => setNewReportTitle(e.target.value)}
-                  placeholder="e.g. Q4 2026 Kerala High Court Causelist & Injunction Log"
+                  placeholder="e.g. Quarterly Practice Causelist & Docket Audit"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -608,7 +645,7 @@ Digitally certified and generated via Wakheel Practice Intelligence.
                     type="text"
                     value={newReportPeriod}
                     onChange={(e) => setNewReportPeriod(e.target.value)}
-                    placeholder="Q4 2026"
+                    placeholder="e.g. Q4 2026"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none font-mono"
                   />
                 </div>
@@ -616,9 +653,9 @@ Digitally certified and generated via Wakheel Practice Intelligence.
 
               <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 space-y-1 font-mono">
                 <p className="font-bold text-black dark:text-white uppercase">Automated Audit Aggregations:</p>
-                <p>• Live win-rate: {analytics?.kpis.winRate || "89.2%"}</p>
+                <p>• Live win-rate: {analytics?.kpis.winRate || "0%"}</p>
                 <p>• Bench hearings listed: {analytics?.kpis.todayHearingsCount || 0}</p>
-                <p>• Certified Chamber Signature: {advocateName}</p>
+                <p>• Account Signature: {advocateName || "Registered User"}</p>
               </div>
 
               <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end space-x-2.5">

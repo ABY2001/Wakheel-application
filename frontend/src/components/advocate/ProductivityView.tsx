@@ -419,12 +419,12 @@ export function ProductivityView({
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-black dark:text-white animate-pulse" />
                 <div>
-                  <span className="text-xs font-bold text-black dark:text-white">Active Session: CyberCorp Commercial Arbitration Rejoinder</span>
-                  <p className="text-[11px] text-zinc-500">Matter #ARB-2026/104 • Client: CyberCorp Technologies Ltd</p>
+                  <span className="text-xs font-bold text-black dark:text-white">No Active Billing Timer</span>
+                  <p className="text-[11px] text-zinc-500">Select a matter or click + Log Entry to track billable hours.</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-mono text-base font-bold text-black dark:text-white">01:42:18</span>
+                <span className="font-mono text-base font-bold text-black dark:text-white">00:00:00</span>
                 <button className="px-4 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer">
                   Pause &amp; Log
                 </button>

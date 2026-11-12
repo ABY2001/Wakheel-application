@@ -119,10 +119,10 @@ export function CollabView({
                   </span>
                 </div>
                 <h3 className="text-lg font-bold text-white">
-                  WP(C) 19482/2024 — High Court Rejoinder &amp; Precedent Briefing
+                  Multi-Party Matter Briefing Room
                 </h3>
                 <p className="text-xs text-zinc-400">
-                  Lead Advocate, Senior Counsel K. Ramachandran Nair, Associate Ananya Kurian, and Litigant Gopakumar Nambiar
+                  Invite co-counsel, associates, and clients into an encrypted collaborative hearing preparation workspace.
                 </p>
               </div>
 
@@ -154,40 +154,30 @@ export function CollabView({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
             <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Chamber Status</span>
-              <div className="text-xl font-bold text-black dark:text-white">Active Session</div>
-              <span className="text-[10px] text-zinc-500">Court Hall 4 &amp; 12</span>
+              <div className="text-xl font-bold text-black dark:text-white">Ready</div>
+              <span className="text-[10px] text-zinc-500">Live collaboration available</span>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Active Briefs</span>
-              <div className="text-xl font-bold text-black dark:text-white">24 Matters</div>
+              <div className="text-xl font-bold text-black dark:text-white">0 Matters</div>
               <span className="text-[10px] text-zinc-500">Assigned across team</span>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">Chamber Conference</span>
-              <div className="text-xl font-bold text-black dark:text-white">04:30 PM</div>
-              <span className="text-[10px] text-zinc-500">Senior brief strategy</span>
+              <div className="text-xl font-bold text-black dark:text-white">None Scheduled</div>
+              <span className="text-[10px] text-zinc-500">No upcoming briefing calls</span>
             </div>
             <div className="p-5 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-1">
               <span className="text-xs text-zinc-500">e-Filings Pending</span>
-              <div className="text-xl font-bold text-black dark:text-white">2 Filings</div>
-              <span className="text-[10px] text-zinc-500">Registry clearing</span>
+              <div className="text-xl font-bold text-black dark:text-white">0 Filings</div>
+              <span className="text-[10px] text-zinc-500">Registry queue clear</span>
             </div>
           </div>
 
           <div className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-4">
             <h3 className="text-sm font-bold text-black dark:text-white">Live Chamber Activity Stream</h3>
-            <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-              {[
-                { time: "11:20 AM", event: "Bail petition draft uploaded for Matter #WP-2026/894 by Adv. Rajiv" },
-                { time: "10:45 AM", event: "Court order in Commercial Suit #402 signed and filed into Vault" },
-                { time: "09:30 AM", event: "Causelist sync completed: Bench 3 hearing listed item 14" },
-                { time: "Yesterday", event: "New corporate retainer executed with CyberCorp Ltd" },
-              ].map((act, idx) => (
-                <div key={idx} className="py-3 flex items-center justify-between text-zinc-700 dark:text-zinc-300">
-                  <span>{act.event}</span>
-                  <span className="text-[11px] font-mono text-zinc-500 shrink-0 ml-4">{act.time}</span>
-                </div>
-              ))}
+            <div className="py-8 text-center text-xs text-zinc-500">
+              No recent chamber collaboration events logged yet. Launch a briefing room to collaborate on an active matter.
             </div>
           </div>
         </div>
@@ -329,12 +319,12 @@ export function CollabView({
       {/* Milestone 2: Multi-Party Case Collaboration Room Modal */}
       {isCollabRoomOpen && (
         <MultiPartyCollaborationRoom
-          roomId="room_wpc_19482"
-          matterId="mat_wpc_19482"
-          matterTitle="WP(C) 19482/2024 — Gopakumar v. KSEB & Anr."
-          subject="WP(C) 19482/2024 — High Court Rejoinder & Precedent Briefing"
-          advocateName="Adv. Meera Krishnan"
-          barCouncilNumber="K/1429/2016"
+          roomId="room_active"
+          matterId="active_matter"
+          matterTitle="Active Briefing Room"
+          subject="Collaborative Legal Briefing"
+          advocateName="Lead Counsel"
+          barCouncilNumber=""
           onClose={() => setIsCollabRoomOpen(false)}
         />
       )}

@@ -106,7 +106,7 @@ const STATUTORY_QUERY_PRESETS = [
   {
     type: "CLARIFICATION" as QueryType,
     title: "Form 3CD Clause 21 / 26AS Ledger Reconciliation",
-    description: "Please confirm whether the payment of ₹3,45,000 to M/s Alpha Tech on 28-Feb-2026 was net of TDS under Section 194C, and provide the bank debit transaction reference.",
+    description: "Please confirm whether the payment referenced under Section 194C was settled net of TDS, and provide the bank debit transaction reference.",
     requestedDocumentName: "Bank_Advice_Debit_Confirmation.pdf",
   },
 ];
@@ -238,8 +238,8 @@ export function InDocketQueryThreadModal({
     try {
       setIsSubmittingResponse(true);
       const token = typeof window !== "undefined"
-        ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
 
       const payload = {
         status: "RESOLVED",
@@ -248,11 +248,13 @@ export function InDocketQueryThreadModal({
         resolutionNotes: clientNotes.trim(),
       };
 
-      // Call API
-      const res = await citizenApi.resolveMatterQuery(token, docket.id, queryId, payload).catch((err) => {
-        console.warn("resolveMatterQuery API error, fallback to local update:", err);
-        return null;
-      });
+      // Call API when authenticated
+      const res = token
+        ? await citizenApi.resolveMatterQuery(token, docket.id, queryId, payload).catch((err) => {
+            console.warn("resolveMatterQuery API error, fallback to local update:", err);
+            return null;
+          })
+        : null;
 
       // Update local queries
       const updated = queries.map((q) => {
@@ -311,8 +313,8 @@ export function InDocketQueryThreadModal({
     try {
       setIsSubmittingNewQuery(true);
       const token = typeof window !== "undefined"
-        ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
 
       const queryPayload: InDocketQueryItem = {
         id: `qry_${Date.now()}`,
@@ -329,10 +331,12 @@ export function InDocketQueryThreadModal({
         createdAt: new Date().toISOString(),
       };
 
-      // Call API
-      await citizenApi.addMatterQuery(token, docket.id, queryPayload).catch((err) => {
-        console.warn("addMatterQuery API error, falling back locally:", err);
-      });
+      // Call API when authenticated
+      if (token) {
+        await citizenApi.addMatterQuery(token, docket.id, queryPayload).catch((err) => {
+          console.warn("addMatterQuery API error, falling back locally:", err);
+        });
+      }
 
       const updated = [queryPayload, ...queries];
       setQueries(updated);
@@ -359,8 +363,8 @@ export function InDocketQueryThreadModal({
   const handleAcknowledgeQuery = async (queryId: string) => {
     try {
       const token = typeof window !== "undefined"
-        ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
 
       const updated = queries.map((q) => {
         if (q.id === queryId) {
@@ -369,9 +373,11 @@ export function InDocketQueryThreadModal({
         return q;
       });
 
-      await citizenApi.updateMatter(token, docket.id, { queries: updated }).catch((e) => {
-        console.warn("updateMatter non-fatal:", e);
-      });
+      if (token) {
+        await citizenApi.updateMatter(token, docket.id, { queries: updated }).catch((e) => {
+          console.warn("updateMatter non-fatal:", e);
+        });
+      }
 
       setQueries(updated);
       onQueriesUpdated(updated);

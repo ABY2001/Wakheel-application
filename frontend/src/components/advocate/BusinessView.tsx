@@ -125,10 +125,37 @@ export function BusinessView({
     timestamp: string;
   } | null>(null);
 
+  const [sessionUser, setSessionUser] = useState<{
+    id?: string;
+    _id?: string;
+    name?: string;
+    role?: string;
+    companyName?: string;
+    cin?: string;
+    pan?: string;
+    gstin?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem("wakheel_user");
+      if (raw) {
+        setSessionUser(JSON.parse(raw));
+      }
+    } catch {
+      // ignore malformed user JSON
+    }
+  }, []);
+
+  const currentUserId = String(sessionUser?.id || sessionUser?._id || "");
+  const currentUserRole: "citizen" | "advocate" =
+    sessionUser?.role === "advocate" ? "advocate" : "citizen";
+
   // Hook into live matter WebSocket events
   const { isConnected: isWsConnected } = useMatterWebSocket({
-    role: "citizen",
-    userId: "default_citizen",
+    role: currentUserRole,
+    userId: currentUserId,
     onStageUpdated: (event: MatterWebSocketEvent) => {
       const updatedMatter = event.matter;
       const matterId = event.matterId || updatedMatter?.id || updatedMatter?._id;
@@ -311,34 +338,36 @@ export function BusinessView({
       (docket.court || "").toLowerCase().includes("income tax");
 
     setActiveCertificateData({
-      caseNumber: docket.caseNumber || "SRN-MCA-2026/894120",
+      caseNumber: docket.caseNumber || "",
       title: docket.title || "Statutory Compliance Docket",
-      courtOrAuthority: docket.court || "Registrar of Companies (ROC Kerala) • MCA21 Portal",
+      courtOrAuthority: docket.court || docket.courtForum || "",
       category: isCa ? "ca" : "cs",
-      clientName: "Inworth Technologies Pvt Ltd",
-      clientCinOrPan: docket.clientPanOrCin || "U72200KL2023PTC081290 / AABCI9812G",
-      clientGstin: "32AABCI9812G1Z2",
-      clientAddress: "Infopark Phase II, Kakkanad, Kochi, Kerala 682042",
-      assignedProfessional:
-        docket.assignedAdvocate ||
-        (isCa ? "CA Ramanathan Iyer (FCA 40192)" : "CS Meera Krishnan (FCS 9482)"),
+      clientName: docket.clientName || sessionUser?.companyName || sessionUser?.name || "",
+      clientCinOrPan:
+        docket.clientPanOrCin ||
+        docket.cin ||
+        docket.pan ||
+        sessionUser?.cin ||
+        sessionUser?.pan ||
+        "",
+      clientGstin: docket.clientGstin || docket.gstin || sessionUser?.gstin || "",
+      clientAddress: docket.clientAddress || "",
+      assignedProfessional: docket.assignedAdvocate || docket.advocateName || "",
       professionalRole: isCa
-        ? "Fellow Chartered Accountant (FCA) • Statutory Auditor"
-        : "Practicing Company Secretary (FCS) • Corporate Secretarial Advisor",
-      membershipNumber: isCa ? "ICAI M.No 240189 • FRN 019482C" : "ICSI FCS-9482 • CP 14298",
-      firmName: "Wakheel Multi-Disciplinary Practice LLP",
-      udinOrSrn: docket.udinOrSrn || (isCa ? "UDIN: 2640192A00098124" : "SRN: ROC-2026-90124"),
+        ? "Chartered Accountant (ICAI) • Statutory Auditor"
+        : "Practicing Company Secretary (ICSI) • Corporate Secretarial Advisor",
+      membershipNumber: docket.membershipNumber || "",
+      firmName: docket.firmName || "",
+      udinOrSrn: docket.udinOrSrn || "",
       filingDate: docket.filingDate || new Date().toISOString().split("T")[0],
       certificationDate: new Date().toLocaleDateString("en-IN", {
         day: "numeric",
         month: "long",
         year: "numeric",
       }),
-      integrityHash:
-        docket.documents?.[0]?.hash ||
-        "sha256:7f92014ea89201cb184920aef104928b",
-      status: "OFFICIALLY FILED",
-      feePaid: docket.feePaid,
+      integrityHash: docket.documents?.[0]?.hash || "",
+      status: docket.status || "RECORDED",
+      feePaid: docket.feePaid || "",
     });
     setCertificateModalOpen(true);
   };
@@ -1518,124 +1547,16 @@ export function BusinessView({
   const loadDockets = async () => {
     try {
       setLoadingDockets(true);
-      const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
-      const res = await citizenApi.getMatters(token).catch(() => ({ matters: [] }));
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
+      if (!token) {
+        setActiveDockets([]);
+        return;
+      }
 
-      const seeded = [
-        {
-          id: "seed-cs-1",
-          caseNumber: "SRN-MCA-2026/894120",
-          title: "Annual MCA Filing (Form AOC-4 & MGT-7) — Inworth Technologies Pvt Ltd",
-          court: "MCA21 • Registrar of Companies (ROC Ernakulam)",
-          assignedAdvocate: "CS Rajesh Sharma (FCS 9214)",
-          status: "Statutory Verification Complete",
-          filingDate: "2026-10-18",
-          stageIndex: 4,
-          stages: [
-            { name: "Docket Initiated & Vault Stamped", date: "18 Oct 2026", done: true },
-            { name: "Financial Statements Scrutiny", date: "21 Oct 2026", done: true },
-            { name: "AGM Minutes & Director Sign-Off", date: "24 Oct 2026", done: true },
-            { name: "MCA21 V3 Portal E-Filing", date: "27 Oct 2026", done: true },
-            { name: "Official ROC SRN Challan Issued", date: "28 Oct 2026", done: true },
-          ],
-          documents: [
-            { name: "Audited_Balance_Sheet_FY25_26.pdf", size: "3.4 MB", hash: "sha256:7a92c4b8e190fa72" },
-            { name: "Directors_Report_MGT9.pdf", size: "1.2 MB", hash: "sha256:3d91ea55c01289fe" },
-            { name: "AGM_Signed_Minutes_2026.pdf", size: "840 KB", hash: "sha256:66b1fa091928cc3a" },
-          ],
-          udinOrSrn: "SRN: AA92019401",
-          feePaid: "₹ 12,500 (ROC Statutory + CS Professional Fee)",
-        },
-        {
-          id: "seed-ca-1",
-          caseNumber: "ITR-CA-2026/741092",
-          title: "Form 3CD Tax Audit & Corporate ITR-6 — Vanguard Infrastructure Ltd",
-          court: "ICAI • Income Tax Department (CPC Bengaluru)",
-          assignedAdvocate: "CA Ramanathan Iyer (FCA 40192)",
-          status: "UDIN Stamped & Ready for E-Verification",
-          filingDate: "2026-10-25",
-          stageIndex: 3,
-          stages: [
-            { name: "Books of Account & 26AS Ingested", date: "25 Oct 2026", done: true },
-            { name: "Depreciation & 43B(h) Audit", date: "29 Oct 2026", done: true },
-            { name: "Tax Audit Report (Form 3CD) Drafted", date: "02 Nov 2026", done: true },
-            { name: "ICAI UDIN Generation & Stamping", date: "05 Nov 2026", done: true },
-            { name: "ITBA Income Tax Portal Filing", date: "Pending Client OTP", done: false },
-          ],
-          documents: [
-            { name: "Trial_Balance_General_Ledger_2026.xlsx", size: "4.8 MB", hash: "sha256:aa441928e0018fa9" },
-            { name: "Form_26AS_AIS_TIS_FY25_26.pdf", size: "2.1 MB", hash: "sha256:12bc5566de778901" },
-            { name: "Draft_Form_3CD_Tax_Audit.pdf", size: "1.9 MB", hash: "sha256:44aa0011bb223344" },
-          ],
-          udinOrSrn: "UDIN: 2640192A00018921",
-          feePaid: "₹ 24,000 (Tax Audit & Corporate Return)",
-          queries: [
-            {
-              id: "qry-ca-101",
-              type: "CLARIFICATION",
-              title: "Section 43B(h) Clause 22 Vendor Status Confirmation",
-              description: "Please confirm whether invoice INV-2025/902 from TechFab Solutions (MSME Micro) was settled prior to 31-Mar-2026 or if statutory interest has been computed under MSMED Act Section 16.",
-              requestedDocumentName: "Bank_Advice_Debit_Confirmation.pdf",
-              status: "RESOLVED",
-              raisedBy: {
-                name: "CA Ramanathan Iyer (FCA 40192)",
-                role: "Statutory Tax Auditor",
-                date: "30 Oct 2026",
-              },
-              clientResponse: {
-                notes: "Payment of ₹1,45,000 discharged via RTGS on 12-Mar-2026. Official UTR transaction slip attached.",
-                submittedAt: "01 Nov 2026",
-                attachments: [
-                  {
-                    id: "att-1",
-                    name: "RTGS_Advice_TechFab_Settlement.pdf",
-                    size: "480 KB",
-                    hash: "sha256:77bb19280011eeff11223344",
-                  },
-                ],
-              },
-            },
-          ],
-        },
-        {
-          id: "seed-cs-2",
-          caseNumber: "SRN-MCA-2026/910245",
-          title: "Appointment of Independent Director (Form DIR-12) — Zenith FinTech Ltd",
-          court: "MCA21 • Registrar of Companies (ROC Delhi)",
-          assignedAdvocate: "CS Rajesh Sharma (FCS 9214)",
-          status: "Requisition Pending Response",
-          filingDate: "2026-11-02",
-          stageIndex: 1,
-          stages: [
-            { name: "Docket Initiated & Vault Stamped", date: "02 Nov 2026", done: true },
-            { name: "Technical Scrutiny & DIN Verification", date: "04 Nov 2026", done: true },
-            { name: "Board Resolution & CTC Sign-Off", date: "Pending Sign-Off", done: false },
-            { name: "MCA21 V3 Portal E-Filing", date: "Pending", done: false },
-            { name: "Official ROC SRN Challan Issued", date: "Pending", done: false },
-          ],
-          documents: [
-            { name: "Consent_Letter_Form_DIR2.pdf", size: "450 KB", hash: "sha256:ee881294fa0018aa" },
-            { name: "Declaration_Form_DIR8.pdf", size: "380 KB", hash: "sha256:cc551100bb443322" },
-          ],
-          udinOrSrn: "SRN: Pending Pre-Scrutiny",
-          feePaid: "₹ 6,000 (ROC Statutory Fee + Professional Charges)",
-          queries: [
-            {
-              id: "qry-cs-201",
-              type: "DOCUMENT_REUPLOAD",
-              title: "Form DIR-2 Consent Letter & Updated Residential Address Proof",
-              description: "The DIN verification indicates the Director's residential address in Aadhaar was updated recently. Please upload a self-attested proof of updated residential address (Utility bill, Bank Statement, or Passport copy) for Form DIR-12 attachment.",
-              requestedDocumentName: "Self_Attested_Address_Proof_DIR2.pdf",
-              status: "OPEN",
-              raisedBy: {
-                name: "CS Rajesh Sharma (FCS 9214)",
-                role: "Practicing Company Secretary",
-                date: "04 Nov 2026",
-              },
-            },
-          ],
-        },
-      ];
+      const res = await citizenApi.getMatters(token).catch(() => ({ matters: [] }));
 
       if (res && res.matters && Array.isArray(res.matters)) {
         const relevant = res.matters.filter((m: any) => {
@@ -1659,43 +1580,48 @@ export function BusinessView({
           );
         });
 
-        if (relevant.length > 0) {
-          const formatted = relevant.map((m: any, idx: number) => {
-            const isCompleted = (m.status || "").toLowerCase().includes("complete") || (m.status || "").toLowerCase().includes("disposed");
-            const currentStageIndex = typeof m.stageIndex === "number" ? m.stageIndex : (isCompleted ? 4 : 2);
-            const stages = (m.stages && Array.isArray(m.stages) && m.stages.length === 5) ? m.stages : [
-              { name: "Docket Initiated & Vault Stamped", date: m.filingDate || "Filing Date", done: true },
-              { name: "Technical Scrutiny & Computation", date: currentStageIndex >= 1 ? "Complete" : "In Progress", done: currentStageIndex >= 1 },
-              { name: "Client Sign-Off & Four-Eyes Review", date: currentStageIndex >= 2 ? "Approved" : "Partner Review", done: currentStageIndex >= 2 },
-              { name: "UDIN / MCA21 Portal E-Filing", date: currentStageIndex >= 3 ? "Submitted" : "Portal Submission", done: currentStageIndex >= 3 },
-              { name: "Official Acknowledgment Released", date: currentStageIndex >= 4 ? "Downloaded" : "Pending", done: currentStageIndex >= 4 },
-            ];
-            return {
-              id: m.id || m._id || `docket-${idx}`,
-              caseNumber: m.caseNumber || `SRN-MCA-2026/${idx + 1000}`,
-              title: m.title || m.matterTitle || "Statutory Compliance Docket",
-              court: m.court || m.courtForum || "Statutory Authority",
-              assignedAdvocate: m.assignedAdvocate || m.advocateName || "CA Ramanathan Iyer & CS Rajesh Sharma",
-              status: m.status || "In Technical Scrutiny",
-              filingDate: m.filingDate || new Date().toISOString().split("T")[0],
-              stageIndex: currentStageIndex,
-              stages,
-              documents: (m.documents && Array.isArray(m.documents) && m.documents.length > 0) ? m.documents : [
-                { name: "Supporting_Statutory_Dossier.pdf", size: "2.4 MB", hash: "sha256:8899aabbccddeeff" },
-              ],
-              udinOrSrn: m.udinOrSrn || ((m.caseNumber || "").startsWith("ITR") ? "UDIN: 2640192A00098124" : "SRN: ROC-2026-90124"),
-              feePaid: m.feePaid || "Retainer Verified",
-              queries: m.queries || [],
-            };
-          });
+        const formatted = relevant.map((m: any, idx: number) => {
+          const isCompleted =
+            (m.status || "").toLowerCase().includes("complete") ||
+            (m.status || "").toLowerCase().includes("disposed");
+          const currentStageIndex =
+            typeof m.stageIndex === "number" ? m.stageIndex : isCompleted ? 4 : 0;
+          const stages =
+            m.stages && Array.isArray(m.stages) && m.stages.length === 5
+              ? m.stages
+              : [
+                  { name: "Docket Initiated & Vault Stamped", date: m.filingDate || "Filing Date", done: true },
+                  { name: "Technical Scrutiny & Computation", date: currentStageIndex >= 1 ? "Complete" : "Pending", done: currentStageIndex >= 1 },
+                  { name: "Client Sign-Off & Four-Eyes Review", date: currentStageIndex >= 2 ? "Approved" : "Pending", done: currentStageIndex >= 2 },
+                  { name: "UDIN / MCA21 Portal E-Filing", date: currentStageIndex >= 3 ? "Submitted" : "Pending", done: currentStageIndex >= 3 },
+                  { name: "Official Acknowledgment Released", date: currentStageIndex >= 4 ? "Downloaded" : "Pending", done: currentStageIndex >= 4 },
+                ];
+          return {
+            id: m.id || m._id || `docket-${idx}`,
+            caseNumber: m.caseNumber || "",
+            title: m.title || m.matterTitle || "Statutory Compliance Docket",
+            court: m.court || m.courtForum || "Statutory Authority",
+            assignedAdvocate: m.assignedAdvocate || m.advocateName || "",
+            status: m.status || "Docket Initiated",
+            filingDate: m.filingDate || new Date().toISOString().split("T")[0],
+            stageIndex: currentStageIndex,
+            stages,
+            documents: Array.isArray(m.documents) ? m.documents : [],
+            udinOrSrn: m.udinOrSrn || "",
+            feePaid: m.feePaid || "",
+            clientName: m.clientName || "",
+            clientPanOrCin: m.clientPanOrCin || "",
+            clientGstin: m.clientGstin || "",
+            queries: Array.isArray(m.queries) ? m.queries : [],
+            clientAuthorization: m.clientAuthorization || undefined,
+          };
+        });
 
-          // Prepend newly created dockets while preserving seeded items for complete view
-          setActiveDockets([...formatted, ...seeded]);
-          return;
-        }
+        setActiveDockets(formatted);
+        return;
       }
 
-      setActiveDockets(seeded);
+      setActiveDockets([]);
     } catch (e) {
       console.warn("Failed to load active dockets:", e);
     } finally {
@@ -1802,20 +1728,23 @@ This document serves as the official client acknowledgment copy generated by Wak
     setIsSubmittingDocket(true);
 
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
+      if (!token) {
+        setActiveDocketSuccess("Please log in to initiate and track a statutory compliance docket.");
+        return;
+      }
 
       const isCS = selectedService.category === "company-secretary";
       const isCA = selectedService.category === "auditor-ca";
       const prefix = isCS ? "SRN-MCA" : isCA ? "ITR-CA" : "SRN-REG";
       const generatedDocket = `${prefix}-${new Date().getFullYear()}/${Math.floor(100000 + Math.random() * 900000)}`;
 
-      const assignedProfessional = isCS
-        ? "CS Rajesh Sharma (FCS 9214)"
-        : isCA
-        ? "CA Ramanathan Iyer (FCA 40192)"
-        : "Adv. Meera Krishnan & CS Rajesh Sharma";
+      const assignedProfessional = "";
 
-      const clientNameClean = docketClientName.trim() || "Direct Matter Representation";
+      const clientNameClean = docketClientName.trim() || sessionUser?.companyName || sessionUser?.name || "Direct Matter Representation";
       const matterTitle = `${selectedService.name} — ${clientNameClean}`;
 
       // 1. Create Matter in Citizen Case Tracker
@@ -1834,7 +1763,7 @@ This document serves as the official client acknowledgment copy generated by Wak
           {
             date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
             title: `Service Docket Opened (${generatedDocket})`,
-            remarks: `Client ${clientNameClean} initiated ${selectedService.name}. Priority verification queued with ${assignedProfessional}. ${
+            remarks: `Client ${clientNameClean} initiated ${selectedService.name}. ${
               uploadedFiles.length > 0 ? `${uploadedFiles.length} file(s) attached.` : ""
             } ${docketNotes ? `Notes: ${docketNotes.trim()}` : ""}`,
             stage: "Completed",
@@ -1874,7 +1803,7 @@ This document serves as the official client acknowledgment copy generated by Wak
         if (selectedService.id === "ca-1" || selectedService.name.toLowerCase().includes("income tax")) {
           await caApi.createIncomeTaxReturn({
             clientName: clientNameClean,
-            pan: docketEntityPan.trim() || "AAECI9012K",
+            pan: docketEntityPan.trim(),
             assessmentYear: "2026-27",
             financialYear: "2025-26",
             itrForm: "ITR-6",
@@ -1887,7 +1816,7 @@ This document serves as the official client acknowledgment copy generated by Wak
         } else if (selectedService.id === "ca-3" || selectedService.name.toLowerCase().includes("gst")) {
           await caApi.createGstReturn({
             clientName: clientNameClean,
-            gstin: docketEntityPan.trim() || "07AAECI9012K1ZQ",
+            gstin: docketEntityPan.trim(),
             returnType: "GSTR-3B",
             period: new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
             status: "pending_upload",
@@ -2653,11 +2582,11 @@ This document serves as the official client acknowledgment copy generated by Wak
       ========================================================================= */}
       {viewMode === "precheck" && (
         <ClientStatutoryPreCheckView
-          clientName="Inworth Technologies Pvt Ltd"
-          cin="U72200KL2023PTC081290"
-          pan="AABCI9812G"
-          gstin="32AABCI9812G1Z2"
-          onInitiateFiling={(serviceCategory, initialNotes, generatedReport) => {
+          clientName={sessionUser?.companyName || sessionUser?.name || ""}
+          cin={sessionUser?.cin || ""}
+          pan={sessionUser?.pan || ""}
+          gstin={sessionUser?.gstin || ""}
+          onInitiateFiling={async (serviceCategory, initialNotes, generatedReport) => {
             let matchedService: ServiceItem | undefined;
             if (serviceCategory === "board-advisor") {
               matchedService = companySecretaryServices.find((s) => s.id === "board-advisor") || companySecretaryServices[0];
@@ -2691,13 +2620,29 @@ This document serves as the official client acknowledgment copy generated by Wak
             setSelectedService(matchedService);
             setDocketNotes(initialNotes);
             if (generatedReport) {
+              let computedHash = "";
+              try {
+                if (typeof crypto !== "undefined" && crypto.subtle) {
+                  const buf = await crypto.subtle.digest(
+                    "SHA-256",
+                    new TextEncoder().encode(generatedReport)
+                  );
+                  computedHash =
+                    "sha256:" +
+                    Array.from(new Uint8Array(buf))
+                      .map((b) => b.toString(16).padStart(2, "0"))
+                      .join("");
+                }
+              } catch {
+                computedHash = "";
+              }
               setUploadedFiles([
                 {
                   id: `precheck-doc-${Date.now()}`,
                   name: `AI_${serviceCategory.toUpperCase()}_Statutory_Precheck_Dossier.txt`,
                   size: `${Math.max(1, Math.round(generatedReport.length / 1024))} KB`,
                   type: "text/plain",
-                  hash: "sha256:7f92014ea89201cb",
+                  hash: computedHash,
                 },
               ]);
             }
@@ -2782,7 +2727,7 @@ This document serves as the official client acknowledgment copy generated by Wak
                       required
                       value={docketClientName}
                       onChange={(e) => setDocketClientName(e.target.value)}
-                      placeholder="e.g. Inworth Technologies Pvt Ltd"
+                      placeholder="Enter client or entity name"
                       className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white text-xs focus:outline-none focus:border-black dark:focus:border-white shadow-xs"
                     />
                   </div>
@@ -2795,7 +2740,7 @@ This document serves as the official client acknowledgment copy generated by Wak
                       type="text"
                       value={docketEntityPan}
                       onChange={(e) => setDocketEntityPan(e.target.value.toUpperCase())}
-                      placeholder="e.g. AAECI1234F or U72900KL2024PTC..."
+                      placeholder="Enter PAN, CIN, or GSTIN"
                       className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white text-xs font-mono focus:outline-none focus:border-black dark:focus:border-white shadow-xs"
                     />
                   </div>
@@ -3060,7 +3005,7 @@ This document serves as the official client acknowledgment copy generated by Wak
                           <span className="text-[10px] font-mono text-zinc-400">{doc.size}</span>
                         </div>
                         <div className="p-1.5 rounded-lg bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[10px] font-mono">
-                          <span className="text-zinc-500 truncate mr-2">{doc.hash || "sha256:verified"}</span>
+                          <span className="text-zinc-500 truncate mr-2">{doc.hash || "Not recorded"}</span>
                           <button
                             onClick={() => handleCopy(doc.hash || "", `hash-${dIdx}`)}
                             className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
@@ -3162,7 +3107,7 @@ This document serves as the official client acknowledgment copy generated by Wak
           if (!queryModalDocket) return;
           const updatedDockets = activeDockets.map((d) => {
             if (d.id === queryModalDocket.id) {
-              const docs = newDocs && newDocs.length > 0 ? [...d.documents, ...newDocs] : d.documents;
+              const docs = newDocs && newDocs.length > 0 ? [...(d.documents || []), ...newDocs] : d.documents || [];
               return { ...d, queries: updatedQueries, documents: docs };
             }
             return d;
@@ -3174,7 +3119,7 @@ This document serves as the official client acknowledgment copy generated by Wak
                 ? {
                     ...prev,
                     queries: updatedQueries,
-                    documents: newDocs && newDocs.length > 0 ? [...prev.documents, ...newDocs] : prev.documents,
+                    documents: newDocs && newDocs.length > 0 ? [...(prev.documents || []), ...newDocs] : prev.documents || [],
                   }
                 : null
             );
@@ -3197,7 +3142,7 @@ This document serves as the official client acknowledgment copy generated by Wak
           if (!challanModalDocket) return;
           const updatedDockets = activeDockets.map((d) => {
             if (d.id === challanModalDocket.id) {
-              const docs = [...d.documents, newDocketDoc];
+              const docs = [...(d.documents || []), newDocketDoc];
               return {
                 ...d,
                 documents: docs,

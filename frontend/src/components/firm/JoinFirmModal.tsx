@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   AlertCircle,
 } from "lucide-react";
-import { FirmProfile, DEFAULT_DEMO_FIRM } from "./firmTypes";
+import { FirmProfile } from "./firmTypes";
 
 interface JoinFirmModalProps {
   isOpen: boolean;
@@ -24,8 +24,8 @@ export function JoinFirmModal({
   isOpen,
   onClose,
   onJoined,
-  currentUserFullName = "Adv. Sarah Jenkins",
-  currentUserEmail = "advocate@inworth.law",
+  currentUserFullName = "",
+  currentUserEmail = "",
 }: JoinFirmModalProps) {
   const [inviteCode, setInviteCode] = useState("");
   const [verifiedFirm, setVerifiedFirm] = useState<FirmProfile | null>(null);
@@ -46,49 +46,22 @@ export function JoinFirmModal({
     setIsVerifying(true);
     setTimeout(() => {
       setIsVerifying(false);
-      // Check in user stored firms or default demo firm
       let found: FirmProfile | null = null;
       try {
         const stored = localStorage.getItem("wakheel_user_firms");
         const firms: FirmProfile[] = stored ? JSON.parse(stored) : [];
-        found =
-          firms.find((f) => f.inviteCode.toUpperCase() === cleaned) ||
-          (DEFAULT_DEMO_FIRM.inviteCode.toUpperCase() === cleaned ? DEFAULT_DEMO_FIRM : null);
+        found = firms.find((f) => f.inviteCode?.toUpperCase() === cleaned) || null;
       } catch {
-        if (DEFAULT_DEMO_FIRM.inviteCode.toUpperCase() === cleaned) {
-          found = DEFAULT_DEMO_FIRM;
-        }
+        found = null;
       }
 
       if (found) {
         setVerifiedFirm(found);
       } else {
-        // Fallback simulate finding a verified partner firm
-        setVerifiedFirm({
-          id: `firm-joined-${Date.now()}`,
-          name: "Apex Legal & Partners LLP",
-          entityType: "LLP",
-          registrationNumber: "LLPIN-APX-8109",
-          headquartersCity: "New Delhi",
-          jurisdiction: "High Court of Delhi",
-          managingPartnerName: "Adv. Vikram Singhania",
-          managingPartnerEmail: "vikram@apexlegal.in",
-          userRoleInFirm: selectedRole,
-          practiceGroups: [
-            "Commercial Disputes & Arbitration",
-            "Insolvency & Bankruptcy (NCLT)",
-          ],
-          inviteCode: cleaned,
-          billingDefaults: {
-            currency: "INR",
-            partnerRate: 14000,
-            associateRate: 4500,
-          },
-          members: [],
-          createdAt: "2021-03-10",
-        });
+        setVerifiedFirm(null);
+        setErrorMsg("No matching firm found for that invite code. Please check your invitation or create a firm workspace.");
       }
-    }, 400);
+    }, 300);
   };
 
   const handleConfirmJoin = () => {

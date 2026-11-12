@@ -157,10 +157,7 @@ export function StatutoryComplianceCertificateModal({
     "Registrar of Companies (ROC Kerala & Lakshadweep) • MCA21 Portal";
 
   const udinOrSrn =
-    data.udinOrSrn ||
-    (data.category === "ca"
-      ? "UDIN: 2640192A00098124"
-      : "SRN: ROC-KL-2026-90124");
+    data.udinOrSrn || "Pending Assignment";
 
   const formattedDate =
     data.certificationDate ||
@@ -172,11 +169,10 @@ export function StatutoryComplianceCertificateModal({
     });
 
   const sha256Digest =
-    data.integrityHash ||
-    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    data.integrityHash || "Pending Cryptographic Digest";
 
   const professionalName =
-    data.assignedProfessional || "CS Meera Krishnan & CA Ramanathan Iyer";
+    data.assignedProfessional || "Assigned Statutory Professional";
 
   const professionalRole =
     data.professionalRole ||
@@ -185,11 +181,10 @@ export function StatutoryComplianceCertificateModal({
       : "Practicing Company Secretary (FCS) • Corporate Advisor");
 
   const membershipNo =
-    data.membershipNumber ||
-    (data.category === "ca" ? "ICAI M.No 240189 • FRN 019482C" : "ICSI FCS-9482 • CP 14298");
+    data.membershipNumber || "Membership No. Not Specified";
 
   const firmName =
-    data.firmName || "Wakheel Multi-Disciplinary Practice Network LLP";
+    data.firmName || "Designated Compliance Practice";
 
   const verificationUrl = `https://mca.gov.in/mcafoportal/udinVerify?udin=${encodeURIComponent(
     udinOrSrn
@@ -501,9 +496,9 @@ export function StatutoryComplianceCertificateModal({
         </tr>
         <tr>
           <td class="label">Corporate ID / PAN</td>
-          <td class="value" style="font-family: monospace;">${data.clientCinOrPan || "U72200KL2023PTC081290 / AABCI9812G"}</td>
+          <td class="value" style="font-family: monospace;">${data.clientCinOrPan || "Not Provided"}</td>
           <td class="label">GSTIN Identification</td>
-          <td class="value" style="font-family: monospace;">${data.clientGstin || "32AABCI9812G1Z2"}</td>
+          <td class="value" style="font-family: monospace;">${data.clientGstin || "Not Provided"}</td>
         </tr>
         <tr>
           <td class="label">Statutory Subject</td>
@@ -601,8 +596,8 @@ Statutory Reference / Token: ${udinOrSrn}
 ASSESSEE & FILING PARTICULARS:
 --------------------------------------------------------------------------------
 Client Legal Name: ${data.clientName}
-CIN / Registration No: ${data.clientCinOrPan || "U72200KL2023PTC081290"}
-GSTIN: ${data.clientGstin || "32AABCI9812G1Z2"}
+CIN / Registration No: ${data.clientCinOrPan || "Not Provided"}
+GSTIN: ${data.clientGstin || "Not Provided"}
 Statutory Authority: ${filingAuthority}
 Docket Reference: ${data.caseNumber}
 Matter Title: ${data.title}
@@ -836,13 +831,13 @@ Online Verification Gateway: ${verificationUrl}
                         Corporate ID (CIN) / PAN
                       </td>
                       <td className="p-2.5 font-mono font-bold text-zinc-900 border-r border-zinc-200">
-                        {data.clientCinOrPan || "U72200KL2023PTC081290 / AABCI9812G"}
+                        {data.clientCinOrPan || "Not Provided"}
                       </td>
                       <td className="w-1/4 p-2.5 bg-zinc-50 font-bold text-zinc-600 border-r border-zinc-200">
                         GSTIN Identification
                       </td>
                       <td className="p-2.5 font-mono font-bold text-zinc-900">
-                        {data.clientGstin || "32AABCI9812G1Z2"}
+                        {data.clientGstin || "Not Provided"}
                       </td>
                     </tr>
                     <tr className="border-b border-zinc-200">

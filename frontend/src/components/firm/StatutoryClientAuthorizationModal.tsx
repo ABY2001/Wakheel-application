@@ -106,10 +106,10 @@ export function StatutoryClientAuthorizationModal({
   const [signMethod, setSignMethod] = useState<"AADHAAR_ESIGN" | "CLASS_3_DSC">("AADHAAR_ESIGN");
   
   // Signer Details
-  const [signerName, setSignerName] = useState<string>("Rajesh Varma");
+  const [signerName, setSignerName] = useState<string>("");
   const [signerDesignation, setSignerDesignation] = useState<string>("Managing Director");
-  const [signerPanOrDin, setSignerPanOrDin] = useState<string>("DIN: 08912401");
-  const [aadhaarNumber, setAadhaarNumber] = useState<string>("5492 8812 7419");
+  const [signerPanOrDin, setSignerPanOrDin] = useState<string>("");
+  const [aadhaarNumber, setAadhaarNumber] = useState<string>("");
   
   // OTP State
   const [otpRequested, setOtpRequested] = useState<boolean>(false);
@@ -167,7 +167,6 @@ export function StatutoryClientAuthorizationModal({
       setOtpSending(false);
       setOtpRequested(true);
       setOtpTimer(60);
-      setOtpCode("123456"); // Prefill for easy testing
     }, 900);
   };
 
@@ -197,6 +196,11 @@ export function StatutoryClientAuthorizationModal({
 
   // Handle Authorize & Submit
   const handleAuthorizeSubmit = async () => {
+    if (!signerName.trim()) {
+      setOtpError("Please enter the Authorized Signatory Full Name.");
+      return;
+    }
+
     if (!declarationAccepted) {
       setOtpError("You must accept the statutory declaration under Section 448 / Section 277.");
       return;
@@ -219,11 +223,11 @@ export function StatutoryClientAuthorizationModal({
 
     try {
       const cleanAadhaar = aadhaarNumber.replace(/\s+/g, "");
-      const maskedAadhaar = `XXXX-XXXX-${cleanAadhaar.slice(-4) || "8921"}`;
+      const maskedAadhaar = cleanAadhaar ? `XXXX-XXXX-${cleanAadhaar.slice(-4)}` : "Not Provided";
       const nowIso = new Date().toISOString();
       const espRef = signMethod === "AADHAAR_ESIGN"
-        ? `ESP-CDAC-202611-${Math.floor(100000 + Math.random() * 900000)}`
-        : `DSC-EMUDHRA-202611-${Math.floor(100000 + Math.random() * 900000)}`;
+        ? `ESP-CDAC-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
+        : `DSC-TOKEN-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
       const payloadToHash = `${docket.id}|${docket.caseNumber}|${signerName}|${signerPanOrDin}|${maskedAadhaar}|${espRef}|${nowIso}`;
       const hashValue = await generateSha256(payloadToHash);
@@ -248,18 +252,22 @@ export function StatutoryClientAuthorizationModal({
         certificateAuthority:
           signMethod === "AADHAAR_ESIGN"
             ? "C-DAC (Centre for Development of Advanced Computing) e-Sign ESP"
-            : "e-Mudhra Class 3 Individual & Organization CA 2026",
+            : "Licensed Class 3 Certifying Authority",
         dscSerialNumber:
-          signMethod === "CLASS_3_DSC" ? "5A:92:DF:88:12:00:FE:41" : undefined,
+          signMethod === "CLASS_3_DSC" ? `DSC-${Date.now().toString(36).toUpperCase()}` : undefined,
       };
 
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
+      const token = typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
       
-      // Call backend API
-      try {
-        await citizenApi.authorizeMatter(token, docket.id, authRecord);
-      } catch (err) {
-        console.warn("Backend authorizeMatter call handled with local persistence:", err);
+      // Call backend API when authenticated
+      if (token) {
+        try {
+          await citizenApi.authorizeMatter(token, docket.id, authRecord);
+        } catch (err) {
+          console.warn("Backend authorizeMatter call handled with local persistence:", err);
+        }
       }
 
       const newDocketDoc = {
@@ -281,15 +289,6 @@ export function StatutoryClientAuthorizationModal({
     } finally {
       setSubmitting(false);
     }
-  };
-
-  // Prefill Demo
-  const handlePrefillDemo = () => {
-    setSignerName("Rajesh Varma");
-    setSignerDesignation("Managing Director");
-    setSignerPanOrDin("DIN: 08912401");
-    setAadhaarNumber("5492 8812 7419");
-    setDeclarationAccepted(true);
   };
 
   return (
@@ -566,12 +565,6 @@ export function StatutoryClientAuthorizationModal({
                     <UserCheck className="w-4 h-4 text-zinc-400" />
                     <span>Authorized Signatory Credentials</span>
                   </span>
-                  <button
-                    onClick={handlePrefillDemo}
-                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                  >
-                    Use Demo Signer
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -581,7 +574,7 @@ export function StatutoryClientAuthorizationModal({
                       type="text"
                       value={signerName}
                       onChange={(e) => setSignerName(e.target.value)}
-                      placeholder="e.g. Rajesh Varma"
+                      placeholder="Authorized signatory full name"
                       className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-black dark:text-white focus:outline-hidden focus:ring-1 focus:ring-black dark:focus:ring-white"
                     />
                   </div>
@@ -608,7 +601,7 @@ export function StatutoryClientAuthorizationModal({
                       type="text"
                       value={signerPanOrDin}
                       onChange={(e) => setSignerPanOrDin(e.target.value)}
-                      placeholder="DIN: 08912401 or PAN"
+                      placeholder="DIN or PAN"
                       className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-black dark:text-white font-mono focus:outline-hidden focus:ring-1 focus:ring-black dark:focus:ring-white"
                     />
                   </div>
@@ -647,7 +640,12 @@ export function StatutoryClientAuthorizationModal({
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-semibold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
                             <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>OTP dispatched to registered mobile ending in <strong>...7419</strong></span>
+                            <span>
+                              OTP dispatched to registered mobile linked to Aadhaar{" "}
+                              {aadhaarNumber.replace(/\s+/g, "").slice(-4)
+                                ? `(ending in ...${aadhaarNumber.replace(/\s+/g, "").slice(-4)})`
+                                : ""}
+                            </span>
                           </span>
                           <span className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400">
                             {otpTimer > 0 ? `Valid for ${otpTimer}s` : "OTP Expired"}
@@ -663,14 +661,6 @@ export function StatutoryClientAuthorizationModal({
                             placeholder="Enter 6-digit OTP"
                             className="w-48 px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-black text-black dark:text-white font-mono text-center tracking-widest text-base font-extrabold focus:outline-hidden"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setOtpCode("123456")}
-                            className="text-[11px] px-2.5 py-1.5 rounded-md bg-indigo-100 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 font-mono font-bold hover:bg-indigo-200 cursor-pointer"
-                            title="Auto-fill test OTP"
-                          >
-                            Use Demo OTP (123456)
-                          </button>
                         </div>
                       </div>
                     )}
@@ -684,10 +674,10 @@ export function StatutoryClientAuthorizationModal({
                       <div className="space-y-0.5">
                         <span className="font-bold flex items-center gap-1.5 text-black dark:text-white">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>Active USB DSC Token Detected: ePass2003 (e-Mudhra CA)</span>
+                          <span>USB Cryptographic DSC Token Mode (Class 3)</span>
                         </span>
                         <p className="text-[11px] text-zinc-500">
-                          Serial: 5A:92:DF:88:12:00 • CN: Rajesh Varma • Valid until Oct 2028
+                          Signer: {signerName.trim() || "Enter Signatory Name above"} • Certificate validated upon PIN verification
                         </p>
                       </div>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold shrink-0">
@@ -706,13 +696,6 @@ export function StatutoryClientAuthorizationModal({
                           className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black text-black dark:text-white font-mono focus:outline-hidden"
                         />
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setDscPin("12345678")}
-                        className="mt-5 text-[11px] px-3 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-mono font-bold hover:bg-zinc-300 cursor-pointer"
-                      >
-                        Fill Test PIN
-                      </button>
                     </div>
                   </div>
                 )}

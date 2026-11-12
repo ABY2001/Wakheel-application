@@ -101,14 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("wakheel_token", res.token);
         localStorage.setItem("wakheel_user", JSON.stringify(res.user));
 
-        // If firm user, populate default firm profile for zero-configuration workspace access
+        // If firm user, populate firm profile from their real registration details
         if (res.user.role === "cs" || res.user.role === "ca") {
           const firmProfile = {
-            name: res.user.firmName || "Apex Law & Corporate Partners LLP",
-            founderName: res.user.fullName || (res.user.role === "ca" ? "CA Ramanathan Iyer" : "CS Rajesh Sharma"),
+            name: res.user.firmName || "",
+            founderName: res.user.fullName || "",
             category: res.user.role,
-            registrationCin: res.user.firmRegistration || "LLPIN-AAR-4192 / D/1942/2012",
-            isAccredited: true,
+            registrationCin: res.user.firmRegistration || "",
+            isAccredited: Boolean(res.user.firmRegistration),
           };
           localStorage.setItem("wakheel_firm_profile", JSON.stringify(firmProfile));
         }
@@ -132,11 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (res.user.role === "cs" || res.user.role === "ca") {
           const firmProfile = {
-            name: data.firmName || "Apex Law & Corporate Partners LLP",
-            founderName: data.fullName,
+            name: data.firmName || "",
+            founderName: data.fullName || "",
             category: res.user.role,
-            registrationCin: data.firmRegistration || "LLPIN-AAR-4192 / D/1942/2012",
-            isAccredited: true,
+            registrationCin: data.firmRegistration || "",
+            isAccredited: Boolean(data.firmRegistration),
           };
           localStorage.setItem("wakheel_firm_profile", JSON.stringify(firmProfile));
         }

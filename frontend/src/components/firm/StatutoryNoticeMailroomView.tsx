@@ -56,14 +56,14 @@ interface StatutoryNoticeMailroomViewProps {
 }
 
 export function StatutoryNoticeMailroomView({
-  firmName = "Wakheel Corporate & Tax Advisory LLP",
-  csName = "CS Rajesh Sharma (FCS-8921, CP-10293)",
-  caName = "CA Ramanathan Iyer (M.No 054921, FRN-018241N)",
+  firmName = "",
+  csName = "",
+  caName = "",
   defaultClient = {
-    name: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    pan: "AAECS1234F",
-    gstin: "07AAECS1234F1Z8",
+    name: "",
+    cin: "",
+    pan: "",
+    gstin: "",
   },
 }: StatutoryNoticeMailroomViewProps) {
   const { theme } = useTheme();

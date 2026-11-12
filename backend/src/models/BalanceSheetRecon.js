@@ -9,14 +9,14 @@ const balanceSheetReconSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "ca_1",
+      required: true,
       index: true,
     },
     clientName: {
       type: String,
       required: true,
       trim: true,
-      default: "CyberCorp Technologies Pvt Ltd",
+      default: "",
     },
     financialYear: {
       type: String,
@@ -30,55 +30,55 @@ const balanceSheetReconSchema = new mongoose.Schema(
     },
     totalAssets: {
       type: Number,
-      default: 45000000,
+      default: 0,
     },
     totalLiabilities: {
       type: Number,
-      default: 45000000,
+      default: 0,
     },
     shareCapital: {
       type: Number,
-      default: 2500000,
+      default: 0,
     },
     reservesAndSurplus: {
       type: Number,
-      default: 18500000,
+      default: 0,
     },
     longTermBorrowings: {
       type: Number,
-      default: 12000000,
+      default: 0,
     },
     tradePayables: {
       type: Number,
-      default: 6500000,
+      default: 0,
     },
     tangibleFixedAssets: {
       type: Number,
-      default: 22000000,
+      default: 0,
     },
     cashAndBank: {
       type: Number,
-      default: 8400000,
+      default: 0,
     },
     bookDepreciationScheduleII: {
       type: Number,
-      default: 2800000,
+      default: 0,
     },
     taxDepreciationRule5: {
       type: Number,
-      default: 3450000,
+      default: 0,
     },
     depreciationDifference: {
       type: Number,
-      default: 650000, // Timing difference for Deferred Tax
+      default: 0,
     },
     deferredTaxAssetLiability: {
       type: Number,
-      default: -163800, // Negative for DTL at 25.17% corporate tax rate
+      default: 0,
     },
     reconciliationNotes: {
       type: String,
-      default: "Depreciation timing differences reconciled under Ind AS 12. Book profit adjusted for MAT under Section 115JB.",
+      default: "",
     },
     status: {
       type: String,

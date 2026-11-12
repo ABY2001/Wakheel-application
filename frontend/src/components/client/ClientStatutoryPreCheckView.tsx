@@ -57,10 +57,10 @@ const formatInr = (amount?: number | null) => {
 };
 
 export function ClientStatutoryPreCheckView({
-  clientName = "Inworth Technologies Pvt Ltd",
-  cin = "U72200KL2023PTC081290",
-  pan = "AABCI9812G",
-  gstin = "32AABCI9812G1Z2",
+  clientName = "",
+  cin = "",
+  pan = "",
+  gstin = "",
   onInitiateFiling,
 }: ClientStatutoryPreCheckViewProps) {
   // Active diagnostic engine: "sec-186" | "clause-43b" | "gst-drc01"
@@ -81,23 +81,23 @@ export function ClientStatutoryPreCheckView({
   const [sec186Inputs, setSec186Inputs] = useState<Section186Params>({
     entityName: clientName,
     cin: cin,
-    paidUpCapital: 25000000, // ₹2.5 Cr
-    freeReserves: 15000000,  // ₹1.5 Cr
-    securitiesPremium: 5000000, // ₹50 L
-    existingLoans: 12000000, // ₹1.2 Cr
-    existingInvestments: 4000000,
-    existingGuarantees: 2000000,
+    paidUpCapital: 0,
+    freeReserves: 0,
+    securitiesPremium: 0,
+    existingLoans: 0,
+    existingInvestments: 0,
+    existingGuarantees: 0,
     existingSecurities: 0,
-    proposedAmount: 15000000, // ₹1.5 Cr
-    targetEntityName: "Zenith FinTech India Pvt Ltd",
-    targetCin: "U67190DL2021PTC389012",
+    proposedAmount: 0,
+    targetEntityName: "",
+    targetCin: "",
     transactionType: "inter_corporate_loan",
-    interestRate: 10.5,
-    tenureMonths: 24,
-    purpose: "Expansion of AI cloud computing servers and working capital credit",
+    interestRate: 0,
+    tenureMonths: 12,
+    purpose: "",
     hasPfiDefault: false,
-    signatoryName: "CS Rajesh Sharma",
-    signatoryMembership: "FCS-9214",
+    signatoryName: "",
+    signatoryMembership: "",
   });
 
   const [sec186Loading, setSec186Loading] = useState(false);
@@ -162,9 +162,9 @@ export function ClientStatutoryPreCheckView({
             filingRequired: sec186Stats.requiresSpecialResolution ? "Form MGT-14 within 30 days" : "None (Board Minutes)",
           },
           resolutions: {
-            boardResolutionDraft: `RESOLVED THAT pursuant to the provisions of Section 179(3) and Section 186 of the Companies Act, 2013 read with the Companies (Meetings of Board and its Powers) Rules, 2014, consent of the Board of Directors of ${sec186Inputs.entityName} be and is hereby accorded to grant an inter-corporate loan of ${formatInr(sec186Inputs.proposedAmount)} to M/s ${sec186Inputs.targetEntityName} at an interest rate of ${sec186Inputs.interestRate}% p.a. for a tenure of ${sec186Inputs.tenureMonths} months.`,
+            boardResolutionDraft: `RESOLVED THAT pursuant to the provisions of Section 179(3) and Section 186 of the Companies Act, 2013 read with the Companies (Meetings of Board and its Powers) Rules, 2014, consent of the Board of Directors of ${sec186Inputs.entityName || "[Company Legal Name]"} be and is hereby accorded to grant an inter-corporate loan of ${formatInr(sec186Inputs.proposedAmount)} to M/s ${sec186Inputs.targetEntityName || "[Target Entity Name]"} at an interest rate of ${sec186Inputs.interestRate}% p.a. for a tenure of ${sec186Inputs.tenureMonths} months.`,
             specialResolutionDraft: sec186Stats.requiresSpecialResolution
-              ? `RESOLVED AS A SPECIAL RESOLUTION THAT pursuant to Section 186(3) of the Companies Act, 2013, the consent of the Members of ${sec186Inputs.entityName} be and is hereby accorded to exceed the statutory ceiling of ${formatInr(sec186Stats.statutoryCeiling)} and advance financial commitments up to an aggregate limit of ${formatInr(sec186Stats.totalExposure)}.`
+              ? `RESOLVED AS A SPECIAL RESOLUTION THAT pursuant to Section 186(3) of the Companies Act, 2013, the consent of the Members of ${sec186Inputs.entityName || "[Company Legal Name]"} be and is hereby accorded to exceed the statutory ceiling of ${formatInr(sec186Stats.statutoryCeiling)} and advance financial commitments up to an aggregate limit of ${formatInr(sec186Stats.totalExposure)}.`
               : null,
           },
         });
@@ -179,68 +179,56 @@ export function ClientStatutoryPreCheckView({
   // =========================================================================
   // 2. SECTION 43B(h) MSME 45-DAY PAYMENT DISALLOWANCE AUDIT (CA)
   // =========================================================================
-  const [msmeInvoices, setMsmeInvoices] = useState<MsmeInvoiceItem[]>([
-    {
-      id: "INV-001",
-      invoiceNumber: "MH/25-26/089",
-      supplierName: "MicroTech Precision Tools Pvt Ltd",
-      supplierUdyam: "UDYAM-MH-03-0012489",
+  const [msmeInvoices, setMsmeInvoices] = useState<MsmeInvoiceItem[]>([]);
+  const [showAddInvoiceForm, setShowAddInvoiceForm] = useState(false);
+  const [newInvoiceForm, setNewInvoiceForm] = useState({
+    invoiceNumber: "",
+    supplierName: "",
+    supplierUdyam: "",
+    enterpriseType: "micro" as "micro" | "small" | "trader",
+    invoiceDate: "",
+    amount: "",
+    agreedCreditPeriodDays: "45",
+    paymentDate: "",
+    notes: "",
+  });
+
+  const handleAddMsmeInvoice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newInvoiceForm.invoiceNumber.trim() || !newInvoiceForm.supplierName.trim() || !newInvoiceForm.invoiceDate) {
+      return;
+    }
+    const item: MsmeInvoiceItem = {
+      id: `INV-${Date.now()}`,
+      invoiceNumber: newInvoiceForm.invoiceNumber.trim(),
+      supplierName: newInvoiceForm.supplierName.trim(),
+      supplierUdyam: newInvoiceForm.supplierUdyam.trim() || "Unregistered / Pending",
+      enterpriseType: newInvoiceForm.enterpriseType,
+      invoiceDate: newInvoiceForm.invoiceDate,
+      amount: Number(newInvoiceForm.amount || 0),
+      agreedCreditPeriodDays: Math.min(Math.max(Number(newInvoiceForm.agreedCreditPeriodDays || 15), 1), 45),
+      paymentDate: newInvoiceForm.paymentDate ? newInvoiceForm.paymentDate : null,
+      notes: newInvoiceForm.notes.trim(),
+    };
+    setMsmeInvoices((prev) => [item, ...prev]);
+    setNewInvoiceForm({
+      invoiceNumber: "",
+      supplierName: "",
+      supplierUdyam: "",
       enterpriseType: "micro",
-      invoiceDate: "2026-02-10",
-      amount: 850000,
-      agreedCreditPeriodDays: 45,
-      paymentDate: "2026-04-12",
-      notes: "Written supply agreement in place. Payment cleared 16 days past 45-day cutoff.",
-    },
-    {
-      id: "INV-002",
-      invoiceNumber: "KA/25-26/142",
-      supplierName: "Apex PolyFab Industries",
-      supplierUdyam: "UDYAM-KR-08-0045120",
-      enterpriseType: "small",
-      invoiceDate: "2026-03-20",
-      amount: 1420000,
-      agreedCreditPeriodDays: 30,
-      paymentDate: "2026-04-10",
-      notes: "Settled on 10 April 2026 within agreed 30-day window (prior to 19 April statutory cutoff).",
-    },
-    {
-      id: "INV-003",
-      invoiceNumber: "DL/25-26/512",
-      supplierName: "Vanguard Cloud Server Hosting LLP",
-      supplierUdyam: "UDYAM-DL-01-0099312",
-      enterpriseType: "small",
-      invoiceDate: "2026-01-15",
-      amount: 675000,
-      agreedCreditPeriodDays: 15,
-      paymentDate: null,
-      notes: "Unpaid as on 31 March 2026. 100% disallowed under Section 43B(h).",
-    },
-    {
-      id: "INV-004",
-      invoiceNumber: "TN/25-26/304",
-      supplierName: "Om Retail Traders & Distributors",
-      supplierUdyam: "UDYAM-TN-02-0038921",
-      enterpriseType: "trader",
-      invoiceDate: "2026-01-20",
-      amount: 980000,
-      agreedCreditPeriodDays: 60,
-      paymentDate: "2026-04-20",
-      notes: "Trader/Retailer registration. Exempt from 43B(h) disallowance per OM 2/1/2021-P&G/Policy.",
-    },
-    {
-      id: "INV-005",
-      invoiceNumber: "GJ/25-26/781",
-      supplierName: "Zenith Micro Semiconductor Labs",
-      supplierUdyam: "UDYAM-GJ-04-0021943",
-      enterpriseType: "micro",
-      invoiceDate: "2026-02-28",
-      amount: 1250000,
-      agreedCreditPeriodDays: 45,
-      paymentDate: "2026-05-10",
-      notes: "Paid on 10 May 2026. Disallowed for FY 25-26, deductible in FY 26-27 upon actual payment.",
-    },
-  ]);
+      invoiceDate: "",
+      amount: "",
+      agreedCreditPeriodDays: "45",
+      paymentDate: "",
+      notes: "",
+    });
+    setShowAddInvoiceForm(false);
+  };
+
+  const handleDeleteMsmeInvoice = (id?: string) => {
+    if (!id) return;
+    setMsmeInvoices((prev) => prev.filter((inv) => inv.id !== id));
+  };
 
   const [clause43bLoading, setClause43bLoading] = useState(false);
   const [clause43bResult, setClause43bResult] = useState<any>(null);
@@ -268,6 +256,16 @@ export function ClientStatutoryPreCheckView({
       }
 
       const invDate = new Date(inv.invoiceDate);
+      if (Number.isNaN(invDate.getTime())) {
+        return {
+          ...inv,
+          dueDate: inv.invoiceDate || "—",
+          isDisallowed: false,
+          delayDays: 0,
+          interest: 0,
+          reason: "Invalid or missing invoice date.",
+        };
+      }
       const creditDays = Math.min(inv.agreedCreditPeriodDays || 15, 45); // Max 45 days under Sec 15
       const dueDate = new Date(invDate.getTime() + creditDays * 24 * 60 * 60 * 1000);
       const yearEnd = new Date("2026-03-31T23:59:59");
@@ -353,18 +351,18 @@ export function ClientStatutoryPreCheckView({
   const [drc01Inputs, setDrc01Inputs] = useState<GstDrc01Params>({
     clientName,
     gstin,
-    noticeNumber: "SCN/GST/2026/DRC01-8921",
-    noticeDate: "2026-10-10",
-    financialYear: "2020-21",
+    noticeNumber: "",
+    noticeDate: "",
+    financialYear: "",
     section: "73",
     allegationType: "itc_2a_vs_3b_mismatch",
-    demandTax: 845000,
-    demandInterest: 385000,
-    demandPenalty: 84500,
-    officerDesignation: "Assistant Commissioner of Central & State Tax, Ward 44",
-    additionalFacts: "The supplier confirmed under statutory CA certification that outward tax was discharged in GSTR-3B. Input tax credit is protected under High Court rulings in Suncraft Energies and Section 16(4) Finance Act 2024 relief.",
-    signatoryName: "Gopakumar Nambiar",
-    signatoryDesignation: "Managing Director / Authorized Signatory",
+    demandTax: 0,
+    demandInterest: 0,
+    demandPenalty: 0,
+    officerDesignation: "",
+    additionalFacts: "",
+    signatoryName: "",
+    signatoryDesignation: "",
   });
 
   const [drc01Loading, setDrc01Loading] = useState(false);
@@ -379,10 +377,10 @@ export function ClientStatutoryPreCheckView({
       } else {
         // Fallback draft
         setDrc01Result({
-          formalReplyDraft: `BEFORE THE HON'BLE ${drc01Inputs.officerDesignation?.toUpperCase()}
+          formalReplyDraft: `BEFORE THE HON'BLE ${drc01Inputs.officerDesignation?.toUpperCase() || "[ADJUDICATING AUTHORITY]"}
 REPLY TO SHOW CAUSE NOTICE IN FORM GST DRC-01
-Notice Reference: ${drc01Inputs.noticeNumber} | Notice Date: ${drc01Inputs.noticeDate}
-Taxpayer: ${drc01Inputs.clientName} | GSTIN: ${drc01Inputs.gstin} | FY: ${drc01Inputs.financialYear}
+Notice Reference: ${drc01Inputs.noticeNumber || "Not Specified"} | Notice Date: ${drc01Inputs.noticeDate || "Not Specified"}
+Taxpayer: ${drc01Inputs.clientName || "[Taxpayer Legal Name]"} | GSTIN: ${drc01Inputs.gstin || "[GSTIN]"} | FY: ${drc01Inputs.financialYear || "[Financial Year]"}
 
 RESPECTFULLY SHEWETH:
 
@@ -437,11 +435,13 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white shadow-xs">
-              Entity: {clientName.split(" ")[0]} ({cin.slice(0, 10)}...)
-            </span>
-          </div>
+          {(clientName || cin) && (
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white shadow-xs">
+                Entity: {clientName || "Registered Entity"}{cin ? ` (${cin})` : ""}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 3 Diagnostic Engine Nav Tabs */}
@@ -570,6 +570,7 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
                   <label className="text-zinc-500 font-medium block mb-1">Target Entity Name</label>
                   <input
                     type="text"
+                    placeholder="Target Entity Legal Name"
                     value={sec186Inputs.targetEntityName}
                     onChange={(e) => setSec186Inputs({ ...sec186Inputs, targetEntityName: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
@@ -802,18 +803,114 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddInvoiceForm((v) => !v)}
+                  className="px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-black dark:text-white text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{showAddInvoiceForm ? "Cancel" : "Add MSME Invoice"}</span>
+                </button>
                 <button
                   type="button"
                   onClick={handleRunClause43bAnalysis}
-                  disabled={clause43bLoading}
-                  className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                  disabled={clause43bLoading || msmeInvoices.length === 0}
+                  className="px-3.5 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-40 transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{clause43bLoading ? "Auditing..." : "Re-Calculate Disallowances"}</span>
                 </button>
               </div>
             </div>
+
+            {showAddInvoiceForm && (
+              <form
+                onSubmit={handleAddMsmeInvoice}
+                className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs"
+              >
+                <input
+                  type="text"
+                  required
+                  placeholder="Invoice Number *"
+                  value={newInvoiceForm.invoiceNumber}
+                  onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, invoiceNumber: e.target.value })}
+                  className="px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
+                />
+                <input
+                  type="text"
+                  required
+                  placeholder="Supplier Legal Name *"
+                  value={newInvoiceForm.supplierName}
+                  onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, supplierName: e.target.value })}
+                  className="px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                />
+                <input
+                  type="text"
+                  placeholder="Udyam Registration No."
+                  value={newInvoiceForm.supplierUdyam}
+                  onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, supplierUdyam: e.target.value })}
+                  className="px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
+                />
+                <select
+                  value={newInvoiceForm.enterpriseType}
+                  onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, enterpriseType: e.target.value as "micro" | "small" | "trader" })}
+                  className="px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                >
+                  <option value="micro">Micro Enterprise</option>
+                  <option value="small">Small Enterprise</option>
+                  <option value="trader">Trader / Retail (Exempt)</option>
+                </select>
+                <div>
+                  <label className="text-[10px] text-zinc-500 block mb-1">Invoice Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={newInvoiceForm.invoiceDate}
+                    onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, invoiceDate: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-500 block mb-1">Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    placeholder="0"
+                    value={newInvoiceForm.amount}
+                    onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, amount: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-500 block mb-1">Payment Date (blank if unpaid)</label>
+                  <input
+                    type="date"
+                    value={newInvoiceForm.paymentDate}
+                    onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, paymentDate: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                  />
+                </div>
+                <div className="flex items-end gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="45"
+                    title="Agreed Credit Period Days (max 45)"
+                    value={newInvoiceForm.agreedCreditPeriodDays}
+                    onChange={(e) => setNewInvoiceForm({ ...newInvoiceForm, agreedCreditPeriodDays: e.target.value })}
+                    className="w-20 px-3 py-2 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
+                  />
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 px-3 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
+                  >
+                    Save Row
+                  </button>
+                </div>
+              </form>
+            )}
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -827,55 +924,74 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
                     <th className="py-2.5 px-3">Payment Date</th>
                     <th className="py-2.5 px-3">Sec 43B(h) Status</th>
                     <th className="py-2.5 px-3 text-right">Penal Interest</th>
+                    <th className="py-2.5 px-2 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
-                  {local43bStats.analyzedInvoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50">
-                      <td className="py-3 px-3 font-mono font-bold text-black dark:text-white">
-                        {inv.invoiceNumber}
-                      </td>
-                      <td className="py-3 px-3">
-                        <span className="font-semibold block text-black dark:text-white">{inv.supplierName}</span>
-                        <span className="text-[10px] text-zinc-400 font-mono">{inv.supplierUdyam}</span>
-                      </td>
-                      <td className="py-3 px-3">
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 uppercase font-bold text-zinc-600 dark:text-zinc-400">
-                          {inv.enterpriseType}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 font-mono font-bold text-black dark:text-white">
-                        {formatInr(inv.amount)}
-                      </td>
-                      <td className="py-3 px-3 text-[11px] font-mono text-zinc-500">
-                        <span>Inv: {inv.invoiceDate}</span>
-                        <span className="block text-zinc-400">Due: {inv.dueDate}</span>
-                      </td>
-                      <td className="py-3 px-3 text-[11px] font-mono">
-                        {inv.paymentDate ? (
-                          <span className="text-zinc-600 dark:text-zinc-300">{inv.paymentDate}</span>
-                        ) : (
-                          <span className="text-red-500 font-bold">Unpaid</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3">
-                        {inv.isDisallowed ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-[10px] font-bold">
-                            <AlertCircle className="w-3 h-3" />
-                            Disallowed (+{formatInr(inv.amount)})
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
-                            <Check className="w-3 h-3" />
-                            Allowed
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3 font-mono text-right font-bold text-amber-600 dark:text-amber-400">
-                        {inv.interest > 0 ? formatInr(inv.interest) : "—"}
+                  {local43bStats.analyzedInvoices.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-8 px-4 text-center text-zinc-500">
+                        No MSME supplier invoices added yet. Click &quot;Add MSME Invoice&quot; to evaluate Section 43B(h) disallowances and Section 16 penal interest.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    local43bStats.analyzedInvoices.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50">
+                        <td className="py-3 px-3 font-mono font-bold text-black dark:text-white">
+                          {inv.invoiceNumber}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="font-semibold block text-black dark:text-white">{inv.supplierName}</span>
+                          <span className="text-[10px] text-zinc-400 font-mono">{inv.supplierUdyam}</span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 uppercase font-bold text-zinc-600 dark:text-zinc-400">
+                            {inv.enterpriseType}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-black dark:text-white">
+                          {formatInr(inv.amount)}
+                        </td>
+                        <td className="py-3 px-3 text-[11px] font-mono text-zinc-500">
+                          <span>Inv: {inv.invoiceDate}</span>
+                          <span className="block text-zinc-400">Due: {inv.dueDate}</span>
+                        </td>
+                        <td className="py-3 px-3 text-[11px] font-mono">
+                          {inv.paymentDate ? (
+                            <span className="text-zinc-600 dark:text-zinc-300">{inv.paymentDate}</span>
+                          ) : (
+                            <span className="text-red-500 font-bold">Unpaid</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3">
+                          {inv.isDisallowed ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 text-[10px] font-bold">
+                              <AlertCircle className="w-3 h-3" />
+                              Disallowed (+{formatInr(inv.amount)})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                              <Check className="w-3 h-3" />
+                              Allowed
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-right font-bold text-amber-600 dark:text-amber-400">
+                          {inv.interest > 0 ? formatInr(inv.interest) : "—"}
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMsmeInvoice(inv.id)}
+                            title="Remove invoice"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -925,6 +1041,7 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
                   <label className="text-zinc-500 font-medium block mb-1">Notice Reference Number</label>
                   <input
                     type="text"
+                    placeholder="Enter SCN / Notice Ref No."
                     value={drc01Inputs.noticeNumber}
                     onChange={(e) => setDrc01Inputs({ ...drc01Inputs, noticeNumber: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
@@ -945,6 +1062,7 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
                     <label className="text-zinc-500 font-medium block mb-1">Financial Year</label>
                     <input
                       type="text"
+                      placeholder="e.g. 2024-25"
                       value={drc01Inputs.financialYear}
                       onChange={(e) => setDrc01Inputs({ ...drc01Inputs, financialYear: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
@@ -980,6 +1098,7 @@ ${drc01Inputs.signatoryName} (${drc01Inputs.signatoryDesignation})`,
                   <label className="text-zinc-500 font-medium block mb-1">Issuing Officer &amp; Ward</label>
                   <input
                     type="text"
+                    placeholder="Issuing Officer Designation & Ward"
                     value={drc01Inputs.officerDesignation}
                     onChange={(e) => setDrc01Inputs({ ...drc01Inputs, officerDesignation: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"

@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const StatutoryNoticeSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     noticeId: {
       type: String,
       required: true,
@@ -30,7 +35,7 @@ const StatutoryNoticeSchema = new mongoose.Schema(
       jurisdiction: { type: String },
     },
     clientEntity: {
-      entityId: { type: String, default: "ent_cybercorp_1" },
+      entityId: { type: String, default: "" },
       name: { type: String, required: true },
       cin: { type: String },
       pan: { type: String },

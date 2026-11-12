@@ -113,8 +113,8 @@ interface RocComplianceViewProps {
 }
 
 export function RocComplianceView({
-  firmName = "Apex Law & Corporate Partners LLP",
-  csName = "CS Rajesh Sharma",
+  firmName = "",
+  csName = "",
   initialSubTab = "filings",
 }: RocComplianceViewProps) {
   const [activeTab, setActiveTab] = useState<"filings" | "registers" | "secretarial-audit" | "entities">(initialSubTab);
@@ -127,7 +127,7 @@ export function RocComplianceView({
 
   // Master Data
   const [entities, setEntities] = useState<CorporateEntityItem[]>([]);
-  const [selectedCompanyName, setSelectedCompanyName] = useState<string>("CyberCorp Technologies Pvt Ltd");
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>("");
   const [filings, setFilings] = useState<RocFilingItem[]>([]);
   const [registers, setRegisters] = useState<StatutoryRegisterItem[]>([]);
   const [auditReport, setAuditReport] = useState<any>(null);
@@ -152,10 +152,10 @@ export function RocComplianceView({
   // Form states - New Filing
   const [newFormName, setNewFormName] = useState("MGT-14");
   const [newFormDescription, setNewFormDescription] = useState("Filing of Board Resolutions with Registrar of Companies under Section 117");
-  const [newDueDate, setNewDueDate] = useState("2026-11-30");
+  const [newDueDate, setNewDueDate] = useState("");
   const [newStatutorySection, setNewStatutorySection] = useState("Section 117(1) of Companies Act 2013");
   const [newChallanAmount, setNewChallanAmount] = useState(600);
-  const [newSignatoryName, setNewSignatoryName] = useState("Dr. Vikram Malhotra (MD)");
+  const [newSignatoryName, setNewSignatoryName] = useState("");
 
   // Form states - New Register Entry
   const [newRegType, setNewRegType] = useState<StatutoryRegisterItem["registerType"]>("members");
@@ -271,8 +271,8 @@ export function RocComplianceView({
 
     const newFiling: RocFilingItem = {
       id: `roc-${Date.now()}`,
-      companyName: selectedCompanyName,
-      cin: currentEntity?.cin || "U72200DL2022PTC394812",
+      companyName: selectedCompanyName || currentEntity?.companyName || "",
+      cin: currentEntity?.cin || "",
       formName: newFormName.trim(),
       formDescription: newFormDescription.trim(),
       financialYear: "FY 2026-27",
@@ -284,10 +284,10 @@ export function RocComplianceView({
       challanAmount: Number(newChallanAmount) || 600,
       lateFeeAmount: 0,
       paymentStatus: "unpaid",
-      signatoryDin: currentEntity?.directors?.[0]?.din || "08912340",
+      signatoryDin: currentEntity?.directors?.[0]?.din || "",
       signatoryName: newSignatoryName || currentEntity?.directors?.[0]?.name || "Managing Director",
-      pcsCertificateNumber: `${csName} (FCS 8492, CP 10294)`,
-      attachmentCount: 2,
+      pcsCertificateNumber: csName ? `${csName}` : "",
+      attachmentCount: 0,
       notes: "Newly scheduled statutory ROC filing.",
     };
 
@@ -316,8 +316,8 @@ export function RocComplianceView({
 
     const newEntry: StatutoryRegisterItem = {
       id: `reg-${Date.now()}`,
-      companyName: selectedCompanyName,
-      cin: currentEntity?.cin || "U72200DL2022PTC394812",
+      companyName: selectedCompanyName || currentEntity?.companyName || "",
+      cin: currentEntity?.cin || "",
       registerType: newRegType,
       statutoryForm: formMap[newRegType] || "MGT-1",
       folioOrRefNumber: newRegFolio.trim(),
@@ -330,7 +330,7 @@ export function RocComplianceView({
       distinctiveTo: newRegDistTo.trim(),
       certificateNumber: `CERT-00${registers.length + 1}`,
       status: "active",
-      certifiedBy: `${csName}, FCS 8492`,
+      certifiedBy: csName || "Company Secretary",
       certifiedAt: new Date().toISOString().split("T")[0],
     };
 
@@ -362,7 +362,7 @@ export function RocComplianceView({
       email: `compliance@${newEntName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
       directors: [
         {
-          din: "08912340",
+          din: "",
           name: "Managing Director",
           designation: "Managing Director",
           appointmentDate: new Date().toISOString().split("T")[0],
@@ -433,7 +433,7 @@ export function RocComplianceView({
 
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
                 <Building2 className="w-3 h-3 text-zinc-400" />
-                <span className="font-mono text-[11px]">{currentEntity?.cin || "U72200DL2022PTC394812"}</span>
+                <span className="font-mono text-[11px]">{currentEntity?.cin || "No entity selected"}</span>
               </div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-xs text-emerald-300 font-semibold">
                 <Sparkles className="w-3 h-3 text-emerald-400" />
@@ -1517,13 +1517,13 @@ export function RocComplianceView({
                   SECRETARIAL AUDIT REPORT
                 </h3>
                 <p className="text-xs font-medium text-zinc-500">FOR THE FINANCIAL YEAR ENDED 31ST MARCH, 2026</p>
-                <p className="text-xs font-bold text-black dark:text-white">To the Members of {selectedCompanyName.toUpperCase()}</p>
-                <p className="text-[11px] font-mono text-zinc-500">CIN: {currentEntity?.cin || "U72200DL2022PTC394812"}</p>
+                <p className="text-xs font-bold text-black dark:text-white">To the Members of {(selectedCompanyName || currentEntity?.companyName || "CLIENT COMPANY").toUpperCase()}</p>
+                <p className="text-[11px] font-mono text-zinc-500">CIN: {currentEntity?.cin || "—"}</p>
               </div>
 
               <div className="space-y-3 leading-relaxed text-xs">
                 <p>
-                  We have conducted the secretarial audit of the compliance of applicable statutory provisions and the adherence to good corporate practices by <strong>{selectedCompanyName}</strong> (hereinafter called the Company). Secretarial Audit was conducted in a manner that provided us a reasonable basis for evaluating the corporate conducts/statutory compliances and expressing our opinion thereon.
+                  We have conducted the secretarial audit of the compliance of applicable statutory provisions and the adherence to good corporate practices by <strong>{selectedCompanyName || currentEntity?.companyName || "the Company"}</strong> (hereinafter called the Company). Secretarial Audit was conducted in a manner that provided us a reasonable basis for evaluating the corporate conducts/statutory compliances and expressing our opinion thereon.
                 </p>
                 <p>
                   Based on our verification of the Company’s books, papers, minute books, forms and returns filed and other records maintained by the Company and also the information provided by the Company, its officers, agents and authorized representatives during the conduct of secretarial audit, we hereby report that in our opinion, the Company has, during the audit period covering the financial year ended on 31st March, 2026 complied with the statutory provisions listed hereunder:
@@ -1548,17 +1548,14 @@ export function RocComplianceView({
               {/* Signoff */}
               <div className="pt-6 border-t border-dashed border-zinc-300 dark:border-zinc-700 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 font-sans text-xs">
                 <div className="space-y-1 text-zinc-500">
-                  <p>Place: New Delhi</p>
                   <p>Date: {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                  <p className="font-mono text-[11px]">UDIN: S008492G00{Date.now().toString().slice(-6)}</p>
+                  <p className="font-mono text-[11px]">UDIN: Pending Certification</p>
                 </div>
 
                 <div className="text-right space-y-0.5">
-                  <p className="font-extrabold text-black dark:text-white">For Sharma & Associates</p>
+                  <p className="font-extrabold text-black dark:text-white">{firmName ? `For ${firmName}` : "Authorized Signatory"}</p>
                   <p className="text-zinc-600 dark:text-zinc-400">Company Secretaries</p>
-                  <p className="font-bold text-[#6B1728] dark:text-rose-300">{csName}</p>
-                  <p className="text-zinc-500 text-[11px]">FCS No. 8492 | C.P. No. 10294</p>
-                  <p className="text-zinc-400 text-[11px]">Peer Review Certificate No. 1049/2023</p>
+                  <p className="font-bold text-[#6B1728] dark:text-rose-300">{csName || "Company Secretary"}</p>
                 </div>
               </div>
             </div>

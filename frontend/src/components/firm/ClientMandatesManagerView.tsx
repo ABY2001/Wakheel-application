@@ -106,170 +106,16 @@ export interface ClientMandateItem {
   partnerNotes?: string;
 }
 
-const DEFAULT_MANDATES: ClientMandateItem[] = [
-  {
-    id: "seed-cs-1",
-    caseNumber: "SRN-MCA-2026/894120",
-    title: "Annual MCA Filing (Form AOC-4 & MGT-7) — Inworth Technologies Pvt Ltd",
-    court: "MCA21 • Registrar of Companies (ROC Ernakulam)",
-    category: "cs",
-    assignedAdvocate: "CS Rajesh Sharma (FCS 9214)",
-    clientPanOrCin: "CIN: U72200KL2023PTC081290",
-    status: "Statutory Verification Complete",
-    filingDate: "2026-10-18",
-    stageIndex: 4,
-    stages: [
-      { name: "Docket Initiated & Vault Stamped", date: "18 Oct 2026", done: true, remarks: "Vault documents verified with SHA-256 seal" },
-      { name: "Financial Statements Scrutiny", date: "21 Oct 2026", done: true, remarks: "Schedule III balance sheet and director report reconciled" },
-      { name: "AGM Minutes & Director Sign-Off", date: "24 Oct 2026", done: true, remarks: "Board resolutions adopted with unanimous vote" },
-      { name: "MCA21 V3 Portal E-Filing", date: "27 Oct 2026", done: true, remarks: "Submitted via V3 portal with Class 3 DSC token" },
-      { name: "Official ROC SRN Challan Issued", date: "28 Oct 2026", done: true, remarks: "SRN: AA92019401 officially released to client" },
-    ],
-    documents: [
-      { name: "Audited_Balance_Sheet_FY25_26.pdf", size: "3.4 MB", hash: "sha256:7a92c4b8e190fa72" },
-      { name: "Directors_Report_MGT9.pdf", size: "1.2 MB", hash: "sha256:3d91ea55c01289fe" },
-      { name: "AGM_Signed_Minutes_2026.pdf", size: "840 KB", hash: "sha256:66b1fa091928cc3a" },
-    ],
-    udinOrSrn: "SRN: AA92019401",
-    feePaid: "₹ 12,500 (ROC Statutory + CS Professional Fee)",
-    partnerNotes: "All MCA21 requirements satisfied. Filing approved under Section 137 & 92 of Companies Act 2013.",
-    clientAuthorization: {
-      authId: "ESIGN-20261024-9124",
-      signMethod: "AADHAAR_ESIGN",
-      signerName: "Rajesh Varma",
-      signerPanOrDin: "DIN: 08912401",
-      signerAadhaarMasked: "XXXX-XXXX-7419",
-      signerDesignation: "Managing Director",
-      espReference: "ESP-CDAC-202610-842109",
-      timestamp: "2026-10-24T11:45:00.000Z",
-      status: "AUTHORIZED",
-      statutoryDeclarationAccepted: true,
-      documentTitle: "Annual MCA Filing (Form AOC-4 & MGT-7)",
-      authHash: "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
-      legalSection: "IT Act 2000 Section 3A & Second Schedule (C-DAC ESP) • Companies Act 2013 Section 448",
-      certificateAuthority: "C-DAC (Centre for Development of Advanced Computing) e-Sign ESP",
-    },
-    trustDisbursement: {
-      voucherNo: "VCH-MCA-202610-894120",
-      treatment: "reimbursable_out_of_pocket",
-      amount: 12500,
-      portal: "MCA21",
-      formName: "AOC-4 & MGT-7",
-      cinOrSrn: "SRN: AA92019401",
-      bsrCode: "0290142",
-      challanSerialNumber: "89410",
-      disbursedAt: "2026-10-28T14:20:00.000Z",
-      invoiceRef: "INV-STAT-89412",
-      status: "RECORDED_IN_TRUST_LEDGER",
-    },
-  },
-  {
-    id: "seed-ca-1",
-    caseNumber: "ITR-CA-2026/741092",
-    title: "Form 3CD Tax Audit & Corporate ITR-6 — Vanguard Infrastructure Ltd",
-    court: "ICAI • Income Tax Department (CPC Bengaluru)",
-    category: "ca",
-    assignedAdvocate: "CA Ramanathan Iyer (FCA 40192)",
-    clientPanOrCin: "PAN: AABCV8912G",
-    status: "UDIN Stamped & Ready for E-Verification",
-    filingDate: "2026-10-25",
-    stageIndex: 3,
-    stages: [
-      { name: "Books of Account & 26AS Ingested", date: "25 Oct 2026", done: true, remarks: "AIS and 26AS reconciled against general ledger" },
-      { name: "Depreciation & 43B(h) Audit", date: "29 Oct 2026", done: true, remarks: "Section 43B(h) MSME 45-day calculation completed with 0 disallowance" },
-      { name: "Tax Audit Report (Form 3CD) Drafted", date: "02 Nov 2026", done: true, remarks: "Clauses 1 to 44 scrutinized by lead engagement manager" },
-      { name: "ICAI UDIN Generation & Stamping", date: "05 Nov 2026", done: true, remarks: "UDIN 2640192A00018921 generated per ICAI guidelines" },
-      { name: "ITBA Income Tax Portal Filing", date: "Pending Client OTP", done: false, remarks: "Awaiting final Aadhaar / DSC client authentication" },
-    ],
-    documents: [
-      { name: "Trial_Balance_General_Ledger_2026.xlsx", size: "4.8 MB", hash: "sha256:aa441928e0018fa9" },
-      { name: "Form_26AS_AIS_TIS_FY25_26.pdf", size: "2.1 MB", hash: "sha256:12bc5566de778901" },
-      { name: "Draft_Form_3CD_Tax_Audit.pdf", size: "1.9 MB", hash: "sha256:44aa0011bb223344" },
-    ],
-    udinOrSrn: "UDIN: 2640192A00018921",
-    feePaid: "₹ 24,000 (Tax Audit & Corporate Return)",
-    partnerNotes: "Tax computation finalized under Section 44AB. Gross receipts reconciled with GST turnover.",
-    queries: [
-      {
-        id: "qry-ca-101",
-        type: "CLARIFICATION",
-        title: "Section 43B(h) Clause 22 Vendor Status Confirmation",
-        description: "Please confirm whether invoice INV-2025/902 from TechFab Solutions (MSME Micro) was settled prior to 31-Mar-2026 or if statutory interest has been computed under MSMED Act Section 16.",
-        requestedDocumentName: "Bank_Advice_Debit_Confirmation.pdf",
-        status: "RESOLVED",
-        raisedBy: {
-          name: "CA Ramanathan Iyer (FCA 40192)",
-          role: "Statutory Tax Auditor",
-          date: "30 Oct 2026",
-        },
-        clientResponse: {
-          notes: "Payment of ₹1,45,000 discharged via RTGS on 12-Mar-2026. Official UTR transaction slip attached.",
-          submittedAt: "01 Nov 2026",
-          attachments: [
-            {
-              id: "att-1",
-              name: "RTGS_Advice_TechFab_Settlement.pdf",
-              size: "480 KB",
-              hash: "sha256:77bb19280011eeff11223344",
-            },
-          ],
-        },
-      },
-    ],
-  },
-  {
-    id: "seed-cs-2",
-    caseNumber: "SRN-MCA-2026/910245",
-    title: "Appointment of Independent Director (Form DIR-12) — Zenith FinTech Ltd",
-    court: "MCA21 • Registrar of Companies (ROC Delhi)",
-    category: "cs",
-    assignedAdvocate: "CS Rajesh Sharma (FCS 9214)",
-    clientPanOrCin: "CIN: U67190DL2021PTC389012",
-    status: "Technical Scrutiny in Progress",
-    filingDate: "2026-11-02",
-    stageIndex: 1,
-    stages: [
-      { name: "Docket Initiated & Vault Stamped", date: "02 Nov 2026", done: true, remarks: "DIR-2 consent and DIR-8 non-disqualification forms uploaded" },
-      { name: "Technical Scrutiny & DIN Verification", date: "04 Nov 2026", done: true, remarks: "DIN 09841202 verified against MCA Director Master Database" },
-      { name: "Board Resolution & CTC Sign-Off", date: "Pending Sign-Off", done: false, remarks: "Certified true copy of Board Resolution awaiting digital signature" },
-      { name: "MCA21 V3 Portal E-Filing", date: "Pending", done: false, remarks: "Form DIR-12 pre-scrutiny pass required" },
-      { name: "Official ROC SRN Challan Issued", date: "Pending", done: false, remarks: "Awaiting approval under Straight Through Process (STP)" },
-    ],
-    documents: [
-      { name: "Consent_Letter_Form_DIR2.pdf", size: "450 KB", hash: "sha256:ee881294fa0018aa" },
-      { name: "Declaration_Form_DIR8.pdf", size: "380 KB", hash: "sha256:cc551100bb443322" },
-    ],
-    udinOrSrn: "SRN: Pending Pre-Scrutiny",
-    feePaid: "₹ 6,000 (ROC Statutory Fee + Professional Charges)",
-    partnerNotes: "Candidate meets criteria under Section 149(6) of Companies Act 2013.",
-    queries: [
-      {
-        id: "qry-cs-201",
-        type: "DOCUMENT_REUPLOAD",
-        title: "Form DIR-2 Consent Letter & Updated Residential Address Proof",
-        description: "The DIN verification indicates the Director's residential address in Aadhaar was updated recently. Please upload a self-attested proof of updated residential address (Utility bill, Bank Statement, or Passport copy) for Form DIR-12 attachment.",
-        requestedDocumentName: "Self_Attested_Address_Proof_DIR2.pdf",
-        status: "OPEN",
-        raisedBy: {
-          name: "CS Rajesh Sharma (FCS 9214)",
-          role: "Practicing Company Secretary",
-          date: "04 Nov 2026",
-        },
-      },
-    ],
-  },
-];
-
 interface ClientMandatesManagerViewProps {
   firmName?: string;
   practitionerName?: string;
 }
 
 export function ClientMandatesManagerView({
-  firmName = "Apex Law & Corporate Partners LLP",
-  practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
+  firmName = "",
+  practitionerName = "",
 }: ClientMandatesManagerViewProps) {
-  const [mandates, setMandates] = useState<ClientMandateItem[]>(DEFAULT_MANDATES);
+  const [mandates, setMandates] = useState<ClientMandateItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterCategory, setFilterCategory] = useState<"ALL" | "cs" | "ca" | "action_needed" | "completed">("ALL");
@@ -299,10 +145,23 @@ export function ClientMandatesManagerView({
     timestamp: string;
   } | null>(null);
 
+  const wsUserId =
+    typeof window !== "undefined"
+      ? (() => {
+          try {
+            const raw = localStorage.getItem("wakheel_user");
+            const u = raw ? JSON.parse(raw) : null;
+            return u?.id || u?._id || "";
+          } catch {
+            return "";
+          }
+        })()
+      : "";
+
   // Hook into live matter WebSocket events
   const { isConnected: isWsConnected } = useMatterWebSocket({
     role: "advocate",
-    userId: "adv_1",
+    userId: wsUserId,
     onAuthorized: (event: MatterWebSocketEvent) => {
       const matterId = event.matterId;
       const caseNumber = event.meta?.caseNumber;
@@ -519,29 +378,24 @@ export function ClientMandatesManagerView({
       title: mandate.title,
       courtOrAuthority: mandate.court,
       category: mandate.category,
-      clientName: "Inworth Technologies Pvt Ltd",
-      clientCinOrPan: mandate.clientPanOrCin || "U72200KL2023PTC081290",
-      clientGstin: "32AABCI9812G1Z2",
+      clientName: mandate.title.split("—")[1]?.trim() || mandate.title,
+      clientCinOrPan: mandate.clientPanOrCin || "—",
+      clientGstin: "—",
       assignedProfessional: mandate.assignedAdvocate,
       professionalRole:
         mandate.category === "ca"
           ? "Fellow Chartered Accountant (FCA) • Statutory Auditor"
           : "Practicing Company Secretary (FCS) • Corporate Secretarial Advisor",
-      membershipNumber:
-        mandate.category === "ca"
-          ? "ICAI M.No 240189 • FRN 019482C"
-          : "ICSI FCS-9482 • CP 14298",
-      firmName: "Wakheel Multi-Disciplinary Practice LLP",
-      udinOrSrn: mandate.udinOrSrn || "SRN-VERIFIED-2026",
+      membershipNumber: "Verified Member",
+      firmName: firmName || "Practice Firm",
+      udinOrSrn: mandate.udinOrSrn || "Pending",
       filingDate: mandate.filingDate,
       certificationDate: new Date().toLocaleDateString("en-IN", {
         day: "numeric",
         month: "long",
         year: "numeric",
       }),
-      integrityHash:
-        mandate.documents?.[0]?.hash ||
-        "sha256:7f92014ea89201cb184920aef104928b",
+      integrityHash: mandate.documents?.[0]?.hash || "—",
       status: "OFFICIALLY FILED",
       feePaid: mandate.feePaid,
     });
@@ -556,11 +410,18 @@ export function ClientMandatesManagerView({
     }
   };
 
-  // Load live matters from backend and merge with seeded mandates
+  // Load live matters from backend
   const loadMandates = async () => {
     try {
       setLoading(true);
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
+      if (!token) {
+        setMandates([]);
+        return;
+      }
       const res = await citizenApi.getMatters(token).catch(() => ({ matters: [] }));
 
       if (res && res.matters && Array.isArray(res.matters)) {
@@ -599,44 +460,34 @@ export function ClientMandatesManagerView({
 
             return {
               id: m.id || m._id || `live-mandate-${idx}`,
-              caseNumber: m.caseNumber || `SRN-MCA-2026/${idx + 1000}`,
+              caseNumber: m.caseNumber || `SRN-MCA-${idx + 1000}`,
               title: m.title || m.matterTitle || "Statutory Compliance Docket",
               court: m.court || m.courtForum || (isCa ? "ICAI • Income Tax Department" : "MCA21 • Registrar of Companies"),
               category: isCa ? "ca" : "cs",
-              assignedAdvocate: m.assignedAdvocate || m.advocateName || (isCa ? "CA Ramanathan Iyer (FCA 40192)" : "CS Rajesh Sharma (FCS 9214)"),
-              clientPanOrCin: m.clientPanOrCin || (isCa ? "PAN: AABCV8912G" : "CIN: U72200KL2023PTC081290"),
+              assignedAdvocate: m.assignedAdvocate || m.advocateName || practitionerName || "Assigned Professional",
+              clientPanOrCin: m.clientPanOrCin || "—",
               status: m.status || (isCompleted ? "Statutory Verification Complete" : "In Technical Scrutiny"),
               filingDate: m.filingDate || new Date().toISOString().split("T")[0],
               stageIndex,
               stages,
-              documents: m.documents && Array.isArray(m.documents) && m.documents.length > 0 ? m.documents : [
-                { name: "Supporting_Statutory_Dossier.pdf", size: "2.4 MB", hash: "sha256:8899aabbccddeeff" },
-              ],
-              udinOrSrn: m.udinOrSrn || (isCa ? "UDIN: 2640192A00098124" : "SRN: ROC-2026-90124"),
+              documents: m.documents && Array.isArray(m.documents) ? m.documents : [],
+              udinOrSrn: m.udinOrSrn || "Pending",
               feePaid: m.feePaid || "Retainer Verified",
-              partnerNotes: m.partnerNotes || "Docket active in multi-disciplinary firm workflow.",
+              partnerNotes: m.partnerNotes || "Docket active in firm workflow.",
               queries: m.queries || [],
               clientAuthorization: m.clientAuthorization || undefined,
               trustDisbursement: m.trustDisbursement || undefined,
             };
           });
 
-        if (liveMandates.length > 0) {
-          // Merge unique by caseNumber
-          const map = new Map<string, ClientMandateItem>();
-          for (const item of liveMandates) map.set(item.caseNumber, item);
-          for (const item of DEFAULT_MANDATES) {
-            if (!map.has(item.caseNumber)) map.set(item.caseNumber, item);
-          }
-          setMandates(Array.from(map.values()));
-          return;
-        }
+        setMandates(liveMandates);
+        return;
       }
 
-      setMandates(DEFAULT_MANDATES);
+      setMandates([]);
     } catch (e) {
       console.warn("Failed to load mandates:", e);
-      setMandates(DEFAULT_MANDATES);
+      setMandates([]);
     } finally {
       setLoading(false);
     }
@@ -696,7 +547,14 @@ export function ClientMandatesManagerView({
           ? "UDIN Stamped & Filed on Portal"
           : "Statutory Verification Complete";
 
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
+      if (!token) {
+        alert("Authentication required to advance stage.");
+        return;
+      }
 
       // 1. Update Matter in backend
       await citizenApi.updateMatter(token, mandate.id, {
@@ -751,18 +609,25 @@ export function ClientMandatesManagerView({
       if (customUdinInput.trim()) {
         generatedToken = customUdinInput.trim();
       } else if (isCa) {
-        // Generate authentic 18-character ICAI UDIN
+        // Generate format-compliant ICAI UDIN placeholder only when user leaves custom field blank
         const year = new Date().getFullYear().toString().slice(-2);
-        const mem = "054921";
+        const randomDigits = Math.floor(100000 + Math.random() * 900000).toString();
         const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
-        generatedToken = `UDIN: ${year}${mem}${randomSuffix}`.slice(0, 24);
+        generatedToken = `UDIN: ${year}${randomDigits}${randomSuffix}`.slice(0, 24);
       } else {
         // Generate MCA21 V3 SRN
         const randomDigits = Math.floor(100000 + Math.random() * 900000);
         generatedToken = `SRN: AA${randomDigits}`;
       }
 
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
+      if (!token) {
+        alert("Authentication required to stamp UDIN/SRN.");
+        return;
+      }
 
       // Advance to stage 3 if currently at stage 1 or 2
       const targetStageIndex = Math.max(udinModalDocket.stageIndex, 3);
@@ -816,7 +681,14 @@ export function ClientMandatesManagerView({
   const handleReleaseAcknowledgment = async (mandate: ClientMandateItem) => {
     try {
       setIsSubmittingAction(true);
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+          : "";
+      if (!token) {
+        alert("Authentication required to release acknowledgment.");
+        return;
+      }
 
       const updatedStages = mandate.stages.map((st) => ({
         ...st,
@@ -859,12 +731,12 @@ export function ClientMandatesManagerView({
     const content = `================================================================================
 GOVERNMENT OF INDIA • STATUTORY COMPLIANCE ACKNOWLEDGMENT
 ================================================================================
-Platform: Wakheel Multi-Disciplinary Practice Network (Kerala High Court & ROC)
+Platform: ${firmName || "Wakheel Legal & Compliance Workspace"}
 Docket Reference: ${mandate.caseNumber}
 Matter Title: ${mandate.title}
 Filing Authority: ${mandate.court}
 Certifying Professional: ${mandate.assignedAdvocate}
-Statutory Reference / Token: ${mandate.udinOrSrn || "SRN-VERIFIED-2026"}
+Statutory Reference / Token: ${mandate.udinOrSrn || "Pending"}
 Date of Certification: ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
 
 STATUS: COMPLETED & OFFICIALLY FILED (TAMPER-PROOF DIGITALLY SIGNED)
@@ -1449,7 +1321,7 @@ This document serves as the official client acknowledgment copy generated by Wak
                   type="text"
                   value={customUdinInput}
                   onChange={(e) => setCustomUdinInput(e.target.value)}
-                  placeholder={udinModalDocket.category === "ca" ? "e.g. 26054921AAAAAA9214" : "e.g. SRN: AA92019401"}
+                  placeholder={udinModalDocket.category === "ca" ? "Enter 18-digit ICAI UDIN" : "Enter MCA21 V3 SRN"}
                   className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-black dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white font-mono"
                 />
               </div>

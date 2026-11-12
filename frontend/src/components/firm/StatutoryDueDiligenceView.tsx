@@ -59,18 +59,18 @@ interface StatutoryDueDiligenceViewProps {
 }
 
 export function StatutoryDueDiligenceView({
-  firmName = "Apex Corporate Secretarial & Tax Advisory LLP",
-  csName = "CS Rajesh Sharma (FCS-8921, CP-10293)",
-  caName = "CA Ramanathan Iyer (M.No 054921, FRN-018241N)",
+  firmName = "",
+  csName = "",
+  caName = "",
   initialAuditId,
   defaultClient = {
-    name: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    pan: "AAECS1234F",
-    gstin: "07AAECS1234F1Z8",
-    turnover: 485000000,
-    authorizedCapital: 50000000,
-    paidUpCapital: 25000000,
+    name: "",
+    cin: "",
+    pan: "",
+    gstin: "",
+    turnover: 0,
+    authorizedCapital: 0,
+    paidUpCapital: 0,
   },
 }: StatutoryDueDiligenceViewProps) {
   const { theme } = useTheme();
@@ -237,8 +237,8 @@ export function StatutoryDueDiligenceView({
     if (!selectedAudit) return;
     try {
       const res = await dueDiligenceApi.attestAudit(selectedAudit.auditId, {
-        csSigner: { name: "CS Rajesh Sharma", membershipNo: "FCS-8921", cpNumber: "CP-10293" },
-        caSigner: { name: "CA Ramanathan Iyer", membershipNo: "401928", udin: "26401928DDAUDIT8921" },
+        csSigner: { name: csName || "Practicing Company Secretary", membershipNo: "", cpNumber: "" },
+        caSigner: { name: caName || "Practicing Chartered Accountant", membershipNo: "", udin: "" },
       });
       if (res.success && res.audit) {
         setSelectedAudit(res.audit);

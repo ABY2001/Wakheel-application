@@ -51,12 +51,35 @@ const evaluateScoreAndGrade = (checkpoints = []) => {
   return { score, grade, riskCategory, passed, failed, total };
 };
 
+const getUserId = (req) => {
+  const id = req.user?.id || req.user?._id;
+  return id ? String(id) : "";
+};
+
+const getBlankCheckpointTemplate = () => {
+  const template = DEFAULT_DUE_DILIGENCE_AUDITS?.[0]?.checkpoints || [];
+  return template.map((c) => ({
+    checkpointId: c.checkpointId,
+    title: c.title,
+    category: c.category,
+    statutorySection: c.statutorySection,
+    status: "not_applicable",
+    points: c.points || 1,
+    earnedPoints: 0,
+    evidenceDocument: "",
+    observation: "",
+    riskWeight: c.riskWeight || "low",
+    remedialAction: "",
+  }));
+};
+
 // @desc    Get all due diligence audits
 // @route   GET /api/due-diligence
-// @access  Public / Protected
+// @access  Protected
 export const getDueDiligenceAudits = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId || "cs_1";
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const { entityName, riskCategory } = req.query;
 
     if (isMongoConnected()) {
@@ -81,13 +104,16 @@ export const getDueDiligenceAudits = async (req, res) => {
 
 // @desc    Get due diligence audit by ID
 // @route   GET /api/due-diligence/:id
-// @access  Public / Protected
+// @access  Protected
 export const getDueDiligenceAuditById = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const { id } = req.params;
 
     if (isMongoConnected()) {
       const audit = await DueDiligenceAudit.findOne({
+        userId,
         $or: [{ auditId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
       });
       if (!audit) {
@@ -96,7 +122,7 @@ export const getDueDiligenceAuditById = async (req, res) => {
       return res.json({ success: true, audit, mode: "mongo" });
     }
 
-    const audit = devStore.getDueDiligenceAuditById(id);
+    const audit = devStore.getDueDiligenceAuditById(id, userId);
     if (!audit) {
       return res.status(404).json({ success: false, message: "Due diligence audit not found" });
     }
@@ -109,14 +135,17 @@ export const getDueDiligenceAuditById = async (req, res) => {
 
 // @desc    Create new due diligence audit
 // @route   POST /api/due-diligence
-// @access  Public / Protected
+// @access  Protected
 export const createDueDiligenceAudit = async (req, res) => {
   try {
-    const userId = req.user?.id || req.body.userId || "cs_1";
-    const auditData = req.body;
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
+    const auditData = req.body || {};
 
-    // Evaluate Checkpoints
-    const checkpoints = auditData.checkpoints || DEFAULT_DUE_DILIGENCE_AUDITS[0].checkpoints;
+    const checkpoints =
+      Array.isArray(auditData.checkpoints) && auditData.checkpoints.length > 0
+        ? auditData.checkpoints
+        : getBlankCheckpointTemplate();
     const evaluation = evaluateScoreAndGrade(checkpoints);
 
     const auditId =
@@ -127,7 +156,7 @@ export const createDueDiligenceAudit = async (req, res) => {
 
     const digest = sha256({
       auditId,
-      entity: auditData.clientEntity?.cin,
+      entity: auditData.clientEntity?.cin || "",
       score: evaluation.score,
       date: new Date().toISOString(),
     });
@@ -144,10 +173,10 @@ export const createDueDiligenceAudit = async (req, res) => {
       passedCheckpoints: evaluation.passed,
       failedCheckpoints: evaluation.failed,
       attestation: {
-        ...(auditData.attestation || DEFAULT_DUE_DILIGENCE_AUDITS[0].attestation),
+        ...(auditData.attestation || {}),
         integrityHash: digest,
         qrVerificationUrl: `https://wakheel.legal/verify/due-diligence/${auditId}`,
-        attestedAt: new Date().toISOString(),
+        attestedAt: auditData.attestation ? new Date().toISOString() : undefined,
       },
     };
 
@@ -166,26 +195,28 @@ export const createDueDiligenceAudit = async (req, res) => {
 
 // @desc    Update checkpoint status (curative action / finding update)
 // @route   PATCH /api/due-diligence/:id/checkpoint
-// @access  Public / Protected
+// @access  Protected
 export const updateAuditCheckpoint = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const { id } = req.params;
     const { checkpointId, status, observation, remedialAction } = req.body;
 
     let audit;
     if (isMongoConnected()) {
       audit = await DueDiligenceAudit.findOne({
+        userId,
         $or: [{ auditId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
       });
     } else {
-      audit = devStore.getDueDiligenceAuditById(id);
+      audit = devStore.getDueDiligenceAuditById(id, userId);
     }
 
     if (!audit) {
       return res.status(404).json({ success: false, message: "Audit not found" });
     }
 
-    // Update specific checkpoint
     const updatedCheckpoints = (audit.checkpoints || []).map((cp) => {
       if (cp.checkpointId === checkpointId) {
         return {
@@ -212,11 +243,15 @@ export const updateAuditCheckpoint = async (req, res) => {
     };
 
     if (isMongoConnected()) {
-      const updated = await DueDiligenceAudit.findByIdAndUpdate(audit._id, updatePayload, { new: true });
+      const updated = await DueDiligenceAudit.findOneAndUpdate(
+        { _id: audit._id, userId },
+        updatePayload,
+        { new: true }
+      );
       return res.json({ success: true, audit: updated, mode: "mongo" });
     }
 
-    const updated = devStore.updateDueDiligenceAudit(id, updatePayload);
+    const updated = devStore.updateDueDiligenceAudit(id, updatePayload, userId);
     res.json({ success: true, audit: updated, mode: "devStore" });
   } catch (error) {
     console.error("updateAuditCheckpoint error:", error);
@@ -226,40 +261,36 @@ export const updateAuditCheckpoint = async (req, res) => {
 
 // @desc    Statutory Financial Penalty Calculator (Sec 403, Sec 271B, Sec 270A, Sec 122)
 // @route   POST /api/due-diligence/calculate-penalties
-// @access  Public / Protected
+// @access  Protected
 export const calculateStatutoryPenalties = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const {
       mcaLateDays = 0,
-      annualTurnover = 485000000,
+      annualTurnover = 0,
       taxAuditDelay = false,
       underReportedIncome = 0,
       gstTaxDisputed = 0,
-      corporateTaxRate = 0.2517, // 22% + surcharge/cess
+      corporateTaxRate = 0.2517,
     } = req.body;
 
-    // 1. MCA Section 403 Additional Fees (₹100 per day per defaulting document)
     const mcaSection403 = mcaLateDays * 100;
 
-    // 2. Income Tax Section 271B: 0.5% of turnover or ₹1,50,000, whichever is less
     let section271B = 0;
     if (taxAuditDelay) {
       section271B = Math.min(annualTurnover * 0.005, 150000);
     }
 
-    // 3. Section 270A: Under-reporting penalty = 50% of tax payable on under-reported income
     const taxOnUnderReported = underReportedIncome * corporateTaxRate;
     const section270A = taxOnUnderReported * 0.5;
 
-    // 4. GST Section 122: 10% of tax amount or ₹10,000, whichever is higher
     let gstSection122 = 0;
     if (gstTaxDisputed > 0) {
       gstSection122 = Math.max(gstTaxDisputed * 0.1, 10000);
     }
 
     const totalMaximumExposure = mcaSection403 + section271B + section270A + gstSection122;
-
-    // Mitigated exposure with bona fide reasonable cause submission under Section 273B
     const mitigatedExposure = Math.round(mcaSection403 * 0.5 + (taxAuditDelay ? 25000 : 0) + section270A * 0.2);
 
     res.json({
@@ -275,7 +306,7 @@ export const calculateStatutoryPenalties = async (req, res) => {
           delayed: taxAuditDelay,
           rate: "0.5% of gross turnover capped at ₹1,50,000",
           total: section271B,
-          reasonableCauseReliefUnder273B: taxAuditDelay ? "Can be waived upon showing genuine illness/system crash" : "N/A",
+          reasonableCauseReliefUnder273B: taxAuditDelay ? "Can be waived upon showing reasonable cause" : "N/A",
         },
         section270A: {
           underReportedIncome,
@@ -301,29 +332,43 @@ export const calculateStatutoryPenalties = async (req, res) => {
 
 // @desc    Generate Section 441 Compounding Petition Draft
 // @route   POST /api/due-diligence/compounding-petition
-// @access  Public / Protected
+// @access  Protected
 export const generateCompoundingPetition = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const {
-      companyName = "CyberCorp Technologies Pvt Ltd",
-      cin = "U72200DL2022PTC394812",
+      companyName = "",
+      cin = "",
       sectionViolated = "Section 82 / Section 137",
-      natureOfDefault = "Technical delay in filing satisfaction of charge Form CHG-4 / financial statements Form AOC-4",
-      daysOfDelay = 45,
-      estimatedPenalty = 25000,
+      natureOfDefault = "Technical delay in filing statutory form under Companies Act, 2013",
+      daysOfDelay = 0,
+      estimatedPenalty = 0,
       jurisdiction = "Regional Director (RD)",
+      registeredOffice = "",
+      signatoryName = "",
     } = req.body;
 
+    if (!companyName.trim()) {
+      return res.status(400).json({ success: false, message: "Company name is required to draft a compounding petition." });
+    }
+
+    const practitionerLabel = signatoryName || req.user?.fullName || "Practicing Company Secretary";
+    const cinLabel = cin || "[CIN Pending]";
+    const regOfficeLine = registeredOffice
+      ? `HAVING ITS REGISTERED OFFICE AT ${registeredOffice.toUpperCase()}`
+      : "HAVING ITS REGISTERED OFFICE IN INDIA";
+
     const petitionText = `
-BEFORE THE HON'BLE REGIONAL DIRECTOR, NORTHERN REGION
-MINISTRY OF CORPORATE AFFAIRS, NEW DELHI
+BEFORE THE HON'BLE ${jurisdiction.toUpperCase()}
+MINISTRY OF CORPORATE AFFAIRS
 
 IN THE MATTER OF SECTION 441 OF THE COMPANIES ACT, 2013
 AND
-IN THE MATTER OF ${companyName.toUpperCase()} (CIN: ${cin})
-HAVING ITS REGISTERED OFFICE AT GURUGRAM, HARYANA
+IN THE MATTER OF ${companyName.toUpperCase()} (CIN: ${cinLabel})
+${regOfficeLine}
 
-COMPANY APPLICATION NO. ________ / RD(NR) / 2026
+COMPANY APPLICATION NO. ________ / ${new Date().getFullYear()}
 
 MEMORANDUM OF APPLICATION UNDER SECTION 441 FOR COMPOUNDING OF OFFENCE
 UNDER ${sectionViolated.toUpperCase()} OF THE COMPANIES ACT, 2013
@@ -331,30 +376,29 @@ UNDER ${sectionViolated.toUpperCase()} OF THE COMPANIES ACT, 2013
 MOST RESPECTFULLY SHOWETH:
 
 1. PARTICULARS OF THE APPLICANT COMPANY:
-The Applicant is a private limited company incorporated under the provisions of the Companies Act, engaged in the business of enterprise software development and artificial intelligence systems.
+The Applicant (${companyName}, CIN: ${cinLabel}) is a company incorporated under the Companies Act, 2013.
 
 2. NATURE AND FACTS OF THE DEFAULT:
-The default pertains to a temporary, unintentional delay of ${daysOfDelay} days in regularizing statutory filings under ${sectionViolated}. The delay was occasioned purely due to bona fide administrative transitions and reliance on third-party documentation from financial institutions, with zero mala fide intent.
+${natureOfDefault} (Delay recorded: ${daysOfDelay} days under ${sectionViolated}). The delay was inadvertent and without any mala fide intent.
 
 3. ABSENCE OF HARM TO PUBLIC INTEREST OR REVENUE:
-The Applicant company has discharged all statutory dues including Corporate Income Tax and Goods & Services Tax in full, without any loss caused to the Central Government, creditors, shareholders, or the public at large.
+No loss has been caused to the Central Government, creditors, shareholders, or public interest.
 
-4. JURISDICTION OF THE HON'BLE REGIONAL DIRECTOR:
-As the maximum aggregate fine imposable for the subject default does not exceed ₹25,00,000 (Rupees Twenty-Five Lakhs), this Hon'ble Authority possesses full and absolute jurisdiction to compound the offence under Section 441(1)(b) of the Companies Act, 2013.
+4. JURISDICTION OF THE AUTHORITY:
+Under Section 441(1) of the Companies Act, 2013, this Hon'ble Authority has jurisdiction to compound the subject technical offence.
 
 5. PRAYER:
-In light of the above facts, clean corporate antecedents, and the settled law laid down by the Hon'ble Supreme Court in Hindustan Steel Ltd v. State of Orissa (1970 1 SCR 753), the Applicant respectfully prays that:
-(a) The technical default under ${sectionViolated} be compounded upon payment of such nominal compounding fee as this Hon'ble Authority may deem fit;
-(b) Such further or other orders be made as may be just and proper.
+In light of the settled principles laid down in Hindustan Steel Ltd v. State of Orissa (1970 1 SCR 753), the Applicant respectfully prays that:
+(a) The technical default under ${sectionViolated} be compounded upon payment of a nominal compounding fee;
+(b) Such further or other orders be passed as may be deemed just and proper.
 
 VERIFICATION:
-Verified at New Delhi on this ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })} that the contents of the application are true and correct.
+Verified on ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })} that the contents of this application are true and correct.
 
 FOR ${companyName.toUpperCase()}
 
 _______________________            _______________________
-Authorized Director                 CS Rajesh Sharma
-(DIN: 08912340)                    Practicing Company Secretary (FCS-8921, CP-10293)
+Authorized Director                 ${practitionerLabel}
 `.trim();
 
     res.json({
@@ -377,19 +421,22 @@ Authorized Director                 CS Rajesh Sharma
 
 // @desc    Joint Attestation Seal by CS & CA (Dual Digital Attestation)
 // @route   POST /api/due-diligence/:id/attest
-// @access  Public / Protected
+// @access  Protected
 export const attestAuditReport = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const { id } = req.params;
     const { csSigner, caSigner } = req.body;
 
     let audit;
     if (isMongoConnected()) {
       audit = await DueDiligenceAudit.findOne({
+        userId,
         $or: [{ auditId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
       });
     } else {
-      audit = devStore.getDueDiligenceAuditById(id);
+      audit = devStore.getDueDiligenceAuditById(id, userId);
     }
 
     if (!audit) {
@@ -399,32 +446,35 @@ export const attestAuditReport = async (req, res) => {
     const timestamp = new Date().toISOString();
     const digest = sha256({
       auditId: audit.auditId,
-      entity: audit.clientEntity?.cin,
+      entity: audit.clientEntity?.cin || "",
       score: audit.overallScore,
-      cs: csSigner?.membershipNo || "FCS-8921",
-      ca: caSigner?.udin || "26401928DDAUDIT8921",
+      cs: csSigner?.membershipNo || "",
+      ca: caSigner?.udin || "",
       attestedAt: timestamp,
     });
+
+    const defaultLead = req.user?.fullName || "";
+    const defaultFirm = req.user?.firmName || "";
 
     const attestationPayload = {
       attestation: {
         leadCs: {
-          name: csSigner?.name || "CS Rajesh Sharma",
-          membershipNo: csSigner?.membershipNo || "FCS-8921",
-          cpNumber: csSigner?.cpNumber || "CP-10293",
-          firm: "Apex Corporate Secretarial & Legal LLP",
-          digitalSigned: true,
-          signatureHash: sha256(`CS_${csSigner?.membershipNo}_${timestamp}`),
+          name: csSigner?.name || defaultLead,
+          membershipNo: csSigner?.membershipNo || "",
+          cpNumber: csSigner?.cpNumber || "",
+          firm: csSigner?.firm || defaultFirm,
+          digitalSigned: Boolean(csSigner?.name || defaultLead),
+          signatureHash: sha256(`CS_${csSigner?.membershipNo || userId}_${timestamp}`),
           signedAt: timestamp,
         },
         leadCa: {
-          name: caSigner?.name || "CA Ramanathan Iyer",
-          membershipNo: caSigner?.membershipNo || "401928",
-          firmRegNo: caSigner?.firmRegNo || "018241N",
-          firm: "Iyer & Co. Chartered Accountants",
-          udin: caSigner?.udin || `26401928${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-          digitalSigned: true,
-          signatureHash: sha256(`CA_${caSigner?.membershipNo}_${timestamp}`),
+          name: caSigner?.name || "",
+          membershipNo: caSigner?.membershipNo || "",
+          firmRegNo: caSigner?.firmRegNo || "",
+          firm: caSigner?.firm || defaultFirm,
+          udin: caSigner?.udin || "",
+          digitalSigned: Boolean(caSigner?.name),
+          signatureHash: sha256(`CA_${caSigner?.membershipNo || userId}_${timestamp}`),
           signedAt: timestamp,
         },
         qrVerificationUrl: `https://wakheel.legal/verify/due-diligence/${audit.auditId}`,
@@ -437,11 +487,15 @@ export const attestAuditReport = async (req, res) => {
     };
 
     if (isMongoConnected()) {
-      const updated = await DueDiligenceAudit.findByIdAndUpdate(audit._id, attestationPayload, { new: true });
+      const updated = await DueDiligenceAudit.findOneAndUpdate(
+        { _id: audit._id, userId },
+        attestationPayload,
+        { new: true }
+      );
       return res.json({ success: true, audit: updated, mode: "mongo" });
     }
 
-    const updated = devStore.updateDueDiligenceAudit(id, attestationPayload);
+    const updated = devStore.updateDueDiligenceAudit(id, attestationPayload, userId);
     res.json({ success: true, audit: updated, mode: "devStore" });
   } catch (error) {
     console.error("attestAuditReport error:", error);
@@ -451,19 +505,22 @@ export const attestAuditReport = async (req, res) => {
 
 // @desc    Delete audit by ID
 // @route   DELETE /api/due-diligence/:id
-// @access  Public / Protected
+// @access  Protected
 export const deleteDueDiligenceAudit = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
     const { id } = req.params;
 
     if (isMongoConnected()) {
       await DueDiligenceAudit.findOneAndDelete({
+        userId,
         $or: [{ auditId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
       });
       return res.json({ success: true, message: "Audit deleted successfully", mode: "mongo" });
     }
 
-    devStore.deleteDueDiligenceAudit(id);
+    devStore.deleteDueDiligenceAudit(id, userId);
     res.json({ success: true, message: "Audit deleted successfully", mode: "devStore" });
   } catch (error) {
     console.error("deleteDueDiligenceAudit error:", error);

@@ -5,7 +5,7 @@ export const caApi = {
   // 1. Income Tax & ITR Filing
   async getIncomeTaxReturns(params?: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
       const res = await fetch(`${API_BASE_URL}/ca/itr${query}`, {
         headers: { Authorization: `Bearer ${t}` },
@@ -19,7 +19,7 @@ export const caApi = {
 
   async createIncomeTaxReturn(data: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/itr`, {
         method: "POST",
         headers: {
@@ -37,7 +37,7 @@ export const caApi = {
 
   async updateIncomeTaxReturn(id: string, updates: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/itr/${id}`, {
         method: "PUT",
         headers: {
@@ -55,7 +55,7 @@ export const caApi = {
 
   async deleteIncomeTaxReturn(id: string, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/itr/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${t}` },
@@ -70,7 +70,7 @@ export const caApi = {
   // 2. GST Compliance Hub
   async getGstReturns(params?: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
       const res = await fetch(`${API_BASE_URL}/ca/gst${query}`, {
         headers: { Authorization: `Bearer ${t}` },
@@ -84,7 +84,7 @@ export const caApi = {
 
   async createGstReturn(data: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/gst`, {
         method: "POST",
         headers: {
@@ -102,7 +102,7 @@ export const caApi = {
 
   async updateGstReturn(id: string, updates: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/gst/${id}`, {
         method: "PUT",
         headers: {
@@ -120,7 +120,7 @@ export const caApi = {
 
   async deleteGstReturn(id: string, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/gst/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${t}` },
@@ -135,7 +135,7 @@ export const caApi = {
   // 3. Statutory & Tax Audit (Form 3CD & UDIN)
   async getTaxAuditReports(params?: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
       const res = await fetch(`${API_BASE_URL}/ca/audit${query}`, {
         headers: { Authorization: `Bearer ${t}` },
@@ -149,7 +149,7 @@ export const caApi = {
 
   async createTaxAuditReport(data: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/audit`, {
         method: "POST",
         headers: {
@@ -167,7 +167,7 @@ export const caApi = {
 
   async updateTaxAuditReport(id: string, updates: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/audit/${id}`, {
         method: "PUT",
         headers: {
@@ -185,7 +185,7 @@ export const caApi = {
 
   async deleteTaxAuditReport(id: string, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/audit/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${t}` },
@@ -199,7 +199,7 @@ export const caApi = {
 
   async generateUdin(id: string, data?: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/audit/${id}/udin`, {
         method: "POST",
         headers: {
@@ -218,7 +218,7 @@ export const caApi = {
   // 4. Balance Sheet Reconciliation & Financials
   async getBalanceSheetRecons(params?: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const query = params ? "?" + new URLSearchParams(params).toString() : "";
       const res = await fetch(`${API_BASE_URL}/ca/reconciliations${query}`, {
         headers: { Authorization: `Bearer ${t}` },
@@ -232,7 +232,7 @@ export const caApi = {
 
   async createBalanceSheetRecon(data: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/reconciliations`, {
         method: "POST",
         headers: {
@@ -250,7 +250,7 @@ export const caApi = {
 
   async updateBalanceSheetRecon(id: string, updates: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/reconciliations/${id}`, {
         method: "PUT",
         headers: {
@@ -268,7 +268,7 @@ export const caApi = {
 
   async deleteBalanceSheetRecon(id: string, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/ca/reconciliations/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${t}` },

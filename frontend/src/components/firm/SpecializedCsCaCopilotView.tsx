@@ -56,14 +56,14 @@ const formatInr = (amount?: number | null) => {
 };
 
 export function SpecializedCsCaCopilotView({
-  firmName = "Wakheel Corporate & Tax Advisory LLP",
-  practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
+  firmName = "",
+  practitionerName = "",
   defaultClient = {
-    name: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    pan: "AAECS1234F",
-    gstin: "07AAECS1234F1Z8",
-    paidUpCapital: 25000000,
+    name: "",
+    cin: "",
+    pan: "",
+    gstin: "",
+    paidUpCapital: 0,
   },
 }: SpecializedCsCaCopilotViewProps) {
   // Active Tab: sec-186 | clause-43b | gst-drc01 | statutory-chat
@@ -80,25 +80,25 @@ export function SpecializedCsCaCopilotView({
   // PILLAR 1: SECTION 186 DRAFTER STATE (CS)
   // =========================================================================
   const [sec186Inputs, setSec186Inputs] = useState<Section186Params>({
-    entityName: defaultClient.name,
-    cin: defaultClient.cin || "U72200DL2022PTC394812",
-    paidUpCapital: defaultClient.paidUpCapital || 25000000,
-    freeReserves: 15000000,
-    securitiesPremium: 5000000,
-    existingLoans: 12000000,
-    existingInvestments: 4000000,
-    existingGuarantees: 2000000,
+    entityName: defaultClient.name || "",
+    cin: defaultClient.cin || "",
+    paidUpCapital: defaultClient.paidUpCapital || 0,
+    freeReserves: 0,
+    securitiesPremium: 0,
+    existingLoans: 0,
+    existingInvestments: 0,
+    existingGuarantees: 0,
     existingSecurities: 0,
-    proposedAmount: 15000000,
-    targetEntityName: "Zenith FinTech India Pvt Ltd",
-    targetCin: "U67190DL2021PTC389012",
+    proposedAmount: 0,
+    targetEntityName: "",
+    targetCin: "",
     transactionType: "inter_corporate_loan",
-    interestRate: 10.5,
-    tenureMonths: 24,
-    purpose: "Expansion of AI cloud compute servers and working capital facilities",
+    interestRate: 0,
+    tenureMonths: 0,
+    purpose: "",
     hasPfiDefault: false,
-    signatoryName: "CS Rajesh Sharma",
-    signatoryMembership: "FCS-8921",
+    signatoryName: "",
+    signatoryMembership: "",
   });
 
   const [sec186Loading, setSec186Loading] = useState(false);
@@ -157,63 +157,7 @@ export function SpecializedCsCaCopilotView({
   // =========================================================================
   // PILLAR 2: SECTION 43B(h) MSME ANALYZER STATE (CA)
   // =========================================================================
-  const [msmeInvoices, setMsmeInvoices] = useState<MsmeInvoiceItem[]>([
-    {
-      id: "INV-001",
-      invoiceNumber: "MH/25-26/089",
-      supplierName: "MicroTech Precision Tools Pvt Ltd",
-      supplierUdyam: "UDYAM-MH-03-0012489",
-      enterpriseType: "micro",
-      invoiceDate: "2026-02-10",
-      amount: 850000,
-      agreedCreditPeriodDays: 45,
-      paymentDate: "2026-04-12",
-    },
-    {
-      id: "INV-002",
-      invoiceNumber: "KA/25-26/142",
-      supplierName: "Apex PolyFab Industries",
-      supplierUdyam: "UDYAM-KR-08-0045120",
-      enterpriseType: "small",
-      invoiceDate: "2026-03-20",
-      amount: 1420000,
-      agreedCreditPeriodDays: 30,
-      paymentDate: "2026-04-10",
-    },
-    {
-      id: "INV-003",
-      invoiceNumber: "DL/25-26/512",
-      supplierName: "Vanguard Server Hosting LLP",
-      supplierUdyam: "UDYAM-DL-01-0099312",
-      enterpriseType: "small",
-      invoiceDate: "2026-01-15",
-      amount: 675000,
-      agreedCreditPeriodDays: 15,
-      paymentDate: null,
-    },
-    {
-      id: "INV-004",
-      invoiceNumber: "TN/25-26/304",
-      supplierName: "Om Retail Traders & Distributors",
-      supplierUdyam: "UDYAM-TN-02-0038921",
-      enterpriseType: "trader",
-      invoiceDate: "2026-01-20",
-      amount: 980000,
-      agreedCreditPeriodDays: 60,
-      paymentDate: "2026-04-20",
-    },
-    {
-      id: "INV-005",
-      invoiceNumber: "GJ/25-26/781",
-      supplierName: "Zenith Micro Semiconductor Labs",
-      supplierUdyam: "UDYAM-GJ-04-0021943",
-      enterpriseType: "micro",
-      invoiceDate: "2026-02-28",
-      amount: 1250000,
-      agreedCreditPeriodDays: 45,
-      paymentDate: "2026-05-10",
-    },
-  ]);
+  const [msmeInvoices, setMsmeInvoices] = useState<MsmeInvoiceItem[]>([]);
 
   const [clause43bLoading, setClause43bLoading] = useState(false);
   const [clause43bResult, setClause43bResult] = useState<any>(null);
@@ -242,20 +186,20 @@ export function SpecializedCsCaCopilotView({
   // PILLAR 3: GST DRC-01 SCN REPLIER STATE (CA & CS)
   // =========================================================================
   const [drc01Inputs, setDrc01Inputs] = useState<GstDrc01Params>({
-    clientName: defaultClient.name,
-    gstin: defaultClient.gstin || "07AAECS1234F1Z8",
-    noticeNumber: "SCN/GST/2026/DRC01-8921",
-    noticeDate: "2026-10-10",
-    financialYear: "2020-21",
+    clientName: defaultClient.name || "",
+    gstin: defaultClient.gstin || "",
+    noticeNumber: "",
+    noticeDate: "",
+    financialYear: "2025-26",
     section: "73",
     allegationType: "itc_2a_vs_3b_mismatch",
-    demandTax: 845000,
-    demandInterest: 385000,
-    demandPenalty: 84500,
-    officerDesignation: "Assistant Commissioner of State Tax, Ward 44, New Delhi",
-    additionalFacts: "The supplier M/s Zenith Tech confirmed under statutory CA certification that outward tax of ₹8,45,000 was duly discharged in their monthly GSTR-3B return for September 2020.",
-    signatoryName: "CA Ramanathan Iyer",
-    signatoryDesignation: "Authorized Representative & Chartered Accountant (M.No 054921)",
+    demandTax: 0,
+    demandInterest: 0,
+    demandPenalty: 0,
+    officerDesignation: "",
+    additionalFacts: "",
+    signatoryName: practitionerName || "",
+    signatoryDesignation: "Authorized Representative",
   });
 
   const [drc01Loading, setDrc01Loading] = useState(false);

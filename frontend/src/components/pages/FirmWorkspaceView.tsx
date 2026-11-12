@@ -79,13 +79,13 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
 
   // Active Firm State
   const [firm, setFirm] = useState<any>({
-    name: "Apex Law & Corporate Partners LLP",
-    founderName: "CS Rajesh Sharma & CA Ramanathan Iyer",
-    headquarters: "New Delhi, India",
-    registrationCin: "LLPIN-AAR-4192 / D/1942/2012",
-    industry: "Corporate Law, Secretarial Governance & Litigation",
-    employeeRange: "11 to 50 attorneys & staff",
-    companyType: "Limited Liability Partnership (LLP)",
+    name: firmData?.name || "",
+    founderName: firmData?.founderName || "",
+    headquarters: firmData?.headquarters || "",
+    registrationCin: firmData?.registrationCin || "",
+    industry: firmData?.industry || "",
+    employeeRange: firmData?.employeeRange || "",
+    companyType: firmData?.companyType || "",
   });
 
   useEffect(() => {
@@ -415,10 +415,10 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
               {sidebarOpen && (
                 <div className="flex flex-col truncate">
                   <span className="text-xs font-bold text-black dark:text-white truncate">
-                    {firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
+                    {firm.founderName || "Practice Owner"}
                   </span>
                   <span className="text-[10px] text-zinc-500 truncate">
-                    Corporate Secretarial &amp; Statutory Tax • {firm.name}
+                    Corporate Secretarial &amp; Tax{firm.name ? ` • ${firm.name}` : ""}
                   </span>
                 </div>
               )}
@@ -788,34 +788,9 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
                   </div>
 
                   <div className="divide-y divide-zinc-100 dark:divide-zinc-900 text-xs">
-                    {[
-                      { form: "AOC-4", entity: "CyberCorp Technologies Pvt Ltd", desc: "Financial Statements FY 2025-26", status: "Approved", date: "Today, 11:30 AM" },
-                      { form: "MGT-7", entity: "Heritage Real Estate Developers LLP", desc: "Annual Return & Shareholding Pattern", status: "Under Review", date: "Yesterday" },
-                      { form: "DIR-3 KYC", entity: "Vikram Malhotra (Director DIN: 08912340)", desc: "Annual Web KYC Verification", status: "Approved", date: "12 Oct 2026" },
-                      { form: "PAS-3", entity: "Zenith FinTech India Pvt Ltd", desc: "Return of Allotment (Series A Shares)", status: "Challan Paid", date: "10 Oct 2026" },
-                    ].map((row, idx) => (
-                      <div key={idx} className="py-3 flex items-center justify-between gap-3">
-                        <div className="space-y-0.5 overflow-hidden">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-[11px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white">
-                              {row.form}
-                            </span>
-                            <span className="font-semibold text-black dark:text-white truncate">{row.entity}</span>
-                          </div>
-                          <p className="text-[11px] text-zinc-500 truncate">{row.desc}</p>
-                        </div>
-                        <div className="flex flex-col items-end shrink-0">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            row.status === "Approved"
-                              ? "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800"
-                              : "bg-zinc-50 dark:bg-zinc-900 text-zinc-500"
-                          }`}>
-                            {row.status}
-                          </span>
-                          <span className="text-[10px] text-zinc-400 font-mono mt-0.5">{row.date}</span>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="py-8 text-center text-zinc-500">
+                      No MCA21 or ROC filings recorded yet. Open <span className="font-semibold text-black dark:text-white">ROC Compliance</span> to initiate a filing.
+                    </div>
                   </div>
                 </div>
 
@@ -909,7 +884,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <ClientMandatesManagerView
                 firmName={firm.name}
-                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
+                practitionerName={firm.founderName || ""}
               />
             </div>
           )}
@@ -917,7 +892,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
           {/* VIEW: Compliance Calendar */}
           {activeTab === "compliance-calendar" && (
             <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
-              <ChamberCalendarView advocateName={firm.founderName || "CS Corporate Practice"} />
+              <ChamberCalendarView advocateName={firm.founderName || "Practice Administrator"} />
             </div>
           )}
 
@@ -936,7 +911,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-black min-h-[750px]">
               <TaskMiteView
                 portalType="advocate"
-                advocateName={firm.founderName || "CS Corporate Practice"}
+                advocateName={firm.founderName || "Practice Administrator"}
                 onSelectModule={(m) => setActiveTab(m)}
               />
             </div>
@@ -947,7 +922,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <BoardGovernanceView
                 firmName={firm.name}
-                csName={firm.founderName || "CS Corporate Practice"}
+                csName={firm.founderName || ""}
                 initialSubTab={activeTab === "resolutions" ? "resolutions" : "meetings"}
               />
             </div>
@@ -958,7 +933,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <UnifiedClientHubView
                 firmName={firm.name}
-                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
+                practitionerName={firm.founderName || ""}
                 onNavigateToTab={(tabId) => setActiveTab(tabId)}
               />
             </div>
@@ -1002,7 +977,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <CaWorkspaceView
                 firmName={firm.name}
-                caName="CA Ramanathan Iyer &amp; Partners"
+                caName={firm.founderName || ""}
                 initialTab={
                   activeTab === "ca-gst"
                     ? "gst"
@@ -1021,14 +996,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <SpecializedCsCaCopilotView
                 firmName={firm.name}
-                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
-                defaultClient={{
-                  name: "CyberCorp Technologies Pvt Ltd",
-                  cin: "U72200DL2022PTC394812",
-                  pan: "AAECS1234F",
-                  gstin: "07AAECS1234F1Z8",
-                  paidUpCapital: 25000000,
-                }}
+                practitionerName={firm.founderName || ""}
               />
             </div>
           )}
@@ -1038,13 +1006,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <ChallanDscWorkspaceView
                 firmName={firm.name}
-                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
-                defaultClient={{
-                  name: "CyberCorp Technologies Pvt Ltd",
-                  cin: "U72200DL2022PTC394812",
-                  pan: "AAECS1234F",
-                  gstin: "07AAECS1234F1Z8",
-                }}
+                practitionerName={firm.founderName || ""}
               />
             </div>
           )}
@@ -1054,16 +1016,7 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <ExecutiveBoardDossierView
                 firmName={firm.name}
-                practitionerName={firm.founderName || "CS Rajesh Sharma & CA Ramanathan Iyer"}
-                defaultClient={{
-                  name: "CyberCorp Technologies Pvt Ltd",
-                  cin: "U72200DL2022PTC394812",
-                  pan: "AAECS1234F",
-                  gstin: "07AAECS1234F1Z8",
-                  authorizedCapital: 50000000,
-                  paidUpCapital: 25000000,
-                  turnover: 48500000,
-                }}
+                practitionerName={firm.founderName || ""}
               />
             </div>
           )}
@@ -1073,14 +1026,8 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <StatutoryDueDiligenceView
                 firmName={firm.name}
-                csName={firm.founderName || "CS Rajesh Sharma (FCS-8921, CP-10293)"}
-                caName="CA Ramanathan Iyer (M.No 054921, FRN-018241N)"
-                defaultClient={{
-                  name: "CyberCorp Technologies Pvt Ltd",
-                  cin: "U72200DL2022PTC394812",
-                  pan: "AAECS1234F",
-                  gstin: "07AAECS1234F1Z8",
-                }}
+                csName={firm.founderName || ""}
+                caName={firm.founderName || ""}
               />
             </div>
           )}
@@ -1090,14 +1037,8 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="w-full 2xl:max-w-[1550px] mx-auto">
               <StatutoryNoticeMailroomView
                 firmName={firm.name}
-                csName={firm.founderName || "CS Rajesh Sharma (FCS-8921, CP-10293)"}
-                caName="CA Ramanathan Iyer (M.No 054921, FRN-018241N)"
-                defaultClient={{
-                  name: "CyberCorp Technologies Pvt Ltd",
-                  cin: "U72200DL2022PTC394812",
-                  pan: "AAECS1234F",
-                  gstin: "07AAECS1234F1Z8",
-                }}
+                csName={firm.founderName || ""}
+                caName={firm.founderName || ""}
               />
             </div>
           )}
@@ -1134,11 +1075,11 @@ export function FirmWorkspaceView({ firmData }: FirmWorkspaceViewProps) {
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
                 <label className="font-bold block">Target Client Entity</label>
-                <select className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white">
-                  <option>CyberCorp Technologies Pvt Ltd (CIN: U74999DL2018PTC123456)</option>
-                  <option>Heritage Real Estate Developers LLP (LLPIN: AAR-8902)</option>
-                  <option>Zenith FinTech India Pvt Ltd (CIN: U67190DL2021PTC389012)</option>
-                </select>
+                <input
+                  type="text"
+                  placeholder="Enter entity name & CIN (or manage via Client Hub)"
+                  className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
+                />
               </div>
 
               <div className="space-y-1">

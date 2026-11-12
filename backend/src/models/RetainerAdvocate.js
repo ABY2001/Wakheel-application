@@ -9,7 +9,7 @@ const retainerAdvocateSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     fullName: {
@@ -24,11 +24,11 @@ const retainerAdvocateSchema = new mongoose.Schema(
     },
     primaryJurisdiction: {
       type: String,
-      default: "NCLT New Delhi & High Court of Delhi",
+      default: "",
     },
     specialization: {
       type: String,
-      default: "Insolvency (IBC), Oppression & Mismanagement, Mergers",
+      default: "",
     },
     email: {
       type: String,
@@ -40,15 +40,15 @@ const retainerAdvocateSchema = new mongoose.Schema(
     },
     retainerFee: {
       type: Number,
-      default: 50000, // Monthly retainer in INR
+      default: 0,
     },
     appearanceRatePerHearing: {
       type: Number,
-      default: 25000,
+      default: 0,
     },
     activeBriefsCount: {
       type: Number,
-      default: 2,
+      default: 0,
     },
     status: {
       type: String,

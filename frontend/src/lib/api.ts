@@ -426,7 +426,7 @@ export const citizenApi = {
   },
 
   async getConsultations(token: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/consultations`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -434,7 +434,7 @@ export const citizenApi = {
   },
 
   async getConsultationById(token: string, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -442,7 +442,7 @@ export const citizenApi = {
   },
 
   async rescheduleConsultation(token: string, id: string, scheduledDate: string, timeSlot: string, reason?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}/reschedule`, {
       method: "PUT",
       headers: {
@@ -455,7 +455,7 @@ export const citizenApi = {
   },
 
   async cancelConsultation(token: string, id: string, reason?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}/cancel`, {
       method: "PUT",
       headers: {
@@ -468,7 +468,7 @@ export const citizenApi = {
   },
 
   async joinConsultationRoom(token: string, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/consultations/${id}/room`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -487,7 +487,7 @@ export const citizenApi = {
     if (filters?.search) params.append("search", filters.search);
     const qs = params.toString() ? `?${params.toString()}` : "";
 
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/documents${qs}`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -513,7 +513,7 @@ export const citizenApi = {
       isSigned?: boolean;
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/documents`, {
       method: "POST",
       headers: {
@@ -539,7 +539,7 @@ export const citizenApi = {
       advocateId?: string;
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/documents/file`, {
       method: "POST",
       headers: {
@@ -552,7 +552,7 @@ export const citizenApi = {
   },
 
   async getFilings(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/documents/filings`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -560,7 +560,7 @@ export const citizenApi = {
   },
 
   async deleteDocument(token: string | undefined, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/documents/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -569,7 +569,7 @@ export const citizenApi = {
   },
 
   async verifyDocumentHash(token: string | undefined, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token");
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "");
     const res = await fetch(`${API_BASE_URL}/citizen/documents/${id}/verify`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -578,7 +578,7 @@ export const citizenApi = {
 
   // 7. Statutory Legal Notices & Speed Post Tracking
   async getLegalNotices(token: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notices`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -586,7 +586,7 @@ export const citizenApi = {
   },
 
   async getNoticeById(token: string, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notices/${id}`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -610,7 +610,7 @@ export const citizenApi = {
       matterId?: string;
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notices`, {
       method: "POST",
       headers: {
@@ -623,7 +623,7 @@ export const citizenApi = {
   },
 
   async trackNoticeSpeedPost(token: string, idOrBarcode: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notices/${encodeURIComponent(idOrBarcode)}/track`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -647,7 +647,7 @@ export const citizenApi = {
       statutoryNoticeDays?: number;
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notices/generate-draft`, {
       method: "POST",
       headers: {
@@ -660,7 +660,7 @@ export const citizenApi = {
   },
 
   async deleteLegalNotice(token: string, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notices/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -683,7 +683,7 @@ export const citizenApi = {
 
   // 9. Fee Invoices & Payment Settlement (Milestone 2 Sync)
   async getInvoices(token: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/invoices`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -691,7 +691,7 @@ export const citizenApi = {
   },
 
   async getInvoiceById(token: string, id: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/invoices/${encodeURIComponent(id)}`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -699,7 +699,7 @@ export const citizenApi = {
   },
 
   async payInvoice(token: string, invoiceId: string, paymentMethod: string = "UPI", transactionId?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/invoices/${encodeURIComponent(invoiceId)}/pay`, {
       method: "POST",
       headers: {
@@ -721,7 +721,7 @@ export const citizenApi = {
       estimatedAmount?: number;
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/invoices`, {
       method: "POST",
       headers: {
@@ -735,7 +735,7 @@ export const citizenApi = {
 
   // 10. Secure Client-Advocate Privileged Messaging & Inbox
   async getMessages(token: string, matterId?: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const url = matterId
       ? `${API_BASE_URL}/citizen/messages?matterId=${encodeURIComponent(matterId)}`
       : `${API_BASE_URL}/citizen/messages`;
@@ -757,7 +757,7 @@ export const citizenApi = {
       category?: "general" | "hearing_update" | "document_request" | "urgent";
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/messages`, {
       method: "POST",
       headers: {
@@ -770,7 +770,7 @@ export const citizenApi = {
   },
 
   async markMessageAsRead(token: string, messageId: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/messages/${encodeURIComponent(messageId)}/read`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${t}` },
@@ -779,7 +779,7 @@ export const citizenApi = {
   },
 
   async getUnreadMessageCount(token: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/messages/unread-count`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -788,7 +788,7 @@ export const citizenApi = {
 
   // 10b. Citizen Secure Mailbox & Notifications
   async getMails(token?: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/mails`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -811,7 +811,7 @@ export const citizenApi = {
       attachments?: { name: string; size: string; type: "pdf" | "doc" | "img" }[];
     }
   ) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/mails`, {
       method: "POST",
       headers: {
@@ -824,7 +824,7 @@ export const citizenApi = {
   },
 
   async replyMail(token: string | undefined, mailId: string, content: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/mails/${encodeURIComponent(mailId)}/reply`, {
       method: "POST",
       headers: {
@@ -841,7 +841,7 @@ export const citizenApi = {
     mailId: string,
     updates: { isRead?: boolean; isStarred?: boolean; folder?: "inbox" | "starred" | "sent" | "drafts" | "archive" | "trash" }
   ) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/mails/${encodeURIComponent(mailId)}`, {
       method: "PUT",
       headers: {
@@ -854,7 +854,7 @@ export const citizenApi = {
   },
 
   async deleteMail(token: string | undefined, mailId: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/mails/${encodeURIComponent(mailId)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -863,7 +863,7 @@ export const citizenApi = {
   },
 
   async getNotifications(token?: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notifications`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -871,7 +871,7 @@ export const citizenApi = {
   },
 
   async markNotificationRead(token: string | undefined, notificationId: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notifications/${encodeURIComponent(notificationId)}/read`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${t}` },
@@ -880,7 +880,7 @@ export const citizenApi = {
   },
 
   async markAllNotificationsRead(token?: string, ids?: string[]) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notifications/read-all`, {
       method: "PUT",
       headers: {
@@ -893,7 +893,7 @@ export const citizenApi = {
   },
 
   async dismissNotification(token: string | undefined, notificationId: string) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notifications/${encodeURIComponent(notificationId)}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -902,7 +902,7 @@ export const citizenApi = {
   },
 
   async clearAllNotifications(token?: string, ids?: string[]) {
-    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? (localStorage.getItem("wakheel_token") || localStorage.getItem("token")) : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/notifications`, {
       method: "DELETE",
       headers: {
@@ -916,7 +916,7 @@ export const citizenApi = {
 
   // --- Citizen Calendar Suite ---
   async getCitizenCalendarEvents(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/events`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -924,7 +924,7 @@ export const citizenApi = {
   },
 
   async createCitizenCalendarEvent(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/events`, {
       method: "POST",
       headers: {
@@ -937,7 +937,7 @@ export const citizenApi = {
   },
 
   async getCitizenCalendarBacklog(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/backlog`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -945,7 +945,7 @@ export const citizenApi = {
   },
 
   async updateCitizenCalendarEvent(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/events/${id}`, {
       method: "PUT",
       headers: {
@@ -958,7 +958,7 @@ export const citizenApi = {
   },
 
   async deleteCitizenCalendarEvent(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/events/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -967,7 +967,7 @@ export const citizenApi = {
   },
 
   async createCitizenCalendarBacklogItem(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/backlog`, {
       method: "POST",
       headers: {
@@ -980,7 +980,7 @@ export const citizenApi = {
   },
 
   async updateCitizenCalendarBacklogItem(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/backlog/${id}`, {
       method: "PUT",
       headers: {
@@ -993,7 +993,7 @@ export const citizenApi = {
   },
 
   async deleteCitizenCalendarBacklogItem(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/calendar/backlog/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -1186,7 +1186,7 @@ export const citizenApi = {
 
   // --- DigiLocker KYC Suite ---
   async getDigiLockerKyc(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/profile/kyc`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -1194,7 +1194,7 @@ export const citizenApi = {
   },
 
   async updateDigiLockerKyc(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/profile/kyc`, {
       method: "PUT",
       headers: {
@@ -1207,7 +1207,7 @@ export const citizenApi = {
   },
 
   async verifyDigiLockerKyc(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/citizen/profile/kyc/verify`, {
       method: "POST",
       headers: { Authorization: `Bearer ${t}` },
@@ -1495,15 +1495,13 @@ export interface AdvocateNotificationItem {
 }
 
 export const advocateApi = {
-  getAuthHeader(token?: string) {
+  getAuthHeader(token?: string): Record<string, string> {
     const activeToken =
       token ||
       (typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") ||
-          localStorage.getItem("token") ||
-          "advocate_token"
-        : "advocate_token");
-    return { Authorization: `Bearer ${activeToken}` };
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "");
+    return activeToken ? { Authorization: `Bearer ${activeToken}` } : {};
   },
 
   // 1. Dashboard KPIs & Court Board Summary
@@ -3464,7 +3462,7 @@ function getFallbackAudit(bundleType?: string) {
 // ============================================================================
 export const csApi = {
   async getBoardMeetings(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/meetings`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -3472,7 +3470,7 @@ export const csApi = {
   },
 
   async createBoardMeeting(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/meetings`, {
       method: "POST",
       headers: {
@@ -3485,7 +3483,7 @@ export const csApi = {
   },
 
   async updateBoardMeeting(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/meetings/${id}`, {
       method: "PUT",
       headers: {
@@ -3498,7 +3496,7 @@ export const csApi = {
   },
 
   async deleteBoardMeeting(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/meetings/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3507,7 +3505,7 @@ export const csApi = {
   },
 
   async getBoardResolutions(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/resolutions`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -3515,7 +3513,7 @@ export const csApi = {
   },
 
   async createBoardResolution(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/resolutions`, {
       method: "POST",
       headers: {
@@ -3528,7 +3526,7 @@ export const csApi = {
   },
 
   async updateBoardResolution(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/resolutions/${id}`, {
       method: "PUT",
       headers: {
@@ -3541,7 +3539,7 @@ export const csApi = {
   },
 
   async deleteBoardResolution(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/resolutions/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3550,7 +3548,7 @@ export const csApi = {
   },
 
   async generateCtcResolution(id: string, certifiedBy?: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/resolutions/${id}/ctc`, {
       method: "POST",
       headers: {
@@ -3564,7 +3562,7 @@ export const csApi = {
 
   // Managed Corporate Entities
   async getCorporateEntities(token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/entities`, {
       headers: { Authorization: `Bearer ${t}` },
     });
@@ -3572,7 +3570,7 @@ export const csApi = {
   },
 
   async createCorporateEntity(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/entities`, {
       method: "POST",
       headers: {
@@ -3585,7 +3583,7 @@ export const csApi = {
   },
 
   async updateCorporateEntity(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/entities/${id}`, {
       method: "PUT",
       headers: {
@@ -3598,7 +3596,7 @@ export const csApi = {
   },
 
   async deleteCorporateEntity(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/entities/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3608,7 +3606,7 @@ export const csApi = {
 
   // MCA21 & ROC Statutory Filings
   async getRocFilings(filters?: { companyName?: string; status?: string; formName?: string }, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const params = new URLSearchParams();
     if (filters?.companyName) params.append("companyName", filters.companyName);
     if (filters?.status) params.append("status", filters.status);
@@ -3621,7 +3619,7 @@ export const csApi = {
   },
 
   async createRocFiling(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/filings`, {
       method: "POST",
       headers: {
@@ -3634,7 +3632,7 @@ export const csApi = {
   },
 
   async updateRocFiling(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/filings/${id}`, {
       method: "PUT",
       headers: {
@@ -3647,7 +3645,7 @@ export const csApi = {
   },
 
   async deleteRocFiling(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/filings/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3657,7 +3655,7 @@ export const csApi = {
 
   // Statutory Registers (Section 88, 170, 85, 186)
   async getStatutoryRegisters(filters?: { companyName?: string; registerType?: string }, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const params = new URLSearchParams();
     if (filters?.companyName) params.append("companyName", filters.companyName);
     if (filters?.registerType) params.append("registerType", filters.registerType);
@@ -3669,7 +3667,7 @@ export const csApi = {
   },
 
   async createRegisterEntry(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/registers`, {
       method: "POST",
       headers: {
@@ -3682,7 +3680,7 @@ export const csApi = {
   },
 
   async updateRegisterEntry(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/registers/${id}`, {
       method: "PUT",
       headers: {
@@ -3695,7 +3693,7 @@ export const csApi = {
   },
 
   async deleteRegisterEntry(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/registers/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3705,7 +3703,7 @@ export const csApi = {
 
   // Secretarial Audit Report (Form MR-3)
   async getSecretarialAuditReport(companyName?: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const q = companyName ? `?companyName=${encodeURIComponent(companyName)}` : "";
     const res = await fetch(`${API_BASE_URL}/cs/audit${q}`, {
       headers: { Authorization: `Bearer ${t}` },
@@ -3715,7 +3713,7 @@ export const csApi = {
 
   // Commercial Contracts & Shareholders' Agreements (SHA/SSA)
   async getCorporateContracts(filters?: { companyName?: string; contractType?: string }, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const params = new URLSearchParams();
     if (filters?.companyName) params.append("companyName", filters.companyName);
     if (filters?.contractType) params.append("contractType", filters.contractType);
@@ -3727,7 +3725,7 @@ export const csApi = {
   },
 
   async createCorporateContract(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/contracts`, {
       method: "POST",
       headers: {
@@ -3740,7 +3738,7 @@ export const csApi = {
   },
 
   async updateCorporateContract(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/contracts/${id}`, {
       method: "PUT",
       headers: {
@@ -3753,7 +3751,7 @@ export const csApi = {
   },
 
   async deleteCorporateContract(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/contracts/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3763,7 +3761,7 @@ export const csApi = {
 
   // Retainer Advocates & Litigation Gateway
   async getRetainerAdvocates(filters?: { status?: string }, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const params = new URLSearchParams();
     if (filters?.status) params.append("status", filters.status);
     const qs = params.toString() ? `?${params.toString()}` : "";
@@ -3774,7 +3772,7 @@ export const csApi = {
   },
 
   async createRetainerAdvocate(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/advocates`, {
       method: "POST",
       headers: {
@@ -3787,7 +3785,7 @@ export const csApi = {
   },
 
   async updateRetainerAdvocate(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/advocates/${id}`, {
       method: "PUT",
       headers: {
@@ -3800,7 +3798,7 @@ export const csApi = {
   },
 
   async deleteRetainerAdvocate(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/advocates/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3810,7 +3808,7 @@ export const csApi = {
 
   // Corporate Statutory Vault & DSC Tokens
   async getCorporateVaultItems(filters?: { companyName?: string; docType?: string }, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const params = new URLSearchParams();
     if (filters?.companyName) params.append("companyName", filters.companyName);
     if (filters?.docType) params.append("docType", filters.docType);
@@ -3822,7 +3820,7 @@ export const csApi = {
   },
 
   async createCorporateVaultItem(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/vault`, {
       method: "POST",
       headers: {
@@ -3835,7 +3833,7 @@ export const csApi = {
   },
 
   async updateCorporateVaultItem(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/vault/${id}`, {
       method: "PUT",
       headers: {
@@ -3848,7 +3846,7 @@ export const csApi = {
   },
 
   async deleteCorporateVaultItem(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/vault/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },
@@ -3858,7 +3856,7 @@ export const csApi = {
 
   // Secretarial Invoices & Fee Notes
   async getSecretarialInvoices(filters?: { status?: string }, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const params = new URLSearchParams();
     if (filters?.status) params.append("status", filters.status);
     const qs = params.toString() ? `?${params.toString()}` : "";
@@ -3869,7 +3867,7 @@ export const csApi = {
   },
 
   async createSecretarialInvoice(data: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/invoices`, {
       method: "POST",
       headers: {
@@ -3882,7 +3880,7 @@ export const csApi = {
   },
 
   async updateSecretarialInvoice(id: string, updates: any, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/invoices/${id}`, {
       method: "PUT",
       headers: {
@@ -3895,7 +3893,7 @@ export const csApi = {
   },
 
   async deleteSecretarialInvoice(id: string, token?: string) {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+    const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
     const res = await fetch(`${API_BASE_URL}/cs/invoices/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${t}` },

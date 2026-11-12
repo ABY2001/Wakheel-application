@@ -119,13 +119,15 @@ export function useMatterWebSocket(options: UseMatterWebSocketOptions = {}) {
 
         // Authenticate with user role and register for matter compliance broadcasts
         try {
-          socket.send(
-            JSON.stringify({
-              type: "auth",
-              userId: userId || (role === "advocate" ? "adv_1" : "default_citizen"),
-              role,
-            })
-          );
+          if (userId) {
+            socket.send(
+              JSON.stringify({
+                type: "auth",
+                userId,
+                role,
+              })
+            );
+          }
           socket.send(
             JSON.stringify({
               type: "subscribe_matters",

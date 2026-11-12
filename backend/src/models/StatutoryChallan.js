@@ -10,7 +10,7 @@ const statutoryChallanSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     portal: {
@@ -56,11 +56,11 @@ const statutoryChallanSchema = new mongoose.Schema(
     },
     bsrCode: {
       type: String,
-      default: "0290142", // 7 digits
+      default: "",
     },
     challanSerialNumber: {
       type: String,
-      default: "00124", // 5 digits
+      default: "",
     },
     tenderedBank: {
       type: String,
@@ -92,7 +92,7 @@ const statutoryChallanSchema = new mongoose.Schema(
     },
     dscSignatory: {
       type: String,
-      default: "CS Rajesh Sharma (FCS-8921)",
+      default: "",
     },
     clientBilled: {
       type: Boolean,

@@ -3410,6 +3410,8 @@ export function ClientPortalView() {
             <AnalyticsView
               activeModule={activeTab}
               onSelectModule={(m) => setActiveTab(m)}
+              token={typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : ""}
+              advocateName={citizenProfile.fullName || citizenProfile.username || ""}
             />
           )}
 

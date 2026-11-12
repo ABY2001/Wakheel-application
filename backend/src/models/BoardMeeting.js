@@ -9,25 +9,25 @@ const boardMeetingSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     companyName: {
       type: String,
       required: true,
       trim: true,
-      default: "CyberCorp Technologies Pvt Ltd",
+      default: "",
     },
     cin: {
       type: String,
       trim: true,
-      default: "U72200DL2022PTC394812",
+      default: "",
     },
     meetingNumber: {
       type: String,
       required: true,
       trim: true,
-      default: "BM-04/2026-27",
+      default: "",
     },
     meetingType: {
       type: String,
@@ -46,7 +46,7 @@ const boardMeetingSchema = new mongoose.Schema(
     },
     venue: {
       type: String,
-      default: "Board Room, Registered Office & Two-Way Video Conference (Rule 3)",
+      default: "",
     },
     isVideoConference: {
       type: Boolean,
@@ -54,7 +54,7 @@ const boardMeetingSchema = new mongoose.Schema(
     },
     chairperson: {
       type: String,
-      default: "Dr. Vikram Malhotra (Chairman & Independent Director)",
+      default: "",
     },
     directors: [
       {

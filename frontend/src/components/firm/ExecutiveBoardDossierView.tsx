@@ -48,8 +48,8 @@ interface ExecutiveBoardDossierViewProps {
 }
 
 export function ExecutiveBoardDossierView({
-  firmName = "Apex Law, Secretarial & Tax Partners LLP",
-  practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
+  firmName = "",
+  practitionerName = "",
   defaultClient,
   onClose,
 }: ExecutiveBoardDossierViewProps) {
@@ -63,8 +63,8 @@ export function ExecutiveBoardDossierView({
 
   // Form Customizer State
   const [financialYear, setFinancialYear] = useState("2025-26");
-  const [boardMeetingDate, setBoardMeetingDate] = useState("2026-11-15");
-  const [meetingType, setMeetingType] = useState("Quarterly Board of Directors & Audit Committee Review (Q3)");
+  const [boardMeetingDate, setBoardMeetingDate] = useState("");
+  const [meetingType, setMeetingType] = useState("Quarterly Board of Directors & Audit Committee Review");
 
   // Load Dossiers
   const loadDossiers = async () => {
@@ -75,206 +75,16 @@ export function ExecutiveBoardDossierView({
         setDossiers(res.dossiers);
         setSelectedDossier(res.dossiers[0]);
       } else {
-        // Fallback default
-        const fallback = createDefaultDossier();
-        setDossiers([fallback]);
-        setSelectedDossier(fallback);
+        setDossiers([]);
+        setSelectedDossier(null);
       }
     } catch (err) {
-      console.warn("Failed to load dossiers, using default:", err);
-      const fallback = createDefaultDossier();
-      setDossiers([fallback]);
-      setSelectedDossier(fallback);
+      console.warn("Failed to load dossiers:", err);
+      setDossiers([]);
+      setSelectedDossier(null);
     } finally {
       setLoading(false);
     }
-  };
-
-  const createDefaultDossier = (): BoardDossierItem => {
-    const entName = defaultClient?.name || "CyberCorp Technologies Pvt Ltd";
-    const cin = defaultClient?.cin || "U72200DL2022PTC394812";
-    const pan = defaultClient?.pan || "AAECS1234F";
-    const gstin = defaultClient?.gstin || "07AAECS1234F1Z8";
-    const turnover = defaultClient?.turnover || 48500000;
-
-    return {
-      dossierId: "WAK-EXD-2026-CC-8941",
-      clientEntity: {
-        name: entName,
-        cin,
-        pan,
-        gstin,
-        registeredAddress: "Level 14, Cyber Towers, Barakhamba Road, Connaught Place, New Delhi 110001",
-        entityType: "pvt_ltd",
-        incorporationDate: "2022-04-12",
-        authorizedCapital: defaultClient?.authorizedCapital || 50000000,
-        paidUpCapital: defaultClient?.paidUpCapital || 25000000,
-      },
-      financialYear: "2025-26",
-      assessmentYear: "2026-27",
-      boardMeetingDate: "2026-11-15",
-      meetingType: "Quarterly Board of Directors & Audit Committee Review (Q3)",
-      governanceStandard: "Section 177 & 134(5) of Companies Act 2013 read with ICSI SS-1 & SS-2",
-      directorsList: [
-        {
-          din: "08912340",
-          name: "Dr. Vikram Malhotra",
-          designation: "Managing Director",
-          appointmentDate: "2022-04-12",
-          kycStatus: "DIR-3 Web KYC Verified",
-          sec164Clearance: true,
-          shareholdingPercentage: 54.5,
-        },
-        {
-          din: "09104928",
-          name: "Ms. Ananya Sengupta",
-          designation: "Whole-Time Director & COO",
-          appointmentDate: "2022-04-12",
-          kycStatus: "DIR-3 Web KYC Verified",
-          sec164Clearance: true,
-          shareholdingPercentage: 25.5,
-        },
-        {
-          din: "07419201",
-          name: "Mr. Rohan Murthy",
-          designation: "Non-Executive Independent Director",
-          appointmentDate: "2023-01-15",
-          kycStatus: "DIR-3 Web KYC Verified",
-          sec164Clearance: true,
-          shareholdingPercentage: 0,
-        },
-        {
-          din: "08192834",
-          name: "Adv. Meera Nair",
-          designation: "Independent Director & Audit Committee Chair",
-          appointmentDate: "2023-05-10",
-          kycStatus: "DIR-3 Web KYC Verified",
-          sec164Clearance: true,
-          shareholdingPercentage: 0,
-        },
-      ],
-      csGovernanceData: {
-        aoc4Status: "Approved & Reconciled",
-        aoc4Srn: "AA8910245",
-        mgt7Status: "Annual Return Filed",
-        mgt7Srn: "M8819201",
-        boardMeetingsConducted: 4,
-        ss1ComplianceScore: 99.2,
-        secretarialAuditOpinion: "Unqualified / Clean Opinion under Form MR-3",
-        registeredChargesStatus: "Zero Default / Satisfaction CHG-4 Issued",
-        activeLitigationsCount: 0,
-      },
-      caAuditData: {
-        itrStatus: "ITR-6 Filed & Verified",
-        itrAckNumber: "9812401823",
-        gstr9Status: "Annual Return Reconciled (100% Match)",
-        form3CdTurnover: turnover,
-        gstAnnualTurnover: turnover,
-        mcaFinancialTurnover: turnover,
-        turnoverVariance: 0,
-        udin: "26401928AAAA129481",
-        clause43bDisallowance: 0,
-        indAs12DeferredTax: "Reconciled (Net DTA ₹37,755)",
-        ifcControlRating: "Operating Effectively (Zero Material Weakness)",
-      },
-      auditCommitteeRisks: [
-        {
-          category: "Internal Financial Controls (IFC)",
-          riskLevel: "Low",
-          parameter: "Section 134(5)(e) Financial Reporting Controls",
-          statutorySection: "Companies Act Section 134(5)(e)",
-          observation: "Controls over revenue recognition, vendor payments, and bank authorizations tested with 0 exceptions.",
-          mitigationStatus: "Operating effectively with automated multi-tier ERP authorizations.",
-        },
-        {
-          category: "Loans & Investments",
-          riskLevel: "Low",
-          parameter: "Section 186 Statutory Ceiling (60% Paid-up + Reserves)",
-          statutorySection: "Companies Act Section 186",
-          observation: "Aggregate corporate loans & investments stand at ₹1.10 Cr vs statutory limit of ₹3.60 Cr (30.5% utilized).",
-          mitigationStatus: "Well within Board delegation threshold; no Special Resolution required under Section 186(3).",
-        },
-        {
-          category: "Director Advances & Guarantees",
-          riskLevel: "Low",
-          parameter: "Section 185 Prohibition on Loans to Directors",
-          statutorySection: "Companies Act Section 185",
-          observation: "Zero personal loans, book debts, or guarantees given to directors or interested entities.",
-          mitigationStatus: "100% compliant with Section 185 statutory bar.",
-        },
-        {
-          category: "MSME Vendor Dues",
-          riskLevel: "Low",
-          parameter: "Clause 43B(h) / Section 15 of MSMED Act",
-          statutorySection: "Income Tax Act Sec 43B(h) & MSMED Act",
-          observation: "All registered micro/small enterprise invoices settled within 45 days. Disallowance ₹0 Nil.",
-          mitigationStatus: "Audited trade payables ledger confirms zero overdue MSME balances at year-end.",
-        },
-        {
-          category: "GST ITC Integrity",
-          riskLevel: "Low",
-          parameter: "Rule 36(4) / GSTR-2B vs GSTR-3B Input Tax Credit",
-          statutorySection: "CGST Rules Rule 36(4)",
-          observation: "100% input tax credit claimed matches invoice-level GSTR-2B inward supplies.",
-          mitigationStatus: "Zero DRC-01 SCN notice risk; all tax liabilities settled via electronic cash ledger.",
-        },
-      ],
-      boardResolutionsExtracts: [
-        {
-          agendaNo: "Item #01",
-          title: "Adoption and Approval of Audited Annual Financial Statements for FY 2025-26",
-          statutorySection: "Section 134 & Section 177",
-          votingResult: "Passed Unanimously (4 in favor, 0 against)",
-          signatoryDin: "08912340",
-        },
-        {
-          agendaNo: "Item #02",
-          title: "Consideration of Statutory Auditor's Report & Form 3CD Tax Audit Observations",
-          statutorySection: "Section 143 & Section 44AB",
-          votingResult: "Passed Unanimously (4 in favor, 0 against)",
-          signatoryDin: "08192834",
-        },
-        {
-          agendaNo: "Item #03",
-          title: "Review and Adoption of Secretarial Audit Report under Form MR-3",
-          statutorySection: "Section 204 & Secretarial Standards",
-          votingResult: "Passed Unanimously (4 in favor, 0 against)",
-          signatoryDin: "07419201",
-        },
-        {
-          agendaNo: "Item #04",
-          title: "Authorization for Strategic Technology Infrastructure Capex under Section 179(3)",
-          statutorySection: "Section 179(3)(c)",
-          votingResult: "Passed Unanimously (4 in favor, 0 against)",
-          signatoryDin: "09104928",
-        },
-      ],
-      dualAttestationSignOff: {
-        csSignatory: {
-          name: "CS Rajesh Sharma",
-          membershipNo: "FCS-9182",
-          cpNo: "10482",
-          firm: "Apex Law & Secretarial Partners LLP",
-          signatureHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          signedAt: "2026-11-15T11:30:00Z",
-        },
-        caSignatory: {
-          name: "CA Ramanathan Iyer",
-          membershipNo: "401928",
-          firmRegNo: "018241N",
-          firm: "Iyer & Co. Chartered Accountants",
-          udin: "26401928AAAA129481",
-          signatureHash: "4a59281a6e9742719a868f05151b72e0d37e6f80998a1f81d113ae87401c4501",
-          signedAt: "2026-11-15T11:45:00Z",
-        },
-        jointDeclaration: `We, the practicing Company Secretary and the Statutory Auditor of ${entName}, hereby jointly certify that we have examined the corporate secretarial registers, filings on the MCA21 portal, audited financial statements, Income Tax returns, and GST disclosures for the financial year 2025-26. We confirm that the reported revenues, statutory dues, and regulatory disclosures are reconciled with ZERO variance across MCA, CBDT, and GSTN frameworks.`,
-        qrVerificationUrl: "https://wakheel.legal/verify/dossier/WAK-EXD-2026-CC-8941",
-        status: "Signed & Sealed",
-      },
-      dossierDigestSha256: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
-      version: "3.4.1-FINAL",
-      createdAt: "2026-11-03T10:00:00Z",
-    };
   };
 
   useEffect(() => {
@@ -302,27 +112,27 @@ export function ExecutiveBoardDossierView({
     try {
       const res = await boardDossierApi.generateBoardDossier({
         clientEntity: {
-          name: defaultClient?.name || selectedDossier?.clientEntity?.name || "CyberCorp Technologies Pvt Ltd",
-          cin: defaultClient?.cin || selectedDossier?.clientEntity?.cin || "U72200DL2022PTC394812",
-          pan: defaultClient?.pan || selectedDossier?.clientEntity?.pan || "AAECS1234F",
-          gstin: defaultClient?.gstin || selectedDossier?.clientEntity?.gstin || "07AAECS1234F1Z8",
-          authorizedCapital: defaultClient?.authorizedCapital || 50000000,
-          paidUpCapital: defaultClient?.paidUpCapital || 25000000,
+          name: defaultClient?.name || selectedDossier?.clientEntity?.name || "",
+          cin: defaultClient?.cin || selectedDossier?.clientEntity?.cin || "",
+          pan: defaultClient?.pan || selectedDossier?.clientEntity?.pan || "",
+          gstin: defaultClient?.gstin || selectedDossier?.clientEntity?.gstin || "",
+          authorizedCapital: defaultClient?.authorizedCapital || 0,
+          paidUpCapital: defaultClient?.paidUpCapital || 0,
         },
         financialYear,
         boardMeetingDate,
         meetingType,
         csSignatory: {
-          name: "CS Rajesh Sharma",
-          membershipNo: "FCS-9182",
-          cpNo: "10482",
-          firm: "Apex Law & Secretarial Partners LLP",
+          name: practitionerName || "Company Secretary",
+          membershipNo: "",
+          cpNo: "",
+          firm: firmName || "",
         },
         caSignatory: {
-          name: "CA Ramanathan Iyer",
-          membershipNo: "401928",
-          firmRegNo: "018241N",
-          firm: "Iyer & Co. Chartered Accountants",
+          name: practitionerName || "Statutory Auditor",
+          membershipNo: "",
+          firmRegNo: "",
+          firm: firmName || "",
         },
       });
 
@@ -492,7 +302,7 @@ export function ExecutiveBoardDossierView({
               Client Entity Target
             </label>
             <div className="font-extrabold text-zinc-950 dark:text-white truncate">
-              {ent?.name || "CyberCorp Technologies Pvt Ltd"}
+              {ent?.name || "No Client Entity Selected"}
             </div>
             <div className="font-mono text-[10px] text-zinc-500 truncate">CIN: {ent?.cin}</div>
           </div>

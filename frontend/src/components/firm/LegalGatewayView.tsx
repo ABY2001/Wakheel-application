@@ -350,7 +350,7 @@ export function LegalGatewayView({
       id: `inv-cs-${Date.now()}`,
       invoiceNumber: `INV-CS-2026-0${invoices.length + 85}`,
       clientCompanyName: newInvClient.trim(),
-      clientGstin: "07AAECS1234F1Z8",
+      clientGstin: "",
       sacCode: "9982",
       billingType: "monthly_retainer",
       items: [{ description: newInvDesc.trim(), amount: subtotal }],

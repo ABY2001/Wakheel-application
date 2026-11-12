@@ -220,8 +220,8 @@ export function StatutoryChallanPaymentSimulatorModal({
         challanId: `CHL-${selectedPortal.slice(0, 3)}-${Date.now().toString().slice(-6)}`,
         portal: selectedPortal,
         challanType,
-        entityName: docket.clientName || "Inworth Technologies Pvt Ltd",
-        cinOrPanOrGstin: (docket.clientCinOrPan || "U72200KL2023PTC081290").toUpperCase(),
+        entityName: docket.clientName || "Registered Client",
+        cinOrPanOrGstin: (docket.clientCinOrPan || "Not Provided").toUpperCase(),
         financialYear: "2025-26",
         assessmentYear: "2026-27",
         filingForm: formName,
@@ -239,7 +239,7 @@ export function StatutoryChallanPaymentSimulatorModal({
         paymentStatus: "PAID",
         paidAt: timestamp,
         receiptNumber: receiptNo,
-        dscSignatory: docket.assignedAdvocate || "CS Meera Krishnan & CA Ramanathan Iyer",
+        dscSignatory: docket.assignedAdvocate || "Assigned Statutory Professional",
         createdAt: timestamp,
       };
 
@@ -250,20 +250,20 @@ export function StatutoryChallanPaymentSimulatorModal({
 
       // Token for API calls
       const token = typeof window !== "undefined"
-        ? localStorage.getItem("token") || localStorage.getItem("wakheel_token") || "dev_token"
-        : "dev_token";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
+        : "";
 
       // 1. Post to Firm Trust / Escrow Accounting (BCI Rule 24 / ICAI Escrow)
       const trustTxData: any = {
         type: "disbursement",
-        clientName: docket.clientName || "Inworth Technologies Pvt Ltd",
-        citizenId: docket.clientCinOrPan || "client_inworth",
+        clientName: docket.clientName || "Registered Client",
+        citizenId: docket.clientCinOrPan || docket.id || "",
         matterTitle: `${docket.caseNumber} — ${docket.title}`,
         matterId: docket.id,
         amount: totalPayable,
         purpose: `Statutory Government Fee: ${selectedPortal} ${formName} (${identifier})`,
         referenceNumber: identifier,
-        verifiedBy: docket.assignedAdvocate || "CS Meera Krishnan & CA Ramanathan Iyer",
+        verifiedBy: docket.assignedAdvocate || "Assigned Statutory Professional",
         date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
         status: "cleared",
         statutoryDetails: {
@@ -277,36 +277,40 @@ export function StatutoryChallanPaymentSimulatorModal({
         },
       };
 
-      try {
-        await advocateApi.addTrustTransaction(trustTxData, token);
-      } catch (txErr) {
-        console.warn("addTrustTransaction non-fatal:", txErr);
+      if (token) {
+        try {
+          await advocateApi.addTrustTransaction(trustTxData, token);
+        } catch (txErr) {
+          console.warn("addTrustTransaction non-fatal:", txErr);
+        }
       }
 
       // 2. If Reimbursable Out-of-Pocket, record in Firm Invoicing / Pure Agent Ledger
       let invoiceRefNumber = "";
       if (accountingTreatment === "reimbursable_out_of_pocket") {
         invoiceRefNumber = `INV-STAT-${Date.now().toString().slice(-5)}`;
-        try {
-          await advocateApi.createInvoice({
-            clientName: docket.clientName || "Inworth Technologies Pvt Ltd",
-            matterTitle: `${docket.caseNumber} — ${docket.title}`,
-            items: [
-              {
-                description: `Statutory Government Fee Reimbursement: ${selectedPortal} ${formName} (${identifier}) [Pure Agent Rule 33]`,
-                amount: totalPayable,
-              },
-            ],
-            subtotal: totalPayable,
-            gstRate: 0,
-            gstAmount: 0,
-            totalAmount: totalPayable,
-            status: "unpaid",
-            dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
-            paymentMethod: "Pending Client Reimbursement",
-          }, token);
-        } catch (invErr) {
-          console.warn("createInvoice non-fatal:", invErr);
+        if (token) {
+          try {
+            await advocateApi.createInvoice({
+              clientName: docket.clientName || "Registered Client",
+              matterTitle: `${docket.caseNumber} — ${docket.title}`,
+              items: [
+                {
+                  description: `Statutory Government Fee Reimbursement: ${selectedPortal} ${formName} (${identifier}) [Pure Agent Rule 33]`,
+                  amount: totalPayable,
+                },
+              ],
+              subtotal: totalPayable,
+              gstRate: 0,
+              gstAmount: 0,
+              totalAmount: totalPayable,
+              status: "unpaid",
+              dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
+              paymentMethod: "Pending Client Reimbursement",
+            }, token);
+          } catch (invErr) {
+            console.warn("createInvoice non-fatal:", invErr);
+          }
         }
       }
 
@@ -315,18 +319,25 @@ export function StatutoryChallanPaymentSimulatorModal({
         treatment: accountingTreatment,
         amount: totalPayable,
         ledgerDebit: accountingTreatment === "escrow_deduction"
-          ? `Client Segregated Trust Escrow A/c (${docket.clientName || "Inworth Technologies"})`
+          ? `Client Segregated Trust Escrow A/c (${docket.clientName || "Client"})`
           : `Client Reimbursable Disbursement Receivable (GST Rule 33 Pure Agent)`,
         ledgerCredit: `Treasury Clearing A/c (${tenderedBank} • BSR ${bsrCode})`,
         invoiceRef: invoiceRefNumber || undefined,
       };
       setRecordedVoucher(voucherRecord);
 
+      const receiptSeed = `${receiptNo}|${selectedPortal}|${identifier}|${totalPayable}|${timestamp}`;
+      let receiptHash = `sha256:${receiptNo.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+      if (typeof window !== "undefined" && window.crypto?.subtle) {
+        const digestBuf = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(receiptSeed));
+        receiptHash = `sha256:${Array.from(new Uint8Array(digestBuf)).map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+      }
+
       // Create new document to attach to docket vault
       const newDocketDoc = {
         name: `Official_${selectedPortal}_Challan_Receipt_${identifier.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
         size: "340 KB",
-        hash: `sha256:7f92014ea89201cb${randomCin}`,
+        hash: receiptHash,
         type: "application/pdf",
         uploadedAt: timestamp,
         source: "statutory_challan_simulator",
@@ -338,23 +349,25 @@ export function StatutoryChallanPaymentSimulatorModal({
       }
 
       // Update backend matter fee status & trust disbursement
-      await citizenApi.updateMatter(token, docket.id, {
-        feePaid: `₹ ${totalPayable.toLocaleString("en-IN")} Discharged via ${selectedPortal} (${identifier})`,
-        status: "Statutory Fee Discharged & Officially Stamped",
-        trustDisbursement: {
-          voucherNo,
-          treatment: accountingTreatment,
-          amount: totalPayable,
-          portal: selectedPortal,
-          formName,
-          cinOrSrn: identifier,
-          bsrCode,
-          challanSerialNumber: `${randomCin}`,
-          disbursedAt: timestamp,
-          invoiceRef: invoiceRefNumber || null,
-          status: "RECORDED_IN_TRUST_LEDGER",
-        },
-      }).catch((e) => console.warn("updateMatter non-fatal:", e));
+      if (token) {
+        await citizenApi.updateMatter(token, docket.id, {
+          feePaid: `₹ ${totalPayable.toLocaleString("en-IN")} Discharged via ${selectedPortal} (${identifier})`,
+          status: "Statutory Fee Discharged & Officially Stamped",
+          trustDisbursement: {
+            voucherNo,
+            treatment: accountingTreatment,
+            amount: totalPayable,
+            portal: selectedPortal,
+            formName,
+            cinOrSrn: identifier,
+            bsrCode,
+            challanSerialNumber: `${randomCin}`,
+            disbursedAt: timestamp,
+            invoiceRef: invoiceRefNumber || null,
+            status: "RECORDED_IN_TRUST_LEDGER",
+          },
+        }).catch((e) => console.warn("updateMatter non-fatal:", e));
+      }
 
       setPaymentStep("RECEIPT");
     } catch (err: any) {
@@ -709,7 +722,7 @@ Note: This receipt serves as valid proof of statutory remittance under Section 4
                       </span>
                     </div>
                     <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      Debited directly from client&apos;s segregated retainer escrow account in State Bank of India Client Escrow A/c 98210041289.
+                      Debited directly from the client&apos;s segregated retainer escrow account under Bar Council / ICAI escrow rules.
                     </p>
                   </button>
                 </div>

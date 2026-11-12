@@ -106,6 +106,7 @@ const DualSignOffGateSchema = new mongoose.Schema({
 
 const MdpFirmGovernanceSchema = new mongoose.Schema(
   {
+    userId: { type: String, required: true, index: true },
     firmId: { type: String, required: true, unique: true },
     firmName: { type: String, required: true },
     firmStructure: { type: String, default: "Multi-Disciplinary Partnership (LLP)" },

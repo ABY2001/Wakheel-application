@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../middleware/auth.js";
 import {
   getStatutoryNotices,
   getStatutoryNoticeById,
@@ -12,6 +13,8 @@ import {
 } from "../controllers/statutoryNoticeController.js";
 
 const router = express.Router();
+
+router.use(protect);
 
 router.get("/", getStatutoryNotices);
 router.get("/:id", getStatutoryNoticeById);

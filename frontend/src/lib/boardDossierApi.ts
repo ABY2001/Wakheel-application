@@ -111,7 +111,7 @@ export const boardDossierApi = {
   // 1. Get all dossiers with optional entity or FY filtering
   async getBoardDossiers(params?: { entityName?: string; financialYear?: string }, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const query = params ? "?" + new URLSearchParams(params as any).toString() : "";
       const res = await fetch(`${API_BASE_URL}/board-dossier${query}`, {
         headers: { Authorization: `Bearer ${t}` },
@@ -126,7 +126,7 @@ export const boardDossierApi = {
   // 2. Get single dossier by ID
   async getBoardDossierById(id: string, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/board-dossier/${id}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
@@ -140,7 +140,7 @@ export const boardDossierApi = {
   // 3. Generate New Board & Audit Committee Dossier
   async generateBoardDossier(data: any, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/board-dossier/generate`, {
         method: "POST",
         headers: {
@@ -159,7 +159,7 @@ export const boardDossierApi = {
   // 4. Verify Cryptographic Signatures
   async verifyDossierSignatures(data: { dossierId: string; dossierDigestSha256: string }, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/board-dossier/verify`, {
         method: "POST",
         headers: {

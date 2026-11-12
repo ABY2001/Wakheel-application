@@ -59,7 +59,7 @@ export function MdpFirmGovernanceView({
   const [activeTab, setActiveTab] = useState<"roster" | "rules" | "delegation" | "dualgates">("roster");
 
   // Active Simulated User
-  const [selectedMemberId, setSelectedMemberId] = useState<string>("mbr-cs-rajesh");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
 
   // Rule Test Simulator State
   const [testedAction, setTestedAction] = useState<string>("FORM_3CD_TAX_AUDIT_CERTIFICATION");
@@ -75,8 +75,8 @@ export function MdpFirmGovernanceView({
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskModule, setNewTaskModule] = useState("ROC_FILING");
-  const [newTaskClient, setNewTaskClient] = useState("CyberCorp Technologies Pvt Ltd");
-  const [newTaskTraineeId, setNewTaskTraineeId] = useState("mbr-trainee-pooja");
+  const [newTaskClient, setNewTaskClient] = useState("");
+  const [newTaskTraineeId, setNewTaskTraineeId] = useState("");
   const [newTaskTraineeNotes, setNewTaskTraineeNotes] = useState("");
 
   // Signing Gate State
@@ -217,7 +217,7 @@ export function MdpFirmGovernanceView({
         module: newTaskModule,
         assignedTrainee: trainee
           ? { memberId: trainee.memberId, name: trainee.name, role: trainee.primaryRole }
-          : { memberId: "mbr-trainee-pooja", name: "Pooja Hegde", role: "CS Trainee" },
+          : { memberId: "", name: "Unassigned Trainee", role: "Trainee" },
         reviewingPartner: {
           memberId: activeMember.memberId,
           name: activeMember.name,

@@ -11,7 +11,7 @@ const matterSchema = new mongoose.Schema(
     },
     advocateName: {
       type: String,
-      default: "Adv. Meera Krishnan",
+      default: "",
     },
     matterTitle: {
       type: String,
@@ -24,28 +24,28 @@ const matterSchema = new mongoose.Schema(
     },
     matterType: {
       type: String,
-      default: "Writ Petition (Civil)",
+      default: "",
     },
     caseNumber: {
       type: String,
-      default: "WP(C) 19482/2024",
+      default: "",
     },
     cnrNumber: {
       type: String,
       trim: true,
-      default: "KLHC01-019482-2024",
+      default: "",
     },
     courtForum: {
       type: String,
-      default: "High Court of Kerala (Ernakulam)",
+      default: "",
     },
     courtHall: {
       type: String,
-      default: "Court Hall 2A",
+      default: "",
     },
     bench: {
       type: String,
-      default: "Division Bench",
+      default: "",
     },
     petitioner: {
       type: String,

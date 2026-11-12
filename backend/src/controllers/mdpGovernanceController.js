@@ -4,39 +4,53 @@ import mongoose from "mongoose";
 
 const isMongoConnected = () => mongoose.connection.readyState === 1;
 
+const getUserId = (req) => {
+  const id = req.user?.id || req.user?._id;
+  return id ? String(id) : "";
+};
+
 export const mdpGovernanceController = {
   // 1. Get entire MDP Firm Governance Profile (Roster, Rules, Delegated Tasks, Dual Gates)
   async getFirmGovernance(req, res) {
     try {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
+
       if (isMongoConnected()) {
-        const gov = await MdpFirmGovernance.findOne();
+        const gov = await MdpFirmGovernance.findOne({ userId });
         if (gov) {
           return res.status(200).json({ success: true, source: "mongodb", governance: gov });
         }
       }
-      const devGov = devStore.getMdpFirmGovernance();
+      const devGov = devStore.getMdpFirmGovernance(userId);
       return res.status(200).json({ success: true, source: "devStore", governance: devGov });
     } catch (error) {
       console.error("Error in getFirmGovernance:", error);
-      const devGov = devStore.getMdpFirmGovernance();
-      return res.status(200).json({ success: true, source: "devStore_fallback", governance: devGov });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 
   // 2. Validate Statutory Authorization & Regulatory Lock
   async checkActionAuthorization(req, res) {
     try {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
       const { statutoryAction, memberInstitute, memberRole } = req.body;
 
       let governance;
       if (isMongoConnected()) {
-        governance = await MdpFirmGovernance.findOne();
+        governance = await MdpFirmGovernance.findOne({ userId });
       }
       if (!governance) {
-        governance = devStore.getMdpFirmGovernance();
+        governance = devStore.getMdpFirmGovernance(userId);
       }
 
-      const rule = governance.regulatoryRules.find(
+      const rules =
+        Array.isArray(governance?.regulatoryRules) && governance.regulatoryRules.length > 0
+          ? governance.regulatoryRules
+          : devStore.getMdpFirmGovernance(userId).regulatoryRules;
+
+      const rule = rules.find(
         (r) => r.statutoryAction === statutoryAction || r.ruleId === statutoryAction
       );
 
@@ -44,7 +58,6 @@ export const mdpGovernanceController = {
         return res.status(404).json({ success: false, message: "Regulatory rule not found for action" });
       }
 
-      // Check trainee DSC lock (Four-Eyes Principle)
       const isTrainee = [
         "article_assistant_cs",
         "article_assistant_ca",
@@ -67,7 +80,6 @@ export const mdpGovernanceController = {
         });
       }
 
-      // Check institute authorization
       const isInstituteAuthorized = rule.authorizedInstitutes.includes(memberInstitute);
       const isProhibited = rule.prohibitedInstitutes.includes(memberInstitute);
 
@@ -86,7 +98,6 @@ export const mdpGovernanceController = {
         });
       }
 
-      // If authorized
       return res.status(200).json({
         success: true,
         authorized: true,
@@ -108,36 +119,41 @@ export const mdpGovernanceController = {
   // 3. Get Delegated Tasks
   async getDelegatedTasks(req, res) {
     try {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
+
       if (isMongoConnected()) {
-        const gov = await MdpFirmGovernance.findOne();
+        const gov = await MdpFirmGovernance.findOne({ userId });
         if (gov) {
           return res.status(200).json({ success: true, tasks: gov.delegatedTasks || [] });
         }
       }
-      const tasks = devStore.getDelegatedTasks();
+      const tasks = devStore.getDelegatedTasks(userId);
       return res.status(200).json({ success: true, tasks });
     } catch (error) {
       console.error("Error in getDelegatedTasks:", error);
-      const tasks = devStore.getDelegatedTasks();
-      return res.status(200).json({ success: true, tasks });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 
   // 4. Create Delegated Task (Allocate to Trainee)
   async createDelegatedTask(req, res) {
     try {
-      const taskData = req.body;
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
+      const taskData = req.body || {};
+
       if (isMongoConnected()) {
-        const gov = await MdpFirmGovernance.findOne();
+        const gov = await MdpFirmGovernance.findOne({ userId });
         if (gov) {
           const newTask = {
             taskId: `TASK-DEL-${Date.now()}`,
-            title: taskData.title,
-            clientName: taskData.clientName || "CyberCorp Technologies Pvt Ltd",
+            title: taskData.title || "",
+            clientName: taskData.clientName || "",
             module: taskData.module || "ROC_FILING",
             assignedTrainee: taskData.assignedTrainee,
             reviewingPartner: taskData.reviewingPartner,
-            workpaperReference: taskData.workpaperReference || `WP-2026-${Math.floor(100 + Math.random() * 900)}`,
+            workpaperReference: taskData.workpaperReference || `WP-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
             traineeNotes: taskData.traineeNotes || "",
             status: "DRAFTING_BY_TRAINEE",
             fourEyesVerified: false,
@@ -150,23 +166,24 @@ export const mdpGovernanceController = {
         }
       }
 
-      const task = devStore.createDelegatedTask(taskData);
+      const task = devStore.createDelegatedTask(userId, taskData);
       return res.status(201).json({ success: true, task });
     } catch (error) {
       console.error("Error in createDelegatedTask:", error);
-      const task = devStore.createDelegatedTask(req.body);
-      return res.status(201).json({ success: true, task });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 
   // 5. Review Delegated Task (Partner Four-Eyes Approval or Revision Request)
   async reviewDelegatedTask(req, res) {
     try {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
       const { taskId } = req.params;
       const { partnerReviewNotes, status, reviewingPartner } = req.body;
 
       if (isMongoConnected()) {
-        const gov = await MdpFirmGovernance.findOne();
+        const gov = await MdpFirmGovernance.findOne({ userId });
         if (gov) {
           const task = gov.delegatedTasks.find((t) => t.taskId === taskId);
           if (task) {
@@ -184,57 +201,61 @@ export const mdpGovernanceController = {
         }
       }
 
-      const task = devStore.reviewDelegatedTask(taskId, { partnerReviewNotes, status, reviewingPartner });
+      const task = devStore.reviewDelegatedTask(userId, taskId, { partnerReviewNotes, status, reviewingPartner });
       if (!task) {
         return res.status(404).json({ success: false, message: "Delegated task not found" });
       }
       return res.status(200).json({ success: true, task });
     } catch (error) {
       console.error("Error in reviewDelegatedTask:", error);
-      const task = devStore.reviewDelegatedTask(req.params.taskId, req.body);
-      return res.status(200).json({ success: true, task });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 
   // 6. Get Dual Sign-Off Gates
   async getDualSignOffGates(req, res) {
     try {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
+
       if (isMongoConnected()) {
-        const gov = await MdpFirmGovernance.findOne();
+        const gov = await MdpFirmGovernance.findOne({ userId });
         if (gov) {
           return res.status(200).json({ success: true, gates: gov.dualSignOffGates || [] });
         }
       }
-      const gates = devStore.getDualSignOffGates();
+      const gates = devStore.getDualSignOffGates(userId);
       return res.status(200).json({ success: true, gates });
     } catch (error) {
       console.error("Error in getDualSignOffGates:", error);
-      const gates = devStore.getDualSignOffGates();
-      return res.status(200).json({ success: true, gates });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 
   // 7. Execute Dual Sign-Off (CS or CA Gate)
   async signDualSignOffGate(req, res) {
     try {
+      const userId = getUserId(req);
+      if (!userId) return res.status(401).json({ success: false, message: "Authentication required." });
       const { gateId } = req.params;
       const { role, signatoryName, membershipNumber, udin } = req.body;
+      const fallbackSigner = signatoryName || req.user?.fullName || "";
 
       if (isMongoConnected()) {
-        const gov = await MdpFirmGovernance.findOne();
+        const gov = await MdpFirmGovernance.findOne({ userId });
         if (gov) {
           const gate = gov.dualSignOffGates.find((g) => g.gateId === gateId);
           if (gate) {
             if (role === "CS" || role === "practicing_cs" || role === "managing_partner") {
               gate.csGate.status = "SIGNED";
-              gate.csGate.signedBy = signatoryName || "CS Rajesh Sharma";
-              gate.csGate.membershipNumber = membershipNumber || "FCS-8921";
+              gate.csGate.signedBy = fallbackSigner;
+              gate.csGate.membershipNumber = membershipNumber || "";
               gate.csGate.signedAt = new Date().toISOString();
             } else if (role === "CA" || role === "practicing_ca" || role === "senior_partner") {
               gate.caGate.status = "SIGNED";
-              gate.caGate.signedBy = signatoryName || "CA Ramanathan Iyer";
-              gate.caGate.membershipNumber = membershipNumber || "FCA-054921";
-              gate.caGate.udin = udin || `26054921${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+              gate.caGate.signedBy = fallbackSigner;
+              gate.caGate.membershipNumber = membershipNumber || "";
+              gate.caGate.udin = udin || "";
               gate.caGate.signedAt = new Date().toISOString();
             }
 
@@ -251,15 +272,19 @@ export const mdpGovernanceController = {
         }
       }
 
-      const gate = devStore.signDualSignOffGate(gateId, { role, signatoryName, membershipNumber, udin });
+      const gate = devStore.signDualSignOffGate(userId, gateId, {
+        role,
+        signatoryName: fallbackSigner,
+        membershipNumber: membershipNumber || "",
+        udin: udin || "",
+      });
       if (!gate) {
         return res.status(404).json({ success: false, message: "Dual sign-off gate not found" });
       }
       return res.status(200).json({ success: true, gate });
     } catch (error) {
       console.error("Error in signDualSignOffGate:", error);
-      const gate = devStore.signDualSignOffGate(req.params.gateId, req.body);
-      return res.status(200).json({ success: true, gate });
+      return res.status(500).json({ success: false, message: error.message });
     }
   },
 };

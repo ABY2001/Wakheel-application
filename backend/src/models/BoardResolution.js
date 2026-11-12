@@ -9,7 +9,7 @@ const boardResolutionSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     meetingId: {
@@ -20,17 +20,17 @@ const boardResolutionSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      default: "CyberCorp Technologies Pvt Ltd",
+      default: "",
     },
     cin: {
       type: String,
-      default: "U72200DL2022PTC394812",
+      default: "",
     },
     resolutionNumber: {
       type: String,
       required: true,
       trim: true,
-      default: "RES-01/BM-04/2026-27",
+      default: "",
     },
     type: {
       type: String,
@@ -74,7 +74,7 @@ const boardResolutionSchema = new mongoose.Schema(
     },
     authorizedSignatories: {
       type: [String],
-      default: ["CS Rajesh Sharma", "Dr. Vikram Malhotra"],
+      default: [],
     },
     status: {
       type: String,

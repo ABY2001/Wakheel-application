@@ -1,7 +1,10 @@
 import express from "express";
+import { protect } from "../middleware/auth.js";
 import { mdpGovernanceController } from "../controllers/mdpGovernanceController.js";
 
 const router = express.Router();
+
+router.use(protect);
 
 // Firm Governance Profile (Roster, Institute Credentials, Summary)
 router.get("/", mdpGovernanceController.getFirmGovernance);

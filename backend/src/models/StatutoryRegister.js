@@ -9,14 +9,14 @@ const statutoryRegisterSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     companyName: {
       type: String,
       required: true,
       trim: true,
-      default: "CyberCorp Technologies Pvt Ltd",
+      default: "",
     },
     cin: {
       type: String,
@@ -32,7 +32,7 @@ const statutoryRegisterSchema = new mongoose.Schema(
     },
     statutoryForm: {
       type: String,
-      default: "MGT-1", // "MGT-1", "Sec 170", "CHG-7", "MBP-2", "MBP-4"
+      default: "MGT-1",
     },
     folioOrRefNumber: {
       type: String,
@@ -45,11 +45,11 @@ const statutoryRegisterSchema = new mongoose.Schema(
       trim: true,
     },
     identificationNumber: {
-      type: String, // DIN, PAN, Charge ID, CIN
+      type: String,
       trim: true,
     },
     entryDate: {
-      type: String, // "YYYY-MM-DD"
+      type: String,
       required: true,
     },
     particulars: {
@@ -77,7 +77,7 @@ const statutoryRegisterSchema = new mongoose.Schema(
     },
     certifiedBy: {
       type: String,
-      default: "CS Rajesh Sharma, FCS 9482",
+      default: "",
     },
     certifiedAt: {
       type: String,

@@ -51,12 +51,16 @@ export function ERPDashboardView({
   useEffect(() => {
     let isMounted = true;
     async function fetchDashboardData() {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
+          : undefined;
+      if (!token) {
+        if (isMounted) setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || undefined
-            : undefined;
         const data = await advocateApi.getDashboard(token);
         if (isMounted && data.success) {
           setKpis(data.kpis);
@@ -67,7 +71,12 @@ export function ERPDashboardView({
           setRecentInvoices(data.recentInvoices || []);
         }
       } catch (err) {
-        console.error("Failed to load advocate dashboard data:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        if (err instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(message)) {
+          console.warn("Advocate dashboard backend unreachable:", message);
+        } else {
+          console.warn("Failed to load advocate dashboard data:", message);
+        }
       } finally {
         if (isMounted) setLoading(false);
       }

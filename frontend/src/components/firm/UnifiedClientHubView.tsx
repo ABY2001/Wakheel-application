@@ -83,8 +83,8 @@ interface UnifiedClientHubViewProps {
 }
 
 export function UnifiedClientHubView({
-  firmName = "Apex Law, Secretarial & Tax Partners LLP",
-  practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
+  firmName = "",
+  practitionerName = "",
   initialEntityId,
   onNavigateToTab,
 }: UnifiedClientHubViewProps) {
@@ -298,9 +298,9 @@ export function UnifiedClientHubView({
       turnoverMatches,
       capitalMatches,
       status: turnoverMatches && capitalMatches ? "100% Reconciled" : "Variance Flagged",
-      udin: latestAudit?.udin || "26054921Y4P7Z6",
-      srnAoc4: latestAoc4?.srn || "SRN-F8910482",
-      ackItr: latestItr?.ackNumber || "901248192841",
+      udin: latestAudit?.udin || "Pending",
+      srnAoc4: latestAoc4?.srn || "Pending",
+      ackItr: latestItr?.ackNumber || "Pending",
     };
   }, [selectedEntity, clientData]);
 
@@ -490,28 +490,32 @@ export function UnifiedClientHubView({
             <div>
               <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>Permanent A/C (PAN)</span>
               <div className="flex items-center gap-1.5 font-mono font-black text-xs" style={{ color: isDark ? "#ffffff" : "#09090b" }}>
-                <span>{selectedEntity.pan || "AAECS1234F"}</span>
-                <button
-                  onClick={() => handleCopy(selectedEntity.pan || "AAECS1234F", "copy-pan")}
-                  title="Copy PAN"
-                  className="hover:text-red-600 cursor-pointer p-0.5"
-                >
-                  {copiedId === "copy-pan" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
-                </button>
+                <span>{selectedEntity.pan || "—"}</span>
+                {selectedEntity.pan && (
+                  <button
+                    onClick={() => handleCopy(selectedEntity.pan || "", "copy-pan")}
+                    title="Copy PAN"
+                    className="hover:text-red-600 cursor-pointer p-0.5"
+                  >
+                    {copiedId === "copy-pan" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
+                  </button>
+                )}
               </div>
             </div>
 
             <div>
               <span className="text-[11px] uppercase font-mono font-bold block mb-1" style={{ color: isDark ? "#a1a1aa" : "#52525b" }}>GSTIN Number</span>
               <div className="flex items-center gap-1.5 font-mono font-black text-xs truncate" style={{ color: isDark ? "#38bdf8" : "#0284c7" }}>
-                <span className="truncate">{selectedEntity.gstin || "07AAECS1234F1Z8"}</span>
-                <button
-                  onClick={() => handleCopy(selectedEntity.gstin || "07AAECS1234F1Z8", "copy-gstin")}
-                  title="Copy GSTIN"
-                  className="hover:text-blue-900 dark:hover:text-cyan-200 shrink-0 cursor-pointer p-0.5"
-                >
-                  {copiedId === "copy-gstin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
-                </button>
+                <span className="truncate">{selectedEntity.gstin || "—"}</span>
+                {selectedEntity.gstin && (
+                  <button
+                    onClick={() => handleCopy(selectedEntity.gstin || "", "copy-gstin")}
+                    title="Copy GSTIN"
+                    className="hover:text-blue-900 dark:hover:text-cyan-200 shrink-0 cursor-pointer p-0.5"
+                  >
+                    {copiedId === "copy-gstin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" style={{ color: isDark ? "#a1a1aa" : "#71717a" }} />}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -863,14 +867,16 @@ export function UnifiedClientHubView({
                 <div className="flex items-center justify-between font-mono text-xs">
                   <span className="text-zinc-600 dark:text-zinc-400 font-medium">Generated ICAI UDIN:</span>
                   <div className="flex items-center gap-1 font-black text-red-600 dark:text-red-400 text-xs">
-                    <span>{clientData.taxAudits[0]?.udin || "26054921Y4P7Z6"}</span>
-                    <button
-                      onClick={() => handleCopy(clientData.taxAudits[0]?.udin || "26054921Y4P7Z6", "copy-3cd-udin")}
-                      title="Copy UDIN"
-                      className="hover:text-black dark:hover:text-white cursor-pointer"
-                    >
-                      {copiedId === "copy-3cd-udin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
-                    </button>
+                    <span>{clientData.taxAudits[0]?.udin || "Pending"}</span>
+                    {clientData.taxAudits[0]?.udin && (
+                      <button
+                        onClick={() => handleCopy(clientData.taxAudits[0].udin, "copy-3cd-udin")}
+                        title="Copy UDIN"
+                        className="hover:text-black dark:hover:text-white cursor-pointer"
+                      >
+                        {copiedId === "copy-3cd-udin" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-[10px] font-mono pt-1 text-center">
@@ -1132,7 +1138,7 @@ export function UnifiedClientHubView({
                 </h3>
               </div>
               <span className="text-xs font-mono text-zinc-500">
-                PAN: {selectedEntity.pan || "AAECS1234F"}
+                PAN: {selectedEntity.pan || "—"}
               </span>
             </div>
 
@@ -1174,7 +1180,7 @@ export function UnifiedClientHubView({
                         {itr.refundDueOrPayable > 0 ? formatInr(itr.refundDueOrPayable) : "₹0 Nil"}
                       </td>
                       <td className="py-3.5 px-3 font-mono text-xs">
-                        {itr.ackNumber || "901248192841"}
+                        {itr.ackNumber || "—"}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
@@ -1198,7 +1204,7 @@ export function UnifiedClientHubView({
                 </h3>
               </div>
               <span className="text-xs font-mono text-zinc-500">
-                GSTIN: {selectedEntity.gstin || "07AAECS1234F1Z8"}
+                GSTIN: {selectedEntity.gstin || "—"}
               </span>
             </div>
 
@@ -1352,19 +1358,19 @@ export function UnifiedClientHubView({
             {[
               {
                 title: "ICAI UDIN Attestation Sheet",
-                detail: `UDIN: ${clientData.taxAudits[0]?.udin || "26054921Y4P7Z6"} • Tax Audit Sec 44AB`,
+                detail: `UDIN: ${clientData.taxAudits[0]?.udin || "Pending"} • Tax Audit Sec 44AB`,
                 icon: Stamp,
                 action: "Download Attestation",
               },
               {
                 title: "MCA21 AOC-4 Board Pack",
-                detail: `SRN: ${clientData.rocFilings[0]?.srn || "F8910482"} • Audited Balance Sheet & P&L`,
+                detail: `SRN: ${clientData.rocFilings[0]?.srn || "Pending"} • Audited Balance Sheet & P&L`,
                 icon: FileCheck,
                 action: "Download Board Pack",
               },
               {
                 title: "Class 3 DSC Token Status",
-                detail: `${selectedEntity.directors[0]?.name || "Director"} • Active until 18 Jan 2027`,
+                detail: `${selectedEntity.directors[0]?.name || "Signatory"} • Verification Ready`,
                 icon: ShieldCheck,
                 action: "Check Token Status",
               },
@@ -1601,7 +1607,7 @@ export function UnifiedClientHubView({
                 <input
                   name="dirName"
                   required
-                  placeholder="e.g. Vikramaditya Singhania"
+                  placeholder="Enter director full name"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"
                 />
               </div>
@@ -1611,7 +1617,7 @@ export function UnifiedClientHubView({
                 <input
                   name="din"
                   required
-                  placeholder="08912340"
+                  placeholder="Enter 8-digit DIN"
                   className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-mono"
                 />
               </div>

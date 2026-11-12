@@ -56,13 +56,13 @@ const formatInr = (amount?: number | null) => {
 };
 
 export function ChallanDscWorkspaceView({
-  firmName = "Wakheel Corporate & Tax Advisory LLP",
-  practitionerName = "CS Rajesh Sharma & CA Ramanathan Iyer",
+  firmName = "",
+  practitionerName = "",
   defaultClient = {
-    name: "CyberCorp Technologies Pvt Ltd",
-    cin: "U72200DL2022PTC394812",
-    pan: "AAECS1234F",
-    gstin: "07AAECS1234F1Z8",
+    name: "",
+    cin: "",
+    pan: "",
+    gstin: "",
   },
 }: ChallanDscWorkspaceViewProps) {
   const { theme } = useTheme();
@@ -164,17 +164,21 @@ export function ChallanDscWorkspaceView({
 
   // 1-Click Cryptographic Digital Signer
   const handleSignDocument = async () => {
+    if (!selectedCertificate?.certificateId) {
+      alert("Please select an active DSC certificate first.");
+      return;
+    }
     setIsSigning(true);
     setSignedPlaque(null);
     setVerifyStatus(null);
     try {
       const res = await challanDscApi.signDocumentWithDsc({
-        certificateId: selectedCertificate?.certificateId || "DSC-CS-8921",
+        certificateId: selectedCertificate.certificateId,
         pin: tokenPin,
         documentTitle: docTitle,
         documentType: signingDocType,
-        documentPayload: `PAYLOAD::${docTitle}::${defaultClient.name}::${Date.now()}`,
-        entityName: defaultClient.name,
+        documentPayload: `PAYLOAD::${docTitle}::${defaultClient.name || "ENTITY"}::${Date.now()}`,
+        entityName: defaultClient.name || "",
       });
 
       if (res && res.signature) {
@@ -558,8 +562,8 @@ export function ChallanDscWorkspaceView({
                     onChange={(e) => {
                       setSigningDocType(e.target.value);
                       if (e.target.value === "board_resolution") setDocTitle("Board Resolution under Section 186 (Loans & Guarantees)");
-                      else if (e.target.value === "form_3cd") setDocTitle("Form 3CD Tax Audit Statement for FY 2025-26");
-                      else if (e.target.value === "aoc4_financials") setDocTitle("Form AOC-4 Financial Statements for CyberCorp Technologies");
+                      else if (e.target.value === "form_3cd") setDocTitle("Form 3CD Tax Audit Statement");
+                      else if (e.target.value === "aoc4_financials") setDocTitle(`Form AOC-4 Financial Statements${defaultClient.name ? ` for ${defaultClient.name}` : ""}`);
                       else if (e.target.value === "dir3_kyc") setDocTitle("DIR-3 Director Web KYC Declaration");
                       else setDocTitle("Form GST DRC-06 Statutory Rebuttal");
                     }}

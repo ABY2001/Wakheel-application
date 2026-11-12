@@ -1837,7 +1837,10 @@ export const addAssociate = async (req, res) => {
 // ============================================================================
 export const getBenchAnalytics = async (req, res) => {
   try {
-    const advocateId = getAdvocateId(req);
+    const advocateId = req.user?._id || req.user?.id;
+    if (!advocateId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const analytics = devStore.getBenchAnalytics(advocateId);
     res.json({ success: true, ...analytics, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
   } catch (error) {
@@ -1848,7 +1851,10 @@ export const getBenchAnalytics = async (req, res) => {
 
 export const getChamberReports = async (req, res) => {
   try {
-    const advocateId = getAdvocateId(req);
+    const advocateId = req.user?._id || req.user?.id;
+    if (!advocateId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const reports = devStore.getChamberReports(advocateId);
     res.json({ success: true, count: reports.length, reports, mode: shouldUseDevStore() ? "dummy_data" : "cloud_db" });
   } catch (error) {
@@ -1859,7 +1865,10 @@ export const getChamberReports = async (req, res) => {
 
 export const generateChamberReport = async (req, res) => {
   try {
-    const advocateId = getAdvocateId(req);
+    const advocateId = req.user?._id || req.user?.id;
+    if (!advocateId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const newReport = devStore.generateChamberReport({ ...req.body, advocateId });
     res.status(201).json({
       success: true,

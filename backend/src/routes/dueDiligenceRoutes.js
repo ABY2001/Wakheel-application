@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../middleware/auth.js";
 import {
   getDueDiligenceAudits,
   getDueDiligenceAuditById,
@@ -11,6 +12,8 @@ import {
 } from "../controllers/dueDiligenceController.js";
 
 const router = express.Router();
+
+router.use(protect);
 
 router.route("/")
   .get(getDueDiligenceAudits)

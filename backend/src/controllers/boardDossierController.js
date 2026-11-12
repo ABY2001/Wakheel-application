@@ -7,12 +7,14 @@
 
 import crypto from "crypto";
 import { BoardDossier } from "../models/BoardDossier.js";
-import { devStore, DEFAULT_BOARD_DOSSIERS } from "../utils/devStore.js";
+import { devStore } from "../utils/devStore.js";
 
 // Check if MongoDB is connected
 const isMongoConnected = () => {
   return BoardDossier.db?.readyState === 1;
 };
+
+const getUserId = (req) => String(req.user?._id || req.user?.id || "");
 
 // Compute SHA-256 Hash
 const sha256 = (content) => {
@@ -21,10 +23,11 @@ const sha256 = (content) => {
 
 // @desc    Get all executive board dossiers
 // @route   GET /api/board-dossier
-// @access  Public / Protected
+// @access  Private
 export const getBoardDossiers = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId || "cs_1";
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
     const { entityName, financialYear } = req.query;
 
     if (isMongoConnected()) {
@@ -49,13 +52,16 @@ export const getBoardDossiers = async (req, res) => {
 
 // @desc    Get board dossier by ID
 // @route   GET /api/board-dossier/:id
-// @access  Public / Protected
+// @access  Private
 export const getBoardDossierById = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
 
     if (isMongoConnected()) {
       const dossier = await BoardDossier.findOne({
+        userId,
         $or: [{ dossierId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
       });
       if (dossier) {
@@ -63,7 +69,7 @@ export const getBoardDossierById = async (req, res) => {
       }
     }
 
-    const dossier = devStore.getBoardDossierById(id);
+    const dossier = devStore.getBoardDossierById(id, userId);
     if (!dossier) {
       return res.status(404).json({ success: false, message: "Executive board dossier not found." });
     }
@@ -77,209 +83,113 @@ export const getBoardDossierById = async (req, res) => {
 
 // @desc    Generate / Synthesize New Board & Audit Committee Dossier
 // @route   POST /api/board-dossier/generate
-// @access  Public / Protected
+// @access  Private
 export const generateBoardDossier = async (req, res) => {
   try {
-    const userId = req.user?.id || req.body.userId || "cs_1";
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
     const {
       clientEntity = {},
       financialYear = "2025-26",
       assessmentYear = "2026-27",
       boardMeetingDate = new Date().toISOString().split("T")[0],
-      meetingType = "Quarterly Board of Directors & Audit Committee Review (Q3)",
+      meetingType = "Quarterly Board of Directors & Audit Committee Review",
       csSignatory = {},
       caSignatory = {},
       customRisks = [],
       customResolutions = [],
+      csGovernanceOverrides = {},
+      caAuditOverrides = {},
     } = req.body;
 
-    const entityName = clientEntity.name || clientEntity.companyName || "CyberCorp Technologies Pvt Ltd";
-    const cin = clientEntity.cin || "U72200DL2022PTC394812";
-    const pan = clientEntity.pan || "AAECS1234F";
-    const gstin = clientEntity.gstin || "07AAECS1234F1Z8";
-    const turnover = Number(clientEntity.turnover) || 48500000;
+    const entityName = (clientEntity.name || clientEntity.companyName || "").trim();
+    if (!entityName) {
+      return res.status(400).json({ success: false, message: "clientEntity.name is required" });
+    }
+    const cin = (clientEntity.cin || "").toUpperCase();
+    const pan = (clientEntity.pan || "").toUpperCase();
+    const gstin = (clientEntity.gstin || "").toUpperCase();
+    const turnover = Number(clientEntity.turnover) || 0;
 
     const dossierSerial = `WAK-EXD-${new Date().getFullYear()}-${entityName.slice(0, 2).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     // Directors List
-    const directorsList = clientEntity.directors?.length
+    const directorsList = Array.isArray(clientEntity.directors)
       ? clientEntity.directors.map((d) => ({
-          din: d.din || "08912340",
-          name: d.name || "Director",
+          din: d.din || "",
+          name: d.name || "",
           designation: d.designation || "Director",
-          appointmentDate: d.appointmentDate || "2022-04-12",
-          kycStatus: "DIR-3 Web KYC Verified",
-          sec164Clearance: true,
-          shareholdingPercentage: d.shareholdingPercentage || 0,
+          appointmentDate: d.appointmentDate || "",
+          kycStatus: d.kycStatus || "Pending Verification",
+          sec164Clearance: d.sec164Clearance !== undefined ? Boolean(d.sec164Clearance) : true,
+          shareholdingPercentage: Number(d.shareholdingPercentage) || 0,
         }))
-      : [
-          {
-            din: "08912340",
-            name: "Dr. Vikram Malhotra",
-            designation: "Managing Director",
-            appointmentDate: "2022-04-12",
-            kycStatus: "DIR-3 Web KYC Verified",
-            sec164Clearance: true,
-            shareholdingPercentage: 54.5,
-          },
-          {
-            din: "09104928",
-            name: "Ms. Ananya Sengupta",
-            designation: "Whole-Time Director & COO",
-            appointmentDate: "2022-04-12",
-            kycStatus: "DIR-3 Web KYC Verified",
-            sec164Clearance: true,
-            shareholdingPercentage: 25.5,
-          },
-          {
-            din: "07419201",
-            name: "Mr. Rohan Murthy",
-            designation: "Non-Executive Independent Director",
-            appointmentDate: "2023-01-15",
-            kycStatus: "DIR-3 Web KYC Verified",
-            sec164Clearance: true,
-            shareholdingPercentage: 0,
-          },
-          {
-            din: "08192834",
-            name: "Adv. Meera Nair",
-            designation: "Independent Director & Audit Committee Chair",
-            appointmentDate: "2023-05-10",
-            kycStatus: "DIR-3 Web KYC Verified",
-            sec164Clearance: true,
-            shareholdingPercentage: 0,
-          },
-        ];
+      : [];
 
-    // CS Governance Harmonized Metrics
+    // CS Governance Harmonized Metrics (driven by request overrides or stored records)
+    const filings = isMongoConnected() ? [] : devStore.getRocFilings(userId, { companyName: entityName });
+    const meetings = isMongoConnected()
+      ? []
+      : devStore.getBoardMeetings(userId).filter((m) => !entityName || m.companyName === entityName);
+    const aoc4 = filings.find((f) => String(f.formName || "").toUpperCase() === "AOC-4");
+    const mgt7 = filings.find((f) => String(f.formName || "").toUpperCase().startsWith("MGT-7"));
+
     const csGovernanceData = {
-      aoc4Status: "Approved & Reconciled",
-      aoc4Srn: `AA${Math.floor(1000000 + Math.random() * 9000000)}`,
-      mgt7Status: "Annual Return Reconciled",
-      mgt7Srn: `M${Math.floor(1000000 + Math.random() * 9000000)}`,
-      boardMeetingsConducted: 4,
-      ss1ComplianceScore: 99.2,
-      secretarialAuditOpinion: "Unqualified / Clean Opinion under Form MR-3",
-      registeredChargesStatus: "Zero Default / Satisfaction CHG-4 Issued",
-      activeLitigationsCount: 0,
+      aoc4Status: csGovernanceOverrides.aoc4Status || aoc4?.status || "Pending",
+      aoc4Srn: csGovernanceOverrides.aoc4Srn || aoc4?.srn || "",
+      mgt7Status: csGovernanceOverrides.mgt7Status || mgt7?.status || "Pending",
+      mgt7Srn: csGovernanceOverrides.mgt7Srn || mgt7?.srn || "",
+      boardMeetingsConducted: Number(csGovernanceOverrides.boardMeetingsConducted ?? meetings.length) || 0,
+      ss1ComplianceScore: Number(csGovernanceOverrides.ss1ComplianceScore) || 0,
+      secretarialAuditOpinion: csGovernanceOverrides.secretarialAuditOpinion || "Pending Assessment",
+      registeredChargesStatus: csGovernanceOverrides.registeredChargesStatus || "As per MCA Index of Charges",
+      activeLitigationsCount: Number(csGovernanceOverrides.activeLitigationsCount) || 0,
     };
 
     // CA Taxation & Audit Harmonized Metrics
-    const randomUdin = `26401928AAAA${Math.floor(100000 + Math.random() * 900000)}`;
     const caAuditData = {
-      itrStatus: "ITR-6 Filed & Verified",
-      itrAckNumber: `${Math.floor(1000000000 + Math.random() * 9000000000)}`,
-      gstr9Status: "Annual Return Reconciled (100% Match)",
-      form3CdTurnover: turnover,
-      gstAnnualTurnover: turnover,
-      mcaFinancialTurnover: turnover,
-      turnoverVariance: 0,
-      udin: caSignatory.udin || randomUdin,
-      clause43bDisallowance: 0,
-      indAs12DeferredTax: "Reconciled (Net DTA ₹37,755)",
-      ifcControlRating: "Operating Effectively (Zero Material Weakness)",
+      itrStatus: caAuditOverrides.itrStatus || "Pending",
+      itrAckNumber: caAuditOverrides.itrAckNumber || "",
+      gstr9Status: caAuditOverrides.gstr9Status || "Pending",
+      form3CdTurnover: Number(caAuditOverrides.form3CdTurnover ?? turnover) || 0,
+      gstAnnualTurnover: Number(caAuditOverrides.gstAnnualTurnover ?? turnover) || 0,
+      mcaFinancialTurnover: Number(caAuditOverrides.mcaFinancialTurnover ?? turnover) || 0,
+      turnoverVariance: Number(caAuditOverrides.turnoverVariance) || 0,
+      udin: caSignatory.udin || caAuditOverrides.udin || "",
+      clause43bDisallowance: Number(caAuditOverrides.clause43bDisallowance) || 0,
+      indAs12DeferredTax: caAuditOverrides.indAs12DeferredTax || "Pending Reconciliation",
+      ifcControlRating: caAuditOverrides.ifcControlRating || "Pending Evaluation",
     };
 
-    // Audit Committee Statutory Risk Heatmap
-    const defaultRisks = [
-      {
-        category: "Internal Financial Controls (IFC)",
-        riskLevel: "Low",
-        parameter: "Section 134(5)(e) Financial Reporting Controls",
-        statutorySection: "Companies Act Section 134(5)(e)",
-        observation: "Controls over revenue recognition, vendor payments, and bank authorizations tested with 0 exceptions.",
-        mitigationStatus: "Operating effectively with automated multi-tier ERP authorizations.",
-      },
-      {
-        category: "Loans & Investments",
-        riskLevel: "Low",
-        parameter: "Section 186 Statutory Ceiling (60% Paid-up + Reserves)",
-        statutorySection: "Companies Act Section 186",
-        observation: `Aggregate corporate loans & investments stand at ₹1.10 Cr vs statutory limit of ₹3.60 Cr (30.5% utilized).`,
-        mitigationStatus: "Well within Board delegation threshold; no Special Resolution required under Section 186(3).",
-      },
-      {
-        category: "Director Advances & Guarantees",
-        riskLevel: "Low",
-        parameter: "Section 185 Prohibition on Loans to Directors",
-        statutorySection: "Companies Act Section 185",
-        observation: "Zero personal loans, book debts, or guarantees given to directors or interested entities.",
-        mitigationStatus: "100% compliant with Section 185 statutory bar.",
-      },
-      {
-        category: "MSME Vendor Dues",
-        riskLevel: "Low",
-        parameter: "Clause 43B(h) / Section 15 of MSMED Act",
-        statutorySection: "Income Tax Act Sec 43B(h) & MSMED Act",
-        observation: "All registered micro/small enterprise invoices settled within 45 days. Disallowance ₹0 Nil.",
-        mitigationStatus: "Audited trade payables ledger confirms zero overdue MSME balances at year-end.",
-      },
-      {
-        category: "GST ITC Integrity",
-        riskLevel: "Low",
-        parameter: "Rule 36(4) / GSTR-2B vs GSTR-3B Input Tax Credit",
-        statutorySection: "CGST Rules Rule 36(4)",
-        observation: "100% input tax credit claimed matches invoice-level GSTR-2B inward supplies.",
-        mitigationStatus: "Zero DRC-01 SCN notice risk; all tax liabilities settled via electronic cash ledger.",
-      },
-    ];
-
-    const auditCommitteeRisks = customRisks.length > 0 ? customRisks : defaultRisks;
-
-    // Board Resolution Extracts
-    const defaultResolutions = [
-      {
-        agendaNo: "Item #01",
-        title: "Adoption and Approval of Audited Annual Financial Statements for FY 2025-26",
-        statutorySection: "Section 134 & Section 177",
-        votingResult: "Passed Unanimously (4 in favor, 0 against)",
-        signatoryDin: directorsList[0]?.din || "08912340",
-      },
-      {
-        agendaNo: "Item #02",
-        title: "Consideration of Statutory Auditor's Report & Form 3CD Tax Audit Observations",
-        statutorySection: "Section 143 & Section 44AB",
-        votingResult: "Passed Unanimously (4 in favor, 0 against)",
-        signatoryDin: directorsList[3]?.din || "08192834",
-      },
-      {
-        agendaNo: "Item #03",
-        title: "Review and Adoption of Secretarial Audit Report under Form MR-3",
-        statutorySection: "Section 204 & Secretarial Standards",
-        votingResult: "Passed Unanimously (4 in favor, 0 against)",
-        signatoryDin: directorsList[2]?.din || "07419201",
-      },
-      {
-        agendaNo: "Item #04",
-        title: "Authorization for Strategic Technology Infrastructure Capex under Section 179(3)",
-        statutorySection: "Section 179(3)(c)",
-        votingResult: "Passed Unanimously (4 in favor, 0 against)",
-        signatoryDin: directorsList[1]?.din || "09104928",
-      },
-    ];
-
-    const boardResolutionsExtracts = customResolutions.length > 0 ? customResolutions : defaultResolutions;
+    const auditCommitteeRisks = Array.isArray(customRisks) ? customRisks : [];
+    const boardResolutionsExtracts = Array.isArray(customResolutions) ? customResolutions : [];
 
     // Cryptographic Signatures
-    const csSignedTimestamp = new Date().toISOString();
-    const caSignedTimestamp = new Date().toISOString();
+    const csSignedTimestamp = csSignatory.signedAt || "";
+    const caSignedTimestamp = caSignatory.signedAt || "";
 
-    const csName = csSignatory.name || "CS Rajesh Sharma";
-    const csMemNo = csSignatory.membershipNo || "FCS-9182";
-    const csCpNo = csSignatory.cpNo || "10482";
-    const csFirm = csSignatory.firm || "Apex Law & Secretarial Partners LLP";
-    const csSigHash = sha256(`CS_SIGN|${entityName}|${cin}|${csMemNo}|${csSignedTimestamp}|WAKHEEL_SEC_GOV`);
+    const csName = csSignatory.name || "";
+    const csMemNo = csSignatory.membershipNo || "";
+    const csCpNo = csSignatory.cpNo || "";
+    const csFirm = csSignatory.firm || "";
+    const csSigHash = csName
+      ? sha256(`CS_SIGN|${entityName}|${cin}|${csMemNo}|${csSignedTimestamp || new Date().toISOString()}|WAKHEEL_SEC_GOV`)
+      : "";
 
-    const caName = caSignatory.name || "CA Ramanathan Iyer";
-    const caMemNo = caSignatory.membershipNo || "401928";
-    const caFrn = caSignatory.firmRegNo || "018241N";
-    const caFirm = caSignatory.firm || "Iyer & Co. Chartered Accountants";
+    const caName = caSignatory.name || "";
+    const caMemNo = caSignatory.membershipNo || "";
+    const caFrn = caSignatory.firmRegNo || "";
+    const caFirm = caSignatory.firm || "";
     const caUdinVal = caSignatory.udin || caAuditData.udin;
-    const caSigHash = sha256(`CA_SIGN|${entityName}|${pan}|${caMemNo}|${caUdinVal}|${caSignedTimestamp}|ICAI_STAT_AUDIT`);
+    const caSigHash = caName
+      ? sha256(`CA_SIGN|${entityName}|${pan}|${caMemNo}|${caUdinVal}|${caSignedTimestamp || new Date().toISOString()}|ICAI_STAT_AUDIT`)
+      : "";
 
-    const jointDeclaration = `We, the practicing Company Secretary and the Statutory Auditor of ${entityName}, hereby jointly certify that we have examined the corporate secretarial registers, filings on the MCA21 portal, audited financial statements, Income Tax returns, and GST disclosures for the financial year ${financialYear}. We confirm that the reported revenues, statutory dues, and regulatory disclosures are reconciled with ZERO variance across MCA, CBDT, and GSTN frameworks.`;
+    const jointDeclaration =
+      req.body.jointDeclaration ||
+      `Executive compliance dossier compiled for ${entityName} for financial year ${financialYear} covering corporate secretarial filings, direct tax returns, and GST reconciliations.`;
 
-    const qrVerificationUrl = `https://wakheel.legal/verify/dossier/${dossierSerial}`;
+    const qrVerificationUrl = `/verify/dossier/${dossierSerial}`;
 
     // Full Dossier Payload Digest
     const rawPayloadToHash = {
@@ -301,16 +211,16 @@ export const generateBoardDossier = async (req, res) => {
       dossierId: dossierSerial,
       userId,
       clientEntity: {
-        entityId: clientEntity.id || clientEntity.entityId || "ent-1",
+        entityId: clientEntity.id || clientEntity.entityId || "",
         name: entityName,
         cin,
         pan,
         gstin,
-        registeredAddress: clientEntity.registeredAddress || "Level 14, Cyber Towers, Barakhamba Road, Connaught Place, New Delhi 110001",
+        registeredAddress: clientEntity.registeredAddress || "",
         entityType: clientEntity.entityType || "pvt_ltd",
-        incorporationDate: clientEntity.incorporationDate || "2022-04-12",
-        authorizedCapital: Number(clientEntity.authorizedCapital) || 50000000,
-        paidUpCapital: Number(clientEntity.paidUpCapital) || 25000000,
+        incorporationDate: clientEntity.incorporationDate || "",
+        authorizedCapital: Number(clientEntity.authorizedCapital) || 0,
+        paidUpCapital: Number(clientEntity.paidUpCapital) || 0,
       },
       financialYear,
       assessmentYear,
@@ -342,7 +252,7 @@ export const generateBoardDossier = async (req, res) => {
         },
         jointDeclaration,
         qrVerificationUrl,
-        status: "Signed & Sealed",
+        status: csSigHash && caSigHash ? "Signed & Sealed" : "Draft",
       },
       dossierDigestSha256,
       version: "3.4.1-FINAL",
@@ -363,20 +273,26 @@ export const generateBoardDossier = async (req, res) => {
 
 // @desc    Download dossier as standalone, print-perfect HTML/CSS
 // @route   GET /api/board-dossier/:id/html
-// @access  Public
+// @access  Private
 export const downloadDossierHtml = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = getUserId(req);
     let dossier = null;
 
     if (isMongoConnected()) {
       dossier = await BoardDossier.findOne({
+        ...(userId ? { userId } : {}),
         $or: [{ dossierId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
       });
     }
 
     if (!dossier) {
-      dossier = devStore.getBoardDossierById(id) || DEFAULT_BOARD_DOSSIERS[0];
+      dossier = devStore.getBoardDossierById(id, userId || null);
+    }
+
+    if (!dossier) {
+      return res.status(404).json({ success: false, message: "Executive board dossier not found." });
     }
 
     const formatInr = (n) => {

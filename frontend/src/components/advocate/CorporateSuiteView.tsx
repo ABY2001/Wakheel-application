@@ -129,29 +129,9 @@ export function CorporateSuiteView({
             </div>
 
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-              {[
-                { mark: "Wakheel Legal OS", appNo: "TM-5928103", class: "Class 42 (Software)", stage: "Mark Advertised in TM Journal No. 2104", status: "Accepted & Advertised", days: "Opposition ends in 28 days" },
-                { mark: "Kerala Inworth Chambers", appNo: "TM-6019284", class: "Class 45 (Legal Services)", stage: "Examination Report Issued (Sec 11 Objection)", status: "Reply Pending", days: "Reply due by 12 Nov 2026" },
-                { mark: "MasoHRM Suite", appNo: "TM-5821940", class: "Class 9 & 35", stage: "Certificate of Registration Issued", status: "Registered", days: "Valid until Oct 2036" },
-              ].map((row, idx) => (
-                <div key={idx} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-black dark:text-white text-sm">{row.mark}</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold">
-                        {row.class}
-                      </span>
-                    </div>
-                    <span className="text-zinc-500 text-[11px] block">{row.appNo} • {row.stage}</span>
-                  </div>
-                  <div className="flex items-center gap-3 self-start sm:self-center">
-                    <span className="text-[11px] font-mono text-zinc-400">{row.days}</span>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white shrink-0">
-                      {row.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              <div className="py-8 text-center text-zinc-500">
+                No trademark applications added yet. Click <span className="font-semibold text-black dark:text-white">+ New TM-A Application</span> to start tracking filings.
+              </div>
             </div>
           </div>
         </div>
@@ -216,27 +196,9 @@ export function CorporateSuiteView({
             </div>
 
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
-              {[
-                { title: "Master Services Agreement (MSA) — CyberCorp Ltd", parties: "Wakheel Chambers & CyberCorp UK", risk: "Low Risk (88 Score)", status: "Active Execution", date: "Renews Oct 2027" },
-                { title: "Series-A Share Subscription & Shareholders Agreement", parties: "Apex Quantum & Lead Venture Partners", risk: "Requires Override", status: "Redlining Stage", date: "Updated 2h ago" },
-                { title: "Tripartite Escrow & Commercial Lease Agreement", parties: "TechHub Kochi & Commercial Properties Ltd", risk: "Cleared", status: "Executed via E-Sign", date: "Locked in Vault" },
-                { title: "Mutual Non-Disclosure Agreement (NDA)", parties: "Kochi Marine BioLabs & Pharma Co", risk: "Standard Template", status: "Counter-Signed", date: "Valid 3 Years" },
-              ].map((c, i) => (
-                <div key={i} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <span className="font-bold text-black dark:text-white text-sm block">{c.title}</span>
-                    <span className="text-zinc-500 text-[11px] block">{c.parties} • {c.date}</span>
-                  </div>
-                  <div className="flex items-center gap-3 self-start sm:self-center">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold">
-                      {c.risk}
-                    </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white shrink-0">
-                      {c.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              <div className="py-8 text-center text-zinc-500">
+                No contracts uploaded yet. Click <span className="font-semibold text-black dark:text-white">+ Upload Contract</span> to run redlining and risk analysis.
+              </div>
             </div>
           </div>
         </div>

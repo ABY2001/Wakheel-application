@@ -1122,58 +1122,7 @@ const DEFAULT_ASSOCIATES = [
   },
 ];
 
-const DEFAULT_CHAMBER_REPORTS = [
-  {
-    _id: "rep_2026_q3",
-    id: "rep_2026_q3",
-    title: "Q3 2026 High Court Chamber Audit & Performance Ledger",
-    category: "Quarterly Audit",
-    period: "Jul – Sep 2026",
-    generatedDate: "01 Oct 2026",
-    metrics: {
-      totalBriefs: 24,
-      admittedRate: "91.6%",
-      interimReliefObtained: 18,
-      disposedFavorable: 14,
-      revenueCollected: 385000,
-      trustEscrowBalance: 650000,
-    },
-    fileSize: "2.8 MB PDF",
-    status: "Certified",
-  },
-  {
-    _id: "rep_2026_causelist",
-    id: "rep_2026_causelist",
-    title: "Kerala High Court Cause List & Bench Appearance Compliance",
-    category: "Court Compliance",
-    period: "Sep – Oct 2026",
-    generatedDate: "12 Oct 2026",
-    metrics: {
-      totalHearingsListed: 38,
-      benchAppearances: 36,
-      adjournmentsSought: 2,
-      zeroDefaultRate: "100%",
-    },
-    fileSize: "1.4 MB PDF",
-    status: "Certified",
-  },
-  {
-    _id: "rep_2026_trust",
-    id: "rep_2026_trust",
-    title: "Bar Council Rule 24 Trust Escrow & GST Reverse Charge Statement",
-    category: "Tax & Trust Audit",
-    period: "Q2 – Q3 2026",
-    generatedDate: "18 Oct 2026",
-    metrics: {
-      trustDeposits: 700000,
-      trustDisbursements: 50000,
-      netEscrowBalance: 650000,
-      gstRcmCompliance: "100% Reconciled",
-    },
-    fileSize: "1.9 MB PDF",
-    status: "Certified",
-  },
-];
+const DEFAULT_CHAMBER_REPORTS = [];
 
 export const parseNotificationEpoch = (record) => {
   const candidates = [
@@ -1881,16 +1830,21 @@ export const devStore = {
 
   // --- Matters ---
   getMatters(userId) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
     if (!userId) return [];
-    if (userId === "default_citizen") return matters;
+    const uid = String(userId);
+    const matters = readFile("dev_matters.json", []);
     return matters.filter(
-      (m) => m.citizenId === userId || m.userId === userId || m.clientId === userId
+      (m) =>
+        String(m.citizenId || "") === uid ||
+        String(m.userId || "") === uid ||
+        String(m.clientId || "") === uid ||
+        String(m.advocateId || "") === uid ||
+        String(m.assignedAdvocateId || "") === uid
     );
   },
 
   getMatterById(id) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", []);
     return (
       matters.find(
         (m) =>
@@ -1902,7 +1856,7 @@ export const devStore = {
   },
 
   updateMatter(id, updateData) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", []);
     const index = matters.findIndex(
       (m) => m._id === id || (m.caseNumber && m.caseNumber.toLowerCase() === id.toLowerCase())
     );
@@ -1917,7 +1871,7 @@ export const devStore = {
   },
 
   addMatter(data) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", []);
     const newMatter = {
       _id: "mat_" + Date.now().toString(),
       ...data,
@@ -1929,7 +1883,7 @@ export const devStore = {
   },
 
   addMatterQuery(matterId, queryData) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", []);
     const index = matters.findIndex(
       (m) => m._id === matterId || (m.caseNumber && m.caseNumber.toLowerCase() === matterId.toLowerCase())
     );
@@ -1962,7 +1916,7 @@ export const devStore = {
   },
 
   resolveMatterQuery(matterId, queryId, responseData) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", []);
     const index = matters.findIndex(
       (m) => m._id === matterId || (m.caseNumber && m.caseNumber.toLowerCase() === matterId.toLowerCase())
     );
@@ -1990,8 +1944,8 @@ export const devStore = {
       for (const att of responseData.attachments) {
         matters[index].documents.push({
           name: att.name,
-          size: att.size || "1.0 MB",
-          hash: att.hash || "sha256:verified_reupload",
+          size: att.size || "—",
+          hash: att.hash || "",
           uploadedAt: new Date().toISOString(),
           source: "query_reupload",
           queryId: queryId,
@@ -2005,7 +1959,7 @@ export const devStore = {
   },
 
   authorizeMatter(matterId, authData) {
-    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const matters = readFile("dev_matters.json", []);
     const index = matters.findIndex(
       (m) => m._id === matterId || (m.caseNumber && m.caseNumber.toLowerCase() === matterId.toLowerCase())
     );
@@ -2016,15 +1970,15 @@ export const devStore = {
       authId: authData.authId || `ESIGN-${Date.now()}`,
       signMethod: authData.signMethod || "AADHAAR_ESIGN",
       signerName: authData.signerName || "Authorized Signatory",
-      signerPanOrDin: authData.signerPanOrDin || "ABCDE1234F",
-      signerAadhaarMasked: authData.signerAadhaarMasked || "XXXX-XXXX-8921",
+      signerPanOrDin: authData.signerPanOrDin || "",
+      signerAadhaarMasked: authData.signerAadhaarMasked || "",
       signerDesignation: authData.signerDesignation || "Director",
-      espReference: authData.espReference || `C-DAC-ESP-2026-${Math.floor(100000 + Math.random() * 900000)}`,
+      espReference: authData.espReference || `ESP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
       timestamp: authData.timestamp || new Date().toISOString(),
       status: "AUTHORIZED",
       statutoryDeclarationAccepted: true,
       documentTitle: authData.documentTitle || "Statutory Board Consent & Filing Authorization",
-      authHash: authData.authHash || `sha256:${Date.now().toString(16)}a9f24`,
+      authHash: authData.authHash || "",
       legalSection: "Information Technology Act 2000 Section 3A & Second Schedule / Companies Act 2013 Section 448",
     };
 
@@ -2035,7 +1989,9 @@ export const devStore = {
     matter.documents.push({
       name: `Signed_Statutory_Consent_${docTitleSlug}.pdf`,
       size: "412 KB",
-      hash: authRecord.authHash.startsWith("sha256:") ? authRecord.authHash : `sha256:${authRecord.authHash.slice(0, 32)}`,
+      hash: authRecord.authHash
+        ? (authRecord.authHash.startsWith("sha256:") ? authRecord.authHash : `sha256:${authRecord.authHash.slice(0, 32)}`)
+        : "",
       type: "application/pdf",
       uploadedAt: new Date().toISOString(),
       source: "client_aadhaar_esign",
@@ -4105,88 +4061,154 @@ export const devStore = {
   },
 
   // --- Bench Analytics & Chamber Reports ---
-  getBenchAnalytics(advocateId = "adv_1") {
-    const matters = this.getMatters(advocateId);
-    const causelist = this.getCauseList(advocateId);
-    const invoices = this.getInvoices(advocateId);
+  getBenchAnalytics(advocateId) {
+    if (!advocateId) {
+      return {
+        kpis: {
+          winRate: "0%",
+          judgmentsAnalyzed: 0,
+          avgDisposalMonths: "—",
+          citationEfficacy: "—",
+          favorableSettlementRatio: "0%",
+          activeMattersCount: 0,
+          todayHearingsCount: 0,
+        },
+        practiceAreas: [],
+        courtBenches: [],
+      };
+    }
+
+    const matters = this.getAdvocateMatters(advocateId) || [];
+    const causelist = this.getCauseList(advocateId) || [];
+
+    const totalMatters = matters.length;
+    const disposedStatuses = ["disposed", "decided", "closed", "completed", "won", "settled", "favorable"];
+    const settledStatuses = ["settled", "mediated", "lok_adalat"];
+    const activeStatuses = ["active", "in_progress", "hearing", "pending", "open", "filed"];
+
+    const disposedMatters = matters.filter((m) =>
+      disposedStatuses.some((s) => String(m.status || "").toLowerCase().includes(s))
+    );
+    const favorableMatters = disposedMatters.filter((m) => {
+      const outcome = `${m.status || ""} ${m.outcome || ""} ${m.disposition || ""}`.toLowerCase();
+      return !outcome.includes("dismissed") && !outcome.includes("lost") && !outcome.includes("adverse");
+    });
+    const settledMatters = matters.filter((m) =>
+      settledStatuses.some((s) => `${m.status || ""} ${m.outcome || ""}`.toLowerCase().includes(s))
+    );
+    const activeMatters = matters.filter((m) => {
+      const st = String(m.status || "").toLowerCase();
+      return !st || activeStatuses.some((s) => st.includes(s));
+    });
+
+    const winRatePct =
+      disposedMatters.length > 0 ? Math.round((favorableMatters.length / disposedMatters.length) * 100) : 0;
+    const settlementPct =
+      totalMatters > 0 && settledMatters.length > 0
+        ? `${Math.round((settledMatters.length / totalMatters) * 100)}%`
+        : "0%";
+
+    const domainMap = new Map();
+    for (const m of matters) {
+      const area = (m.category || m.practiceArea || m.caseType || "General Litigation").trim();
+      if (!domainMap.has(area)) domainMap.set(area, { total: 0, favorable: 0, disposed: 0 });
+      const entry = domainMap.get(area);
+      entry.total += 1;
+      const outcome = `${m.status || ""} ${m.outcome || ""} ${m.disposition || ""}`.toLowerCase();
+      if (disposedStatuses.some((s) => outcome.includes(s))) {
+        entry.disposed += 1;
+        if (!outcome.includes("dismissed") && !outcome.includes("lost") && !outcome.includes("adverse")) {
+          entry.favorable += 1;
+        }
+      }
+    }
+    const practiceAreas = Array.from(domainMap.entries())
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 6)
+      .map(([area, stats]) => ({
+        area,
+        rate: stats.disposed > 0 ? `${Math.round((stats.favorable / stats.disposed) * 100)}%` : "0%",
+        count: `${stats.total} ${stats.total === 1 ? "matter" : "matters"}`,
+      }));
+
+    const benchMap = new Map();
+    for (const c of causelist) {
+      const bench = (c.courtHall || c.courtName || c.court || "Unassigned Court").trim();
+      if (!benchMap.has(bench)) {
+        benchMap.set(bench, {
+          bench,
+          judge: (c.judge || c.coram || c.presidingJudge || "Bench").trim(),
+          hearings: 0,
+        });
+      }
+      benchMap.get(bench).hearings += 1;
+    }
+    for (const m of matters) {
+      const bench = (m.court || m.courtName || "").trim();
+      if (!bench) continue;
+      if (!benchMap.has(bench)) {
+        benchMap.set(bench, {
+          bench,
+          judge: (m.judge || m.coram || "Presiding Bench").trim(),
+          hearings: 0,
+        });
+      }
+      benchMap.get(bench).hearings += 1;
+    }
+    const courtBenches = Array.from(benchMap.values())
+      .sort((a, b) => b.hearings - a.hearings)
+      .slice(0, 6)
+      .map((b) => ({
+        bench: b.bench,
+        judge: b.judge,
+        matters: `${b.hearings} ${b.hearings === 1 ? "record" : "records"}`,
+        disposition: disposedMatters.length > 0 ? `${winRatePct}% Favorable` : "Active Docket",
+      }));
 
     return {
       kpis: {
-        winRate: "89.2%",
-        judgmentsAnalyzed: 148,
-        avgDisposalMonths: "4.1 Mos",
-        citationEfficacy: "99.4%",
-        favorableSettlementRatio: "78.5%",
-        activeMattersCount: matters.length,
+        winRate: disposedMatters.length > 0 ? `${winRatePct}%` : "0%",
+        judgmentsAnalyzed: disposedMatters.length,
+        avgDisposalMonths: "—",
+        citationEfficacy: "—",
+        favorableSettlementRatio: settlementPct,
+        activeMattersCount: activeMatters.length,
         todayHearingsCount: causelist.length,
       },
-      practiceAreas: [
-        { area: "Constitutional & Writ Petitions (Art. 226)", rate: "93%", count: `${matters.length + 8} matters` },
-        { area: "Commercial Arbitration & S.34 Appeals", rate: "88%", count: "6 matters" },
-        { area: "Land Property, Boundary & Telegraph Injunctions", rate: "86%", count: "8 matters" },
-        { area: "Corporate Retainer & MCA Compliance", rate: "95%", count: "5 matters" },
-        { area: "Cheque Dishonour (S. 138 NI Act) & Summary Suits", rate: "84%", count: "4 matters" },
-      ],
-      courtBenches: [
-        {
-          bench: "Court Hall 2A • Division Bench (High Court of Kerala)",
-          judge: "Hon'ble Division Bench",
-          matters: "14 hearings",
-          disposition: "92% Favorable Relief",
-        },
-        {
-          bench: "Court Hall 3B • Single Bench (Writ Jurisdiction)",
-          judge: "Hon'ble Single Bench",
-          matters: "11 hearings",
-          disposition: "88% Interim Relief",
-        },
-        {
-          bench: "Sub Court Ernakulam (Civil Suits & Injunctions)",
-          judge: "Principal Sub Judge",
-          matters: "6 hearings",
-          disposition: "85% Favorable Orders",
-        },
-        {
-          bench: "Arbitral Tribunal • Infopark Kakkanad",
-          judge: "Sole Arbitrator",
-          matters: "4 hearings",
-          disposition: "90% Favorable Discovery",
-        },
-      ],
+      practiceAreas,
+      courtBenches,
     };
   },
 
-  getChamberReports(advocateId = "adv_1") {
-    const reports = readFile("dev_reports.json", DEFAULT_CHAMBER_REPORTS);
-    if (!reports || reports.length === 0) {
-      writeFile("dev_reports.json", DEFAULT_CHAMBER_REPORTS);
-      return DEFAULT_CHAMBER_REPORTS;
-    }
-    return reports;
+  getChamberReports(advocateId) {
+    if (!advocateId) return [];
+    const reports = readFile("dev_reports.json", []);
+    return Array.isArray(reports)
+      ? reports.filter((r) => r.advocateId && String(r.advocateId) === String(advocateId))
+      : [];
   },
 
   generateChamberReport(data) {
-    const reports = readFile("dev_reports.json", DEFAULT_CHAMBER_REPORTS);
+    if (!data?.advocateId) {
+      throw new Error("advocateId is required to generate a chamber report");
+    }
+    const reports = readFile("dev_reports.json", []);
+    const list = Array.isArray(reports) ? reports : [];
     const newReport = {
       _id: "rep_" + Date.now().toString(),
       id: "rep_" + Date.now().toString(),
-      title: data.title || `Comprehensive Chamber Practice Audit — ${new Date().toLocaleDateString("en-IN")}`,
+      advocateId: String(data.advocateId),
+      title: data.title || `Practice Audit — ${new Date().toLocaleDateString("en-IN")}`,
       category: data.category || "General Audit",
-      period: data.period || "Current Quarter 2026",
+      period: data.period || "Current Period",
       generatedDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-      metrics: data.metrics || {
-        totalBriefs: 18,
-        admittedRate: "92.0%",
-        interimReliefObtained: 14,
-        disposedFavorable: 11,
-      },
-      fileSize: "2.2 MB PDF",
+      metrics: data.metrics || {},
+      fileSize: data.fileSize || "Generated TXT",
       status: "Certified",
       createdAt: new Date().toISOString(),
-      ...data,
     };
-    reports.unshift(newReport);
-    writeFile("dev_reports.json", reports);
+    list.unshift(newReport);
+    writeFile("dev_reports.json", list);
     return newReport;
   },
 
@@ -5531,49 +5553,33 @@ export const devStore = {
   // --- CS Board Governance (Meetings, Resolutions & SS-1 Minutes) ---
   // ==========================================================================
   getBoardMeetings(userId) {
-    return readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
+    if (!userId) return [];
+    const meetings = readFile("dev_board_meetings.json", []);
+    return meetings.filter((m) => m.userId && String(m.userId) === String(userId));
   },
 
   createBoardMeeting(userId, data) {
-    const meetings = readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
+    if (!userId) return null;
+    const meetings = readFile("dev_board_meetings.json", []);
+    const userMeetings = meetings.filter((m) => String(m.userId || "") === String(userId));
     const newMeeting = {
       id: data.id || `bm-${Date.now()}`,
       meetingId: data.id || `bm-${Date.now()}`,
-      userId,
-      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
-      cin: data.cin || "U72200DL2022PTC394812",
-      meetingNumber: data.meetingNumber || `BM-0${meetings.length + 1}/2026-27`,
+      userId: String(userId),
+      companyName: data.companyName || "",
+      cin: data.cin || "",
+      meetingNumber: data.meetingNumber || `BM-${String(userMeetings.length + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
       meetingType: data.meetingType || "board_meeting",
-      date: data.date || "2026-11-10",
-      time: data.time || "11:00 AM",
-      venue: data.venue || "Board Room, Registered Office & Two-Way Video Conference (Rule 3)",
+      date: data.date || new Date().toISOString().split("T")[0],
+      time: data.time || "",
+      venue: data.venue || "",
       isVideoConference: data.isVideoConference !== undefined ? data.isVideoConference : true,
-      chairperson: data.chairperson || "Dr. Vikram Malhotra (Chairman & Independent Director)",
-      directors: Array.isArray(data.directors) ? data.directors : [
-        { name: "Dr. Vikram Malhotra", din: "08912340", status: "present" },
-        { name: "CS Rajesh Sharma", din: "07849102", status: "present" },
-        { name: "Priya Sundaram", din: "09124589", status: "present_vc" },
-        { name: "Karan Patel", din: "06451290", status: "leave_of_absence" },
-      ],
+      chairperson: data.chairperson || "",
+      directors: Array.isArray(data.directors) ? data.directors : [],
       isShorterNotice: Boolean(data.isShorterNotice),
       shorterNoticeReason: data.shorterNoticeReason || "",
       status: data.status || "scheduled",
-      agendaItems: Array.isArray(data.agendaItems) && data.agendaItems.length > 0 ? data.agendaItems : [
-        {
-          itemNumber: 1,
-          title: "Leave of Absence & Quorum Verification",
-          description: "Ascertain presence of required quorum per Section 174 of Companies Act 2013.",
-          proposedBy: "Dr. Vikram Malhotra",
-          isStatutory: true,
-        },
-        {
-          itemNumber: 2,
-          title: "Confirmation of Previous Minutes",
-          description: "Confirm minutes of previous board meeting per Secretarial Standard 1 (SS-1).",
-          proposedBy: "CS Rajesh Sharma",
-          isStatutory: true,
-        },
-      ],
+      agendaItems: Array.isArray(data.agendaItems) ? data.agendaItems : [],
       minutes: data.minutes || { draftContent: "", finalContent: "", signedBy: "", signedAt: "" },
       createdAt: new Date().toISOString(),
     };
@@ -5582,46 +5588,54 @@ export const devStore = {
     return newMeeting;
   },
 
-  updateBoardMeeting(id, updates = {}) {
-    let meetings = readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
-    const idx = meetings.findIndex((m) => m.id === id || m.meetingId === id);
+  updateBoardMeeting(id, updates = {}, userId = null) {
+    let meetings = readFile("dev_board_meetings.json", []);
+    const idx = meetings.findIndex(
+      (m) => (m.id === id || m.meetingId === id) && (!userId || String(m.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      meetings[idx] = { ...meetings[idx], ...updates, updatedAt: new Date().toISOString() };
+      meetings[idx] = { ...meetings[idx], ...updates, userId: meetings[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_board_meetings.json", meetings);
       return meetings[idx];
     }
     return null;
   },
 
-  deleteBoardMeeting(id) {
-    let meetings = readFile("dev_board_meetings.json", DEFAULT_BOARD_MEETINGS);
-    meetings = meetings.filter((m) => m.id !== id && m.meetingId !== id);
+  deleteBoardMeeting(id, userId = null) {
+    let meetings = readFile("dev_board_meetings.json", []);
+    meetings = meetings.filter(
+      (m) => !((m.id === id || m.meetingId === id) && (!userId || String(m.userId || "") === String(userId)))
+    );
     writeFile("dev_board_meetings.json", meetings);
     return true;
   },
 
   getBoardResolutions(userId) {
-    return readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+    if (!userId) return [];
+    const resolutions = readFile("dev_board_resolutions.json", []);
+    return resolutions.filter((r) => r.userId && String(r.userId) === String(userId));
   },
 
   createBoardResolution(userId, data) {
-    const resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
+    if (!userId) return null;
+    const resolutions = readFile("dev_board_resolutions.json", []);
+    const userRes = resolutions.filter((r) => String(r.userId || "") === String(userId));
     const newRes = {
       id: data.id || `res-${Date.now()}`,
       resolutionId: data.id || `res-${Date.now()}`,
-      userId,
-      meetingId: data.meetingId || "bm-1",
-      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
-      cin: data.cin || "U72200DL2022PTC394812",
-      resolutionNumber: data.resolutionNumber || `RES-0${resolutions.length + 1}/BM-04/2026-27`,
+      userId: String(userId),
+      meetingId: data.meetingId || "",
+      companyName: data.companyName || "",
+      cin: data.cin || "",
+      resolutionNumber: data.resolutionNumber || `RES-${String(userRes.length + 1).padStart(2, "0")}/${new Date().getFullYear()}`,
       type: data.type || "board",
       category: data.category || "banking",
       title: data.title || "Statutory Board Resolution",
       actSection: data.actSection || "Section 179(3) of Companies Act 2013",
       preambleText: data.preambleText || "",
-      resolutionText: data.resolutionText || "RESOLVED THAT the consent of the Board of Directors be and is hereby accorded...",
-      furtherResolutionText: data.furtherResolutionText || "FURTHER RESOLVED THAT any Director or Company Secretary be authorized to file e-forms...",
-      authorizedSignatories: Array.isArray(data.authorizedSignatories) ? data.authorizedSignatories : ["CS Rajesh Sharma", "Dr. Vikram Malhotra"],
+      resolutionText: data.resolutionText || "",
+      furtherResolutionText: data.furtherResolutionText || "",
+      authorizedSignatories: Array.isArray(data.authorizedSignatories) ? data.authorizedSignatories : [],
       status: data.status || "passed_unanimously",
       isCtcGenerated: Boolean(data.isCtcGenerated),
       ctcCertifiedBy: data.ctcCertifiedBy || "",
@@ -5633,30 +5647,36 @@ export const devStore = {
     return newRes;
   },
 
-  updateBoardResolution(id, updates = {}) {
-    let resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
-    const idx = resolutions.findIndex((r) => r.id === id || r.resolutionId === id);
+  updateBoardResolution(id, updates = {}, userId = null) {
+    let resolutions = readFile("dev_board_resolutions.json", []);
+    const idx = resolutions.findIndex(
+      (r) => (r.id === id || r.resolutionId === id) && (!userId || String(r.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      resolutions[idx] = { ...resolutions[idx], ...updates, updatedAt: new Date().toISOString() };
+      resolutions[idx] = { ...resolutions[idx], ...updates, userId: resolutions[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_board_resolutions.json", resolutions);
       return resolutions[idx];
     }
     return null;
   },
 
-  deleteBoardResolution(id) {
-    let resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
-    resolutions = resolutions.filter((r) => r.id !== id && r.resolutionId !== id);
+  deleteBoardResolution(id, userId = null) {
+    let resolutions = readFile("dev_board_resolutions.json", []);
+    resolutions = resolutions.filter(
+      (r) => !((r.id === id || r.resolutionId === id) && (!userId || String(r.userId || "") === String(userId)))
+    );
     writeFile("dev_board_resolutions.json", resolutions);
     return true;
   },
 
-  generateCtcResolution(id, certifiedBy) {
-    let resolutions = readFile("dev_board_resolutions.json", DEFAULT_BOARD_RESOLUTIONS);
-    const idx = resolutions.findIndex((r) => r.id === id || r.resolutionId === id);
+  generateCtcResolution(id, certifiedBy, userId = null) {
+    let resolutions = readFile("dev_board_resolutions.json", []);
+    const idx = resolutions.findIndex(
+      (r) => (r.id === id || r.resolutionId === id) && (!userId || String(r.userId || "") === String(userId))
+    );
     if (idx !== -1) {
       resolutions[idx].isCtcGenerated = true;
-      resolutions[idx].ctcCertifiedBy = certifiedBy || "CS Rajesh Sharma (FCS 8492, CP 10294)";
+      resolutions[idx].ctcCertifiedBy = certifiedBy || "";
       resolutions[idx].ctcCertifiedAt = new Date().toISOString().split("T")[0];
       writeFile("dev_board_resolutions.json", resolutions);
       return resolutions[idx];
@@ -5668,31 +5688,32 @@ export const devStore = {
   // --- CS Corporate Entities & Master Register ---
   // ==========================================================================
   getCorporateEntities(userId) {
-    return readFile("dev_corporate_entities.json", DEFAULT_CORPORATE_ENTITIES);
+    if (!userId) return [];
+    const entities = readFile("dev_corporate_entities.json", []);
+    return entities.filter((e) => e.userId && String(e.userId) === String(userId));
   },
 
   createCorporateEntity(userId, data) {
-    const entities = readFile("dev_corporate_entities.json", DEFAULT_CORPORATE_ENTITIES);
+    if (!userId) return null;
+    const entities = readFile("dev_corporate_entities.json", []);
     const newEntity = {
       id: data.id || `ent-${Date.now()}`,
       entityId: data.id || `ent-${Date.now()}`,
-      userId,
-      companyName: data.companyName || "New Enterprise Pvt Ltd",
-      cin: (data.cin || `U72200DL${new Date().getFullYear()}PTC${Math.floor(100000 + Math.random() * 900000)}`).toUpperCase(),
-      rocJurisdiction: data.rocJurisdiction || "RoC Delhi & Haryana",
+      userId: String(userId),
+      companyName: data.companyName || "",
+      cin: (data.cin || "").toUpperCase(),
+      rocJurisdiction: data.rocJurisdiction || "",
       entityType: data.entityType || "pvt_ltd",
-      incorporationDate: data.incorporationDate || new Date().toISOString().split("T")[0],
-      authorizedCapital: Number(data.authorizedCapital) || 1000000,
-      paidUpCapital: Number(data.paidUpCapital) || 500000,
-      registeredAddress: data.registeredAddress || "Suite 101, Corporate Hub, New Delhi",
-      email: data.email || "secretarial@newenterprise.com",
-      pan: data.pan || "AAACN1234D",
-      gstin: data.gstin || "07AAACN1234D1Z2",
-      directors: Array.isArray(data.directors) ? data.directors : [
-        { din: "08912340", name: "Managing Director", designation: "Managing Director", active: true }
-      ],
+      incorporationDate: data.incorporationDate || "",
+      authorizedCapital: Number(data.authorizedCapital) || 0,
+      paidUpCapital: Number(data.paidUpCapital) || 0,
+      registeredAddress: data.registeredAddress || "",
+      email: data.email || "",
+      pan: (data.pan || "").toUpperCase(),
+      gstin: (data.gstin || "").toUpperCase(),
+      directors: Array.isArray(data.directors) ? data.directors : [],
       financialYearEnd: data.financialYearEnd || "March 31",
-      complianceHealthScore: data.complianceHealthScore || 95,
+      complianceHealthScore: Number(data.complianceHealthScore) || 0,
       status: data.status || "active",
       createdAt: new Date().toISOString(),
     };
@@ -5701,20 +5722,24 @@ export const devStore = {
     return newEntity;
   },
 
-  updateCorporateEntity(id, updates = {}) {
-    let entities = readFile("dev_corporate_entities.json", DEFAULT_CORPORATE_ENTITIES);
-    const idx = entities.findIndex((e) => e.id === id || e.entityId === id);
+  updateCorporateEntity(id, updates = {}, userId = null) {
+    let entities = readFile("dev_corporate_entities.json", []);
+    const idx = entities.findIndex(
+      (e) => (e.id === id || e.entityId === id) && (!userId || String(e.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      entities[idx] = { ...entities[idx], ...updates, updatedAt: new Date().toISOString() };
+      entities[idx] = { ...entities[idx], ...updates, userId: entities[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_corporate_entities.json", entities);
       return entities[idx];
     }
     return null;
   },
 
-  deleteCorporateEntity(id) {
-    let entities = readFile("dev_corporate_entities.json", DEFAULT_CORPORATE_ENTITIES);
-    entities = entities.filter((e) => e.id !== id && e.entityId !== id);
+  deleteCorporateEntity(id, userId = null) {
+    let entities = readFile("dev_corporate_entities.json", []);
+    entities = entities.filter(
+      (e) => !((e.id === id || e.entityId === id) && (!userId || String(e.userId || "") === String(userId)))
+    );
     writeFile("dev_corporate_entities.json", entities);
     return true;
   },
@@ -5723,7 +5748,9 @@ export const devStore = {
   // --- CS MCA21 & ROC Statutory Filings Tracker ---
   // ==========================================================================
   getRocFilings(userId, filters = {}) {
-    let filings = readFile("dev_roc_filings.json", DEFAULT_ROC_FILINGS);
+    if (!userId) return [];
+    let filings = readFile("dev_roc_filings.json", []);
+    filings = filings.filter((f) => f.userId && String(f.userId) === String(userId));
     if (filters.companyName) {
       filings = filings.filter((f) => f.companyName === filters.companyName);
     }
@@ -5737,13 +5764,14 @@ export const devStore = {
   },
 
   createRocFiling(userId, data) {
-    const filings = readFile("dev_roc_filings.json", DEFAULT_ROC_FILINGS);
+    if (!userId) return null;
+    const filings = readFile("dev_roc_filings.json", []);
     const newFiling = {
       id: data.id || `roc-${Date.now()}`,
       filingId: data.id || `roc-${Date.now()}`,
-      userId,
-      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
-      cin: data.cin || "U72200DL2022PTC394812",
+      userId: String(userId),
+      companyName: data.companyName || "",
+      cin: data.cin || "",
       formName: data.formName || "AOC-4",
       formDescription: data.formDescription || "Statutory e-Form Filing with Registrar of Companies",
       financialYear: data.financialYear || "FY 2025-26",
@@ -5752,13 +5780,13 @@ export const devStore = {
       filingDate: data.filingDate || "",
       status: data.status || "drafted",
       srn: data.srn || "",
-      challanAmount: Number(data.challanAmount) || 600,
+      challanAmount: Number(data.challanAmount) || 0,
       lateFeeAmount: Number(data.lateFeeAmount) || 0,
       paymentStatus: data.paymentStatus || "unpaid",
       signatoryDin: data.signatoryDin || "",
       signatoryName: data.signatoryName || "",
-      pcsCertificateNumber: data.pcsCertificateNumber || "CS Rajesh Sharma (FCS 8492, CP 10294)",
-      attachmentCount: Number(data.attachmentCount) || 2,
+      pcsCertificateNumber: data.pcsCertificateNumber || "",
+      attachmentCount: Number(data.attachmentCount) || 0,
       notes: data.notes || "",
       createdAt: new Date().toISOString(),
     };
@@ -5767,20 +5795,24 @@ export const devStore = {
     return newFiling;
   },
 
-  updateRocFiling(id, updates = {}) {
-    let filings = readFile("dev_roc_filings.json", DEFAULT_ROC_FILINGS);
-    const idx = filings.findIndex((f) => f.id === id || f.filingId === id);
+  updateRocFiling(id, updates = {}, userId = null) {
+    let filings = readFile("dev_roc_filings.json", []);
+    const idx = filings.findIndex(
+      (f) => (f.id === id || f.filingId === id) && (!userId || String(f.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      filings[idx] = { ...filings[idx], ...updates, updatedAt: new Date().toISOString() };
+      filings[idx] = { ...filings[idx], ...updates, userId: filings[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_roc_filings.json", filings);
       return filings[idx];
     }
     return null;
   },
 
-  deleteRocFiling(id) {
-    let filings = readFile("dev_roc_filings.json", DEFAULT_ROC_FILINGS);
-    filings = filings.filter((f) => f.id !== id && f.filingId !== id);
+  deleteRocFiling(id, userId = null) {
+    let filings = readFile("dev_roc_filings.json", []);
+    filings = filings.filter(
+      (f) => !((f.id === id || f.filingId === id) && (!userId || String(f.userId || "") === String(userId)))
+    );
     writeFile("dev_roc_filings.json", filings);
     return true;
   },
@@ -5789,7 +5821,9 @@ export const devStore = {
   // --- CS Statutory Registers (Section 88, 170, 85, 186) ---
   // ==========================================================================
   getStatutoryRegisters(userId, filters = {}) {
-    let registers = readFile("dev_statutory_registers.json", DEFAULT_STATUTORY_REGISTERS);
+    if (!userId) return [];
+    let registers = readFile("dev_statutory_registers.json", []);
+    registers = registers.filter((r) => r.userId && String(r.userId) === String(userId));
     if (filters.companyName) {
       registers = registers.filter((r) => r.companyName === filters.companyName);
     }
@@ -5800,26 +5834,28 @@ export const devStore = {
   },
 
   createRegisterEntry(userId, data) {
-    const registers = readFile("dev_statutory_registers.json", DEFAULT_STATUTORY_REGISTERS);
+    if (!userId) return null;
+    const registers = readFile("dev_statutory_registers.json", []);
+    const userRegisters = registers.filter((r) => String(r.userId || "") === String(userId));
     const newEntry = {
       id: data.id || `reg-${Date.now()}`,
       registerEntryId: data.id || `reg-${Date.now()}`,
-      userId,
-      companyName: data.companyName || "CyberCorp Technologies Pvt Ltd",
-      cin: data.cin || "U72200DL2022PTC394812",
+      userId: String(userId),
+      companyName: data.companyName || "",
+      cin: data.cin || "",
       registerType: data.registerType || "members",
       statutoryForm: data.statutoryForm || "MGT-1",
-      folioOrRefNumber: data.folioOrRefNumber || `REF-0${registers.length + 1}`,
-      primaryHolderName: data.primaryHolderName || "Holder Name",
+      folioOrRefNumber: data.folioOrRefNumber || `REF-${String(userRegisters.length + 1).padStart(2, "0")}`,
+      primaryHolderName: data.primaryHolderName || "",
       identificationNumber: data.identificationNumber || "",
       entryDate: data.entryDate || new Date().toISOString().split("T")[0],
-      particulars: data.particulars || "Statutory entry recorded in register pursuant to Section 88/170/85.",
+      particulars: data.particulars || "",
       quantityOrAmount: Number(data.quantityOrAmount) || 0,
       distinctiveFrom: data.distinctiveFrom || "",
       distinctiveTo: data.distinctiveTo || "",
       certificateNumber: data.certificateNumber || "",
       status: data.status || "active",
-      certifiedBy: data.certifiedBy || "CS Rajesh Sharma, FCS 8492",
+      certifiedBy: data.certifiedBy || "",
       certifiedAt: data.certifiedAt || new Date().toISOString().split("T")[0],
       createdAt: new Date().toISOString(),
     };
@@ -5828,20 +5864,24 @@ export const devStore = {
     return newEntry;
   },
 
-  updateRegisterEntry(id, updates = {}) {
-    let registers = readFile("dev_statutory_registers.json", DEFAULT_STATUTORY_REGISTERS);
-    const idx = registers.findIndex((r) => r.id === id || r.registerEntryId === id);
+  updateRegisterEntry(id, updates = {}, userId = null) {
+    let registers = readFile("dev_statutory_registers.json", []);
+    const idx = registers.findIndex(
+      (r) => (r.id === id || r.registerEntryId === id) && (!userId || String(r.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      registers[idx] = { ...registers[idx], ...updates, updatedAt: new Date().toISOString() };
+      registers[idx] = { ...registers[idx], ...updates, userId: registers[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_statutory_registers.json", registers);
       return registers[idx];
     }
     return null;
   },
 
-  deleteRegisterEntry(id) {
-    let registers = readFile("dev_statutory_registers.json", DEFAULT_STATUTORY_REGISTERS);
-    registers = registers.filter((r) => r.id !== id && r.registerEntryId !== id);
+  deleteRegisterEntry(id, userId = null) {
+    let registers = readFile("dev_statutory_registers.json", []);
+    registers = registers.filter(
+      (r) => !((r.id === id || r.registerEntryId === id) && (!userId || String(r.userId || "") === String(userId)))
+    );
     writeFile("dev_statutory_registers.json", registers);
     return true;
   },
@@ -5849,9 +5889,16 @@ export const devStore = {
   // ==========================================================================
   // --- CS Secretarial Audit Engine (Form MR-3 per Section 204) ---
   // ==========================================================================
-  getSecretarialAuditReport(userId, companyName = "CyberCorp Technologies Pvt Ltd") {
-    const filings = this.getRocFilings(userId, { companyName });
-    const registers = this.getStatutoryRegisters(userId, { companyName });
+  getSecretarialAuditReport(userId, companyName = "") {
+    const cleanCompany = (companyName || "").trim();
+    const filings = this.getRocFilings(userId, cleanCompany ? { companyName: cleanCompany } : {});
+    const registers = this.getStatutoryRegisters(userId, cleanCompany ? { companyName: cleanCompany } : {});
+    const meetings = this.getBoardMeetings(userId).filter((m) => !cleanCompany || m.companyName === cleanCompany);
+
+    const aoc4Filing = filings.find((f) => String(f.formName || "").toUpperCase() === "AOC-4");
+    const mgt7Filing = filings.find((f) => String(f.formName || "").toUpperCase().startsWith("MGT-7"));
+    const chgFiling = filings.find((f) => String(f.formName || "").toUpperCase().startsWith("CHG-"));
+    const signedMeetings = meetings.filter((m) => m.minutes?.signedBy || m.status === "completed");
 
     const statutoryChecklist = [
       {
@@ -5859,83 +5906,109 @@ export const devStore = {
         act: "Companies Act, 2013",
         section: "Section 149 & 152",
         subject: "Board Composition & Optimum Ratio of Independent Directors",
-        status: "compliant",
-        remarks: "Board consists of 4 directors including 1 Independent Director and 1 Woman Director.",
+        status: meetings.some((m) => Array.isArray(m.directors) && m.directors.length > 0) ? "compliant" : "pending_verification",
+        remarks: meetings.length > 0
+          ? `Derived from ${meetings.length} recorded Board Meeting register(s).`
+          : "No board meeting director roster recorded yet.",
       },
       {
         id: "chk-2",
         act: "Companies Act, 2013",
         section: "Section 173(1)",
         subject: "Frequency of Board Meetings & Gap not exceeding 120 days",
-        status: "compliant",
-        remarks: "4 Board meetings held in the financial year with maximum gap between meetings being 84 days.",
+        status: meetings.length >= 4 ? "compliant" : meetings.length > 0 ? "observation" : "pending_verification",
+        remarks: meetings.length > 0
+          ? `${meetings.length} Board meeting(s) recorded for the audit period.`
+          : "No Board meetings recorded yet for Section 173(1) gap verification.",
       },
       {
         id: "chk-3",
         act: "Companies Act, 2013",
         section: "Section 118 & SS-1",
         subject: "Maintenance of Statutory Minutes Book & Secretarial Standards Compliance",
-        status: "compliant",
-        remarks: "Minutes recorded, numbered consecutively, draft circulated within 15 days and signed within 30 days.",
+        status: signedMeetings.length > 0 ? "compliant" : "pending_verification",
+        remarks: signedMeetings.length > 0
+          ? `${signedMeetings.length} Board meeting minutes signed and recorded per SS-1.`
+          : "No signed Board meeting minutes recorded yet.",
       },
       {
         id: "chk-4",
         act: "Companies Act, 2013",
         section: "Section 137 & 92",
         subject: "Annual Filing of Financial Statements (AOC-4) and Annual Return (MGT-7)",
-        status: filings.some((f) => f.formName === "AOC-4" && f.status === "approved") ? "compliant" : "pending_verification",
-        remarks: "Form AOC-4 filed with SRN F93821048. MGT-7 DSC affixed and scheduled for filing.",
+        status:
+          aoc4Filing && aoc4Filing.status === "approved" && mgt7Filing && mgt7Filing.status === "approved"
+            ? "compliant"
+            : "pending_verification",
+        remarks:
+          filings.length > 0
+            ? `${filings.length} ROC filing(s) tracked${aoc4Filing?.srn ? ` (AOC-4 SRN ${aoc4Filing.srn})` : ""}.`
+            : "No ROC e-Forms (AOC-4 / MGT-7) recorded yet.",
       },
       {
         id: "chk-5",
         act: "Companies Act, 2013",
         section: "Section 88 & 170",
         subject: "Statutory Registers maintenance at Registered Office",
-        status: registers.length >= 4 ? "compliant" : "observation",
-        remarks: "Registers of Members (MGT-1), Directors (Sec 170), and Charges (CHG-7) updated and authenticated.",
+        status: registers.length >= 4 ? "compliant" : registers.length > 0 ? "observation" : "pending_verification",
+        remarks:
+          registers.length > 0
+            ? `${registers.length} statutory register entry/entries recorded.`
+            : "No statutory register entries recorded yet (MGT-1 / Sec 170 / CHG-7).",
       },
       {
         id: "chk-6",
         act: "Companies Act, 2013",
         section: "Section 77 & 85",
         subject: "Registration & Satisfaction of Charges with Registrar of Companies",
-        status: "compliant",
-        remarks: "Charge created in favour of HDFC Bank registered within statutory 30-day window via Form CHG-1.",
+        status: chgFiling ? "compliant" : "pending_verification",
+        remarks: chgFiling
+          ? `Charge filing (${chgFiling.formName}) recorded with status: ${chgFiling.status}.`
+          : "No Form CHG-1 / CHG-4 charge filing recorded.",
       },
       {
         id: "chk-7",
         act: "Companies Act, 2013",
         section: "Section 188",
         subject: "Related Party Transactions & Audit Committee / Board Approvals",
-        status: "compliant",
-        remarks: "All contracts/arrangements entered at arm's length in ordinary course of business per Section 188(1).",
+        status: registers.some((r) => String(r.statutoryForm || "").toUpperCase() === "MBP-4")
+          ? "compliant"
+          : "pending_verification",
+        remarks: "Evaluated against recorded MBP-4 Related Party Register entries.",
       },
       {
         id: "chk-8",
         act: "Foreign Exchange Management Act, 1999",
         section: "FEMA (Non-debt Instruments) Rules 2019",
         subject: "Foreign Direct Investment (FDI) & Form FC-GPR Reporting on FIRMS Portal",
-        status: "compliant",
-        remarks: "No offshore equity influx during the period under audit requiring RBI FIRMS filing.",
+        status: "pending_verification",
+        remarks: "Confirm any foreign inward remittances or RBI FIRMS filings for the audit period.",
       },
     ];
 
     const compliantCount = statutoryChecklist.filter((c) => c.status === "compliant").length;
-    const auditScore = Math.round((compliantCount / statutoryChecklist.length) * 100);
+    const auditScore = filings.length + registers.length + meetings.length > 0
+      ? Math.round((compliantCount / statutoryChecklist.length) * 100)
+      : 0;
 
     return {
       success: true,
-      companyName,
-      financialYear: "FY 2025-26",
-      auditingFirm: "Sharma & Associates, Practising Company Secretaries",
-      pcsName: "CS Rajesh Sharma",
-      membershipNumber: "FCS 8492",
-      certificateOfPractice: "CP 10294",
-      peerReviewNumber: "PR-1049/2023",
+      companyName: cleanCompany,
+      financialYear: `FY ${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}`,
+      auditingFirm: "",
+      pcsName: "",
+      membershipNumber: "",
+      certificateOfPractice: "",
+      peerReviewNumber: "",
       auditScore,
       qualificationCount: statutoryChecklist.filter((c) => c.status === "observation").length,
       auditPassed: auditScore >= 90,
-      opinion: "UNQUALIFIED / CLEAN OPINION: The Company has, in our opinion, complied with the statutory provisions of the Acts, Rules, Regulations, and Standards mentioned herein.",
+      opinion:
+        auditScore > 0
+          ? auditScore >= 90
+            ? "UNQUALIFIED / CLEAN OPINION based on the compliance records submitted for the audit period."
+            : "PROVISIONAL AUDIT SUMMARY: Pending completion of open or unverified statutory compliance items."
+          : "NO AUDIT RECORDS YET: Add Board Meetings, ROC Filings, or Statutory Registers to compute the Form MR-3 audit score.",
       checklist: statutoryChecklist,
       generatedAt: new Date().toISOString(),
     };
@@ -5945,12 +6018,9 @@ export const devStore = {
   // --- CS Commercial Contracts & Shareholders' Agreements (SHA/SSA) ---
   // ==========================================================================
   getCorporateContracts(userId, filters = {}) {
-    let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
-    if (userId) {
-      contracts = contracts.filter((c) => c.userId && String(c.userId) === String(userId));
-    } else {
-      return [];
-    }
+    if (!userId) return [];
+    let contracts = readFile("dev_corporate_contracts.json", []);
+    contracts = contracts.filter((c) => c.userId && String(c.userId) === String(userId));
     if (filters.companyName) {
       contracts = contracts.filter((c) => c.companyName === filters.companyName);
     }
@@ -5961,22 +6031,23 @@ export const devStore = {
   },
 
   createCorporateContract(userId, data) {
-    const contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
+    if (!userId) return null;
+    const contracts = readFile("dev_corporate_contracts.json", []);
     const newContract = {
       id: data.id || `cont-${Date.now()}`,
       contractId: data.id || `cont-${Date.now()}`,
-      userId,
-      companyName: data.companyName || "Corporate Client",
-      title: data.title || "Commercial Master Service Agreement",
+      userId: String(userId),
+      companyName: data.companyName || "",
+      title: data.title || "Commercial Agreement",
       contractType: data.contractType || "vendor_msa",
-      parties: Array.isArray(data.parties) ? data.parties : [data.companyName || "Corporate Client", "Counterparty Entity"],
+      parties: Array.isArray(data.parties) ? data.parties : [],
       effectiveDate: data.effectiveDate || new Date().toISOString().split("T")[0],
       expiryDate: data.expiryDate || "",
       contractValue: Number(data.contractValue) || 0,
-      stampDutyPaid: Number(data.stampDutyPaid) || 500,
-      eStampCertificateNumber: data.eStampCertificateNumber || `IN-DL${Date.now().toString().slice(-14)}P`,
-      governingLaw: data.governingLaw || "Laws of India (New Delhi Courts)",
-      keyClauses: Array.isArray(data.keyClauses) ? data.keyClauses : ["Confidentiality & Non-Disclosure", "Arbitration & Dispute Resolution", "Indemnity & Limitation of Liability"],
+      stampDutyPaid: Number(data.stampDutyPaid) || 0,
+      eStampCertificateNumber: data.eStampCertificateNumber || "",
+      governingLaw: data.governingLaw || "Laws of India",
+      keyClauses: Array.isArray(data.keyClauses) ? data.keyClauses : [],
       status: data.status || "executed",
       notes: data.notes || "",
       createdAt: new Date().toISOString(),
@@ -5986,20 +6057,24 @@ export const devStore = {
     return newContract;
   },
 
-  updateCorporateContract(id, updates = {}) {
-    let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
-    const idx = contracts.findIndex((c) => c.id === id || c.contractId === id);
+  updateCorporateContract(id, updates = {}, userId = null) {
+    let contracts = readFile("dev_corporate_contracts.json", []);
+    const idx = contracts.findIndex(
+      (c) => (c.id === id || c.contractId === id) && (!userId || String(c.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      contracts[idx] = { ...contracts[idx], ...updates, updatedAt: new Date().toISOString() };
+      contracts[idx] = { ...contracts[idx], ...updates, userId: contracts[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_corporate_contracts.json", contracts);
       return contracts[idx];
     }
     return null;
   },
 
-  deleteCorporateContract(id) {
-    let contracts = readFile("dev_corporate_contracts.json", DEFAULT_CORPORATE_CONTRACTS);
-    contracts = contracts.filter((c) => c.id !== id && c.contractId !== id);
+  deleteCorporateContract(id, userId = null) {
+    let contracts = readFile("dev_corporate_contracts.json", []);
+    contracts = contracts.filter(
+      (c) => !((c.id === id || c.contractId === id) && (!userId || String(c.userId || "") === String(userId)))
+    );
     writeFile("dev_corporate_contracts.json", contracts);
     return true;
   },
@@ -6008,7 +6083,9 @@ export const devStore = {
   // --- CS Retainer Advocates & Litigation Counsel Gateway ---
   // ==========================================================================
   getRetainerAdvocates(userId, filters = {}) {
-    let advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
+    if (!userId) return [];
+    let advocates = readFile("dev_retainer_advocates.json", []);
+    advocates = advocates.filter((a) => a.userId && String(a.userId) === String(userId));
     if (filters.status && filters.status !== "ALL") {
       advocates = advocates.filter((a) => a.status === filters.status);
     }
@@ -6016,20 +6093,21 @@ export const devStore = {
   },
 
   createRetainerAdvocate(userId, data) {
-    const advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
+    if (!userId) return null;
+    const advocates = readFile("dev_retainer_advocates.json", []);
     const newAdvocate = {
       id: data.id || `adv-ret-${Date.now()}`,
       advocateId: data.id || `adv-ret-${Date.now()}`,
-      userId,
-      fullName: data.fullName || "Advocate Name",
-      barEnrollmentNumber: data.barEnrollmentNumber || "D/0000/2020",
-      primaryJurisdiction: data.primaryJurisdiction || "NCLT & High Court",
-      specialization: data.specialization || "Corporate Litigation & Dispute Resolution",
-      email: data.email || "counsel@bar.in",
-      phone: data.phone || "+91 98000 00000",
-      retainerFee: Number(data.retainerFee) || 50000,
-      appearanceRatePerHearing: Number(data.appearanceRatePerHearing) || 25000,
-      activeBriefsCount: Number(data.activeBriefsCount) || 1,
+      userId: String(userId),
+      fullName: data.fullName || "",
+      barEnrollmentNumber: data.barEnrollmentNumber || "",
+      primaryJurisdiction: data.primaryJurisdiction || "",
+      specialization: data.specialization || "",
+      email: data.email || "",
+      phone: data.phone || "",
+      retainerFee: Number(data.retainerFee) || 0,
+      appearanceRatePerHearing: Number(data.appearanceRatePerHearing) || 0,
+      activeBriefsCount: Number(data.activeBriefsCount) || 0,
       status: data.status || "active_retainer",
       createdAt: new Date().toISOString(),
     };
@@ -6038,20 +6116,24 @@ export const devStore = {
     return newAdvocate;
   },
 
-  updateRetainerAdvocate(id, updates = {}) {
-    let advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
-    const idx = advocates.findIndex((a) => a.id === id || a.advocateId === id);
+  updateRetainerAdvocate(id, updates = {}, userId = null) {
+    let advocates = readFile("dev_retainer_advocates.json", []);
+    const idx = advocates.findIndex(
+      (a) => (a.id === id || a.advocateId === id) && (!userId || String(a.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      advocates[idx] = { ...advocates[idx], ...updates, updatedAt: new Date().toISOString() };
+      advocates[idx] = { ...advocates[idx], ...updates, userId: advocates[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_retainer_advocates.json", advocates);
       return advocates[idx];
     }
     return null;
   },
 
-  deleteRetainerAdvocate(id) {
-    let advocates = readFile("dev_retainer_advocates.json", DEFAULT_RETAINER_ADVOCATES);
-    advocates = advocates.filter((a) => a.id !== id && a.advocateId !== id);
+  deleteRetainerAdvocate(id, userId = null) {
+    let advocates = readFile("dev_retainer_advocates.json", []);
+    advocates = advocates.filter(
+      (a) => !((a.id === id || a.advocateId === id) && (!userId || String(a.userId || "") === String(userId)))
+    );
     writeFile("dev_retainer_advocates.json", advocates);
     return true;
   },
@@ -6060,12 +6142,9 @@ export const devStore = {
   // --- CS Statutory Charters Vault & DSC Token Manager ---
   // ==========================================================================
   getCorporateVaultItems(userId, filters = {}) {
-    let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
-    if (userId) {
-      items = items.filter((v) => v.userId && String(v.userId) === String(userId));
-    } else {
-      return [];
-    }
+    if (!userId) return [];
+    let items = readFile("dev_corporate_vault.json", []);
+    items = items.filter((v) => v.userId && String(v.userId) === String(userId));
     if (filters.companyName) {
       items = items.filter((v) => v.companyName === filters.companyName);
     }
@@ -6076,19 +6155,20 @@ export const devStore = {
   },
 
   createCorporateVaultItem(userId, data) {
-    const items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
+    if (!userId) return null;
+    const items = readFile("dev_corporate_vault.json", []);
     const newItem = {
       id: data.id || `vlt-${Date.now()}`,
       vaultId: data.id || `vlt-${Date.now()}`,
-      userId,
-      companyName: data.companyName || "Corporate Client",
+      userId: String(userId),
+      companyName: data.companyName || "",
       docType: data.docType || "moa_aoa",
       title: data.title || "Statutory Charter Document",
-      fileSize: data.fileSize || "1.2 MB",
+      fileSize: data.fileSize || "—",
       uploadedAt: data.uploadedAt || new Date().toISOString().split("T")[0],
-      validUntil: data.validUntil || "Permanent",
-      holderName: data.holderName || "Company Master",
-      issuingAuthority: data.issuingAuthority || "Ministry of Corporate Affairs",
+      validUntil: data.validUntil || "",
+      holderName: data.holderName || "",
+      issuingAuthority: data.issuingAuthority || "",
       status: data.status || "valid",
       createdAt: new Date().toISOString(),
     };
@@ -6097,20 +6177,24 @@ export const devStore = {
     return newItem;
   },
 
-  updateCorporateVaultItem(id, updates = {}) {
-    let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
-    const idx = items.findIndex((v) => v.id === id || v.vaultId === id);
+  updateCorporateVaultItem(id, updates = {}, userId = null) {
+    let items = readFile("dev_corporate_vault.json", []);
+    const idx = items.findIndex(
+      (v) => (v.id === id || v.vaultId === id) && (!userId || String(v.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      items[idx] = { ...items[idx], ...updates, updatedAt: new Date().toISOString() };
+      items[idx] = { ...items[idx], ...updates, userId: items[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_corporate_vault.json", items);
       return items[idx];
     }
     return null;
   },
 
-  deleteCorporateVaultItem(id) {
-    let items = readFile("dev_corporate_vault.json", DEFAULT_CORPORATE_VAULT_ITEMS);
-    items = items.filter((v) => v.id !== id && v.vaultId !== id);
+  deleteCorporateVaultItem(id, userId = null) {
+    let items = readFile("dev_corporate_vault.json", []);
+    items = items.filter(
+      (v) => !((v.id === id || v.vaultId === id) && (!userId || String(v.userId || "") === String(userId)))
+    );
     writeFile("dev_corporate_vault.json", items);
     return true;
   },
@@ -6119,7 +6203,9 @@ export const devStore = {
   // --- CS Fee Notes & Secretarial Invoicing ---
   // ==========================================================================
   getSecretarialInvoices(userId, filters = {}) {
-    let invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
+    if (!userId) return [];
+    let invoices = readFile("dev_secretarial_invoices.json", []);
+    invoices = invoices.filter((i) => i.userId && String(i.userId) === String(userId));
     if (filters.status && filters.status !== "ALL") {
       invoices = invoices.filter((i) => i.status === filters.status);
     }
@@ -6127,8 +6213,10 @@ export const devStore = {
   },
 
   createSecretarialInvoice(userId, data) {
-    const invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
-    const subtotal = Number(data.subtotal) || 50000;
+    if (!userId) return null;
+    const invoices = readFile("dev_secretarial_invoices.json", []);
+    const userInvoices = invoices.filter((i) => String(i.userId || "") === String(userId));
+    const subtotal = Number(data.subtotal) || 0;
     const gstRate = Number(data.gstRate) || 18;
     const gstAmount = Math.round((subtotal * gstRate) / 100);
     const totalAmount = subtotal + gstAmount;
@@ -6136,15 +6224,13 @@ export const devStore = {
     const newInvoice = {
       id: data.id || `inv-cs-${Date.now()}`,
       invoiceId: data.id || `inv-cs-${Date.now()}`,
-      userId,
-      invoiceNumber: data.invoiceNumber || `INV-CS-2026-0${invoices.length + 85}`,
-      clientCompanyName: data.clientCompanyName || "CyberCorp Technologies Pvt Ltd",
-      clientGstin: data.clientGstin || "07AAECS1234F1Z8",
+      userId: String(userId),
+      invoiceNumber: data.invoiceNumber || `INV-CS-${new Date().getFullYear()}-${String(userInvoices.length + 1).padStart(3, "0")}`,
+      clientCompanyName: data.clientCompanyName || "",
+      clientGstin: data.clientGstin || "",
       sacCode: data.sacCode || "9982",
       billingType: data.billingType || "monthly_retainer",
-      items: Array.isArray(data.items) && data.items.length > 0 ? data.items : [
-        { description: "Corporate Secretarial Advisory & Board Compliance Retainer", amount: subtotal }
-      ],
+      items: Array.isArray(data.items) ? data.items : [],
       subtotal,
       gstRate,
       gstAmount,
@@ -6158,20 +6244,24 @@ export const devStore = {
     return newInvoice;
   },
 
-  updateSecretarialInvoice(id, updates = {}) {
-    let invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
-    const idx = invoices.findIndex((i) => i.id === id || i.invoiceId === id);
+  updateSecretarialInvoice(id, updates = {}, userId = null) {
+    let invoices = readFile("dev_secretarial_invoices.json", []);
+    const idx = invoices.findIndex(
+      (i) => (i.id === id || i.invoiceId === id) && (!userId || String(i.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      invoices[idx] = { ...invoices[idx], ...updates, updatedAt: new Date().toISOString() };
+      invoices[idx] = { ...invoices[idx], ...updates, userId: invoices[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_secretarial_invoices.json", invoices);
       return invoices[idx];
     }
     return null;
   },
 
-  deleteSecretarialInvoice(id) {
-    let invoices = readFile("dev_secretarial_invoices.json", DEFAULT_SECRETARIAL_INVOICES);
-    invoices = invoices.filter((i) => i.id !== id && i.invoiceId !== id);
+  deleteSecretarialInvoice(id, userId = null) {
+    let invoices = readFile("dev_secretarial_invoices.json", []);
+    invoices = invoices.filter(
+      (i) => !((i.id === id || i.invoiceId === id) && (!userId || String(i.userId || "") === String(userId)))
+    );
     writeFile("dev_secretarial_invoices.json", invoices);
     return true;
   },
@@ -6180,7 +6270,9 @@ export const devStore = {
   // --- CA Income Tax Returns & ITR Filing Studio ---
   // ==========================================================================
   getIncomeTaxReturns(userId, filters = {}) {
-    let returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
+    if (!userId) return [];
+    let returns = readFile("dev_income_tax_returns.json", []);
+    returns = returns.filter((r) => r.userId && String(r.userId) === String(userId));
     if (filters.clientName) {
       returns = returns.filter((r) => r.clientName === filters.clientName);
     }
@@ -6197,7 +6289,8 @@ export const devStore = {
   },
 
   createIncomeTaxReturn(userId, data) {
-    const returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
+    if (!userId) return null;
+    const returns = readFile("dev_income_tax_returns.json", []);
     const gross = Number(data.grossTotalIncome) || 0;
     const deductions = Number(data.deductionsChapterVIA) || 0;
     const taxable = Math.max(0, gross - deductions);
@@ -6209,9 +6302,9 @@ export const devStore = {
     const newReturn = {
       id: data.id || `itr-${Date.now()}`,
       itrId: data.id || `itr-${Date.now()}`,
-      userId,
-      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
-      pan: (data.pan || "AAECS1234F").toUpperCase(),
+      userId: String(userId),
+      clientName: data.clientName || "",
+      pan: (data.pan || "").toUpperCase(),
       assessmentYear: data.assessmentYear || "AY 2026-27",
       financialYear: data.financialYear || "FY 2025-26",
       itrForm: data.itrForm || "ITR-6",
@@ -6228,7 +6321,7 @@ export const devStore = {
       filingDate: data.filingDate || "",
       acknowledgementNumber: data.acknowledgementNumber || "",
       status: data.status || "drafted",
-      notes: data.notes || "Drafted in CA Tax Studio.",
+      notes: data.notes || "",
       createdAt: new Date().toISOString(),
     };
     returns.unshift(newReturn);
@@ -6236,20 +6329,24 @@ export const devStore = {
     return newReturn;
   },
 
-  updateIncomeTaxReturn(id, updates = {}) {
-    let returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
-    const idx = returns.findIndex((r) => r.id === id || r.itrId === id);
+  updateIncomeTaxReturn(id, updates = {}, userId = null) {
+    let returns = readFile("dev_income_tax_returns.json", []);
+    const idx = returns.findIndex(
+      (r) => (r.id === id || r.itrId === id) && (!userId || String(r.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      returns[idx] = { ...returns[idx], ...updates, updatedAt: new Date().toISOString() };
+      returns[idx] = { ...returns[idx], ...updates, userId: returns[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_income_tax_returns.json", returns);
       return returns[idx];
     }
     return null;
   },
 
-  deleteIncomeTaxReturn(id) {
-    let returns = readFile("dev_income_tax_returns.json", DEFAULT_INCOME_TAX_RETURNS);
-    returns = returns.filter((r) => r.id !== id && r.itrId !== id);
+  deleteIncomeTaxReturn(id, userId = null) {
+    let returns = readFile("dev_income_tax_returns.json", []);
+    returns = returns.filter(
+      (r) => !((r.id === id || r.itrId === id) && (!userId || String(r.userId || "") === String(userId)))
+    );
     writeFile("dev_income_tax_returns.json", returns);
     return true;
   },
@@ -6258,7 +6355,9 @@ export const devStore = {
   // --- CA GST Compliance Hub (GSTR-1, GSTR-3B, GSTR-9) ---
   // ==========================================================================
   getGstReturns(userId, filters = {}) {
-    let returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
+    if (!userId) return [];
+    let returns = readFile("dev_gst_returns.json", []);
+    returns = returns.filter((g) => g.userId && String(g.userId) === String(userId));
     if (filters.clientName) {
       returns = returns.filter((g) => g.clientName === filters.clientName);
     }
@@ -6272,7 +6371,8 @@ export const devStore = {
   },
 
   createGstReturn(userId, data) {
-    const returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
+    if (!userId) return null;
+    const returns = readFile("dev_gst_returns.json", []);
     const turnover = Number(data.taxableTurnover) || 0;
     const igst = Number(data.igstAmount) || Math.round(turnover * 0.09);
     const cgst = Number(data.cgstAmount) || Math.round(turnover * 0.045);
@@ -6284,11 +6384,11 @@ export const devStore = {
     const newGst = {
       id: data.id || `gst-${Date.now()}`,
       gstReturnId: data.id || `gst-${Date.now()}`,
-      userId,
-      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
-      gstin: (data.gstin || "07AAECS1234F1Z8").toUpperCase(),
+      userId: String(userId),
+      clientName: data.clientName || "",
+      gstin: (data.gstin || "").toUpperCase(),
       returnType: data.returnType || "GSTR-3B",
-      returnPeriod: data.returnPeriod || "October 2026",
+      returnPeriod: data.returnPeriod || "",
       dueDate: data.dueDate || "2026-11-20",
       filingDate: data.filingDate || "",
       taxableTurnover: turnover,
@@ -6301,7 +6401,7 @@ export const devStore = {
       itcDifference: itcClaimed - itc2B,
       arn: data.arn || "",
       status: data.status || "ready_to_file",
-      notes: data.notes || "Reconciled against purchase register and GSTR-2B.",
+      notes: data.notes || "",
       createdAt: new Date().toISOString(),
     };
     returns.unshift(newGst);
@@ -6309,20 +6409,24 @@ export const devStore = {
     return newGst;
   },
 
-  updateGstReturn(id, updates = {}) {
-    let returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
-    const idx = returns.findIndex((g) => g.id === id || g.gstReturnId === id);
+  updateGstReturn(id, updates = {}, userId = null) {
+    let returns = readFile("dev_gst_returns.json", []);
+    const idx = returns.findIndex(
+      (g) => (g.id === id || g.gstReturnId === id) && (!userId || String(g.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      returns[idx] = { ...returns[idx], ...updates, updatedAt: new Date().toISOString() };
+      returns[idx] = { ...returns[idx], ...updates, userId: returns[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_gst_returns.json", returns);
       return returns[idx];
     }
     return null;
   },
 
-  deleteGstReturn(id) {
-    let returns = readFile("dev_gst_returns.json", DEFAULT_GST_RETURNS);
-    returns = returns.filter((g) => g.id !== id && g.gstReturnId !== id);
+  deleteGstReturn(id, userId = null) {
+    let returns = readFile("dev_gst_returns.json", []);
+    returns = returns.filter(
+      (g) => !((g.id === id || g.gstReturnId === id) && (!userId || String(g.userId || "") === String(userId)))
+    );
     writeFile("dev_gst_returns.json", returns);
     return true;
   },
@@ -6331,7 +6435,9 @@ export const devStore = {
   // --- CA Statutory & Tax Audit (Form 3CD & UDIN Generator) ---
   // ==========================================================================
   getTaxAuditReports(userId, filters = {}) {
-    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    if (!userId) return [];
+    let reports = readFile("dev_tax_audit_3cd.json", []);
+    reports = reports.filter((a) => a.userId && String(a.userId) === String(userId));
     if (filters.clientName) {
       reports = reports.filter((a) => a.clientName === filters.clientName);
     }
@@ -6342,7 +6448,8 @@ export const devStore = {
   },
 
   createTaxAuditReport(userId, data) {
-    const reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
+    if (!userId) return null;
+    const reports = readFile("dev_tax_audit_3cd.json", []);
     const d43b = Number(data.disallowanceSec43B) || 0;
     const d40a3 = Number(data.disallowanceSec40A3) || 0;
     const d40aia = Number(data.disallowanceSec40aia) || 0;
@@ -6350,27 +6457,27 @@ export const devStore = {
     const newReport = {
       id: data.id || `aud-3cd-${Date.now()}`,
       auditId: data.id || `aud-3cd-${Date.now()}`,
-      userId,
-      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
-      pan: (data.pan || "AAECS1234F").toUpperCase(),
+      userId: String(userId),
+      clientName: data.clientName || "",
+      pan: (data.pan || "").toUpperCase(),
       financialYear: data.financialYear || "FY 2025-26",
       assessmentYear: data.assessmentYear || "AY 2026-27",
       auditType: data.auditType || "tax_audit_44ab",
-      turnover: Number(data.turnover) || 85000000,
-      grossProfitRatio: Number(data.grossProfitRatio) || 24.5,
-      netProfitRatio: Number(data.netProfitRatio) || 11.2,
+      turnover: Number(data.turnover) || 0,
+      grossProfitRatio: Number(data.grossProfitRatio) || 0,
+      netProfitRatio: Number(data.netProfitRatio) || 0,
       disallowanceSec43B: d43b,
       disallowanceSec40A3: d40a3,
       disallowanceSec40aia: d40aia,
       totalDisallowances: d43b + d40a3 + d40aia,
-      udin: data.udin || `26054921AAAAAA${Math.floor(1000 + Math.random() * 9000)}`,
-      caFirmName: data.caFirmName || "Singhania & Verma Associates, Chartered Accountants",
-      caPartnerName: data.caPartnerName || "CA Rajesh Singhania (FCA)",
-      caMembershipNumber: data.caMembershipNumber || "054921",
-      caFirmRegistrationNumber: data.caFirmRegistrationNumber || "014920N",
+      udin: data.udin || "",
+      caFirmName: data.caFirmName || "",
+      caPartnerName: data.caPartnerName || "",
+      caMembershipNumber: data.caMembershipNumber || "",
+      caFirmRegistrationNumber: data.caFirmRegistrationNumber || "",
       auditOpinion: data.auditOpinion || "unqualified_clean",
-      status: data.status || "udin_generated",
-      notes: data.notes || "Audited strictly per ICAI Standards on Auditing (SAs) and Guidance Note on Tax Audit.",
+      status: data.status || "draft",
+      notes: data.notes || "",
       createdAt: new Date().toISOString(),
     };
     reports.unshift(newReport);
@@ -6378,37 +6485,45 @@ export const devStore = {
     return newReport;
   },
 
-  updateTaxAuditReport(id, updates = {}) {
-    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
-    const idx = reports.findIndex((a) => a.id === id || a.auditId === id);
+  updateTaxAuditReport(id, updates = {}, userId = null) {
+    let reports = readFile("dev_tax_audit_3cd.json", []);
+    const idx = reports.findIndex(
+      (a) => (a.id === id || a.auditId === id) && (!userId || String(a.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      reports[idx] = { ...reports[idx], ...updates, updatedAt: new Date().toISOString() };
+      reports[idx] = { ...reports[idx], ...updates, userId: reports[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_tax_audit_3cd.json", reports);
       return reports[idx];
     }
     return null;
   },
 
-  deleteTaxAuditReport(id) {
-    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
-    reports = reports.filter((a) => a.id !== id && a.auditId !== id);
+  deleteTaxAuditReport(id, userId = null) {
+    let reports = readFile("dev_tax_audit_3cd.json", []);
+    reports = reports.filter(
+      (a) => !((a.id === id || a.auditId === id) && (!userId || String(a.userId || "") === String(userId)))
+    );
     writeFile("dev_tax_audit_3cd.json", reports);
     return true;
   },
 
-  generateUdin(id, partnerName, membershipNo) {
-    let reports = readFile("dev_tax_audit_3cd.json", DEFAULT_TAX_AUDIT_3CD);
-    const idx = reports.findIndex((a) => a.id === id || a.auditId === id);
+  generateUdin(id, partnerName, membershipNo, userId = null) {
+    let reports = readFile("dev_tax_audit_3cd.json", []);
+    const idx = reports.findIndex(
+      (a) => (a.id === id || a.auditId === id) && (!userId || String(a.userId || "") === String(userId))
+    );
     if (idx !== -1) {
+      const cleanMem = (membershipNo || reports[idx].caMembershipNumber || "").trim();
+      if (!cleanMem) return null;
       const year = new Date().getFullYear().toString().slice(-2);
-      const mem = (membershipNo || reports[idx].caMembershipNumber || "054921").padStart(6, "0");
+      const mem = cleanMem.padStart(6, "0").slice(-6);
       const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
       const generatedUdin = `${year}${mem}${randomSuffix}`.slice(0, 18);
 
       reports[idx].udin = generatedUdin;
       reports[idx].status = "signed_uploaded";
       if (partnerName) reports[idx].caPartnerName = partnerName;
-      if (membershipNo) reports[idx].caMembershipNumber = membershipNo;
+      reports[idx].caMembershipNumber = cleanMem;
 
       writeFile("dev_tax_audit_3cd.json", reports);
       return reports[idx];
@@ -6420,7 +6535,9 @@ export const devStore = {
   // --- CA Balance Sheet & Financial Statements Reconciliation ---
   // ==========================================================================
   getBalanceSheetRecons(userId, filters = {}) {
-    let recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
+    if (!userId) return [];
+    let recons = readFile("dev_balance_sheet_recons.json", []);
+    recons = recons.filter((b) => b.userId && String(b.userId) === String(userId));
     if (filters.clientName) {
       recons = recons.filter((b) => b.clientName === filters.clientName);
     }
@@ -6431,32 +6548,33 @@ export const devStore = {
   },
 
   createBalanceSheetRecon(userId, data) {
-    const recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
-    const bookDep = Number(data.bookDepreciationScheduleII) || 2800000;
-    const taxDep = Number(data.taxDepreciationRule5) || 3450000;
+    if (!userId) return null;
+    const recons = readFile("dev_balance_sheet_recons.json", []);
+    const bookDep = Number(data.bookDepreciationScheduleII) || 0;
+    const taxDep = Number(data.taxDepreciationRule5) || 0;
     const diff = taxDep - bookDep;
     const dtl = Math.round(diff * -0.2517); // 25.17% corporate tax rate
 
     const newRecon = {
       id: data.id || `bs-${Date.now()}`,
       reconId: data.id || `bs-${Date.now()}`,
-      userId,
-      clientName: data.clientName || "CyberCorp Technologies Pvt Ltd",
+      userId: String(userId),
+      clientName: data.clientName || "",
       financialYear: data.financialYear || "FY 2025-26",
       accountingStandard: data.accountingStandard || "Ind_AS",
-      totalAssets: Number(data.totalAssets) || 45000000,
-      totalLiabilities: Number(data.totalLiabilities) || 45000000,
-      shareCapital: Number(data.shareCapital) || 2500000,
-      reservesAndSurplus: Number(data.reservesAndSurplus) || 18500000,
-      longTermBorrowings: Number(data.longTermBorrowings) || 12000000,
-      tradePayables: Number(data.tradePayables) || 6500000,
-      tangibleFixedAssets: Number(data.tangibleFixedAssets) || 22000000,
-      cashAndBank: Number(data.cashAndBank) || 8400000,
+      totalAssets: Number(data.totalAssets) || 0,
+      totalLiabilities: Number(data.totalLiabilities) || 0,
+      shareCapital: Number(data.shareCapital) || 0,
+      reservesAndSurplus: Number(data.reservesAndSurplus) || 0,
+      longTermBorrowings: Number(data.longTermBorrowings) || 0,
+      tradePayables: Number(data.tradePayables) || 0,
+      tangibleFixedAssets: Number(data.tangibleFixedAssets) || 0,
+      cashAndBank: Number(data.cashAndBank) || 0,
       bookDepreciationScheduleII: bookDep,
       taxDepreciationRule5: taxDep,
       depreciationDifference: diff,
       deferredTaxAssetLiability: dtl,
-      reconciliationNotes: data.reconciliationNotes || "Depreciation timing differences reconciled under Ind AS 12.",
+      reconciliationNotes: data.reconciliationNotes || "",
       status: data.status || "reconciled",
       createdAt: new Date().toISOString(),
     };
@@ -6465,20 +6583,24 @@ export const devStore = {
     return newRecon;
   },
 
-  updateBalanceSheetRecon(id, updates = {}) {
-    let recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
-    const idx = recons.findIndex((b) => b.id === id || b.reconId === id);
+  updateBalanceSheetRecon(id, updates = {}, userId = null) {
+    let recons = readFile("dev_balance_sheet_recons.json", []);
+    const idx = recons.findIndex(
+      (b) => (b.id === id || b.reconId === id) && (!userId || String(b.userId || "") === String(userId))
+    );
     if (idx !== -1) {
-      recons[idx] = { ...recons[idx], ...updates, updatedAt: new Date().toISOString() };
+      recons[idx] = { ...recons[idx], ...updates, userId: recons[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_balance_sheet_recons.json", recons);
       return recons[idx];
     }
     return null;
   },
 
-  deleteBalanceSheetRecon(id) {
-    let recons = readFile("dev_balance_sheet_recons.json", DEFAULT_BALANCE_SHEET_RECONS);
-    recons = recons.filter((b) => b.id !== id && b.reconId !== id);
+  deleteBalanceSheetRecon(id, userId = null) {
+    let recons = readFile("dev_balance_sheet_recons.json", []);
+    recons = recons.filter(
+      (b) => !((b.id === id || b.reconId === id) && (!userId || String(b.userId || "") === String(userId)))
+    );
     writeFile("dev_balance_sheet_recons.json", recons);
     return true;
   },
@@ -6512,7 +6634,9 @@ export const devStore = {
   // --- Class 3 DSC Crypto Tokens & Hardware Signer ---
   // ==========================================================================
   getDscCertificates(userId, filters = {}) {
-    let certs = readFile("dev_dsc_certificates.json", DEFAULT_DSC_CERTIFICATES);
+    if (!userId) return [];
+    let certs = readFile("dev_dsc_certificates.json", []);
+    certs = certs.filter((c) => c.userId && String(c.userId) === String(userId));
     if (filters.holderRole) {
       certs = certs.filter((c) => c.holderRole === filters.holderRole);
     }
@@ -6522,25 +6646,39 @@ export const devStore = {
     return certs;
   },
 
-  getDscCertificateById(id) {
-    const certs = readFile("dev_dsc_certificates.json", DEFAULT_DSC_CERTIFICATES);
-    return certs.find((c) => c.id === id || c.certificateId === id || c.serialNumber === id) || null;
+  getDscCertificateById(id, userId = null) {
+    const certs = readFile("dev_dsc_certificates.json", []);
+    return (
+      certs.find(
+        (c) =>
+          (c.id === id || c.certificateId === id || c.serialNumber === id) &&
+          (!userId || (c.userId && String(c.userId) === String(userId)))
+      ) || null
+    );
   },
 
-  updateDscCertificate(id, updates = {}) {
-    let certs = readFile("dev_dsc_certificates.json", DEFAULT_DSC_CERTIFICATES);
-    const idx = certs.findIndex((c) => c.id === id || c.certificateId === id || c.serialNumber === id);
+  updateDscCertificate(id, updates = {}, userId = null) {
+    let certs = readFile("dev_dsc_certificates.json", []);
+    const idx = certs.findIndex(
+      (c) =>
+        (c.id === id || c.certificateId === id || c.serialNumber === id) &&
+        (!userId || (c.userId && String(c.userId) === String(userId)))
+    );
     if (idx !== -1) {
-      certs[idx] = { ...certs[idx], ...updates, updatedAt: new Date().toISOString() };
+      certs[idx] = { ...certs[idx], ...updates, userId: certs[idx].userId, updatedAt: new Date().toISOString() };
       writeFile("dev_dsc_certificates.json", certs);
       return certs[idx];
     }
     return null;
   },
 
-  plugDscToken(id, isPlugged = true) {
-    let certs = readFile("dev_dsc_certificates.json", DEFAULT_DSC_CERTIFICATES);
-    const idx = certs.findIndex((c) => c.id === id || c.certificateId === id);
+  plugDscToken(id, isPlugged = true, userId = null) {
+    let certs = readFile("dev_dsc_certificates.json", []);
+    const idx = certs.findIndex(
+      (c) =>
+        (c.id === id || c.certificateId === id) &&
+        (!userId || (c.userId && String(c.userId) === String(userId)))
+    );
     if (idx !== -1) {
       certs[idx].tokenStatus = isPlugged ? "plugged_in" : "unplugged";
       certs[idx].updatedAt = new Date().toISOString();
@@ -6554,7 +6692,9 @@ export const devStore = {
   // --- Statutory E-Challans (MCA21, GST PMT-06, ITNS 280/281) ---
   // ==========================================================================
   getStatutoryChallans(userId, filters = {}) {
-    let challans = readFile("dev_statutory_challans.json", DEFAULT_STATUTORY_CHALLANS);
+    if (!userId) return [];
+    let challans = readFile("dev_statutory_challans.json", []);
+    challans = challans.filter((c) => c.userId && String(c.userId) === String(userId));
     if (filters.portal && filters.portal !== "ALL") {
       challans = challans.filter((c) => c.portal === filters.portal);
     }
@@ -6562,18 +6702,25 @@ export const devStore = {
       challans = challans.filter((c) => c.paymentStatus === filters.paymentStatus);
     }
     if (filters.entityName) {
-      challans = challans.filter((c) => c.entityName.toLowerCase().includes(filters.entityName.toLowerCase()));
+      challans = challans.filter((c) => (c.entityName || "").toLowerCase().includes(filters.entityName.toLowerCase()));
     }
     return challans;
   },
 
-  getStatutoryChallanById(id) {
-    const challans = readFile("dev_statutory_challans.json", DEFAULT_STATUTORY_CHALLANS);
-    return challans.find((c) => c.id === id || c.challanId === id || c.srnOrCpinOrCin === id) || null;
+  getStatutoryChallanById(id, userId = null) {
+    const challans = readFile("dev_statutory_challans.json", []);
+    return (
+      challans.find(
+        (c) =>
+          (c.id === id || c.challanId === id || c.srnOrCpinOrCin === id) &&
+          (!userId || (c.userId && String(c.userId) === String(userId)))
+      ) || null
+    );
   },
 
   createStatutoryChallan(userId, data) {
-    const challans = readFile("dev_statutory_challans.json", DEFAULT_STATUTORY_CHALLANS);
+    if (!userId) return null;
+    const challans = readFile("dev_statutory_challans.json", []);
     const id = data.id || `chl-${Date.now()}`;
     const portal = data.portal || "MCA21";
 
@@ -6584,37 +6731,37 @@ export const devStore = {
       } else if (portal === "GSTN") {
         identifier = `2610${Math.floor(1000000000 + Math.random() * 9000000000)}`;
       } else {
-        identifier = `0290142${new Date().toISOString().slice(0, 10).replace(/-/g, "")}${Math.floor(10000 + Math.random() * 90000)}`;
+        identifier = `${(data.bsrCode || "0000000").slice(0, 7)}${new Date().toISOString().slice(0, 10).replace(/-/g, "")}${Math.floor(10000 + Math.random() * 90000)}`;
       }
     }
 
     const newChallan = {
       id,
       challanId: id,
-      userId,
+      userId: String(userId),
       portal,
       challanType: data.challanType || "ROC_ANNUAL_FILING",
-      entityName: data.entityName || "CyberCorp Technologies Pvt Ltd",
-      cinOrPanOrGstin: (data.cinOrPanOrGstin || "U72200DL2022PTC394812").toUpperCase(),
+      entityName: data.entityName || "",
+      cinOrPanOrGstin: (data.cinOrPanOrGstin || "").toUpperCase(),
       financialYear: data.financialYear || "2025-26",
       assessmentYear: data.assessmentYear || "2026-27",
       filingForm: data.filingForm || "AOC-4",
       srnOrCpinOrCin: identifier,
-      bsrCode: data.bsrCode || "0290142",
+      bsrCode: data.bsrCode || "",
       challanSerialNumber: data.challanSerialNumber || `${Math.floor(10000 + Math.random() * 90000)}`,
-      tenderedBank: data.tenderedBank || "State Bank of India (SBI)",
+      tenderedBank: data.tenderedBank || "",
       paymentMode: data.paymentMode || "INTERNET_BANKING",
       amountBreakdown: data.amountBreakdown || {
-        baseFeeOrTax: Number(data.amount) || 600,
+        baseFeeOrTax: Number(data.amount) || 0,
         additionalOrLateFee: 0,
         interest: 0,
         penalty: 0,
-        totalAmount: Number(data.amount) || 600,
+        totalAmount: Number(data.amount) || 0,
       },
       paymentStatus: data.paymentStatus || "GENERATED",
       paidAt: data.paymentStatus === "PAID" ? new Date().toISOString() : null,
       receiptNumber: data.paymentStatus === "PAID" ? `RCPT-${portal.slice(0, 3)}-${Date.now().toString().slice(-6)}` : null,
-      dscSignatory: data.dscSignatory || "CS Rajesh Sharma (FCS-8921)",
+      dscSignatory: data.dscSignatory || "",
       clientBilled: false,
       createdAt: new Date().toISOString(),
     };
@@ -6624,9 +6771,13 @@ export const devStore = {
     return newChallan;
   },
 
-  payStatutoryChallan(id, paymentData = {}) {
-    let challans = readFile("dev_statutory_challans.json", DEFAULT_STATUTORY_CHALLANS);
-    const idx = challans.findIndex((c) => c.id === id || c.challanId === id);
+  payStatutoryChallan(id, paymentData = {}, userId = null) {
+    let challans = readFile("dev_statutory_challans.json", []);
+    const idx = challans.findIndex(
+      (c) =>
+        (c.id === id || c.challanId === id) &&
+        (!userId || (c.userId && String(c.userId) === String(userId)))
+    );
     if (idx !== -1) {
       const portal = challans[idx].portal;
       const receiptNo = `RCPT-${portal.slice(0, 3)}-${Date.now().toString().slice(-6)}`;
@@ -6646,7 +6797,9 @@ export const devStore = {
   // --- Executive Board & Audit Committee Dossiers (Section 177) ---
   // ==========================================================================
   getBoardDossiers(userId, filters = {}) {
-    let dossiers = readFile("dev_board_dossiers.json", DEFAULT_BOARD_DOSSIERS);
+    if (!userId) return [];
+    let dossiers = readFile("dev_board_dossiers.json", []);
+    dossiers = dossiers.filter((d) => d.userId && String(d.userId) === String(userId));
     if (filters.entityName) {
       dossiers = dossiers.filter((d) =>
         d.clientEntity?.name?.toLowerCase().includes(filters.entityName.toLowerCase()) ||
@@ -6659,17 +6812,24 @@ export const devStore = {
     return dossiers;
   },
 
-  getBoardDossierById(id) {
-    const dossiers = readFile("dev_board_dossiers.json", DEFAULT_BOARD_DOSSIERS);
-    return dossiers.find((d) => d.id === id || d.dossierId === id || d._id === id) || null;
+  getBoardDossierById(id, userId = null) {
+    const dossiers = readFile("dev_board_dossiers.json", []);
+    return (
+      dossiers.find(
+        (d) =>
+          (d.id === id || d.dossierId === id || d._id === id) &&
+          (!userId || (d.userId && String(d.userId) === String(userId)))
+      ) || null
+    );
   },
 
   createBoardDossier(userId, data) {
-    const dossiers = readFile("dev_board_dossiers.json", DEFAULT_BOARD_DOSSIERS);
+    if (!userId) return null;
+    const dossiers = readFile("dev_board_dossiers.json", []);
     const newDossier = {
       id: data.id || `dos-${Date.now()}`,
       dossierId: data.dossierId || `WAK-EXD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      userId: userId || "cs_1",
+      userId: String(userId),
       ...data,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -6679,16 +6839,20 @@ export const devStore = {
     return newDossier;
   },
 
-  deleteBoardDossier(id) {
-    let dossiers = readFile("dev_board_dossiers.json", DEFAULT_BOARD_DOSSIERS);
-    dossiers = dossiers.filter((d) => d.id !== id && d.dossierId !== id);
+  deleteBoardDossier(id, userId = null) {
+    let dossiers = readFile("dev_board_dossiers.json", []);
+    dossiers = dossiers.filter(
+      (d) => !((d.id === id || d.dossierId === id) && (!userId || String(d.userId || "") === String(userId)))
+    );
     writeFile("dev_board_dossiers.json", dossiers);
     return { success: true };
   },
 
   // --- Statutory Due Diligence & M&A Compliance Health Scorecard ---
   getDueDiligenceAudits(userId, filters = {}) {
-    let audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    if (!userId) return [];
+    let audits = readFile("dev_due_diligence_audits.json", []);
+    audits = audits.filter((a) => a.userId && String(a.userId) === String(userId));
     if (filters.entityName) {
       audits = audits.filter((a) =>
         a.clientEntity?.name?.toLowerCase().includes(filters.entityName.toLowerCase()) ||
@@ -6701,17 +6865,24 @@ export const devStore = {
     return audits;
   },
 
-  getDueDiligenceAuditById(id) {
-    const audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
-    return audits.find((a) => a.id === id || a.auditId === id || a._id === id) || null;
+  getDueDiligenceAuditById(id, userId = null) {
+    const audits = readFile("dev_due_diligence_audits.json", []);
+    return (
+      audits.find(
+        (a) =>
+          (a.id === id || a.auditId === id || a._id === id) &&
+          (!userId || (a.userId && String(a.userId) === String(userId)))
+      ) || null
+    );
   },
 
   createDueDiligenceAudit(userId, data) {
-    const audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
+    if (!userId) return null;
+    const audits = readFile("dev_due_diligence_audits.json", []);
     const newAudit = {
       id: data.id || `dd-${Date.now()}`,
       auditId: data.auditId || `WAK-DD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      userId: userId || "cs_1",
+      userId: String(userId),
       ...data,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -6721,29 +6892,37 @@ export const devStore = {
     return newAudit;
   },
 
-  updateDueDiligenceAudit(id, updates) {
-    let audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
-    const index = audits.findIndex((a) => a.id === id || a.auditId === id);
+  updateDueDiligenceAudit(id, updates, userId = null) {
+    let audits = readFile("dev_due_diligence_audits.json", []);
+    const index = audits.findIndex(
+      (a) => (a.id === id || a.auditId === id) && (!userId || String(a.userId || "") === String(userId))
+    );
     if (index === -1) return null;
     audits[index] = {
       ...audits[index],
       ...updates,
+      userId: audits[index].userId,
       updatedAt: new Date().toISOString(),
     };
     writeFile("dev_due_diligence_audits.json", audits);
     return audits[index];
   },
 
-  deleteDueDiligenceAudit(id) {
-    let audits = readFile("dev_due_diligence_audits.json", DEFAULT_DUE_DILIGENCE_AUDITS);
-    audits = audits.filter((a) => a.id !== id && a.auditId !== id);
+  deleteDueDiligenceAudit(id, userId = null) {
+    let audits = readFile("dev_due_diligence_audits.json", []);
+    audits = audits.filter(
+      (a) => !((a.id === id || a.auditId === id) && (!userId || String(a.userId || "") === String(userId)))
+    );
     writeFile("dev_due_diligence_audits.json", audits);
     return { success: true };
   },
 
   // --- Statutory E-Notice & SCN Legal Mailroom ---
   getStatutoryNotices(filters = {}) {
-    let notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    let notices = readFile("dev_statutory_notices.json", []);
+    if (filters.userId) {
+      notices = notices.filter((n) => n.userId && String(n.userId) === String(filters.userId));
+    }
     if (filters.portal && filters.portal !== "ALL") {
       notices = notices.filter((n) => n.portal === filters.portal);
     }
@@ -6763,13 +6942,19 @@ export const devStore = {
     return notices;
   },
 
-  getStatutoryNoticeById(id) {
-    const notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
-    return notices.find((n) => n.id === id || n.noticeId === id || n._id === id) || null;
+  getStatutoryNoticeById(id, userId = null) {
+    const notices = readFile("dev_statutory_notices.json", []);
+    return (
+      notices.find(
+        (n) =>
+          (n.id === id || n.noticeId === id || n._id === id) &&
+          (!userId || (n.userId && String(n.userId) === String(userId)))
+      ) || null
+    );
   },
 
   createStatutoryNotice(data) {
-    const notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
+    const notices = readFile("dev_statutory_notices.json", []);
     const newNotice = {
       id: data.id || `notice-${Date.now()}`,
       noticeId: data.noticeId || `WAK-SCN-${Date.now()}`,
@@ -6783,9 +6968,11 @@ export const devStore = {
     return newNotice;
   },
 
-  updateStatutoryNotice(id, updates) {
-    let notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
-    const index = notices.findIndex((n) => n.id === id || n.noticeId === id);
+  updateStatutoryNotice(id, updates, userId = null) {
+    let notices = readFile("dev_statutory_notices.json", []);
+    const index = notices.findIndex(
+      (n) => (n.id === id || n.noticeId === id) && (!userId || String(n.userId || "") === String(userId))
+    );
     if (index === -1) return null;
     notices[index] = {
       ...notices[index],
@@ -6796,57 +6983,103 @@ export const devStore = {
     return notices[index];
   },
 
-  deleteStatutoryNotice(id) {
-    let notices = readFile("dev_statutory_notices.json", DEFAULT_STATUTORY_NOTICES);
-    notices = notices.filter((n) => n.id !== id && n.noticeId !== id);
+  deleteStatutoryNotice(id, userId = null) {
+    let notices = readFile("dev_statutory_notices.json", []);
+    notices = notices.filter(
+      (n) => !((n.id === id || n.noticeId === id) && (!userId || String(n.userId || "") === String(userId)))
+    );
     writeFile("dev_statutory_notices.json", notices);
     return { success: true };
   },
 
   // MDP Firm Governance & Regulatory Lock Methods
-  getMdpFirmGovernance() {
-    return readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+  _emptyMdpGovernance(userId) {
+    return {
+      firmId: userId ? `mdp-${userId}` : "",
+      userId: userId ? String(userId) : "",
+      firmName: "",
+      firmStructure: "Multi-Disciplinary Partnership (LLP)",
+      registrationCinOrLlpin: "",
+      caFirmRegNo: "",
+      csFirmRegNo: "",
+      barCouncilRegistration: "",
+      headquarters: "",
+      members: [],
+      regulatoryRules: Array.isArray(DEFAULT_MDP_FIRM_GOVERNANCE?.regulatoryRules)
+        ? DEFAULT_MDP_FIRM_GOVERNANCE.regulatoryRules
+        : [],
+      delegatedTasks: [],
+      dualSignOffGates: [],
+    };
   },
 
-  updateMdpFirmGovernance(updates) {
-    const current = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
-    const updated = { ...current, ...updates, updatedAt: new Date().toISOString() };
-    writeFile("dev_mdp_governance.json", updated);
+  _readMdpStore() {
+    const raw = readFile("dev_mdp_governance.json", { byUser: {} });
+    if (raw && typeof raw === "object" && raw.byUser && typeof raw.byUser === "object") {
+      return raw;
+    }
+    return { byUser: {} };
+  },
+
+  getMdpFirmGovernance(userId) {
+    if (!userId) return this._emptyMdpGovernance("");
+    const store = this._readMdpStore();
+    const uid = String(userId);
+    const existing = store.byUser[uid];
+    if (!existing) return this._emptyMdpGovernance(uid);
+    const base = this._emptyMdpGovernance(uid);
+    return {
+      ...base,
+      ...existing,
+      userId: uid,
+      regulatoryRules:
+        Array.isArray(existing.regulatoryRules) && existing.regulatoryRules.length > 0
+          ? existing.regulatoryRules
+          : base.regulatoryRules,
+      members: Array.isArray(existing.members) ? existing.members : [],
+      delegatedTasks: Array.isArray(existing.delegatedTasks) ? existing.delegatedTasks : [],
+      dualSignOffGates: Array.isArray(existing.dualSignOffGates) ? existing.dualSignOffGates : [],
+    };
+  },
+
+  updateMdpFirmGovernance(userId, updates = {}) {
+    if (!userId) return null;
+    const store = this._readMdpStore();
+    const uid = String(userId);
+    const current = this.getMdpFirmGovernance(uid);
+    const updated = { ...current, ...updates, userId: uid, updatedAt: new Date().toISOString() };
+    store.byUser[uid] = updated;
+    writeFile("dev_mdp_governance.json", store);
     return updated;
   },
 
-  updateMdpTeamMember(memberId, updates) {
-    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
-    const index = gov.members.findIndex((m) => m.memberId === memberId);
+  updateMdpTeamMember(userId, memberId, updates = {}) {
+    if (!userId) return null;
+    const gov = this.getMdpFirmGovernance(userId);
+    const index = (gov.members || []).findIndex((m) => m.memberId === memberId);
     if (index === -1) return null;
     gov.members[index] = { ...gov.members[index], ...updates };
-    writeFile("dev_mdp_governance.json", gov);
+    this.updateMdpFirmGovernance(userId, { members: gov.members });
     return gov.members[index];
   },
 
-  getDelegatedTasks() {
-    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+  getDelegatedTasks(userId) {
+    if (!userId) return [];
+    const gov = this.getMdpFirmGovernance(userId);
     return gov.delegatedTasks || [];
   },
 
-  createDelegatedTask(taskData) {
-    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+  createDelegatedTask(userId, taskData = {}) {
+    if (!userId) return null;
+    const gov = this.getMdpFirmGovernance(userId);
     const newTask = {
       taskId: taskData.taskId || `TASK-DEL-${Date.now()}`,
-      title: taskData.title,
-      clientName: taskData.clientName || "CyberCorp Technologies Pvt Ltd",
+      title: taskData.title || "",
+      clientName: taskData.clientName || "",
       module: taskData.module || "ROC_FILING",
-      assignedTrainee: taskData.assignedTrainee || {
-        memberId: "mbr-trainee-pooja",
-        name: "Pooja Hegde",
-        role: "CS Trainee (Executive)",
-      },
-      reviewingPartner: taskData.reviewingPartner || {
-        memberId: "mbr-cs-rajesh",
-        name: "CS Rajesh Sharma",
-        role: "Managing Partner",
-      },
-      workpaperReference: taskData.workpaperReference || "WP-NEW-01",
+      assignedTrainee: taskData.assignedTrainee || null,
+      reviewingPartner: taskData.reviewingPartner || null,
+      workpaperReference: taskData.workpaperReference || "",
       traineeNotes: taskData.traineeNotes || "",
       partnerReviewNotes: "",
       status: "DRAFTING_BY_TRAINEE",
@@ -6854,16 +7087,18 @@ export const devStore = {
       statutoryLockPreventedDsc: true,
       submittedAt: new Date().toISOString(),
     };
-    gov.delegatedTasks = [newTask, ...(gov.delegatedTasks || [])];
-    writeFile("dev_mdp_governance.json", gov);
+    const delegatedTasks = [newTask, ...(gov.delegatedTasks || [])];
+    this.updateMdpFirmGovernance(userId, { delegatedTasks });
     return newTask;
   },
 
-  reviewDelegatedTask(taskId, { partnerReviewNotes, status, reviewingPartner }) {
-    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
-    const index = gov.delegatedTasks.findIndex((t) => t.taskId === taskId);
+  reviewDelegatedTask(userId, taskId, { partnerReviewNotes, status, reviewingPartner } = {}) {
+    if (!userId) return null;
+    const gov = this.getMdpFirmGovernance(userId);
+    const tasks = [...(gov.delegatedTasks || [])];
+    const index = tasks.findIndex((t) => t.taskId === taskId);
     if (index === -1) return null;
-    const task = gov.delegatedTasks[index];
+    const task = { ...tasks[index] };
     if (partnerReviewNotes !== undefined) task.partnerReviewNotes = partnerReviewNotes;
     if (status) task.status = status;
     if (status === "PARTNER_APPROVED") {
@@ -6874,32 +7109,39 @@ export const devStore = {
     if (reviewingPartner) {
       task.reviewingPartner = reviewingPartner;
     }
-    gov.delegatedTasks[index] = task;
-    writeFile("dev_mdp_governance.json", gov);
+    tasks[index] = task;
+    this.updateMdpFirmGovernance(userId, { delegatedTasks: tasks });
     return task;
   },
 
-  getDualSignOffGates() {
-    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
+  getDualSignOffGates(userId) {
+    if (!userId) return [];
+    const gov = this.getMdpFirmGovernance(userId);
     return gov.dualSignOffGates || [];
   },
 
-  signDualSignOffGate(gateId, { role, signatoryName, membershipNumber, udin }) {
-    const gov = readFile("dev_mdp_governance.json", DEFAULT_MDP_FIRM_GOVERNANCE);
-    const index = gov.dualSignOffGates.findIndex((g) => g.gateId === gateId);
+  signDualSignOffGate(userId, gateId, { role, signatoryName, membershipNumber, udin } = {}) {
+    if (!userId) return null;
+    const gov = this.getMdpFirmGovernance(userId);
+    const gates = [...(gov.dualSignOffGates || [])];
+    const index = gates.findIndex((g) => g.gateId === gateId);
     if (index === -1) return null;
-    const gate = gov.dualSignOffGates[index];
+    const gate = {
+      ...gates[index],
+      csGate: { ...(gates[index].csGate || {}) },
+      caGate: { ...(gates[index].caGate || {}) },
+    };
 
     if (role === "CS" || role === "practicing_cs" || role === "managing_partner") {
       gate.csGate.status = "SIGNED";
-      gate.csGate.signedBy = signatoryName || "CS Rajesh Sharma";
-      gate.csGate.membershipNumber = membershipNumber || "FCS-8921";
+      gate.csGate.signedBy = signatoryName || "";
+      gate.csGate.membershipNumber = membershipNumber || "";
       gate.csGate.signedAt = new Date().toISOString();
     } else if (role === "CA" || role === "practicing_ca" || role === "senior_partner") {
       gate.caGate.status = "SIGNED";
-      gate.caGate.signedBy = signatoryName || "CA Ramanathan Iyer";
-      gate.caGate.membershipNumber = membershipNumber || "FCA-054921";
-      gate.caGate.udin = udin || `26054921${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      gate.caGate.signedBy = signatoryName || "";
+      gate.caGate.membershipNumber = membershipNumber || "";
+      gate.caGate.udin = udin || "";
       gate.caGate.signedAt = new Date().toISOString();
     }
 
@@ -6910,8 +7152,8 @@ export const devStore = {
       gate.overallStatus = "PARTIALLY_SIGNED";
     }
 
-    gov.dualSignOffGates[index] = gate;
-    writeFile("dev_mdp_governance.json", gov);
+    gates[index] = gate;
+    this.updateMdpFirmGovernance(userId, { dualSignOffGates: gates });
     return gate;
   },
 };

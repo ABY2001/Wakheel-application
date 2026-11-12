@@ -23,30 +23,33 @@ const formatInr = (amount) => {
 export const draftSection186 = async (req, res) => {
   try {
     const {
-      entityName = "CyberCorp Technologies Pvt Ltd",
-      cin = "U72200DL2022PTC394812",
-      paidUpCapital = 25000000, // ₹2.5 Cr
-      freeReserves = 15000000,  // ₹1.5 Cr
-      securitiesPremium = 5000000, // ₹50 Lakhs
-      existingLoans = 12000000, // ₹1.2 Cr
-      existingInvestments = 4000000,
-      existingGuarantees = 2000000,
+      entityName = "",
+      cin = "",
+      paidUpCapital = 0,
+      freeReserves = 0,
+      securitiesPremium = 0,
+      existingLoans = 0,
+      existingInvestments = 0,
+      existingGuarantees = 0,
       existingSecurities = 0,
-      proposedAmount = 15000000, // ₹1.5 Cr
-      targetEntityName = "Zenith FinTech India Pvt Ltd",
-      targetCin = "U67190DL2021PTC389012",
+      proposedAmount = 0,
+      targetEntityName = "",
+      targetCin = "",
       transactionType = "inter_corporate_loan", // inter_corporate_loan | investment_shares | corporate_guarantee | security
-      interestRate = 10.5, // % p.a.
-      tenureMonths = 24,
-      purpose = "Working capital financing and expansion of AI cloud infrastructure",
+      interestRate = 0, // % p.a.
+      tenureMonths = 12,
+      purpose = "",
       hasPfiDefault = false,
-      signatoryName = "CS Rajesh Sharma",
-      signatoryMembership = "FCS-8921",
+      signatoryName = "",
+      signatoryMembership = "",
     } = req.body;
 
     // Statutory Calculations under Section 186(2)
-    const totalAggregateNet = freeReserves + securitiesPremium;
-    const limit60 = 0.6 * (paidUpCapital + totalAggregateNet);
+    const numPaidUp = Number(paidUpCapital || 0);
+    const numFreeReserves = Number(freeReserves || 0);
+    const numSecPrem = Number(securitiesPremium || 0);
+    const totalAggregateNet = numFreeReserves + numSecPrem;
+    const limit60 = 0.6 * (numPaidUp + totalAggregateNet);
     const limit100 = totalAggregateNet;
     const statutoryCeiling = Math.max(limit60, limit100);
 
@@ -80,23 +83,29 @@ export const draftSection186 = async (req, res) => {
       year: "numeric",
     });
 
+    const resolvedEntityName = (entityName || "").trim() || "[Company Legal Name]";
+    const resolvedTargetEntityName = (targetEntityName || "").trim() || "[Target Entity Name]";
+    const resolvedSignatory = (signatoryName || "").trim() || "[Authorized Signatory]";
+    const resolvedMembership = (signatoryMembership || "").trim() || "[DIN / Membership No.]";
+    const resolvedPurpose = (purpose || "").trim() || "authorized corporate business purposes";
+
     // 1. Board Resolution (Unanimous under Section 186(5))
-    const boardResolution = `CERTIFIED TRUE COPY OF THE UNANIMOUS RESOLUTION PASSED AT THE MEETING OF THE BOARD OF DIRECTORS OF ${entityName.toUpperCase()} HELD ON ${dateStr.toUpperCase()} AT THE REGISTERED OFFICE OF THE COMPANY.
+    const boardResolution = `CERTIFIED TRUE COPY OF THE UNANIMOUS RESOLUTION PASSED AT THE MEETING OF THE BOARD OF DIRECTORS OF ${resolvedEntityName.toUpperCase()} HELD ON ${dateStr.toUpperCase()} AT THE REGISTERED OFFICE OF THE COMPANY.
 
 "RESOLVED THAT pursuant to the provisions of Section 179(3), Section 186 and other applicable provisions, if any, of the Companies Act, 2013 read with the Companies (Meetings of Board and its Powers) Rules, 2014 (including any statutory modifications or re-enactments thereof for the time being in force), and subject to the Articles of Association of the Company ${
       requiresSpecialResolution ? "and the approval of the Members by way of Special Resolution" : ""
-    }, the unanimous consent of all directors present at the meeting be and is hereby accorded to the Company to grant ${transactionTypeLabel.toLowerCase()} to ${targetEntityName} (CIN: ${targetCin}) for an aggregate amount not exceeding ${formatInr(
+    }, the unanimous consent of all directors present at the meeting be and is hereby accorded to the Company to grant ${transactionTypeLabel.toLowerCase()} to ${resolvedTargetEntityName}${targetCin ? ` (CIN: ${targetCin})` : ""} for an aggregate amount not exceeding ${formatInr(
       proposedAmount
-    )} (Rupees ${numberToWords(proposedAmount)} only) on such terms and conditions as detailed in the draft loan agreement placed before the Board, carrying an interest rate of ${interestRate}% per annum (which is strictly in compliance with Section 186(7) being higher than the prevailing yield of Government Securities), for a tenure of ${tenureMonths} months, to be utilized exclusively towards ${purpose}.
+    )} (Rupees ${numberToWords(proposedAmount)} only) on such terms and conditions as detailed in the draft loan agreement placed before the Board, carrying an interest rate of ${interestRate}% per annum (which is strictly in compliance with Section 186(7) being higher than the prevailing yield of Government Securities), for a tenure of ${tenureMonths} months, to be utilized exclusively towards ${resolvedPurpose}.
 
-RESOLVED FURTHER THAT any Director of the Company or ${signatoryName}, Company Secretary (Membership No. ${signatoryMembership}), be and is hereby authorized to negotiate, finalize, and execute the loan agreement, promissory notes, guarantees, and all other ancillary documents, and to file the necessary e-form MGT-14 with the Registrar of Companies (ROC) within 30 days of this resolution."
+RESOLVED FURTHER THAT any Director of the Company or ${resolvedSignatory}, Company Secretary (Membership No. ${resolvedMembership}), be and is hereby authorized to negotiate, finalize, and execute the loan agreement, promissory notes, guarantees, and all other ancillary documents, and to file the necessary e-form MGT-14 with the Registrar of Companies (ROC) within 30 days of this resolution."
 
 // CERTIFIED TRUE COPY //
-For ${entityName}
+For ${resolvedEntityName}
 
 (Sd/-)
 Director / Company Secretary
-DIN / Membership No: ${signatoryMembership}`;
+DIN / Membership No: ${resolvedMembership}`;
 
     // 2. EGM Notice & Special Resolution (if required)
     const egmNoticeAndResolution = requiresSpecialResolution
@@ -104,7 +113,7 @@ DIN / Membership No: ${signatoryMembership}`;
 
 To consider and, if thought fit, to pass the following resolution as a SPECIAL RESOLUTION:
 
-"RESOLVED THAT pursuant to the provisions of Section 186(3) and other applicable provisions, if any, of the Companies Act, 2013 and Rule 11 & 13 of the Companies (Meetings of Board and its Powers) Rules, 2014, the consent of the Members of the Company be and is hereby accorded to the Board of Directors of the Company to grant ${transactionTypeLabel.toLowerCase()} to ${targetEntityName} up to an aggregate amount of ${formatInr(
+"RESOLVED THAT pursuant to the provisions of Section 186(3) and other applicable provisions, if any, of the Companies Act, 2013 and Rule 11 & 13 of the Companies (Meetings of Board and its Powers) Rules, 2014, the consent of the Members of the Company be and is hereby accorded to the Board of Directors of the Company to grant ${transactionTypeLabel.toLowerCase()} to ${resolvedTargetEntityName} up to an aggregate amount of ${formatInr(
           proposedAmount
         )}, notwithstanding that the aggregate of loans and investments so far made, the amounts for which guarantees or securities so far provided to or in all other bodies corporate, along with the proposed transaction, will exceed the statutory limits of sixty per cent (60%) of the paid-up share capital, free reserves and securities premium account or one hundred per cent (100%) of free reserves and securities premium account, whichever is higher, as prescribed under Section 186(2) of the Act.
 
@@ -114,10 +123,10 @@ EXPLANATORY STATEMENT PURSUANT TO SECTION 102 OF THE COMPANIES ACT, 2013:
 1. STATUTORY BACKGROUND:
    As per Section 186(2) of the Act, a company cannot make loans, give guarantees, or make investments exceeding 60% of its paid-up share capital, free reserves, and securities premium account, or 100% of its free reserves and securities premium account, whichever is more, unless prior approval of members by Special Resolution is obtained.
 2. CURRENT FINANCIAL POSITION AS PER LATEST AUDITED FINANCIAL STATEMENTS:
-   - Paid-Up Share Capital: ${formatInr(paidUpCapital)}
-   - Free Reserves: ${formatInr(freeReserves)}
-   - Securities Premium Account: ${formatInr(securitiesPremium)}
-   - Aggregate Capital & Free Reserves: ${formatInr(paidUpCapital + totalAggregateNet)}
+   - Paid-Up Share Capital: ${formatInr(numPaidUp)}
+   - Free Reserves: ${formatInr(numFreeReserves)}
+   - Securities Premium Account: ${formatInr(numSecPrem)}
+   - Aggregate Capital & Free Reserves: ${formatInr(numPaidUp + totalAggregateNet)}
    - Statutory Limit (60% criteria): ${formatInr(limit60)}
    - Statutory Limit (100% criteria): ${formatInr(limit100)}
    - Statutory Threshold Permissible without Special Resolution: ${formatInr(statutoryCeiling)}
@@ -127,10 +136,10 @@ EXPLANATORY STATEMENT PURSUANT TO SECTION 102 OF THE COMPANIES ACT, 2013:
           proposedTotalExposure - statutoryCeiling
         )})
 3. PARTICULARS OF THE PROPOSED TRANSACTION:
-   - Name of Target Entity: ${targetEntityName} (CIN: ${targetCin})
+   - Name of Target Entity: ${resolvedTargetEntityName}${targetCin ? ` (CIN: ${targetCin})` : ""}
    - Rate of Interest: ${interestRate}% p.a. (Compliant with Section 186(7))
    - Repayment Schedule: ${tenureMonths} Months
-   - Specific Purpose: ${purpose}
+   - Specific Purpose: ${resolvedPurpose}
 4. DISCLOSURE OF INTEREST OF DIRECTORS / KMP:
    None of the Directors, Key Managerial Personnel (KMP) of the Company, or their relatives are concerned or interested, financially or otherwise, in the proposed Special Resolution, except to the extent of their shareholding in the Company.`
       : `EXEMPTION NOTICE: Proposed transaction of ${formatInr(
@@ -169,9 +178,9 @@ EXPLANATORY STATEMENT PURSUANT TO SECTION 102 OF THE COMPANIES ACT, 2013:
         targetEntityName,
         targetCin,
         statutoryThreshold: {
-          paidUpCapital,
-          freeReserves,
-          securitiesPremium,
+          paidUpCapital: numPaidUp,
+          freeReserves: numFreeReserves,
+          securitiesPremium: numSecPrem,
           limit60,
           limit100,
           statutoryCeiling,
@@ -204,73 +213,14 @@ EXPLANATORY STATEMENT PURSUANT TO SECTION 102 OF THE COMPANIES ACT, 2013:
 export const analyzeClause43bMsme = async (req, res) => {
   try {
     const {
-      clientName = "CyberCorp Technologies Pvt Ltd",
-      pan = "AAECS1234F",
+      clientName = "",
+      pan = "",
       assessmentYear = "2026-27",
       financialYear = "2025-26",
       invoices = [],
     } = req.body;
 
-    // Default sample invoices if none provided
-    const sampleInvoices = [
-      {
-        id: "INV-001",
-        invoiceNumber: "MH/25-26/089",
-        supplierName: "MicroTech Precision Tools Pvt Ltd",
-        supplierUdyam: "UDYAM-MH-03-0012489",
-        enterpriseType: "micro", // micro | small | medium | trader
-        invoiceDate: "2026-02-10",
-        amount: 850000,
-        agreedCreditPeriodDays: 45, // written agreement
-        paymentDate: "2026-04-12", // Paid after FY end and beyond 45 days (Due: 27-Mar-2026) -> DISALLOWED under 43B(h)
-      },
-      {
-        id: "INV-002",
-        invoiceNumber: "KA/25-26/142",
-        supplierName: "Apex PolyFab Industries",
-        supplierUdyam: "UDYAM-KR-08-0045120",
-        enterpriseType: "small",
-        invoiceDate: "2026-03-20",
-        amount: 1420000,
-        agreedCreditPeriodDays: 30, // Due: 19-Apr-2026
-        paymentDate: "2026-04-10", // Paid within 30 days -> ALLOWED under 43B(h)
-      },
-      {
-        id: "INV-003",
-        invoiceNumber: "DL/25-26/512",
-        supplierName: "Vanguard Server Hosting LLP",
-        supplierUdyam: "UDYAM-DL-01-0099312",
-        enterpriseType: "small",
-        invoiceDate: "2026-01-15",
-        amount: 675000,
-        agreedCreditPeriodDays: 15, // No written agreement -> max 15 days (Due: 30-Jan-2026)
-        paymentDate: null, // STILL UNPAID as on 31st March -> DISALLOWED under 43B(h)
-      },
-      {
-        id: "INV-004",
-        invoiceNumber: "TN/25-26/304",
-        supplierName: "Om Retail Traders & Distributors",
-        supplierUdyam: "UDYAM-TN-02-0038921",
-        enterpriseType: "trader", // Wholesale/retail trader -> EXEMPT from 43B(h)
-        invoiceDate: "2026-01-20",
-        amount: 980000,
-        agreedCreditPeriodDays: 60,
-        paymentDate: "2026-04-20", // Paid late, but exempt from 43B(h)
-      },
-      {
-        id: "INV-005",
-        invoiceNumber: "GJ/25-26/781",
-        supplierName: "Zenith Micro Semiconductor Labs",
-        supplierUdyam: "UDYAM-GJ-04-0021943",
-        enterpriseType: "micro",
-        invoiceDate: "2026-02-28",
-        amount: 1250000,
-        agreedCreditPeriodDays: 45, // Due: 14-Apr-2026
-        paymentDate: "2026-05-10", // Paid after statutory due date -> DISALLOWED under 43B(h)
-      },
-    ];
-
-    const invoiceList = invoices && invoices.length > 0 ? invoices : sampleInvoices;
+    const invoiceList = Array.isArray(invoices) ? invoices : [];
 
     let totalInvoices = invoiceList.length;
     let totalPurchases = 0;
@@ -285,6 +235,7 @@ export const analyzeClause43bMsme = async (req, res) => {
       totalPurchases += Number(inv.amount || 0);
 
       const invDate = new Date(inv.invoiceDate);
+      if (Number.isNaN(invDate.getTime())) continue;
       const isEligibleEnterprise = inv.enterpriseType === "micro" || inv.enterpriseType === "small";
 
       // Section 15 MSMED limit: maximum 45 days if agreed in writing, else 15 days
@@ -434,20 +385,22 @@ AUDITOR'S OBSERVATION / NOTE FOR REPORT:
 export const draftGstDrc01Reply = async (req, res) => {
   try {
     const {
-      clientName = "CyberCorp Technologies Pvt Ltd",
-      gstin = "07AAECS1234F1Z8",
-      noticeNumber = "SCN/GST/2026/DRC01-8921",
-      noticeDate = "2026-10-10",
-      financialYear = "2020-21",
+      clientName = "",
+      clientAddress = "",
+      gstin = "",
+      noticeNumber = "",
+      noticeDate = "",
+      financialYear = "",
       section = "73", // 73 (non-fraud) | 74 (fraud) | 74A
       allegationType = "itc_2a_vs_3b_mismatch", // itc_2a_vs_3b_mismatch | supplier_cancellation_retrospective | section_16_4_time_bar | blocked_credit_17_5
-      demandTax = 845000,
-      demandInterest = 385000,
-      demandPenalty = 84500,
-      officerDesignation = "Assistant Commissioner of State Tax, Ward 44, New Delhi",
+      demandTax = 0,
+      demandInterest = 0,
+      demandPenalty = 0,
+      officerDesignation = "",
       additionalFacts = "",
-      signatoryName = "CA Ramanathan Iyer",
-      signatoryDesignation = "Authorized Representative & Chartered Accountant (M.No 054921)",
+      signatoryName = "",
+      signatoryDesignation = "Authorized Representative",
+      place = "",
     } = req.body;
 
     const totalDemand = Number(demandTax || 0) + Number(demandInterest || 0) + Number(demandPenalty || 0);
@@ -502,22 +455,25 @@ The return in which the impugned ITC was availed was filed well within the statu
 The goods/services were used in the course and furtherance of business, directly enhancing taxable supplies. Section 17(5) restrictions are narrow and specific, and do not apply to the operational hardware, IT infrastructure, and plant and machinery acquired by the Noticee.`;
     }
 
-    const drc06ReplyDraft = `BEFORE THE ${officerDesignation.toUpperCase()}
-GSTIN OF NOTICEE: ${gstin}
+    const resolvedClientName = (clientName || "").trim() || "[Taxpayer Legal Name]";
+    const resolvedOfficer = (officerDesignation || "").trim() || "The Proper Officer (CGST / SGST Authority)";
+    const resolvedSignatory = (signatoryName || "").trim() || "[Authorized Representative]";
+    const drc06ReplyDraft = `BEFORE THE ${resolvedOfficer.toUpperCase()}
+GSTIN OF NOTICEE: ${gstin || "[GSTIN]"}
 
 IN THE MATTER OF:
-${clientName}
-Plot No. 44, Okhla Industrial Area, Phase-III, New Delhi - 110020
+${resolvedClientName}
+${clientAddress || "[Registered Address]"}
 ... NOTICEE / ASSESSEE
 
 AND:
 
-The Assistant Commissioner of State Tax, Ward 44, New Delhi
+${resolvedOfficer}
 ... PROPER OFFICER
 
 REPLY IN FORM GST DRC-06 UNDER RULE 142(4) OF CGST RULES, 2017
-TO SHOW CAUSE NOTICE BEARING REF NO. ${noticeNumber} DATED ${noticeDate}
-FOR THE FINANCIAL YEAR ${financialYear}
+TO SHOW CAUSE NOTICE BEARING REF NO. ${noticeNumber || "[Notice Reference Number]"} DATED ${noticeDate || "[Notice Date]"}
+FOR THE FINANCIAL YEAR ${financialYear || "[Financial Year]"}
 
 MAY IT PLEASE YOUR HONOUR:
 
@@ -553,12 +509,12 @@ In light of the statutory provisions, CBIC circulars, and binding judicial prece
 (d) Pass such further order(s) as may be deemed just, fit, and proper.
 
 DATED: ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
-PLACE: NEW DELHI
+PLACE: ${(place || "").trim().toUpperCase() || "[PLACE OF FILING]"}
 
-FOR ${clientName.toUpperCase()}
+FOR ${resolvedClientName.toUpperCase()}
 
 (Sd/-)
-${signatoryName}
+${resolvedSignatory}
 ${signatoryDesignation}`;
 
     res.json({

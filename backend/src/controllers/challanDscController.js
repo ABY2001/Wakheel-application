@@ -24,7 +24,10 @@ const isMongoConnected = () => {
 // @access  Public / Protected
 export const getDscCertificates = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId || "cs_1";
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const { holderRole, tokenStatus } = req.query;
 
     if (isMongoConnected()) {
@@ -45,9 +48,13 @@ export const getDscCertificates = async (req, res) => {
 
 // @desc    Plug in or unplug USB DSC token
 // @route   POST /api/dsc-challan/tokens/plug
-// @access  Public / Protected
+// @access  Protected
 export const toggleDscToken = async (req, res) => {
   try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const { certificateId, isPlugged = true } = req.body;
 
     if (!certificateId) {
@@ -58,14 +65,20 @@ export const toggleDscToken = async (req, res) => {
 
     if (isMongoConnected()) {
       const updated = await DscCertificate.findOneAndUpdate(
-        { $or: [{ certificateId }, { serialNumber: certificateId }] },
+        { userId, $or: [{ certificateId }, { serialNumber: certificateId }] },
         { tokenStatus: newStatus },
         { new: true }
       );
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "DSC Certificate not found." });
+      }
       return res.json({ success: true, certificate: updated, mode: "mongo" });
     }
 
-    const updated = devStore.plugDscToken(certificateId, isPlugged);
+    const updated = devStore.plugDscToken(certificateId, isPlugged, userId);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "DSC Certificate not found." });
+    }
     res.json({ success: true, certificate: updated, mode: "devStore" });
   } catch (error) {
     console.error("toggleDscToken error:", error);
@@ -84,14 +97,10 @@ export const verifyDscPin = async (req, res) => {
       return res.status(400).json({ success: false, message: "Token PIN is required." });
     }
 
-    // Default master PIN for simulated USB tokens
-    const validPins = ["12345678", "123456", "892144"];
-    const isPinValid = validPins.includes(pin.trim());
-
-    if (!isPinValid) {
+    if (!pin || pin.trim().length < 6) {
       return res.status(401).json({
         success: false,
-        message: "Incorrect USB Token PIN. 2 attempts remaining before hardware lockout.",
+        message: "Incorrect USB Token PIN. Please enter your 6-8 digit cryptographic token PIN.",
       });
     }
 
@@ -111,29 +120,38 @@ export const verifyDscPin = async (req, res) => {
 // @access  Public / Protected
 export const signDocumentWithDsc = async (req, res) => {
   try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const {
-      certificateId = "DSC-CS-8921",
-      pin = "12345678",
-      documentTitle = "Board Resolution under Section 186",
+      certificateId = "",
+      pin = "",
+      documentTitle = "Statutory Document",
       documentType = "board_resolution", // board_resolution | form_3cd | aoc4_financials | dir3_kyc | custom_pdf
       documentPayload = "",
-      entityName = "CyberCorp Technologies Pvt Ltd",
+      entityName = "",
+      location = "Registered Office",
     } = req.body;
 
-    // Validate PIN
-    const validPins = ["12345678", "123456", "892144"];
-    if (!validPins.includes(pin.trim())) {
+    if (!certificateId || !pin.trim()) {
+      return res.status(400).json({ success: false, message: "Certificate ID and Token PIN are required." });
+    }
+
+    // Validate PIN format (at least 6 chars)
+    if (pin.trim().length < 6) {
       return res.status(401).json({ success: false, message: "Invalid USB Token PIN." });
     }
 
-    // Find certificate
+    // Find certificate owned by user
     let cert = null;
     if (isMongoConnected()) {
       cert = await DscCertificate.findOne({
+        userId,
         $or: [{ certificateId }, { serialNumber: certificateId }],
       });
     } else {
-      cert = devStore.getDscCertificateById(certificateId);
+      cert = devStore.getDscCertificateById(certificateId, userId);
     }
 
     if (!cert) {
@@ -157,26 +175,26 @@ export const signDocumentWithDsc = async (req, res) => {
     // Update signature count
     if (isMongoConnected()) {
       await DscCertificate.updateOne(
-        { _id: cert._id },
+        { _id: cert._id, userId },
         { $inc: { totalSignaturesAffixed: 1 }, $set: { lastUsedAt: timestamp } }
       );
     } else {
       devStore.updateDscCertificate(cert.id || cert.certificateId, {
-        totalSignaturesAffixed: (cert.totalSignaturesAffixed || 142) + 1,
+        totalSignaturesAffixed: (cert.totalSignaturesAffixed || 0) + 1,
         lastUsedAt: timestamp,
-      });
+      }, userId);
     }
 
     // Visual Signature Plaque Details (Compliant with CCA India & MCA21 specifications)
     const visualPlaque = {
       digitallySignedBy: cert.holderName,
       reason: `Authorized Signature for ${documentTitle}`,
-      location: "New Delhi, India",
+      location,
       dateFormatted: formattedDate,
       issuerCa: cert.issuerCa,
       certificateSerial: cert.serialNumber,
       keyAlgorithm: cert.keyAlgorithm || "RSA 2048-bit / SHA-256",
-      membershipNumber: cert.membershipNumber || cert.din || "FCS-8921",
+      membershipNumber: cert.membershipNumber || cert.din || "",
       pan: cert.pan,
       sha256Digest: sha256Hash,
       signatureToken,
@@ -320,7 +338,10 @@ export const calculateMcaFee = async (req, res) => {
 // @access  Public / Protected
 export const getStatutoryChallans = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId || "cs_1";
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const { portal, paymentStatus, entityName } = req.query;
 
     if (isMongoConnected()) {
@@ -343,15 +364,18 @@ export const getStatutoryChallans = async (req, res) => {
 
 // @desc    Generate / Create a new statutory challan
 // @route   POST /api/dsc-challan/challans
-// @access  Public / Protected
+// @access  Protected
 export const createStatutoryChallan = async (req, res) => {
   try {
-    const userId = req.user?.id || req.body.userId || "cs_1";
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const {
       portal = "MCA21", // MCA21 | GSTN | CBDT_INCOME_TAX
       challanType = "ROC_ANNUAL_FILING",
-      entityName = "CyberCorp Technologies Pvt Ltd",
-      cinOrPanOrGstin = "U72200DL2022PTC394812",
+      entityName = "",
+      cinOrPanOrGstin = "",
       financialYear = "2025-26",
       assessmentYear = "2026-27",
       filingForm = "AOC-4",
@@ -361,8 +385,15 @@ export const createStatutoryChallan = async (req, res) => {
       penalty = 0,
       tenderedBank = "State Bank of India (SBI)",
       paymentMode = "INTERNET_BANKING",
-      dscSignatory = "CS Rajesh Sharma (FCS-8921)",
+      dscSignatory = req.user?.name || "Authorized Signatory",
     } = req.body;
+
+    if (!entityName.trim() || !cinOrPanOrGstin.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "entityName and cinOrPanOrGstin are required.",
+      });
+    }
 
     const totalAmount =
       Number(baseFeeOrTax || 0) +
@@ -426,6 +457,10 @@ export const createStatutoryChallan = async (req, res) => {
 // @access  Public / Protected
 export const payStatutoryChallan = async (req, res) => {
   try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const { id } = req.params;
     const { paymentMode = "INTERNET_BANKING", tenderedBank = "State Bank of India (SBI)" } = req.body;
 
@@ -433,6 +468,7 @@ export const payStatutoryChallan = async (req, res) => {
 
     if (isMongoConnected()) {
       const challan = await StatutoryChallan.findOne({
+        userId,
         $or: [{ _id: id }, { challanId: id }, { srnOrCpinOrCin: id }],
       });
 
@@ -451,7 +487,7 @@ export const payStatutoryChallan = async (req, res) => {
       return res.json({ success: true, message: "Challan paid successfully.", challan, mode: "mongo" });
     }
 
-    const updated = devStore.payStatutoryChallan(id, { paymentMode, tenderedBank });
+    const updated = devStore.payStatutoryChallan(id, { paymentMode, tenderedBank }, userId);
     if (!updated) {
       return res.status(404).json({ success: false, message: "Challan not found." });
     }
@@ -465,18 +501,23 @@ export const payStatutoryChallan = async (req, res) => {
 
 // @desc    Get official printable statutory payment receipt pack
 // @route   GET /api/dsc-challan/challans/:id/receipt
-// @access  Public / Protected
+// @access  Protected
 export const getChallanReceipt = async (req, res) => {
   try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
     const { id } = req.params;
 
     let challan = null;
     if (isMongoConnected()) {
       challan = await StatutoryChallan.findOne({
+        userId,
         $or: [{ _id: id }, { challanId: id }, { srnOrCpinOrCin: id }],
       });
     } else {
-      challan = devStore.getStatutoryChallanById(id);
+      challan = devStore.getStatutoryChallanById(id, userId);
     }
 
     if (!challan) {

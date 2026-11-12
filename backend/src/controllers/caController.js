@@ -10,7 +10,7 @@ const shouldUseDevStore = () => {
 };
 
 const getUserId = (req) => {
-  return req.user?._id || req.user?.id || "ca_1";
+  return String(req.user?._id || req.user?.id || "");
 };
 
 // ============================================================================
@@ -28,7 +28,7 @@ export const getIncomeTaxReturns = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "ca_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (clientName) query.clientName = clientName;
     if (assessmentYear) query.assessmentYear = assessmentYear;
@@ -89,14 +89,17 @@ export const createIncomeTaxReturn = async (req, res) => {
 
 export const updateIncomeTaxReturn = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const returnDoc = devStore.updateIncomeTaxReturn(req.params.id, req.body);
+      const returnDoc = devStore.updateIncomeTaxReturn(req.params.id, req.body, userId);
       if (!returnDoc) return res.status(404).json({ success: false, message: "ITR not found" });
       return res.json({ success: true, returnDoc });
     }
 
     const returnDoc = await IncomeTaxReturn.findOneAndUpdate(
-      { $or: [{ itrId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ itrId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -114,12 +117,16 @@ export const updateIncomeTaxReturn = async (req, res) => {
 
 export const deleteIncomeTaxReturn = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteIncomeTaxReturn(req.params.id);
+      devStore.deleteIncomeTaxReturn(req.params.id, userId);
       return res.json({ success: true, message: "ITR deleted successfully" });
     }
 
     await IncomeTaxReturn.findOneAndDelete({
+      userId,
       $or: [{ itrId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "ITR deleted successfully" });
@@ -144,7 +151,7 @@ export const getGstReturns = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "ca_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (clientName) query.clientName = clientName;
     if (returnType && returnType !== "ALL") query.returnType = returnType;
@@ -205,14 +212,17 @@ export const createGstReturn = async (req, res) => {
 
 export const updateGstReturn = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const returnDoc = devStore.updateGstReturn(req.params.id, req.body);
+      const returnDoc = devStore.updateGstReturn(req.params.id, req.body, userId);
       if (!returnDoc) return res.status(404).json({ success: false, message: "GST Return not found" });
       return res.json({ success: true, returnDoc });
     }
 
     const returnDoc = await GstReturn.findOneAndUpdate(
-      { $or: [{ gstReturnId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ gstReturnId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -230,12 +240,16 @@ export const updateGstReturn = async (req, res) => {
 
 export const deleteGstReturn = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteGstReturn(req.params.id);
+      devStore.deleteGstReturn(req.params.id, userId);
       return res.json({ success: true, message: "GST Return deleted successfully" });
     }
 
     await GstReturn.findOneAndDelete({
+      userId,
       $or: [{ gstReturnId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "GST Return deleted successfully" });
@@ -260,7 +274,7 @@ export const getTaxAuditReports = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "ca_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (clientName) query.clientName = clientName;
     if (auditType && auditType !== "ALL") query.auditType = auditType;
@@ -297,7 +311,7 @@ export const createTaxAuditReport = async (req, res) => {
       disallowanceSec40A3: d40a3,
       disallowanceSec40aia: d40aia,
       totalDisallowances: d43b + d40a3 + d40aia,
-      udin: req.body.udin || `26054921AAAAAA${Math.floor(1000 + Math.random() * 9000)}`,
+      udin: req.body.udin || "",
       userId,
     });
 
@@ -313,14 +327,17 @@ export const createTaxAuditReport = async (req, res) => {
 
 export const updateTaxAuditReport = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const report = devStore.updateTaxAuditReport(req.params.id, req.body);
+      const report = devStore.updateTaxAuditReport(req.params.id, req.body, userId);
       if (!report) return res.status(404).json({ success: false, message: "Audit Report not found" });
       return res.json({ success: true, report });
     }
 
     const report = await TaxAudit3CD.findOneAndUpdate(
-      { $or: [{ auditId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ auditId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -338,12 +355,16 @@ export const updateTaxAuditReport = async (req, res) => {
 
 export const deleteTaxAuditReport = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteTaxAuditReport(req.params.id);
+      devStore.deleteTaxAuditReport(req.params.id, userId);
       return res.json({ success: true, message: "Audit report deleted successfully" });
     }
 
     await TaxAudit3CD.findOneAndDelete({
+      userId,
       $or: [{ auditId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Audit report deleted successfully" });
@@ -355,26 +376,34 @@ export const deleteTaxAuditReport = async (req, res) => {
 
 export const generateUdin = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     const { partnerName, membershipNo } = req.body;
+    const cleanMembership = (membershipNo || "").trim();
+    if (!cleanMembership) {
+      return res.status(400).json({ success: false, message: "ICAI Membership Number is required to generate UDIN" });
+    }
+
     if (shouldUseDevStore()) {
-      const report = devStore.generateUdin(req.params.id, partnerName, membershipNo);
+      const report = devStore.generateUdin(req.params.id, partnerName || req.user?.name || "", cleanMembership, userId);
       if (!report) return res.status(404).json({ success: false, message: "Audit report not found" });
       return res.json({ success: true, message: "Unique Document Identification Number (UDIN) generated per ICAI guidelines", report });
     }
 
     const year = new Date().getFullYear().toString().slice(-2);
-    const mem = (membershipNo || "054921").padStart(6, "0");
+    const mem = cleanMembership.padStart(6, "0").slice(-6);
     const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
     const generatedUdin = `${year}${mem}${randomSuffix}`.slice(0, 18);
 
     const report = await TaxAudit3CD.findOneAndUpdate(
-      { $or: [{ auditId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ auditId: req.params.id }, { _id: req.params.id }] },
       {
         $set: {
           udin: generatedUdin,
           status: "signed_uploaded",
-          caPartnerName: partnerName || "CA Rajesh Singhania (FCA)",
-          caMembershipNumber: membershipNo || "054921",
+          caPartnerName: partnerName || req.user?.name || "",
+          caMembershipNumber: cleanMembership,
         },
       },
       { new: true }
@@ -407,7 +436,7 @@ export const getBalanceSheetRecons = async (req, res) => {
     }
 
     const query = {
-      $or: [{ userId }, { userId: "ca_1" }, { userId: "default_firm" }],
+      userId,
     };
     if (clientName) query.clientName = clientName;
     if (financialYear) query.financialYear = financialYear;
@@ -433,8 +462,8 @@ export const createBalanceSheetRecon = async (req, res) => {
       return res.status(201).json({ success: true, recon });
     }
 
-    const bookDep = Number(req.body.bookDepreciationScheduleII) || 2800000;
-    const taxDep = Number(req.body.taxDepreciationRule5) || 3450000;
+    const bookDep = Number(req.body.bookDepreciationScheduleII) || 0;
+    const taxDep = Number(req.body.taxDepreciationRule5) || 0;
     const diff = taxDep - bookDep;
     const dtl = Math.round(diff * -0.2517);
 
@@ -460,14 +489,17 @@ export const createBalanceSheetRecon = async (req, res) => {
 
 export const updateBalanceSheetRecon = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      const recon = devStore.updateBalanceSheetRecon(req.params.id, req.body);
+      const recon = devStore.updateBalanceSheetRecon(req.params.id, req.body, userId);
       if (!recon) return res.status(404).json({ success: false, message: "Reconciliation not found" });
       return res.json({ success: true, recon });
     }
 
     const recon = await BalanceSheetRecon.findOneAndUpdate(
-      { $or: [{ reconId: req.params.id }, { _id: req.params.id }] },
+      { userId, $or: [{ reconId: req.params.id }, { _id: req.params.id }] },
       { $set: req.body },
       { new: true }
     );
@@ -485,12 +517,16 @@ export const updateBalanceSheetRecon = async (req, res) => {
 
 export const deleteBalanceSheetRecon = async (req, res) => {
   try {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
+
     if (shouldUseDevStore()) {
-      devStore.deleteBalanceSheetRecon(req.params.id);
+      devStore.deleteBalanceSheetRecon(req.params.id, userId);
       return res.json({ success: true, message: "Reconciliation deleted successfully" });
     }
 
     await BalanceSheetRecon.findOneAndDelete({
+      userId,
       $or: [{ reconId: req.params.id }, { _id: req.params.id }],
     });
     res.json({ success: true, message: "Reconciliation deleted successfully" });

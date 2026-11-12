@@ -97,8 +97,8 @@ interface BoardGovernanceViewProps {
 }
 
 export function BoardGovernanceView({
-  firmName = "Apex Law & Corporate Partners LLP",
-  csName = "CS Rajesh Sharma",
+  firmName = "",
+  csName = "",
   initialSubTab = "meetings",
 }: BoardGovernanceViewProps) {
   // Navigation tabs
@@ -127,12 +127,12 @@ export function BoardGovernanceView({
   const [copiedCtc, setCopiedCtc] = useState(false);
 
   // New Meeting Form
-  const [newCompanyName, setNewCompanyName] = useState("CyberCorp Technologies Pvt Ltd");
-  const [newMeetingNumber, setNewMeetingNumber] = useState("BM-05/2026-27");
+  const [newCompanyName, setNewCompanyName] = useState("");
+  const [newMeetingNumber, setNewMeetingNumber] = useState("BM-01");
   const [newMeetingType, setNewMeetingType] = useState<BoardMeetingItem["meetingType"]>("board_meeting");
-  const [newMeetingDate, setNewMeetingDate] = useState("2026-11-20");
-  const [newMeetingTime, setNewMeetingTime] = useState("11:30 AM");
-  const [newMeetingVenue, setNewMeetingVenue] = useState("Board Room, Registered Office & Video Conference");
+  const [newMeetingDate, setNewMeetingDate] = useState("");
+  const [newMeetingTime, setNewMeetingTime] = useState("");
+  const [newMeetingVenue, setNewMeetingVenue] = useState("Board Room, Registered Office");
   const [newIsShorterNotice, setNewIsShorterNotice] = useState(false);
   const [newShorterNoticeReason, setNewShorterNoticeReason] = useState("");
 
@@ -144,7 +144,7 @@ export function BoardGovernanceView({
   const [newResPreamble, setNewResPreamble] = useState("");
   const [newResText, setNewResText] = useState("");
   const [newResFurtherText, setNewResFurtherText] = useState("");
-  const [newResSignatories, setNewResSignatories] = useState("CS Rajesh Sharma, Dr. Vikram Malhotra");
+  const [newResSignatories, setNewResSignatories] = useState("");
 
   // Load from backend on mount
   useEffect(() => {
@@ -199,22 +199,19 @@ export function BoardGovernanceView({
   // Handle Schedule Meeting
   const handleScheduleMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newCompanyName.trim()) return;
     const newM: BoardMeetingItem = {
       id: `bm-${Date.now()}`,
-      companyName: newCompanyName,
-      cin: "U72200DL2022PTC394812",
+      companyName: newCompanyName.trim(),
+      cin: "",
       meetingNumber: newMeetingNumber,
       meetingType: newMeetingType,
       date: newMeetingDate,
       time: newMeetingTime,
       venue: newMeetingVenue,
       isVideoConference: true,
-      chairperson: "Dr. Vikram Malhotra (Chairman & Independent Director)",
-      directors: [
-        { name: "Dr. Vikram Malhotra", din: "08912340", status: "present" },
-        { name: csName, din: "07849102", status: "present" },
-        { name: "Priya Sundaram", din: "09124589", status: "present_vc" },
-      ],
+      chairperson: "Chairperson",
+      directors: csName ? [{ name: csName, din: "", status: "present" }] : [],
       isShorterNotice: newIsShorterNotice,
       shorterNoticeReason: newShorterNoticeReason,
       status: "scheduled",
@@ -230,7 +227,7 @@ export function BoardGovernanceView({
           itemNumber: 2,
           title: "Confirmation of Previous Minutes",
           description: "Confirm and sign minutes of the previous board meeting strictly per SS-1.",
-          proposedBy: csName,
+          proposedBy: csName || "Company Secretary",
           isStatutory: true,
         },
       ],
@@ -253,8 +250,8 @@ export function BoardGovernanceView({
 
     const newR: BoardResolutionItem = {
       id: `res-${Date.now()}`,
-      companyName: newCompanyName,
-      cin: "U72200DL2022PTC394812",
+      companyName: newCompanyName.trim(),
+      cin: "",
       resolutionNumber: `RES-0${resolutions.length + 1}/${newMeetingNumber}`,
       type: newResType,
       category: newResCategory,
@@ -1179,7 +1176,7 @@ Place: New Delhi`;
                 {selectedMeeting.directors.map((d, idx) => (
                   <div key={idx} className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
                     <div className="font-bold text-black dark:text-white">{d.name}</div>
-                    <div className="text-[10px] text-zinc-400 font-mono">DIN: {d.din || "08912340"}</div>
+                    <div className="text-[10px] text-zinc-400 font-mono">DIN: {d.din || "—"}</div>
                     <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                       {d.status.replace("_", " ")}
                     </span>

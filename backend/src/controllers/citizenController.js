@@ -26,7 +26,19 @@ const shouldUseDevStore = () => {
 
 // Helper to get userId from req.user
 const getUserId = (req) => {
-  return req.user?._id || req.user?.id || "default_citizen";
+  return String(req.user?._id || req.user?.id || "");
+};
+
+const isMatterOwnerOrCounsel = (matter, userId) => {
+  if (!matter || !userId) return false;
+  const uid = String(userId);
+  return (
+    String(matter.citizenId || "") === uid ||
+    String(matter.userId || "") === uid ||
+    String(matter.clientId || "") === uid ||
+    String(matter.advocateId || "") === uid ||
+    String(matter.assignedAdvocateId || "") === uid
+  );
 };
 
 // ============================================================================
@@ -679,21 +691,21 @@ export const matchAdvocateForGrievance = async (req, res) => {
 const normalizeMatterForClient = (m) => {
   const doc = m.toObject ? m.toObject() : m;
   const id = doc._id ? doc._id.toString() : doc.id;
-  const caseNumber = doc.caseNumber || "WP(C) 19482/2024";
-  const rawTitle = doc.title || doc.matterTitle || doc.caseTitle || `${caseNumber} Matter`;
-  const court = doc.court || doc.courtForum || "High Court of Kerala (Ernakulam Bench)";
-  const assignedAdvocate = doc.assignedAdvocate || doc.advocateName || "Adv. Meera Krishnan";
-  const courtHall = doc.courtHall || "Court Hall 2A (Division Bench)";
-  const status = doc.status || "Admitted";
-  const filingDate = doc.filingDate || (doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : "2024-06-14");
-  const cnrNumber = doc.cnrNumber || "KLHC01-019482-2024";
+  const caseNumber = doc.caseNumber || "";
+  const rawTitle = doc.title || doc.matterTitle || doc.caseTitle || (caseNumber ? `${caseNumber} Matter` : "Untitled Docket");
+  const court = doc.court || doc.courtForum || "";
+  const assignedAdvocate = doc.assignedAdvocate || doc.advocateName || "";
+  const courtHall = doc.courtHall || "";
+  const status = doc.status || "Initiated";
+  const filingDate = doc.filingDate || (doc.createdAt ? new Date(doc.createdAt).toISOString().split("T")[0] : "");
+  const cnrNumber = doc.cnrNumber || "";
 
-  let nextHearing = doc.nextHearing || "20-Nov-2024 (Bench 4B)";
+  let nextHearing = doc.nextHearing || "";
   if (doc.nextHearingDate) {
     if (typeof doc.nextHearingDate === "string" && doc.nextHearingDate.includes("T")) {
       const d = new Date(doc.nextHearingDate);
       if (!isNaN(d.getTime())) {
-        nextHearing = `${d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${courtHall.split("(")[0].trim()})`;
+        nextHearing = `${d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}${courtHall ? ` (${courtHall.split("(")[0].trim()})` : ""}`;
       }
     } else if (typeof doc.nextHearingDate === "string") {
       nextHearing = doc.nextHearingDate;
@@ -701,13 +713,7 @@ const normalizeMatterForClient = (m) => {
   }
 
   const statutoryActs =
-    doc.statutoryActs && doc.statutoryActs.length > 0
-      ? doc.statutoryActs
-      : [
-          "Article 226 of the Constitution of India",
-          "Indian Telegraph Act, 1885 (Section 10 & 16)",
-          "Specific Relief Act, 1963",
-        ];
+    doc.statutoryActs && doc.statutoryActs.length > 0 ? doc.statutoryActs : [];
 
   const timeline = (doc.timeline || []).map((step) => ({
     date:
@@ -762,6 +768,9 @@ const normalizeMatterForClient = (m) => {
 export const getMatters = async (req, res) => {
   try {
     const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     if (shouldUseDevStore()) {
       const matters = devStore.getMatters(userId);
@@ -774,7 +783,9 @@ export const getMatters = async (req, res) => {
       });
     }
 
-    let matters = await Matter.find({ citizenId: userId }).sort({ updatedAt: -1 });
+    let matters = await Matter.find({
+      $or: [{ citizenId: userId }, { advocateId: userId }],
+    }).sort({ updatedAt: -1 });
     const normalized = matters.map(normalizeMatterForClient);
     res.json({
       success: true,
@@ -795,10 +806,13 @@ export const getMatterById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     if (shouldUseDevStore()) {
       const match = devStore.getMatterById(id);
-      if (match) {
+      if (match && isMatterOwnerOrCounsel(match, userId)) {
         return res.json({
           success: true,
           matter: normalizeMatterForClient(match),
@@ -809,8 +823,10 @@ export const getMatterById = async (req, res) => {
     }
 
     const matter = await Matter.findOne({
-      citizenId: userId,
-      $or: [{ _id: id }, { caseNumber: id }, { cnrNumber: id }],
+      $and: [
+        { $or: [{ citizenId: userId }, { advocateId: userId }] },
+        { $or: [{ _id: id }, { caseNumber: id }, { cnrNumber: id }] },
+      ],
     });
 
     if (!matter) {
@@ -1116,8 +1132,19 @@ export const updateMatter = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     if (shouldUseDevStore()) {
+      const existing = devStore.getMatterById(id);
+      if (!existing) {
+        return res.status(404).json({ success: false, message: "Matter docket not found" });
+      }
+      if (!isMatterOwnerOrCounsel(existing, userId)) {
+        return res.status(403).json({ success: false, message: "Not authorized to update this matter" });
+      }
       const updated = devStore.updateMatter(id, updateData);
       if (!updated) {
         return res.status(404).json({ success: false, message: "Matter docket not found" });
@@ -1156,6 +1183,9 @@ export const updateMatter = async (req, res) => {
     if (!matter) {
       return res.status(404).json({ success: false, message: "Matter not found" });
     }
+    if (!isMatterOwnerOrCounsel(matter, userId)) {
+      return res.status(403).json({ success: false, message: "Not authorized to update this matter" });
+    }
 
     Object.assign(matter, updateData);
     matter.updatedAt = new Date();
@@ -1193,12 +1223,23 @@ export const addMatterQuery = async (req, res) => {
   try {
     const { id } = req.params;
     const queryData = req.body;
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     if (!queryData.title) {
       return res.status(400).json({ success: false, message: "Query title is required" });
     }
 
     if (shouldUseDevStore()) {
+      const existing = devStore.getMatterById(id);
+      if (!existing) {
+        return res.status(404).json({ success: false, message: "Matter not found" });
+      }
+      if (!isMatterOwnerOrCounsel(existing, userId)) {
+        return res.status(403).json({ success: false, message: "Not authorized to modify this matter" });
+      }
       const result = devStore.addMatterQuery(id, queryData);
       if (!result) {
         return res.status(404).json({ success: false, message: "Matter not found" });
@@ -1211,7 +1252,7 @@ export const addMatterQuery = async (req, res) => {
           queryId: result.query?.id,
           title: queryData.title,
           authorRole: queryData.authorRole || queryData.raisedBy?.role || "Engagement Lead",
-          authorName: queryData.authorName || queryData.raisedBy?.name || "Practicing Professional",
+          authorName: queryData.authorName || queryData.raisedBy?.name || req.user?.name || "Practicing Professional",
           category: queryData.category || queryData.type || "CLARIFICATION",
           caseNumber: normalized.caseNumber,
         });
@@ -1241,6 +1282,9 @@ export const addMatterQuery = async (req, res) => {
     if (!matter) {
       return res.status(404).json({ success: false, message: "Matter not found" });
     }
+    if (!isMatterOwnerOrCounsel(matter, userId)) {
+      return res.status(403).json({ success: false, message: "Not authorized to modify this matter" });
+    }
 
     if (!matter.queries) matter.queries = [];
     const newQuery = {
@@ -1251,7 +1295,7 @@ export const addMatterQuery = async (req, res) => {
       requestedDocumentName: queryData.requestedDocumentName || null,
       status: queryData.status || "OPEN",
       raisedBy: {
-        name: queryData.raisedBy?.name || "Practicing Professional",
+        name: queryData.raisedBy?.name || req.user?.name || "Practicing Professional",
         role: queryData.raisedBy?.role || "Engagement Lead",
         date: queryData.raisedBy?.date || new Date().toISOString(),
       },
@@ -1298,8 +1342,19 @@ export const resolveMatterQuery = async (req, res) => {
   try {
     const { id, queryId } = req.params;
     const responseData = req.body;
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     if (shouldUseDevStore()) {
+      const existing = devStore.getMatterById(id);
+      if (!existing) {
+        return res.status(404).json({ success: false, message: "Matter or query not found" });
+      }
+      if (!isMatterOwnerOrCounsel(existing, userId)) {
+        return res.status(403).json({ success: false, message: "Not authorized to modify this matter" });
+      }
       const result = devStore.resolveMatterQuery(id, queryId, responseData);
       if (!result) {
         return res.status(404).json({ success: false, message: "Matter or query not found" });
@@ -1339,6 +1394,9 @@ export const resolveMatterQuery = async (req, res) => {
     if (!matter) {
       return res.status(404).json({ success: false, message: "Matter not found" });
     }
+    if (!isMatterOwnerOrCounsel(matter, userId)) {
+      return res.status(403).json({ success: false, message: "Not authorized to modify this matter" });
+    }
 
     if (!matter.queries) matter.queries = [];
     const qIndex = matter.queries.findIndex((q) => q.id === queryId || q._id?.toString() === queryId);
@@ -1361,8 +1419,8 @@ export const resolveMatterQuery = async (req, res) => {
       for (const att of responseData.attachments) {
         matter.documents.push({
           name: att.name,
-          size: att.size || "1.0 MB",
-          hash: att.hash || "sha256:verified_reupload",
+          size: att.size || "—",
+          hash: att.hash || "",
           uploadedAt: new Date(),
           source: "query_reupload",
           queryId: queryId,
@@ -1408,8 +1466,19 @@ export const authorizeMatter = async (req, res) => {
   try {
     const { id } = req.params;
     const authData = req.body;
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
 
     if (shouldUseDevStore()) {
+      const existing = devStore.getMatterById(id);
+      if (!existing) {
+        return res.status(404).json({ success: false, message: "Matter docket not found" });
+      }
+      if (!isMatterOwnerOrCounsel(existing, userId)) {
+        return res.status(403).json({ success: false, message: "Not authorized to authorize this matter" });
+      }
       const result = devStore.authorizeMatter(id, authData);
       if (!result) {
         return res.status(404).json({ success: false, message: "Matter docket not found" });
@@ -1452,20 +1521,23 @@ export const authorizeMatter = async (req, res) => {
     if (!matter) {
       return res.status(404).json({ success: false, message: "Matter not found" });
     }
+    if (!isMatterOwnerOrCounsel(matter, userId)) {
+      return res.status(403).json({ success: false, message: "Not authorized to authorize this matter" });
+    }
 
     const authRecord = {
       authId: authData.authId || `ESIGN-${Date.now()}`,
       signMethod: authData.signMethod || "AADHAAR_ESIGN",
       signerName: authData.signerName || "Authorized Signatory",
-      signerPanOrDin: authData.signerPanOrDin || "ABCDE1234F",
-      signerAadhaarMasked: authData.signerAadhaarMasked || "XXXX-XXXX-8921",
+      signerPanOrDin: authData.signerPanOrDin || "",
+      signerAadhaarMasked: authData.signerAadhaarMasked || "",
       signerDesignation: authData.signerDesignation || "Director",
-      espReference: authData.espReference || `C-DAC-ESP-2026-${Math.floor(100000 + Math.random() * 900000)}`,
+      espReference: authData.espReference || `ESP-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
       timestamp: authData.timestamp || new Date().toISOString(),
       status: "AUTHORIZED",
       statutoryDeclarationAccepted: true,
       documentTitle: authData.documentTitle || "Statutory Board Consent & Filing Authorization",
-      authHash: authData.authHash || `sha256:${Date.now().toString(16)}a9f24`,
+      authHash: authData.authHash || "",
       legalSection: "Information Technology Act 2000 Section 3A & Second Schedule / Companies Act 2013 Section 448",
     };
 

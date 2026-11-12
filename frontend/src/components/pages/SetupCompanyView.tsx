@@ -34,7 +34,7 @@ export function SetupCompanyView() {
   const [orgType, setOrgType] = useState<ProfessionalCategory>("Advocate");
 
   // Autofill with AI state
-  const [aiUrl, setAiUrl] = useState("https://inworth.law");
+  const [aiUrl, setAiUrl] = useState("");
   const [isAutofilling, setIsAutofilling] = useState(false);
 
   // Form Fields matching screenshot
@@ -45,8 +45,8 @@ export function SetupCompanyView() {
   const [employeeRange, setEmployeeRange] = useState("Solo Practice (1 Principal)");
   const [founderName, setFounderName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [foundedYear, setFoundedYear] = useState("2018");
-  const [revenueValuation, setRevenueValuation] = useState("₹15M - ₹40M");
+  const [foundedYear, setFoundedYear] = useState("");
+  const [revenueValuation, setRevenueValuation] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [registrationCin, setRegistrationCin] = useState("");
   const [description, setDescription] = useState("");
@@ -83,23 +83,15 @@ export function SetupCompanyView() {
     if (category === "Advocate") {
       setCompanyType("Sole Proprietorship / Independent Counsel");
       setEmployeeRange("Solo Practice (1 Principal)");
-      setAiUrl("https://krishnanlaw.in");
-      setRevenueValuation("₹15M - ₹35M");
     } else if (category === "Law Firm") {
       setCompanyType("Limited Liability Partnership (LLP)");
       setEmployeeRange("11 to 50 attorneys & staff");
-      setAiUrl("https://apexlaw.in");
-      setRevenueValuation("₹35M - ₹80M");
     } else if (category === "CS (Company Secretary)") {
       setCompanyType("Practicing Company Secretary Firm (PCS)");
       setEmployeeRange("6 to 20 associates");
-      setAiUrl("https://mehtacs.in");
-      setRevenueValuation("₹20M - ₹50M");
     } else if (category === "CA (Chartered Accountant)") {
       setCompanyType("Partnership Firm (ICAI Registered)");
       setEmployeeRange("11 to 50 audit & tax staff");
-      setAiUrl("https://singhaniaca.in");
-      setRevenueValuation("₹25M - ₹60M");
     }
   };
 
@@ -108,85 +100,41 @@ export function SetupCompanyView() {
     applyCategoryDefaults(category);
   };
 
-  // Smart Autofill simulation tailored to the selected professional category
+  // Populate category structure from website URL if entered (without inserting third-party fixture names)
   const handleAutofillWithAi = () => {
     setIsAutofilling(true);
     setTimeout(() => {
+      let hostLabel = "";
+      try {
+        if (aiUrl.trim()) {
+          const parsed = new URL(aiUrl.startsWith("http") ? aiUrl : `https://${aiUrl}`);
+          hostLabel = parsed.hostname.replace(/^www\./, "").split(".")[0] || "";
+          hostLabel = hostLabel.charAt(0).toUpperCase() + hostLabel.slice(1);
+        }
+      } catch {
+        hostLabel = "";
+      }
+
       if (orgType === "Advocate") {
-        setCompanyName("Adv. Meera Krishnan Chambers");
-        setHeadquarters("High Court of Delhi & Supreme Court, New Delhi, India");
-        setIndustry("Criminal Defense, Constitutional Writs, Commercial Litigation & Arbitration");
+        if (hostLabel) setCompanyName(`${hostLabel} Chambers`);
         setCompanyType("Sole Proprietorship / Independent Counsel");
         setEmployeeRange("Solo Practice (1 Principal)");
-        setFounderName("Adv. Meera Krishnan");
-        setContactEmail("chambers@krishnanlaw.in");
-        setFoundedYear("2017");
-        setRevenueValuation("₹15M - ₹35M");
-        setWebsiteUrl(aiUrl || "https://krishnanlaw.in");
-        setRegistrationCin("D/1842/2017 (Bar Council of Delhi)");
-        setDescription(
-          "Independent chamber counsel specializing in commercial dispute resolution, writ litigation before the High Court of Delhi, and appellate proceedings in the Supreme Court of India."
-        );
-        setWhyJoinUs(
-          "Hands-on courtroom advocacy, rigorous causelist intelligence, and comprehensive judicial brief drafting backed by AI research tools."
-        );
       } else if (orgType === "Law Firm") {
-        setCompanyName("Apex Law & Corporate Partners LLP");
-        setHeadquarters("Connaught Place, New Delhi, DL, India");
-        setIndustry("Corporate Law, Mergers & Acquisitions, Banking & Commercial Arbitration");
+        if (hostLabel) setCompanyName(`${hostLabel} Legal LLP`);
         setCompanyType("Limited Liability Partnership (LLP)");
         setEmployeeRange("11 to 50 attorneys & staff");
-        setFounderName("Adv. Vikram Mehra & Partners");
-        setContactEmail("partners@apexlaw.in");
-        setFoundedYear("2018");
-        setRevenueValuation("₹35M - ₹80M");
-        setWebsiteUrl(aiUrl || "https://apexlaw.in");
-        setRegistrationCin("LLPIN-AAR-4192 / D/1942/2012");
-        setDescription(
-          "Apex Law & Corporate Partners LLP is a premier full-service legal firm advising corporate enterprises on M&A, cross-border investments, dispute resolution, and contractual governance."
-        );
-        setWhyJoinUs(
-          "Integrated litigation and corporate advisory practice with multi-counsel collaboration, centralized billing, and shared case intelligence."
-        );
       } else if (orgType === "CS (Company Secretary)") {
-        setCompanyName("Mehta & Associates Corporate Secretarial Practice");
-        setHeadquarters("Bandra Kurla Complex (BKC), Mumbai, MH, India");
-        setIndustry("Corporate Governance, MCA21 e-Filings, ROC Compliance & Secretarial Audit");
+        if (hostLabel) setCompanyName(`${hostLabel} Secretarial Practice`);
         setCompanyType("Practicing Company Secretary Firm (PCS)");
         setEmployeeRange("6 to 20 associates");
-        setFounderName("CS Rajesh Sharma (FCS)");
-        setContactEmail("compliance@mehtacs.in");
-        setFoundedYear("2016");
-        setRevenueValuation("₹20M - ₹50M");
-        setWebsiteUrl(aiUrl || "https://mehtacs.in");
-        setRegistrationCin("FCS-9481 / CP-10294 (ICSI)");
-        setDescription(
-          "Practicing Company Secretarial firm managing end-to-end statutory compliance, Form MR-3 secretarial audits, Board meeting minutes, and annual ROC filings for public and private companies."
-        );
-        setWhyJoinUs(
-          "Streamlined secretarial workflow automation, direct MCA21 portal sync, and structured compliance registers for high-growth enterprise boards."
-        );
       } else if (orgType === "CA (Chartered Accountant)") {
-        setCompanyName("S. K. Singhania & Co. Chartered Accountants");
-        setHeadquarters("MG Road, Bengaluru, KA, India");
-        setIndustry("Statutory Audit, Direct & Indirect Taxation, GST, Forensic Audit & Valuation");
+        if (hostLabel) setCompanyName(`${hostLabel} Chartered Accountants`);
         setCompanyType("Partnership Firm (ICAI Registered)");
         setEmployeeRange("11 to 50 audit & tax staff");
-        setFounderName("CA Suresh Singhania (FCA)");
-        setContactEmail("tax@singhaniaca.in");
-        setFoundedYear("2015");
-        setRevenueValuation("₹25M - ₹60M");
-        setWebsiteUrl(aiUrl || "https://singhaniaca.in");
-        setRegistrationCin("FRN-014920N / ACA-518290 (ICAI)");
-        setDescription(
-          "Established Chartered Accountancy firm providing comprehensive statutory audits, corporate tax planning, GST litigation representation, forensic auditing, and MCA financial statement certifications."
-        );
-        setWhyJoinUs(
-          "Advanced audit management platform with automated audit trails, digitized balance sheet certifications, and timely statutory filing alerts."
-        );
       }
+      if (aiUrl.trim()) setWebsiteUrl(aiUrl.trim());
       setIsAutofilling(false);
-    }, 600);
+    }, 300);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -338,13 +286,13 @@ export function SetupCompanyView() {
   const getCompanyNamePlaceholder = () => {
     switch (orgType) {
       case "Advocate":
-        return "e.g. Adv. Meera Krishnan Chambers";
+        return "Enter your chambers or advocate practice name";
       case "Law Firm":
-        return "e.g. Apex Law & Corporate Partners LLP";
+        return "Enter your law firm or LLP name";
       case "CS (Company Secretary)":
-        return "e.g. Mehta & Associates Corporate Secretarial Practice";
+        return "Enter your company secretarial practice name";
       case "CA (Chartered Accountant)":
-        return "e.g. S. K. Singhania & Co. Chartered Accountants";
+        return "Enter your chartered accountancy firm name";
     }
   };
 

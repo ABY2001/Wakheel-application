@@ -77,7 +77,7 @@ export const csCaCopilotApi = {
   // 1. Section 186 Inter-Corporate Loans & Guarantees Drafter (CS)
   async draftSection186(params: Section186Params, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/copilot/cs/section-186-drafter`, {
         method: "POST",
         headers: {
@@ -96,7 +96,7 @@ export const csCaCopilotApi = {
   // 2. Section 43B(h) MSME Disallowance & Penal Interest Analyzer (CA)
   async analyzeClause43bMsme(params: Clause43bParams, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/copilot/ca/clause-43b-msme-analyzer`, {
         method: "POST",
         headers: {
@@ -115,7 +115,7 @@ export const csCaCopilotApi = {
   // 3. GST DRC-01 SCN Notice Replier (CA & CS)
   async draftGstDrc01Reply(params: GstDrc01Params, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/copilot/ca/gst-drc01-replier`, {
         method: "POST",
         headers: {
@@ -134,7 +134,7 @@ export const csCaCopilotApi = {
   // 4. Interactive Statutory Assistant Query (CS & CA)
   async queryStatutoryAssistant(params: StatutoryQueryParams, token?: string) {
     try {
-      const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : "") || "dev_token";
+      const t = token || (typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") : "") || "";
       const res = await fetch(`${API_BASE_URL}/copilot/cs-ca/interactive-query`, {
         method: "POST",
         headers: {

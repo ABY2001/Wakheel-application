@@ -116,37 +116,49 @@ export interface RegulatoryCheckResult {
   requiresDualSignOff: boolean;
 }
 
-const DUMMY_TASK: DelegatedTask = {
-  taskId: "task-fb-1",
-  title: "Statutory Task",
-  clientName: "CyberCorp Technologies",
-  module: "Secretarial & MCA21",
-  assignedTrainee: { memberId: "m1", name: "Associate", role: "CS Executive" },
-  reviewingPartner: { memberId: "m2", name: "Partner", role: "Lead Partner" },
+function getAuthToken(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+}
+
+function getAuthHeaders(includeJson = false): Record<string, string> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (includeJson) headers["Content-Type"] = "application/json";
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
+const EMPTY_TASK: DelegatedTask = {
+  taskId: "",
+  title: "",
+  clientName: "",
+  module: "ROC_FILING",
+  assignedTrainee: { memberId: "", name: "", role: "" },
+  reviewingPartner: { memberId: "", name: "", role: "" },
   status: "DRAFTING_BY_TRAINEE",
   fourEyesVerified: false,
-  statutoryLockPreventedDsc: false,
-  submittedAt: new Date().toISOString(),
+  statutoryLockPreventedDsc: true,
 };
 
-const DUMMY_GATE: DualSignOffGate = {
-  gateId: "gate-fb-1",
-  title: "Dual Gate",
-  transactionType: "Audit",
-  clientName: "Client",
-  csGate: { required: true, statutoryScope: "Secretarial Audit & Annual ROC Return", status: "PENDING" },
-  caGate: { required: true, statutoryScope: "Tax Audit & Financial Verification", status: "PENDING" },
+const EMPTY_GATE: DualSignOffGate = {
+  gateId: "",
+  title: "",
+  transactionType: "",
+  clientName: "",
+  csGate: { required: true, statutoryScope: "Secretarial & MCA21 Corporate Governance Attestation", status: "PENDING" },
+  caGate: { required: true, statutoryScope: "Taxation, 3CD & True/Fair View Financial Attestation", status: "PENDING" },
   overallStatus: "PENDING_DUAL_SIGNOFF",
 };
 
-const DUMMY_GOVERNANCE: MdpFirmProfile = {
-  firmId: "mdp-fb-1",
-  firmName: "Wakheel MDP LLP",
-  firmStructure: "Multi-Disciplinary Partnership",
-  registrationCinOrLlpin: "AAA-0000",
-  caFirmRegNo: "000000N",
-  csFirmRegNo: "S000000",
-  headquarters: "New Delhi",
+const EMPTY_GOVERNANCE: MdpFirmProfile = {
+  firmId: "",
+  firmName: "",
+  firmStructure: "Multi-Disciplinary Partnership (LLP)",
+  registrationCinOrLlpin: "",
+  caFirmRegNo: "",
+  csFirmRegNo: "",
+  headquarters: "",
   members: [],
   regulatoryRules: [],
   delegatedTasks: [],
@@ -155,15 +167,20 @@ const DUMMY_GOVERNANCE: MdpFirmProfile = {
 
 export const mdpGovernanceApi = {
   async getFirmGovernance(): Promise<{ success: boolean; governance: MdpFirmProfile }> {
+    if (!getAuthToken()) {
+      return { success: false, governance: EMPTY_GOVERNANCE };
+    }
     try {
-      const res = await fetch(`${API_BASE}/mdp-governance`);
+      const res = await fetch(`${API_BASE}/mdp-governance`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         return await res.json();
       }
     } catch (e) {
       console.warn("mdpGovernanceApi.getFirmGovernance fallback:", (e as Error)?.message);
     }
-    return { success: false, governance: DUMMY_GOVERNANCE };
+    return { success: false, governance: EMPTY_GOVERNANCE };
   },
 
   async checkRegulatoryLock(params: {
@@ -171,26 +188,28 @@ export const mdpGovernanceApi = {
     memberInstitute: string;
     memberRole: string;
   }): Promise<RegulatoryCheckResult> {
-    try {
-      const res = await fetch(`${API_BASE}/mdp-governance/check-lock`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      if (res.ok) {
-        return await res.json();
+    if (getAuthToken()) {
+      try {
+        const res = await fetch(`${API_BASE}/mdp-governance/check-lock`, {
+          method: "POST",
+          headers: getAuthHeaders(true),
+          body: JSON.stringify(params),
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn("mdpGovernanceApi.checkRegulatoryLock fallback:", (e as Error)?.message);
       }
-    } catch (e) {
-      console.warn("mdpGovernanceApi.checkRegulatoryLock fallback:", (e as Error)?.message);
     }
     return {
-      success: true,
-      authorized: true,
+      success: false,
+      authorized: false,
       statutoryAction: params.statutoryAction,
       actionName: params.statutoryAction,
       governingAct: "Multi-Disciplinary Professional Practice Rules",
       isTraineeLocked: false,
-      warningMessage: null,
+      warningMessage: "Sign in to verify statutory authorization against firm governance rules.",
       penaltyCitation: null,
       penaltyForBreach: null,
       requiresDualSignOff: false,
@@ -198,22 +217,30 @@ export const mdpGovernanceApi = {
   },
 
   async getDelegatedTasks(): Promise<{ success: boolean; tasks: DelegatedTask[] }> {
+    if (!getAuthToken()) {
+      return { success: false, tasks: [] };
+    }
     try {
-      const res = await fetch(`${API_BASE}/mdp-governance/delegated-tasks`);
+      const res = await fetch(`${API_BASE}/mdp-governance/delegated-tasks`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         return await res.json();
       }
     } catch (e) {
       console.warn("mdpGovernanceApi.getDelegatedTasks fallback:", (e as Error)?.message);
     }
-    return { success: true, tasks: [] };
+    return { success: false, tasks: [] };
   },
 
   async createDelegatedTask(taskData: Partial<DelegatedTask>): Promise<{ success: boolean; task: DelegatedTask }> {
+    if (!getAuthToken()) {
+      return { success: false, task: EMPTY_TASK };
+    }
     try {
       const res = await fetch(`${API_BASE}/mdp-governance/delegated-tasks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(taskData),
       });
       if (res.ok) {
@@ -222,7 +249,7 @@ export const mdpGovernanceApi = {
     } catch (e) {
       console.warn("mdpGovernanceApi.createDelegatedTask fallback:", (e as Error)?.message);
     }
-    return { success: false, task: { ...DUMMY_TASK, ...taskData } };
+    return { success: false, task: EMPTY_TASK };
   },
 
   async reviewDelegatedTask(
@@ -233,10 +260,13 @@ export const mdpGovernanceApi = {
       reviewingPartner?: { memberId: string; name: string; role: string };
     }
   ): Promise<{ success: boolean; task: DelegatedTask }> {
+    if (!getAuthToken()) {
+      return { success: false, task: EMPTY_TASK };
+    }
     try {
       const res = await fetch(`${API_BASE}/mdp-governance/delegated-tasks/${taskId}/review`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -245,19 +275,24 @@ export const mdpGovernanceApi = {
     } catch (e) {
       console.warn("mdpGovernanceApi.reviewDelegatedTask fallback:", (e as Error)?.message);
     }
-    return { success: false, task: { ...DUMMY_TASK, taskId, status: payload.status } };
+    return { success: false, task: EMPTY_TASK };
   },
 
   async getDualSignOffGates(): Promise<{ success: boolean; gates: DualSignOffGate[] }> {
+    if (!getAuthToken()) {
+      return { success: false, gates: [] };
+    }
     try {
-      const res = await fetch(`${API_BASE}/mdp-governance/dual-gates`);
+      const res = await fetch(`${API_BASE}/mdp-governance/dual-gates`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         return await res.json();
       }
     } catch (e) {
       console.warn("mdpGovernanceApi.getDualSignOffGates fallback:", (e as Error)?.message);
     }
-    return { success: true, gates: [] };
+    return { success: false, gates: [] };
   },
 
   async signDualSignOffGate(
@@ -269,10 +304,13 @@ export const mdpGovernanceApi = {
       udin?: string;
     }
   ): Promise<{ success: boolean; gate: DualSignOffGate }> {
+    if (!getAuthToken()) {
+      return { success: false, gate: EMPTY_GATE };
+    }
     try {
       const res = await fetch(`${API_BASE}/mdp-governance/dual-gates/${gateId}/sign`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(true),
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -281,6 +319,6 @@ export const mdpGovernanceApi = {
     } catch (e) {
       console.warn("mdpGovernanceApi.signDualSignOffGate fallback:", (e as Error)?.message);
     }
-    return { success: false, gate: { ...DUMMY_GATE, gateId } };
+    return { success: false, gate: EMPTY_GATE };
   },
 };

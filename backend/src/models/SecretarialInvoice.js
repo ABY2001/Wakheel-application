@@ -9,7 +9,7 @@ const secretarialInvoiceSchema = new mongoose.Schema(
     },
     userId: {
       type: mongoose.Schema.Types.Mixed,
-      default: "cs_1",
+      required: true,
       index: true,
     },
     invoiceNumber: {

@@ -66,7 +66,7 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
   currentMatterTitle = "",
 }) => {
   // Active Dossier Bundle
-  const [selectedBundle, setSelectedBundle] = useState<"kerala_land_kseb" | "s138_ni_act" | "custom">("custom");
+  const [selectedBundle, setSelectedBundle] = useState<"custom">("custom");
   const [customDocuments, setCustomDocuments] = useState<Array<{ name: string; size: string; type: string }>>([]);
 
   // View Mode: 'table' | 'timeline' | 'synopsis' | 'contradictions'
@@ -133,7 +133,7 @@ export const CaseChronologyBuilder: React.FC<CaseChronologyBuilderProps> = ({
     }
   }, [selectedBundle]);
 
-  const handleRunExtraction = async (bundle: "kerala_land_kseb" | "s138_ni_act" | "custom") => {
+  const handleRunExtraction = async (bundle: "custom") => {
     if (customDocuments.length === 0) {
       setEvents([]);
       setAuditData({

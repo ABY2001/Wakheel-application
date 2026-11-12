@@ -42,10 +42,18 @@ interface WorkForceViewProps {
 export function WorkForceView({
   activeModule = "my-ai-twin",
   onSelectModule,
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/001429/2012",
+  advocateName = "",
+  barCouncilNumber = "",
   token,
 }: WorkForceViewProps) {
+  const resolveToken = () => {
+    if (token) return token;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+    }
+    return "";
+  };
+
   const [currentTab, setCurrentTab] = useState<string>(activeModule);
 
   useEffect(() => {
@@ -72,38 +80,37 @@ export function WorkForceView({
   const [twinConfig, setTwinConfig] = useState<any>({
     advocateName,
     enrollmentNumber: barCouncilNumber,
-    standingYears: 14,
-    calibrationScore: 99.4,
-    pleadingsTrainedCount: 1420,
-    activeSyncStatus: "Live Synchronized (Vault, Precedents & Causelists)",
+    standingYears: 0,
+    calibrationScore: 0,
+    pleadingsTrainedCount: 0,
+    activeSyncStatus: "Awaiting Sync",
     draftingStyle: "constitutional_assertive",
     primaryJurisdiction: "high_court_kerala",
-    preferredCitations: ["KLT (Kerala Law Times)", "SCC (Supreme Court Cases)", "ILR (Kerala)"],
-    autonomousIntakeEnabled: true,
-    minimumConsultationFee: 3500,
+    preferredCitations: [],
+    autonomousIntakeEnabled: false,
+    minimumConsultationFee: 0,
     conflictCheckStrictness: "high",
-    emergencyBailAutoEscalate: true,
-    twinPersonaSummary:
-      "Specialized in High Court Article 226 Writs, Telegraph Act Section 16 land objections, BNSS 482 anticipatory bail, and commercial contract litigation.",
+    emergencyBailAutoEscalate: false,
+    twinPersonaSummary: "",
   });
 
   const [twinLoading, setTwinLoading] = useState(false);
   const [twinSaveMsg, setTwinSaveMsg] = useState<string | null>(null);
 
   // Twin Simulation Sandbox State
-  const [simQuery, setSimQuery] = useState(
-    "KSEB is drawing a 66kV transmission line through client property without DM order under Section 16(1). What is our urgent remedy?"
-  );
+  const [simQuery, setSimQuery] = useState("");
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState<any>(null);
   const [copiedClause, setCopiedClause] = useState(false);
 
   // Load Twin Data
   useEffect(() => {
+    const authToken = resolveToken();
+    if (!authToken) return;
     const fetchTwin = async () => {
       try {
         setTwinLoading(true);
-        const res = await advocateApi.getAdvocateTwin(token);
+        const res = await advocateApi.getAdvocateTwin(authToken);
         if (res && res.success && res.twin) {
           setTwinConfig(res.twin);
         }
@@ -117,14 +124,19 @@ export function WorkForceView({
   }, [token]);
 
   const handleSaveTwin = async () => {
+    const authToken = resolveToken();
+    if (!authToken) {
+      alert("Please sign in to save AI Twin parameters.");
+      return;
+    }
     try {
-      const res = await advocateApi.updateAdvocateTwin(twinConfig, token);
+      const res = await advocateApi.updateAdvocateTwin(twinConfig, authToken);
       if (res && res.success) {
         setTwinSaveMsg("AI Twin calibration and chamber voice profile saved successfully.");
         setTimeout(() => setTwinSaveMsg(null), 3000);
       }
     } catch (err) {
-      console.error("Save twin error:", err);
+      console.warn("Save twin error:", err);
       alert("Failed to save AI Twin parameters.");
     }
   };
@@ -132,6 +144,11 @@ export function WorkForceView({
   const handleSimulateTwin = async (queryText?: string) => {
     const q = queryText || simQuery;
     if (!q.trim() || simLoading) return;
+    const authToken = resolveToken();
+    if (!authToken) {
+      alert("Please sign in to simulate AI Twin reasoning.");
+      return;
+    }
 
     setSimLoading(true);
     setCopiedClause(false);
@@ -142,13 +159,13 @@ export function WorkForceView({
           draftingStyle: twinConfig.draftingStyle,
           primaryJurisdiction: twinConfig.primaryJurisdiction,
         },
-        token
+        authToken
       );
       if (res && res.success) {
         setSimResult(res);
       }
     } catch (err) {
-      console.error("Twin simulation error:", err);
+      console.warn("Twin simulation error:", err);
       alert("Failed to simulate AI Twin reasoning.");
     } finally {
       setSimLoading(false);
@@ -173,9 +190,11 @@ export function WorkForceView({
   const [examResult, setExamResult] = useState<any | null>(null);
 
   useEffect(() => {
+    const authToken = resolveToken();
+    if (!authToken) return;
     const fetchCurriculum = async () => {
       try {
-        const res = await advocateApi.getTrainingModules(token);
+        const res = await advocateApi.getTrainingModules(authToken);
         if (res && res.success && res.modules) {
           setCurriculumModules(res.modules);
         }
@@ -194,6 +213,11 @@ export function WorkForceView({
 
   const handleSubmitExam = async () => {
     if (!examAnswer.trim() || !activeExamModule || examEvaluating) return;
+    const authToken = resolveToken();
+    if (!authToken) {
+      alert("Please sign in to submit associate evaluations.");
+      return;
+    }
     setExamEvaluating(true);
     try {
       const res = await advocateApi.evaluateAssociateSubmission(
@@ -202,13 +226,13 @@ export function WorkForceView({
           associateAnswer: examAnswer,
           associateName: "Junior Counsel",
         },
-        token
+        authToken
       );
       if (res && res.success) {
         setExamResult(res);
       }
     } catch (err) {
-      console.error("Exam evaluation error:", err);
+      console.warn("Exam evaluation error:", err);
       alert("Failed to evaluate submission.");
     } finally {
       setExamEvaluating(false);
@@ -245,7 +269,7 @@ export function WorkForceView({
       role: "Daily Causelist Monitor",
       status: "Active",
       speed: "Refreshes 07:00 AM Daily",
-      desc: "Scrapes daily cause lists across High Court Division Benches & Ernakulam District Courts for advocate Bar Roll K/001429/2012.",
+      desc: "Scrapes daily cause lists across High Court Division Benches & Ernakulam District Courts for your registered chamber Bar Roll.",
       target: "High Court of Kerala (Court Halls 1–14)",
       triggers: "Daily Cron 07:00 IST",
     },
@@ -503,7 +527,7 @@ export function WorkForceView({
               <button
                 type="button"
                 onClick={() => {
-                  const q = "KSEB is drawing a 66kV transmission line through client property without DM order under Section 16(1). What is our urgent remedy?";
+                  const q = "A statutory authority has initiated transmission line work through client property without a prior District Magistrate order under Section 16(1). What is our urgent remedy?";
                   setSimQuery(q);
                   handleSimulateTwin(q);
                 }}
@@ -588,7 +612,7 @@ export function WorkForceView({
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-ping" />
                     <span className="font-bold text-black dark:text-white">
-                      AI Twin Reasoning Output • Adv. Meera Krishnan Voice
+                      AI Twin Reasoning Output • {advocateName ? `${advocateName} Voice` : "Chamber Twin Voice"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

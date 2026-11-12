@@ -1125,7 +1125,7 @@ export function ERPModulesView({
                   required
                   value={newInvoiceData.clientName}
                   onChange={(e) => setNewInvoiceData({ ...newInvoiceData, clientName: e.target.value })}
-                  placeholder="e.g. Malabar Infotech Solutions or Gopakumar Nambiar"
+                  placeholder="e.g. Client Legal Name or Entity"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>
@@ -1136,7 +1136,7 @@ export function ERPModulesView({
                   type="text"
                   value={newInvoiceData.matterTitle}
                   onChange={(e) => setNewInvoiceData({ ...newInvoiceData, matterTitle: e.target.value })}
-                  placeholder="e.g. WP(C) 19482/2024 — High Court of Kerala"
+                  placeholder="e.g. Writ Petition or Civil Suit Docket"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>

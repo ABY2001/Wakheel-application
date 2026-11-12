@@ -37,7 +37,7 @@ interface ERPDashboardViewProps {
 export function ERPDashboardView({
   onNavigateTab,
   hideTopBanner = false,
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "",
 }: ERPDashboardViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "profile" | "reports" | "settings" | "all">("dashboard");
   const [loading, setLoading] = useState<boolean>(true);

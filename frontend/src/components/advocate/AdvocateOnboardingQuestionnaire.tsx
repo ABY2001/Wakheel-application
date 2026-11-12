@@ -344,7 +344,7 @@ export function AdvocateOnboardingQuestionnaire({
             : ["Civil Litigation", "Constitutional Writs", "Commercial Law"],
           fee: "₹1,500 / session",
           email: email.trim(),
-          barCouncilNumber: "K/001429/2024",
+          barCouncilNumber: (finalData as any).barCouncilNumber || "",
           isCurrentUser: true,
         };
         const updatedList = [advItem, ...registered.filter((a: any) => a.email !== email.trim())];

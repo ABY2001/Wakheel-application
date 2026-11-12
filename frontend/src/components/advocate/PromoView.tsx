@@ -202,7 +202,7 @@ export function PromoView({
             <h3 className="text-sm font-bold text-black dark:text-white">Recent Jurisprudential Research Papers</h3>
             <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
               {[
-                { title: "Evolution of Right to Fair Compensation under Kerala Land Reforms Act, 1963", date: "October 2026", author: "Adv. Meera Krishnan & Research Desk" },
+                { title: "Evolution of Right to Fair Compensation under Land Reforms Legislation", date: "October 2026", author: "Chamber Constitutional Research Desk" },
                 { title: "Interplay between Section 9 of Arbitration Act and Commercial Courts Act 2015", date: "September 2026", author: "Chamber R&D Desk" },
                 { title: "Standard of Proof for Corporate Insolvency in Real Estate Companies under IBC", date: "August 2026", author: "In-house Corporate R&D" },
               ].map((paper, i) => (

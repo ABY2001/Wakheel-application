@@ -67,53 +67,42 @@ export interface AdvocateProfileData {
 }
 
 export const DEFAULT_ADVOCATE_PROFILE: AdvocateProfileData = {
-  firstName: "Meera",
-  lastName: "Krishnan",
-  email: "adv.meera.krishnan@keralabar.org",
+  firstName: "",
+  lastName: "",
+  email: "",
   country: "India",
-  mobileNumber: "+91 94471 28930",
-  organisationName: "Krishnan & Partners Chambers",
-  roleDescription: "Senior Litigation Counsel",
-  barCouncilEnrollmentNumber: "K/001429/2012",
+  mobileNumber: "",
+  organisationName: "",
+  roleDescription: "",
+  barCouncilEnrollmentNumber: "",
   stateBarCouncil: "Bar Council of Kerala",
-  enrollmentYear: "2012",
-  barAssociationId: "KHCAA/2012/5891",
-  seniorityLevel: "14 Years Practice (Senior Counsel)",
-  practiceCourts: [
-    "High Court of Kerala at Ernakulam",
-    "Supreme Court of India (Counsel)",
-    "District & Sessions Court, Ernakulam",
-    "National Company Law Tribunal (NCLT) Kochi Bench",
-  ],
-  practiceAreas: [
-    "Constitutional Law & Writs (Art. 226)",
-    "Criminal Defense & Trial Practice (BNSS, BNS)",
-    "Commercial Arbitration & Dispute Resolution",
-    "Real Estate, Land Acquisition & Revenue",
-    "Corporate & Insolvency (IBC)",
-  ],
-  chamberAddress: "Chamber No. 412, High Court Lawyers Chamber Complex, Marine Drive, Kochi, Kerala - 682031",
-  officeAddress: "TC 18/402, 'Sreepadam', Panampilly Nagar, Kochi, Kerala - 682036",
-  clerkName: "K. R. Mohanan (Registered Advocate Clerk #409)",
-  clerkPhone: "+91 98460 55123",
-  videoConsultationFee: "2,500",
-  chamberConsultationFee: "3,500",
-  courtAppearanceFee: "25,000",
-  minimumRetainerEscrow: "50,000",
-  escrowBankName: "State Bank of India (High Court Branch)",
-  escrowAccountNumber: "38920194821",
-  escrowIfsc: "SBIN0008677",
-  dscProvider: "eMudhra Class 3 (Combo Sign & Encrypt)",
-  dscSerialNo: "EMU-2024-KL-918237",
-  dscExpiryDate: "14-12-2026",
-  eFilingHighCourtId: "KL-ADV-1429-HC",
-  eFilingSupremeCourtId: "SC-ADV-9812-IN",
-  dscStatus: "active",
+  enrollmentYear: "",
+  barAssociationId: "",
+  seniorityLevel: "",
+  practiceCourts: [],
+  practiceAreas: [],
+  chamberAddress: "",
+  officeAddress: "",
+  clerkName: "",
+  clerkPhone: "",
+  videoConsultationFee: "",
+  chamberConsultationFee: "",
+  courtAppearanceFee: "",
+  minimumRetainerEscrow: "",
+  escrowBankName: "",
+  escrowAccountNumber: "",
+  escrowIfsc: "",
+  dscProvider: "",
+  dscSerialNo: "",
+  dscExpiryDate: "",
+  eFilingHighCourtId: "",
+  eFilingSupremeCourtId: "",
+  dscStatus: "expired",
   availableForCitizenMatch: true,
   showFeesTransparently: true,
-  emergencyBailCalls: true,
-  bio: "Senior practicing counsel at the High Court of Kerala specializing in Constitutional litigation, regulatory challenges against statutory authorities, commercial arbitration, and criminal appellate defense under the newly enacted Bharatiya Nagarik Suraksha Sanhita (BNSS).",
-  languages: ["English", "Malayalam", "Hindi"],
+  emergencyBailCalls: false,
+  bio: "",
+  languages: ["English"],
 };
 
 const ALL_COURTS = [
@@ -377,7 +366,7 @@ export default function AdvocateProfileModal({
                     type="text"
                     value={formData.barCouncilEnrollmentNumber}
                     onChange={(e) => handleInputChange("barCouncilEnrollmentNumber", e.target.value)}
-                    placeholder="e.g. K/001429/2012"
+                    placeholder="e.g. K/000000/YYYY"
                     className="w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
                   />
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2" />
@@ -453,7 +442,7 @@ export default function AdvocateProfileModal({
                   BCI Certificate of Practice (COP) Status: Active
                 </span>
                 <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Advocate credentials are cross-referenced with Bar Council of Kerala Roll K/001429/2012. All Vakalatnamas stamped digitally with ₹25 Advocate Welfare Fund and ₹2 Clerks Welfare stamps conform to statutory mandates.
+                  Advocate credentials are cross-referenced with {formData.stateBarCouncil || "your State Bar Council"} Roll {formData.barCouncilEnrollmentNumber || "record"}. All Vakalatnamas stamped digitally with ₹25 Advocate Welfare Fund and ₹2 Clerks Welfare stamps conform to statutory mandates.
                 </p>
               </div>
             </div>
@@ -572,7 +561,7 @@ export default function AdvocateProfileModal({
                   type="text"
                   value={formData.clerkName}
                   onChange={(e) => handleInputChange("clerkName", e.target.value)}
-                  placeholder="e.g. K. R. Mohanan (Registered Clerk #409)"
+                  placeholder="e.g. Clerk Full Name (Registered Clerk #)"
                   className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
                 <span className="text-[10px] text-zinc-500">
@@ -614,7 +603,7 @@ export default function AdvocateProfileModal({
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="adv.meera.krishnan@keralabar.org"
+                  placeholder="advocate@chamber.legal"
                   className="w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                 />
               </div>

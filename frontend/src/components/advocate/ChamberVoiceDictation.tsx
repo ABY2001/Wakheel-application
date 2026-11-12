@@ -41,9 +41,9 @@ interface ChamberVoiceDictationProps {
 }
 
 export function ChamberVoiceDictation({
-  currentMatter = "WP(C) 19482/2024 — Gopakumar v. KSEB",
+  currentMatter = "",
   token,
-  advocateName = "Advocate Chamber",
+  advocateName = "",
   onAttachToMatter,
   onNavigateToCaseNotes,
 }: ChamberVoiceDictationProps) {

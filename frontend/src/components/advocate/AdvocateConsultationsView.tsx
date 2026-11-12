@@ -76,8 +76,8 @@ interface AdvocateConsultationsViewProps {
 
 export const AdvocateConsultationsView: React.FC<AdvocateConsultationsViewProps> = ({
   token,
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
+  advocateName = "",
+  barCouncilNumber = "",
 }) => {
   const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -602,8 +602,8 @@ export const AdvocateConsultationsView: React.FC<AdvocateConsultationsViewProps>
       {/* ========================================================================= */}
       {activeVideoRoom && (
         <MultiPartyCollaborationRoom
-          roomId={activeVideoRoom._id || activeVideoRoom.id || "room_wpc_19482"}
-          matterId={activeVideoRoom.matterId || "mat_wpc_19482"}
+          roomId={activeVideoRoom._id || activeVideoRoom.id || ""}
+          matterId={activeVideoRoom.matterId || ""}
           matterTitle={activeVideoRoom.subject}
           subject={activeVideoRoom.subject}
           advocateName={advocateName}

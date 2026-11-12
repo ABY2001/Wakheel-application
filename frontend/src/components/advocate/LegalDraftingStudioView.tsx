@@ -202,7 +202,7 @@ export const LegalDraftingStudioView: React.FC<LegalDraftingStudioViewProps> = (
       case "balance_convenience":
         snippet = `\n\nBALANCE OF CONVENIENCE & IRREPARABLE INJURY:\nThe Petitioner has made out a strong prima facie case for the grant of interim relief. Unless interim protection is granted during the pendency of these proceedings, the Petitioner will suffer irreparable injury that cannot be adequately compensated in terms of money. The balance of convenience squarely tilts in favour of maintaining status quo.`;
         break;
-      case "valsamma_precedent":
+      case "statutory_precedent":
         snippet = `\n\nJURISDICTIONAL & PROCEDURAL PRECEDENT:\nWhere a statute mandates reference to or prior satisfaction by a designated adjudicatory authority upon written objection, unilateral execution without jurisdiction renders the impugned action non est and void ab initio in law.`;
         break;
       case "urgency_memo":
@@ -580,14 +580,14 @@ export const LegalDraftingStudioView: React.FC<LegalDraftingStudioViewProps> = (
               </button>
 
               <button
-                onClick={() => handleInsertClause("valsamma_precedent")}
+                onClick={() => handleInsertClause("statutory_precedent")}
                 className="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-left transition-colors text-xs text-black dark:text-white font-medium"
               >
                 <span className="flex items-center gap-2">
                   <Plus className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                   <span>Division Bench Precedent Ground</span>
                 </span>
-                <span className="text-[10px] text-zinc-400 font-mono">Valsamma (2024)</span>
+                <span className="text-[10px] text-zinc-400 font-mono">Statutory Bar</span>
               </button>
 
               <button

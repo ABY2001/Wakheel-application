@@ -57,7 +57,7 @@ interface ChamberCalendarViewProps {
 }
 
 export default function ChamberCalendarView({
-  advocateName = "Adv. Meera Krishnan",
+  advocateName = "",
   isClientView = false,
 }: ChamberCalendarViewProps) {
   // Calendar View Settings

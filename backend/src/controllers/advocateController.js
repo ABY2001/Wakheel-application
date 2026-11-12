@@ -24,7 +24,7 @@ const shouldUseDevStore = () => {
 };
 
 const getAdvocateId = (req) => {
-  return req.user?._id || req.user?.id || "adv_1";
+  return req.user?._id ? String(req.user._id) : req.user?.id ? String(req.user.id) : "";
 };
 
 // ============================================================================
@@ -131,7 +131,7 @@ export const getProfile = async (req, res) => {
       profile = await AdvocateProfile.create({
         userId: advocateId,
         fullName: req.user.fullName || "Advocate",
-        barCouncilNumber: req.user.barCouncilNumber || "K/001429/2012",
+        barCouncilNumber: req.user.barCouncilNumber || "",
       });
     }
     res.json({ success: true, profile, mode: "cloud_db" });
@@ -877,7 +877,7 @@ export const joinConsultationRoom = async (req, res) => {
     res.json({
       success: true,
       isHost: true,
-      hostName: consultation.advocateName || "Adv. Meera Krishnan",
+      hostName: consultation.advocateName || req.user?.fullName || "Counsel",
       roomId,
       meetingUrl,
       consultationType: consultation.consultationType,
@@ -1307,13 +1307,13 @@ export const sendAdvocateMessage = async (req, res) => {
     if (!content || !content.trim()) {
       return res.status(400).json({ success: false, message: "Message content cannot be empty" });
     }
-    if (!recipientId && !recipientName && String(advocateId) !== "adv_1") {
+    if (!recipientId && !recipientName) {
       return res.status(400).json({ success: false, message: "Recipient client is required" });
     }
 
     const identity = shouldUseDevStore() ? devStore.getAdvocateIdentities(advocateId) : null;
     const senderName = req.user?.fullName || identity?.primaryName || "Counsel";
-    const resolvedRecipientId = String(recipientId || (String(advocateId) === "adv_1" ? "default_citizen" : "")).trim();
+    const resolvedRecipientId = String(recipientId || "").trim();
     const resolvedRecipientName =
       recipientName ||
       (shouldUseDevStore() && resolvedRecipientId ? devStore.getCitizenDisplayInfo(resolvedRecipientId).citizenName : "") ||
@@ -1489,7 +1489,7 @@ export const getClientDetails = async (req, res) => {
       const allMatters = devStore.getMatters(citizenId);
       const allConsultations = devStore.getConsultations(citizenId);
       const allInvoices = devStore.getInvoices(advocateId);
-      const clientInvoices = allInvoices.filter((inv) => inv.citizenId === citizenId || citizenId === "default_citizen");
+      const clientInvoices = allInvoices.filter((inv) => inv.citizenId === citizenId);
       const clientDocs = devStore.getDocuments(citizenId);
 
       return res.json({
@@ -2185,7 +2185,7 @@ export const createResearchBrief = async (req, res) => {
     const briefData = {
       ...req.body,
       advocateId,
-      author: req.user?.fullName || req.body.author || "Adv. Meera Krishnan",
+      author: req.user?.fullName || req.body.author || "Counsel",
     };
     const brief = devStore.createResearchBrief(briefData);
     res.status(201).json({
@@ -2240,7 +2240,7 @@ export const createCollabRoom = async (req, res) => {
     const room = devStore.createCollabRoom({
       ...req.body,
       advocateId,
-      hostName: req.user?.fullName || "Adv. Meera Krishnan",
+      hostName: req.user?.fullName || "Counsel",
     });
     res.status(201).json({
       success: true,
@@ -2506,7 +2506,7 @@ export const getCalendarEvents = async (req, res) => {
       return res.json({ success: true, events, mode: "dummy_data" });
     }
     const events = await CalendarEvent.find({
-      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+      userId: advocateId,
     }).sort({ date: 1 });
     res.json({
       success: true,
@@ -2585,7 +2585,7 @@ export const getCalendarBacklog = async (req, res) => {
       return res.json({ success: true, backlog, mode: "dummy_data" });
     }
     const backlog = await CalendarBacklog.find({
-      $or: [{ userId: advocateId }, { userId: "adv_1" }],
+      userId: advocateId,
     }).sort({ createdAt: -1 });
     res.json({
       success: true,
@@ -3043,9 +3043,9 @@ export const verifyBciCredentials = async (req, res) => {
     const advocateId = getAdvocateId(req);
     const { enrollmentNumber, stateBarCouncil, enrollmentYear } = req.body;
     const verifiedData = {
-      enrollmentNumber: enrollmentNumber || "K/001429/2012",
+      enrollmentNumber: enrollmentNumber || "",
       stateBarCouncil: stateBarCouncil || "Bar Council of Kerala",
-      enrollmentYear: enrollmentYear || 2012,
+      enrollmentYear: enrollmentYear || "",
       verificationStatus: "Verified",
       verifiedBy: "Bar Council of India Verification Portal",
       verifiedOn: new Date().toISOString(),

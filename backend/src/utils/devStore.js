@@ -39,1089 +39,22 @@ const writeFile = (filename, data) => {
 // ============================================================================
 // DEFAULT SEED DUMMY DATA FOR CITIZEN PORTAL
 // ============================================================================
-const DEFAULT_MATTERS = [
-  {
-    _id: "mat_wpc_19482",
-    citizenId: "default_citizen",
-    advocateName: "Adv. Meera Krishnan",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. Kerala State Electricity Board & Anr.",
-    matterType: "Writ Petition (Civil)",
-    caseNumber: "WP(C) 19482/2024",
-    cnrNumber: "KLHC01-019482-2024",
-    courtForum: "High Court of Kerala (Ernakulam)",
-    courtHall: "Court Hall 2A (Division Bench)",
-    status: "active",
-    nextHearingDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-    statutoryActs: ["Indian Telegraph Act, 1885 (Section 10 & 16)", "Electricity Act, 2003", "Article 226 of the Constitution of India"],
-    timeline: [
-      { date: "18-Oct-2024", title: "Writ Petition (Civil) E-Filing Completed", remarks: "Verified true copy grounds submitted with High Court Registry", stage: "Completed" },
-      { date: "22-Oct-2024", title: "Notice Before Admission Issued", remarks: "Division bench directed standing counsel to file counter-affidavit within 10 days", stage: "Completed" },
-      { date: "26-Oct-2024", title: "Counter-Affidavit Filed by KSEB Executive Engineer", remarks: "Board contends route was surveyed as per gazette scheme", stage: "Completed" },
-      { date: "02-Nov-2024", title: "Interim Stay Hearing Listed", remarks: "Listed as Item #14 in Court Hall 2A before Bench 2A", stage: "Upcoming" },
-    ],
-    totalFeesBilled: 25000,
-    feesPaid: 15000,
-  },
-  {
-    _id: "mat_os_412",
-    citizenId: "default_citizen",
-    advocateName: "Adv. Rajesh V. Varma",
-    matterTitle: "OS 412/2023 — Gopakumar v. Varghese Builders & Developers",
-    matterType: "Civil Appeal",
-    caseNumber: "OS 412/2023",
-    cnrNumber: "KLER02-000412-2023",
-    courtForum: "Sub Court, Ernakulam",
-    courtHall: "Court Hall 1",
-    status: "notice_issued",
-    nextHearingDate: new Date(Date.now() + 24 * 24 * 60 * 60 * 1000).toISOString(),
-    statutoryActs: ["Specific Relief Act, 1963", "Transfer of Property Act, 1882"],
-    timeline: [
-      { date: "10-Dec-2023", title: "Plaint Filed for Injunction & Title Demarcation", remarks: "Suit registered under Section 38 of Specific Relief Act", stage: "Completed" },
-      { date: "15-Jan-2024", title: "Advocate Commissioner Appointed", remarks: "Advocate Commissioner inspected property and prepared site sketch", stage: "Completed" },
-      { date: "18-Nov-2024", title: "Defendant Written Statement Hearing", remarks: "Final opportunity granted to respondents", stage: "Upcoming" },
-    ],
-    totalFeesBilled: 40000,
-    feesPaid: 20000,
-  },
-];
-
-const DEFAULT_GRIEVANCES = [
-  {
-    _id: "grv_101",
-    citizenId: "default_citizen",
-    title: "Drawing 110kV Transmission Line Across Rubber Plantation Without Prior Notice",
-    description: "KSEB contractors entered agricultural property in Kanjirappally Village and initiated tree clearing for 110kV overhead line without serving mandatory notice under Section 10/16 of Telegraph Act.",
-    category: "Property & Land Disputes",
-    jurisdictionDistrict: "Ernakulam",
-    preferredCourt: "High Court of Kerala (Ernakulam)",
-    urgencyLevel: "High (Upcoming Deadline)",
-    status: "matter_opened",
-    aiTriage: {
-      summary: "Violates procedural protections under Indian Telegraph Act 1885 and Kerala High Court ruling in Valsamma v. KSEB. Unilateral entry without District Magistrate order under Section 16 is actionable.",
-      applicableActs: [
-        "Indian Telegraph Act, 1885 (Section 10 & 16)",
-        "Electricity Act, 2003",
-        "Kerala Land Reforms Act, 1963",
-        "Article 226 of the Constitution of India",
-      ],
-      suggestedRemedies: [
-        "File Urgent Writ Petition (Civil) seeking interim stay on tree felling",
-        "Serve legal notice to Executive Engineer, Transmission Division",
-        "Apply for District Court determination of land diminution and yield loss compensation",
-      ],
-      estimatedCourtFee: "₹1,500 - ₹2,500 (High Court Writ Stamp & Process Fees)",
-      recommendedSpecialization: "Constitutional Writs & Land Reforms Counsel",
-      jurisdictionForum: "High Court of Kerala (Ernakulam)",
-      riskScore: "High",
-    },
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const DEFAULT_CONSULTATIONS = [
-  {
-    _id: "con_901",
-    citizenId: "default_citizen",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    consultationType: "video",
-    scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    timeSlot: "10:30 AM - 11:15 AM",
-    durationMinutes: 45,
-    meetingLink: "https://meet.wakheel.law/chambers-krishnan-09",
-    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
-    subject: "WP(C) 19482/2024 — High Court Rejoinder & Precedent Citations",
-    clientNotes: "Discussing KSEB counter-affidavit allegations regarding Telegraph Act Section 16 compliance.",
-    adviceNotes: "",
-    feeAmount: 1500,
-    paymentStatus: "paid",
-    status: "scheduled",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "con_903",
-    citizenId: "default_citizen",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    consultationType: "video",
-    scheduledDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-    timeSlot: "02:30 PM - 03:15 PM",
-    durationMinutes: 45,
-    meetingLink: "https://meet.wakheel.law/chambers-krishnan-14",
-    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
-    subject: "Section 138 NI Act — Statutory Demand Notice Expiry & JFCM Criminal Complaint",
-    clientNotes: "Speed Post delivered on 16th October. Need to draft Section 138 complaint before Judicial First Class Magistrate Court.",
-    adviceNotes: "",
-    feeAmount: 1500,
-    paymentStatus: "paid",
-    status: "scheduled",
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "con_904",
-    citizenId: "default_citizen",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    consultationType: "chamber",
-    scheduledDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    timeSlot: "11:00 AM - 12:00 PM",
-    durationMinutes: 60,
-    meetingLink: "",
-    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
-    subject: "Division Bench Hearing Strategy & ADM Objection Lodgement",
-    clientNotes: "Brought survey plan sketches and revenue tax receipts.",
-    adviceNotes: "Status quo order granted by Division Bench. Injunction restrains KSEB from felling timber or entering property pending fresh notice and summary enquiry by District Magistrate under Section 16(1) of Indian Telegraph Act.",
-    feeAmount: 2000,
-    paymentStatus: "paid",
-    status: "completed",
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "con_902",
-    citizenId: "default_citizen",
-    advocateId: "adv_2",
-    advocateName: "Adv. Rajesh V. Varma",
-    barCouncilNumber: "K/000842/2008",
-    consultationType: "chamber",
-    scheduledDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    timeSlot: "04:00 PM - 04:45 PM",
-    durationMinutes: 45,
-    meetingLink: "",
-    chamberAddress: "Chamber #18, District Court Complex, Ernakulam 682011",
-    subject: "Sub Court OS 412/2023 — Property Demarcation & Boundary Injunction",
-    clientNotes: "Initial strategy conference on commission inspection mahazar.",
-    adviceNotes: "Commission application under Order XXVI Rule 9 CPC moved with urgent memo. Taluk surveyor assistance requested.",
-    feeAmount: 2500,
-    paymentStatus: "paid",
-    status: "completed",
-    createdAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
+const DEFAULT_MATTERS = [];
+const DEFAULT_GRIEVANCES = [];
+const DEFAULT_CONSULTATIONS = [];
 const DEFAULT_DOCUMENTS = [];
-
-const DEFAULT_NOTICES = [
-  {
-    _id: "not_701",
-    id: "not_701",
-    citizenId: "default_citizen",
-    noticeType: "Cheque Bounce Demand (Sec 138 NI Act)",
-    title: "Statutory Demand Notice for Dishonoured Cheque of ₹4,50,000",
-    senderName: "Gopakumar Nambiar",
-    recipientName: "Coastal Logistics & Infra Ltd",
-    recipientAddress: "Plot 12, Port Trust Road, Willingdon Island, Kochi 682003",
-    claimAmount: "₹4,50,000",
-    statutoryNoticeDays: 15,
-    dispatchDate: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-    speedPostTrackingNumber: "EK948102391IN",
-    deliveryStatus: "Item Delivered",
-    daysRemaining: 6,
-    advocateName: "Adv. Meera Krishnan",
-    draftContent: `DEMAND NOTICE UNDER SECTION 138 OF THE NEGOTIABLE INSTRUMENTS ACT, 1881
-
-To,
-Coastal Logistics & Infra Ltd,
-Plot 12, Port Trust Road, Willingdon Island, Kochi 682003.
-
-Under instructions from my client, Sri. Gopakumar Nambiar, residing at Ernakulam, I do hereby serve upon you this statutory notice under proviso (b) of Section 138 of the Negotiable Instruments Act, 1881:
-
-1. That in discharge of your legally enforceable debt towards logistics consultancy and contract supervision, you had issued Cheque No. 492019 dated 25th September 2024 drawn on Federal Bank, Marine Drive Branch for a sum of ₹4,50,000/- (Rupees Four Lakhs Fifty Thousand only).
-2. That my client presented the said cheque for encashment through his banker, State Bank of India, but the same was dishonoured and returned unpaid on 04th October 2024 with the memo remarks 'FUNDS INSUFFICIENT'.
-3. You are hereby called upon to pay the said sum of ₹4,50,000/- within 15 (fifteen) days from the receipt of this statutory notice, failing which my client shall be constrained to initiate criminal proceedings against you under Section 138 of the Negotiable Instruments Act, 1881 without further reference.
-
-Adv. Meera Krishnan (Roll No: K/001429/2012)
-High Court of Kerala, Ernakulam`,
-    trackingHistory: [
-      { date: "16-Oct-2026", time: "14:18:22", location: "Willingdon Island SO", activity: "Item Delivered [Signed by Security Incharge]" },
-      { date: "16-Oct-2026", time: "09:30:15", location: "Willingdon Island SO", activity: "Out for Delivery" },
-      { date: "15-Oct-2026", time: "21:40:00", location: "NSH Kochi Hub", activity: "Item Dispatched to Delivery Sub Office" },
-      { date: "15-Oct-2026", time: "18:20:10", location: "NSH Kochi Hub", activity: "Item Received at Sorting Hub" },
-      { date: "12-Oct-2026", time: "11:24:10", location: "Ernakulam GPO", activity: "Item Booked via Speed Post (Weight: 80g)" },
-    ],
-  },
-  {
-    _id: "not_702",
-    id: "not_702",
-    citizenId: "default_citizen",
-    noticeType: "Recovery of Money & Outstanding Invoices",
-    title: "Notice for Settlement of Outstanding Commercial Invoices of ₹1,85,000",
-    senderName: "Gopakumar Nambiar",
-    recipientName: "Malabar Trading Enterprises",
-    recipientAddress: "Broadway, Ernakulam, Kerala 682031",
-    claimAmount: "₹1,85,000",
-    statutoryNoticeDays: 30,
-    dispatchDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    speedPostTrackingNumber: "KL094812304IN",
-    deliveryStatus: "In Transit",
-    daysRemaining: 28,
-    advocateName: "Adv. Meera Krishnan",
-    draftContent: `LEGAL NOTICE FOR RECOVERY OF OUTSTANDING DUES WITH 18% INTEREST
-
-To,
-Malabar Trading Enterprises,
-Broadway, Ernakulam, Kerala 682031.
-
-Take notice that my client, Sri. Gopakumar Nambiar, has retained me to demand immediate liquidation of outstanding commercial dues amounting to ₹1,85,000/- under Invoice Nos. INV-2024/08 and INV-2024/11. Despite repeated verbal requests and email reminders, you have deliberately withheld payment.
-
-You are hereby granted 30 (thirty) days to clear the outstanding sum of ₹1,85,000/- along with accrued commercial interest @ 18% per annum, failing which a civil summary suit under Order XXXVII CPC shall be instituted before the Sub Court, Ernakulam entirely at your risk as to costs and consequences.
-
-Adv. Meera Krishnan
-Chambers of Krishnan & Associates, Kochi`,
-    trackingHistory: [
-      { date: "19-Oct-2026", time: "16:45:00", location: "Ernakulam Nodal Hub", activity: "Item In Transit to Broadway SO" },
-      { date: "19-Oct-2026", time: "10:15:30", location: "Kochi GPO", activity: "Item Booked via Inland Speed Post" },
-    ],
-  },
-  {
-    _id: "not_703",
-    id: "not_703",
-    citizenId: "default_citizen",
-    noticeType: "Section 80 CPC Notice of Suit Against Statutory Authority",
-    title: "Statutory Notice under Section 80 CPC to Kerala State Electricity Board",
-    senderName: "Gopakumar Nambiar",
-    recipientName: "The Secretary, KSEB & Executive Engineer",
-    recipientAddress: "Vydyuthi Bhavanam, Pattom, Thiruvananthapuram 695004",
-    claimAmount: "Restitution & Injunctive Relief",
-    statutoryNoticeDays: 60,
-    dispatchDate: new Date(Date.now() - 42 * 24 * 60 * 60 * 1000).toISOString(),
-    speedPostTrackingNumber: "EK810924715IN",
-    deliveryStatus: "Item Delivered",
-    daysRemaining: 18,
-    advocateName: "Adv. Meera Krishnan",
-    draftContent: `NOTICE UNDER SECTION 80 OF THE CODE OF CIVIL PROCEDURE, 1908
-
-To,
-1. The Secretary, Kerala State Electricity Board, Pattom, Thiruvananthapuram.
-2. The Executive Engineer, Electrical Division, Pala, Kottayam District.
-
-Take notice that on the expiry of two months from the date of receipt of this statutory notice under Section 80 CPC, my client, Sri. Gopakumar Nambiar, intends to institute a suit against the Board and its officers in the competent Court of Civil Jurisdiction for mandatory and prohibitory injunction restraining trespass into property in Sy. No. 441/2 of Kanjirappally Village.
-
-Cause of action arose when respondents entered the holding without prior statutory notice under Section 16 of the Indian Telegraph Act, 1885.
-
-Adv. Meera Krishnan, High Court of Kerala`,
-    trackingHistory: [
-      { date: "10-Sep-2026", time: "11:20:00", location: "Pattom SO, Thiruvananthapuram", activity: "Item Delivered [Signed by Despatch Section KSEB]" },
-      { date: "09-Sep-2026", time: "19:00:00", location: "Trivandrum NSH", activity: "Item Received at Sorting Hub" },
-      { date: "08-Sep-2026", time: "14:15:00", location: "Ernakulam GPO", activity: "Item Booked via Speed Post" },
-    ],
-  },
-];
-
-const DEFAULT_ADVOCATES = [
-  {
-    id: "adv_1",
-    fullName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    experienceYears: 12,
-    primaryCourt: "High Court of Kerala (Ernakulam)",
-    chamberAddress: "Chamber #412, KHCAA Complex, Marine Drive, Kochi",
-    specializations: ["Constitutional Writs", "Land Reforms & Property", "Commercial Arbitration"],
-    languages: ["English", "Malayalam"],
-    consultationFee: 1500,
-    rating: 4.9,
-    reviewCount: 38,
-    isVerified: true,
-    availableToday: true,
-  },
-  {
-    id: "adv_2",
-    fullName: "Adv. Rajesh V. Varma",
-    barCouncilNumber: "K/000892/2008",
-    experienceYears: 16,
-    primaryCourt: "High Court of Kerala & NCLT Kochi",
-    chamberAddress: "Varma & Associates, MG Road, Ernakulam",
-    specializations: ["Corporate & M&A", "Insolvency (IBC)", "Commercial Contracts"],
-    languages: ["English", "Malayalam", "Hindi"],
-    consultationFee: 2500,
-    rating: 4.8,
-    reviewCount: 52,
-    isVerified: true,
-    availableToday: false,
-  },
-  {
-    id: "adv_3",
-    fullName: "Adv. Fathima Zahra",
-    barCouncilNumber: "K/002105/2017",
-    experienceYears: 7,
-    primaryCourt: "District & Sessions Court, Kozhikode",
-    chamberAddress: "Courts Road, Kozhikode, Kerala",
-    specializations: ["Family & Matrimonial", "Criminal Law & Bail", "Consumer Disputes"],
-    languages: ["English", "Malayalam"],
-    consultationFee: 1000,
-    rating: 4.9,
-    reviewCount: 29,
-    isVerified: true,
-    availableToday: true,
-  },
-  {
-    id: "adv_4",
-    fullName: "Adv. Ananthapadmanabhan Nair",
-    barCouncilNumber: "K/000543/2001",
-    experienceYears: 23,
-    primaryCourt: "Supreme Court of India & High Court of Kerala",
-    chamberAddress: "Law Chambers, Vanchiyoor, Thiruvananthapuram",
-    specializations: ["Constitutional Law", "Revenue & Taxation", "Civil Appeals"],
-    languages: ["English", "Malayalam", "Tamil"],
-    consultationFee: 3500,
-    rating: 5.0,
-    reviewCount: 74,
-    isVerified: true,
-    availableToday: false,
-  },
-];
-
+const DEFAULT_NOTICES = [];
+const DEFAULT_ADVOCATES = [];
 const DEFAULT_CAUSE_LIST = [];
-
-const DEFAULT_INVOICES = [
-  {
-    _id: "inv_2026_041",
-    invoiceNumber: "INV-2026/KL-041",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
-    citizenId: "default_citizen",
-    clientName: "Gopakumar Nambiar",
-    clientPhone: "+91 94471 28400",
-    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
-    items: [
-      { description: "High Court E-Filing & Senior Drafting Fee", category: "Professional Fee", sacCode: "9982", amount: 15000 },
-      { description: "Court Hall 2A Senior Appearance (Interim Injunction Hearing)", category: "Appearance Fee", sacCode: "9982", amount: 10000 },
-      { description: "High Court Paper Book Binding, Indexing & True Copy Attestations", category: "Stationery & Process", sacCode: "9982", amount: 2500 },
-      { description: "Kerala Advocates' Clerks Welfare Fund Stamp & Advocate Welfare Fund", category: "Clerkage & Stamps", sacCode: "9982", amount: 1500 },
-    ],
-    subtotal: 29000,
-    gstRate: 18,
-    gstAmount: 5220,
-    cgstAmount: 2610,
-    sgstAmount: 2610,
-    totalAmount: 34220,
-    status: "unpaid",
-    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentMethod: "UPI",
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "inv_2026_072",
-    invoiceNumber: "INV-2026/KL-072",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
-    citizenId: "default_citizen",
-    clientName: "Gopakumar Nambiar",
-    clientPhone: "+91 94471 28400",
-    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
-    matterId: "mat_os_412",
-    matterTitle: "OS 412/2024 — Title Injunction & Commission Inspection (Munsiff Court, Pala)",
-    items: [
-      { description: "Plaint Preparation & Order XXVI Rule 9 Commission Application", category: "Professional Fee", sacCode: "9982", amount: 8000 },
-      { description: "Taluk Surveyor & Advocate Commissioner Mahazar Assistance", category: "Commission & Process", sacCode: "9982", amount: 6000 },
-      { description: "Kerala Court Fees & Suits Valuation Act Ad-valorem Stamps", category: "Court Fees", sacCode: "9982", amount: 3500 },
-    ],
-    subtotal: 17500,
-    gstRate: 18,
-    gstAmount: 3150,
-    cgstAmount: 1575,
-    sgstAmount: 1575,
-    totalAmount: 20650,
-    status: "unpaid",
-    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentMethod: "Portal_Escrow",
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "inv_2026_011",
-    invoiceNumber: "INV-2026/KL-011",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
-    citizenId: "default_citizen",
-    clientName: "Gopakumar Nambiar",
-    clientPhone: "+91 94471 28400",
-    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
-    matterId: "mat_not_701",
-    matterTitle: "Pre-Litigation Legal Notice under Section 138 NI Act & Scrutiny",
-    items: [
-      { description: "Chamber Legal Consultation & Limitation Scrutiny", category: "Consultation", sacCode: "9982", amount: 5000 },
-      { description: "Section 138 Statutory Notice Drafting & India Post Speed Post Dispatch", category: "Drafting & Dispatch", sacCode: "9982", amount: 4500 },
-    ],
-    subtotal: 9500,
-    gstRate: 18,
-    gstAmount: 1710,
-    cgstAmount: 855,
-    sgstAmount: 855,
-    totalAmount: 11210,
-    status: "paid",
-    dueDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    paidAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentMethod: "UPI",
-    transactionId: "UPI/2026/894102914",
-    receiptNumber: "REC-2026/KL-011",
-    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "inv_2026_004",
-    invoiceNumber: "INV-2026/KL-004",
-    advocateId: "adv_1",
-    advocateName: "Adv. Meera Krishnan",
-    barCouncilNumber: "K/001429/2012",
-    chamberAddress: "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031",
-    citizenId: "default_citizen",
-    clientName: "Gopakumar Nambiar",
-    clientPhone: "+91 94471 28400",
-    clientAddress: "Nambiar Nilayam, Panampilly Nagar, Ernakulam, Kerala 682036",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — Initial Legal Retainer & Caveat Registry Search",
-    items: [
-      { description: "Initial Chamber Retainer & High Court Caveat Registry Search", category: "Retainer Fee", sacCode: "9982", amount: 18000 },
-      { description: "High Court Legal Benefit Fund & Vakalat Stamp Duty", category: "Stamps & Welfare", sacCode: "9982", amount: 2000 },
-    ],
-    subtotal: 20000,
-    gstRate: 18,
-    gstAmount: 3600,
-    cgstAmount: 1800,
-    sgstAmount: 1800,
-    totalAmount: 23600,
-    status: "paid",
-    dueDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    paidAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    paymentMethod: "NEFT/RTGS",
-    transactionId: "NEFT-SBI9481029841",
-    receiptNumber: "REC-2026/KL-004",
-    createdAt: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const DEFAULT_CASE_NOTES = [
-  {
-    _id: "note_101",
-    advocateId: "adv_1",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    title: "Precedent Note: Valsamma v. KSEB on Telegraph Act Sec 16",
-    content: "Crucial High Court of Kerala precedent: Division bench held that licensee cannot enter private plantation without explicit District Magistrate sanction when landowner registers objection under Section 16(1). Emphasize lack of DM order during Friday hearing before Court Hall 2A.",
-    category: "precedent_notes",
-    isConfidential: true,
-    tags: ["Telegraph Act", "Section 16", "Valsamma Precedent", "Division Bench"],
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "note_102",
-    advocateId: "adv_1",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    title: "Chamber Conference with Client (Gopakumar) & Land Surveyor",
-    content: "Client verified that survey sketches produced by KSEB deviate by 14 meters from the sanctioned alignment plan published in the 2023 Gazette notification. True copy of Village Officer demarcated sketch to be annexed to Reply Affidavit.",
-    category: "client_instructions",
-    isConfidential: true,
-    tags: ["Survey Sketch", "Village Officer", "Gazette Alignment"],
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "note_103",
-    advocateId: "adv_1",
-    matterId: "mat_arb_041",
-    matterTitle: "Apex Logistics v. Marine Exports Ltd",
-    title: "Section 9 Interim Injunction Hearing Memo",
-    content: "Prepare arguments on Perkins Eastman doctrine regarding unilateral arbitrator appointment clause in Master Services Agreement Clause 18. Seek immediate injunction restraining encumbrance of warehouse assets.",
-    category: "hearing_memo",
-    isConfidential: true,
-    tags: ["Arbitration", "Perkins Eastman", "Interim Relief"],
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const DEFAULT_ADVOCATE_PROFILES = [
-  {
-    _id: "prof_adv_1",
-    userId: "adv_1",
-    fullName: "Adv. Meera Krishnan",
-    email: "meera.krishnan@wakheel.law",
-    phone: "+91 98470 12345",
-    barCouncilNumber: "K/001429/2012",
-    experienceYears: 12,
-    primaryCourt: "High Court of Kerala (Ernakulam)",
-    secondaryCourts: ["District Court, Ernakulam", "Sub Court, Ernakulam", "NCLT Kochi Bench"],
-    chamberAddress: "Chamber #412, KHCAA Golden Jubilee Complex, High Court Road, Marine Drive, Kochi 682031",
-    specializations: ["Constitutional Writs", "Land Acquisition & Property", "Commercial Arbitration", "Civil Writs"],
-    languages: ["English", "Malayalam", "Hindi"],
-    consultationFee: 1500,
-    rating: 4.9,
-    reviewCount: 38,
-    isVerified: true,
-    availableToday: true,
-    bio: "Practicing Advocate before the High Court of Kerala with 12+ years of expertise in constitutional writ petitions, infrastructure property disputes, and commercial arbitration.",
-    upiId: "meera.krishnan@okaxis",
-  },
-];
-
-const DEFAULT_MESSAGES = [
-  {
-    _id: "msg_201",
-    id: "msg_201",
-    senderId: "adv_1",
-    senderRole: "advocate",
-    senderName: "Adv. Meera Krishnan",
-    recipientId: "default_citizen",
-    recipientRole: "citizen",
-    recipientName: "Gopakumar Nambiar",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
-    content: "Good afternoon Sri. Gopakumar. The Division Bench of the High Court of Kerala has taken up WP(C) 19482/2024 today before Court Hall 2A. We argued the interim stay application, and the Hon'ble Court has directed the respondents (KSEB) to maintain status quo regarding tree felling and tower alignment until their counter-affidavit is placed on record.",
-    attachments: [
-      {
-        fileName: "High_Court_Daily_Order_Interim_Stay.pdf",
-        fileUrl: "/docs/High_Court_Daily_Order_Interim_Stay.pdf",
-        fileType: "application/pdf",
-        fileSize: "1.4 MB",
-      },
-    ],
-    isRead: true,
-    readAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    isPrivileged: true,
-    category: "hearing_update",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "msg_202",
-    id: "msg_202",
-    senderId: "default_citizen",
-    senderRole: "citizen",
-    senderName: "Gopakumar Nambiar",
-    recipientId: "adv_1",
-    recipientRole: "advocate",
-    recipientName: "Adv. Meera Krishnan",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
-    content: "Thank you Adv. Meera! That is a huge relief. Do I need to submit the original Village Officer demarcation sketch before the next posting date?",
-    attachments: [],
-    isRead: true,
-    readAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    isPrivileged: true,
-    category: "general",
-    createdAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "msg_203",
-    id: "msg_203",
-    senderId: "adv_1",
-    senderRole: "advocate",
-    senderName: "Adv. Meera Krishnan",
-    recipientId: "default_citizen",
-    recipientRole: "citizen",
-    recipientName: "Gopakumar Nambiar",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — High Court Writ Representation & Interim Stay",
-    content: "Yes, please upload the certified copy of the Village demarcation sketch to your document vault so we can examine the alignment coordinates and annex it to our reply affidavit before Friday.",
-    attachments: [],
-    isRead: true,
-    readAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
-    isPrivileged: true,
-    category: "document_request",
-    createdAt: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "msg_204",
-    id: "msg_204",
-    senderId: "adv_1",
-    senderRole: "advocate",
-    senderName: "Adv. Meera Krishnan",
-    recipientId: "default_citizen",
-    recipientRole: "citizen",
-    recipientName: "Gopakumar Nambiar",
-    matterId: "mat_os_412",
-    matterTitle: "OS 412/2024 — Title Injunction & Commission Inspection (Munsiff Court, Pala)",
-    content: "Regarding the commission inspection in OS 412/2024, the Advocate Commissioner has scheduled the local spot inspection for this Saturday at 10:30 AM. Kindly ensure you or your authorized representative is present at the property with your prior registered title deeds and tax receipts.",
-    attachments: [],
-    isRead: false,
-    isPrivileged: true,
-    category: "urgent",
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "msg_205",
-    id: "msg_205",
-    senderId: "default_citizen",
-    senderRole: "citizen",
-    senderName: "Gopakumar Nambiar",
-    recipientId: "adv_1",
-    recipientRole: "advocate",
-    recipientName: "Adv. Meera Krishnan",
-    matterId: "mat_not_701",
-    matterTitle: "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
-    content: "Advocate, India Post Speed Post tracking report shows the statutory demand notice was successfully delivered to Coastal Logistics on 16th October. The 15-day cure countdown is actively tracking in our portal.",
-    attachments: [],
-    isRead: true,
-    readAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-    isPrivileged: true,
-    category: "general",
-    createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const DEFAULT_CLIENTS = [
-  {
-    _id: "cli_101",
-    id: "cli_101",
-    citizenId: "default_citizen",
-    advocateId: "adv_1",
-    fullName: "Gopakumar Nambiar",
-    category: "Individual Citizen",
-    email: "gopakumar.law@gmail.com",
-    phone: "+91 94471 28400",
-    alternatePhone: "+91 98460 31200",
-    address: {
-      street: "Nambiar Nilayam, Panampilly Nagar",
-      city: "Kochi",
-      district: "Ernakulam",
-      state: "Kerala",
-      pincode: "682036",
-    },
-    location: "Kochi, Kerala",
-    kycVerified: true,
-    vakalatnamaExecuted: true,
-    status: "Active Matter",
-    activeMatters: [
-      "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
-      "Sec. 138 NI Act — Statutory Notice v. Coastal Logistics",
-    ],
-    activeMattersCount: 2,
-    totalBilled: 35000,
-    totalPaid: 25000,
-    nextHearing: "18 Oct 2026 • Court Hall 2A (High Court)",
-    notes: "Main agricultural land transmission line dispute. Very responsive on WhatsApp and speed post notices.",
-    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "cli_102",
-    id: "cli_102",
-    citizenId: "client_malabar",
-    advocateId: "adv_1",
-    fullName: "Malabar Infotech Solutions Pvt Ltd",
-    category: "Corporate Enterprise",
-    contactPerson: "Rajeev Menon (Managing Director)",
-    email: "legal@malabarinfotech.in",
-    phone: "+91 484 298100",
-    alternatePhone: "+91 94470 55100",
-    address: {
-      street: "Module 4B, Phase II, Infopark Kakkanad",
-      city: "Kochi",
-      district: "Ernakulam",
-      state: "Kerala",
-      pincode: "682042",
-    },
-    location: "Infopark Kochi, Kerala",
-    kycVerified: true,
-    vakalatnamaExecuted: true,
-    status: "Active Matter",
-    activeMatters: [
-      "ARB/NCLT/KOCHI/2024/041 — Commercial Arbitration Claim",
-    ],
-    activeMattersCount: 1,
-    totalBilled: 120000,
-    totalPaid: 120000,
-    nextHearing: "24 Oct 2026 • Arbitral Tribunal Chamber",
-    notes: "Corporate retainer account. Software development contractual dispute with vendor.",
-    createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "cli_103",
-    id: "cli_103",
-    citizenId: "client_deepa",
-    advocateId: "adv_1",
-    fullName: "Deepa V. Kurup",
-    category: "Individual Citizen",
-    email: "deepa.kurup@outlook.com",
-    phone: "+91 98470 11234",
-    address: {
-      street: "Kurup House, Bank Junction",
-      city: "Aluva",
-      district: "Ernakulam",
-      state: "Kerala",
-      pincode: "683101",
-    },
-    location: "Aluva, Kerala",
-    kycVerified: true,
-    vakalatnamaExecuted: true,
-    status: "Pre Filing",
-    activeMatters: [
-      "Sub Court OS 412/2023 — Property Demarcation & Boundary Injunction",
-    ],
-    activeMattersCount: 1,
-    totalBilled: 18000,
-    totalPaid: 15000,
-    nextHearing: "28 Oct 2026 • Sub Court Ernakulam",
-    notes: "Boundary dispute with neighboring plot. Commission mahazar inspection scheduled.",
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "cli_104",
-    id: "cli_104",
-    citizenId: "client_vanguard",
-    advocateId: "adv_1",
-    fullName: "Vanguard Infrastructure Ltd",
-    category: "Corporate Enterprise",
-    contactPerson: "K. S. Narayanan (VP Legal)",
-    email: "contracts@vanguardinfra.com",
-    phone: "+91 484 410290",
-    address: {
-      street: "Chamber #8, Marine Drive Commercial Center",
-      city: "Kochi",
-      district: "Ernakulam",
-      state: "Kerala",
-      pincode: "682011",
-    },
-    location: "Marine Drive, Kochi",
-    kycVerified: true,
-    vakalatnamaExecuted: false,
-    status: "Retainer",
-    activeMatters: [
-      "WP(C) 4921/2026 — Vanguard Infrastructure v. NHAI & Ors.",
-    ],
-    activeMattersCount: 1,
-    totalBilled: 85000,
-    totalPaid: 50000,
-    nextHearing: "12 Nov 2026 • High Court of Kerala",
-    notes: "Highway concessionaire alignment dispute. Special Leave Petition grounds under preparation.",
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const DEFAULT_DICTATIONS = [
-  {
-    _id: "dict_101",
-    id: "dict_101",
-    advocateId: "adv_1",
-    title: "WP(C) 19482/2024 — Bench Observation on Telegraph Line Alignment",
-    category: "Judge Directions",
-    matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    duration: "00:48",
-    date: "18 Oct 2026, 11:45 AM",
-    transcript:
-      "Hon'ble Bench observed that Section 16 of Indian Telegraph Act does not empower KSEB to draw 11KV lines through petitioner's homestead without prior notice to the District Magistrate. Interim stay extended until November 14th. Bench asked Assistant Executive Engineer to be personally present if counter-affidavit is not filed within two weeks.",
-    actionItems: [
-      "Obtain certified copy of today's Bench interim extension order",
-      "Draft rejoinder addressing Section 16 jurisdictional bar",
-      "Brief client Sri. Gopakumar regarding next posting on Nov 14",
-    ],
-    status: "archived",
-    audioUrl: "",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "dict_102",
-    id: "dict_102",
-    advocateId: "adv_1",
-    title: "CC 412/2024 — Post-Hearing Cross Examination Highlights",
-    category: "Cross-Exam Strategy",
-    matter: "CC 412/2024 — Cheque Dishonour (S.138 NI Act)",
-    matterId: "mat_cc_412",
-    duration: "01:15",
-    date: "19 Oct 2026, 04:20 PM",
-    transcript:
-      "Complainant admitted during cross-examination that no income tax returns were produced to substantiate cash lending of ₹5 Lakhs. Defense reliance on Supreme Court ratio in Basalingappa v. Mudibasappa (2019) 5 SCC 418 established foundational rebuttable presumption. Complainant's passbook reveals no corresponding withdrawal on 12/03/2023.",
-    actionItems: [
-      "File memo with excerpt of Complainant PW-1 cross-examination deposition",
-      "Compile citations on standard of preponderance of probability in Section 139 NI Act",
-      "Prepare Section 313 CrPC defense questionnaire for accused",
-    ],
-    status: "archived",
-    audioUrl: "",
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "dict_103",
-    id: "dict_103",
-    advocateId: "adv_1",
-    title: "OS 284/2023 — Client Conference on Survey Commission Report",
-    category: "Client Conference",
-    matter: "OS 284/2023 — Varghese v. Mathew (Sub Court)",
-    matterId: "mat_os_284",
-    duration: "00:34",
-    date: "20 Oct 2026, 02:15 PM",
-    transcript:
-      "Client instructed that Advocate Commissioner failed to measure the eastern boundary with reference to 1968 resettlement survey plan. The existing granite wall was ignored in sketch C-1. Need to file objection to commission report and pray for remitting the warrant back to the same commissioner.",
-    actionItems: [
-      "Draft objection petition to Advocate Commissioner report",
-      "Attach old resettlement survey sketch as defense Exhibit",
-    ],
-    status: "archived",
-    audioUrl: "",
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    _id: "dict_104",
-    id: "dict_104",
-    advocateId: "adv_1",
-    title: "ARB/NCLT/2024 — Arbitral Tribunal Order 11 Scope of Discovery",
-    category: "Court Hearing",
-    matter: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-    matterId: "mat_arb_041",
-    duration: "01:02",
-    date: "21 Oct 2026, 05:30 PM",
-    transcript:
-      "Sole Arbitrator allowed claimant's application under Section 27 of Arbitration and Conciliation Act for production of server audit trails. Respondent directed to supply digital logs within 10 days. Procedural hearing fixed for framing additional issues on 3rd November.",
-    actionItems: [
-      "Send official demand letter to vendor for production of AWS audit trails",
-      "Draft proposed issues on breach of SLA for Nov 3 hearing",
-      "Update MD Rajeev Menon on arbitrator ruling",
-    ],
-    status: "archived",
-    audioUrl: "",
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const DEFAULT_TRUST_TRANSACTIONS = [
-  {
-    _id: "tru_101",
-    id: "tru_101",
-    advocateId: "adv_1",
-    type: "deposit",
-    clientName: "Malabar Infotech Solutions Pvt Ltd",
-    citizenId: "client_malabar",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041 — Commercial Arbitration Claim",
-    matterId: "mat_arb_041",
-    amount: 350000,
-    purpose: "Arbitrator Hearing Fee & Stenographer Advance Deposit",
-    referenceNumber: "NEFT/KLB2026/091244",
-    verifiedBy: "Adv. Meera Krishnan",
-    date: "14 Oct 2026",
-    status: "cleared",
-    createdAt: "2026-10-14T05:15:00.000Z",
-  },
-  {
-    _id: "tru_102",
-    id: "tru_102",
-    advocateId: "adv_1",
-    type: "deposit",
-    clientName: "Gopakumar Nambiar",
-    citizenId: "default_citizen",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    amount: 150000,
-    purpose: "Advocate Commissioner Remuneration & Re-survey Deposit",
-    referenceNumber: "UPI/SBIN/88129014",
-    verifiedBy: "Adv. Meera Krishnan",
-    date: "18 Oct 2026",
-    status: "cleared",
-    createdAt: "2026-10-18T06:30:00.000Z",
-  },
-  {
-    _id: "tru_103",
-    id: "tru_103",
-    advocateId: "adv_1",
-    type: "disbursement",
-    clientName: "Gopakumar Nambiar",
-    citizenId: "default_citizen",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    amount: 50000,
-    purpose: "Disbursement to Advocate Commissioner (High Court Warrant #82)",
-    referenceNumber: "CHQ/771920/AXIS",
-    verifiedBy: "Adv. Meera Krishnan",
-    date: "20 Oct 2026",
-    status: "cleared",
-    createdAt: "2026-10-20T04:15:00.000Z",
-  },
-  {
-    _id: "tru_104",
-    id: "tru_104",
-    advocateId: "adv_1",
-    type: "deposit",
-    clientName: "Vanguard Infrastructure Ltd",
-    citizenId: "client_vanguard",
-    matterTitle: "WP(C) 4921/2026 — Vanguard Infrastructure v. NHAI",
-    matterId: "mat_1792557595989",
-    amount: 200000,
-    purpose: "Court Registry Security Deposit (Conditional Stay)",
-    referenceNumber: "RTGS/HDFC/2026/0991",
-    verifiedBy: "Adv. Meera Krishnan",
-    date: "21 Oct 2026",
-    status: "cleared",
-    createdAt: "2026-10-21T09:00:00.000Z",
-  },
-  {
-    _id: "tru_105",
-    id: "tru_105",
-    advocateId: "adv_1",
-    type: "disbursement",
-    clientName: "Inworth Technologies Pvt Ltd",
-    citizenId: "client_inworth",
-    matterTitle: "SRN-MCA-2026/894120 — Annual MCA Filing (Form AOC-4 & MGT-7)",
-    matterId: "seed-cs-1",
-    amount: 12500,
-    purpose: "Statutory Government Fee: MCA21 Form AOC-4 & MGT-7 (SRN: AA92019401)",
-    referenceNumber: "SRN-AA92019401",
-    verifiedBy: "CS Rajesh Sharma (FCS 9214)",
-    date: "28 Oct 2026",
-    status: "cleared",
-    createdAt: "2026-10-28T14:20:00.000Z",
-    statutoryDetails: {
-      portal: "MCA21",
-      formName: "AOC-4 & MGT-7",
-      cinOrSrn: "SRN-AA92019401",
-      bsrCode: "0290142",
-      challanSerialNumber: "89410",
-      treatment: "reimbursable_out_of_pocket",
-      voucherNo: "VCH-MCA-202610-894120",
-    },
-  },
-  {
-    _id: "tru_106",
-    id: "tru_106",
-    advocateId: "adv_1",
-    type: "disbursement",
-    clientName: "Vanguard Infrastructure Ltd",
-    citizenId: "client_vanguard",
-    matterTitle: "ITR-CA-2026/741092 — Form 3CD Tax Audit & Corporate ITR-6",
-    matterId: "seed-ca-1",
-    amount: 10000,
-    purpose: "Statutory Government Fee: CBDT ITNS 280 Self-Assessment Tax (CIN: 029014274109)",
-    referenceNumber: "ITNS-280-CIN-029014274109",
-    verifiedBy: "CA Ramanathan Iyer (FCA 40192)",
-    date: "26 Oct 2026",
-    status: "cleared",
-    createdAt: "2026-10-26T11:00:00.000Z",
-    statutoryDetails: {
-      portal: "CBDT_INCOME_TAX",
-      formName: "ITNS 280",
-      cinOrSrn: "ITNS-280-CIN-029014274109",
-      bsrCode: "0290142",
-      challanSerialNumber: "74109",
-      treatment: "escrow_deduction",
-      voucherNo: "VCH-CBDT-202610-741092",
-    },
-  },
-];
-
-const DEFAULT_EXPENSES = [
-  {
-    _id: "exp_101",
-    id: "exp_101",
-    advocateId: "adv_1",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-    matterId: "mat_wpc_19482",
-    clientName: "Gopakumar Nambiar",
-    category: "Court Fee Stamps & Welfare",
-    amount: 2850,
-    description: "Kerala High Court e-filing judicial stamp duty and welfare fund tickets",
-    paidBy: "Suresh Rawat (Clerk)",
-    date: "16 Oct 2026",
-    receiptNumber: "KLHC-EF-2026-9812",
-    isReimbursable: true,
-    status: "approved",
-    createdAt: "2026-10-16T08:00:00.000Z",
-  },
-  {
-    _id: "exp_102",
-    id: "exp_102",
-    advocateId: "adv_1",
-    matterTitle: "ARB/NCLT/KOCHI/2024/041 — Malabar Infotech",
-    matterId: "mat_arb_041",
-    clientName: "Malabar Infotech Solutions Pvt Ltd",
-    category: "Process Service & Speed Post",
-    amount: 1420,
-    description: "Speed post statutory notice with AD to 4 respondent directors",
-    paidBy: "Chamber Petty Cash",
-    date: "18 Oct 2026",
-    receiptNumber: "SP-EKM-4412",
-    isReimbursable: true,
-    status: "approved",
-    createdAt: "2026-10-18T10:15:00.000Z",
-  },
-  {
-    _id: "exp_103",
-    id: "exp_103",
-    advocateId: "adv_1",
-    matterTitle: "General Chamber Operations",
-    matterId: "chamber_gen",
-    clientName: "Chamber Overhead",
-    category: "Legal Research Subscriptions",
-    amount: 8500,
-    description: "SCC Online & Manupatra Kerala High Court monthly research seats",
-    paidBy: "Adv. Meera Krishnan",
-    date: "19 Oct 2026",
-    receiptNumber: "INV-SCCO-8812",
-    isReimbursable: false,
-    status: "paid",
-    createdAt: "2026-10-19T06:00:00.000Z",
-  },
-  {
-    _id: "exp_104",
-    id: "exp_104",
-    advocateId: "adv_1",
-    matterTitle: "WP(C) 4921/2026 — Vanguard Infrastructure v. NHAI",
-    matterId: "mat_1792557595989",
-    clientName: "Vanguard Infrastructure Ltd",
-    category: "Paperbook Binding & Scrutiny",
-    amount: 3200,
-    description: "4 sets Division Bench paperbook binding, index tab sheets, and registry attestations",
-    paidBy: "Suresh Rawat (Clerk)",
-    date: "21 Oct 2026",
-    receiptNumber: "CH-PB-2026-401",
-    isReimbursable: true,
-    status: "approved",
-    createdAt: "2026-10-21T11:45:00.000Z",
-  },
-];
-
-const DEFAULT_ASSOCIATES = [
-  {
-    _id: "asc_101",
-    id: "asc_101",
-    advocateId: "adv_1",
-    fullName: "Adv. Rahul Nair",
-    role: "Senior Associate (Civil & Writs)",
-    enrollmentNumber: "K/002140/2017",
-    phone: "+91 94472 88120",
-    email: "rahul.nair@chamber.law",
-    status: "Active",
-    courtPass: "KHCAA Golden Jubilee Pass #104",
-    activeMattersAssigned: 8,
-    attendanceToday: "Present — Court Hall 2A",
-    createdAt: "2026-06-01T00:00:00.000Z",
-  },
-  {
-    _id: "asc_102",
-    id: "asc_102",
-    advocateId: "adv_1",
-    fullName: "Adv. Preeti Sharma",
-    role: "Litigation Junior (Arbitration & Corporate)",
-    enrollmentNumber: "K/003891/2021",
-    phone: "+91 98471 44520",
-    email: "preeti.sharma@chamber.law",
-    status: "Active",
-    courtPass: "KHCAA Pass #312",
-    activeMattersAssigned: 5,
-    attendanceToday: "Present — Arbitral Tribunal",
-    createdAt: "2026-07-15T00:00:00.000Z",
-  },
-  {
-    _id: "asc_103",
-    id: "asc_103",
-    advocateId: "adv_1",
-    fullName: "Suresh Rawat",
-    role: "Chief Court Clerk & Registry In-charge",
-    enrollmentNumber: "HC Clerk Badge #402",
-    phone: "+91 94470 22390",
-    email: "suresh.clerk@chamber.law",
-    status: "Active",
-    courtPass: "Registry Filing Pass #402",
-    activeMattersAssigned: 14,
-    attendanceToday: "Present — Filing Scrutiny Section",
-    createdAt: "2026-05-10T00:00:00.000Z",
-  },
-];
-
+const DEFAULT_INVOICES = [];
+const DEFAULT_CASE_NOTES = [];
+const DEFAULT_ADVOCATE_PROFILES = [];
+const DEFAULT_MESSAGES = [];
+const DEFAULT_CLIENTS = [];
+const DEFAULT_DICTATIONS = [];
+const DEFAULT_TRUST_TRANSACTIONS = [];
+const DEFAULT_EXPENSES = [];
+const DEFAULT_ASSOCIATES = [];
 const DEFAULT_CHAMBER_REPORTS = [];
 
 export const parseNotificationEpoch = (record) => {
@@ -1625,67 +558,37 @@ export const devStore = {
     const profiles = readFile("dev_citizen_profiles.json", []);
     let profile = profiles.find((p) => p.userId === userId);
     if (!profile) {
-      if (userId === "default_citizen") {
-        profile = {
-          userId: "default_citizen",
-          fullName: "Gopakumar Nambiar",
-          email: "gopakumar@test.com",
-          phone: "+91 94471 28400",
-          alternatePhone: "+91 484 231456",
-          address: {
-            street: "Flat 4B, Silver Heights, Panampilly Nagar",
-            city: "Kochi",
-            district: "Ernakulam",
-            state: "Kerala",
-            pincode: "682036",
-          },
-          preferredLanguage: "en",
-          emergencyContact: {
-            name: "Suresh Nambiar",
-            relationship: "Brother",
-            phone: "+91 98460 11223",
-          },
-          kycVerified: true,
-          notificationPreferences: {
-            whatsapp: true,
-            email: true,
-            inApp: true,
-            courtHearingAlerts: true,
-          },
-        };
-      } else {
-        const user = this.getUserById(userId);
-        const userFullName = user?.fullName || user?.name || "";
-        const userUsername = user?.username || (user?.email ? user.email.split("@")[0] : "");
-        profile = {
-          userId,
-          username: userUsername,
-          fullName: userFullName,
-          email: user?.email || "",
-          phone: user?.phone || "",
-          alternatePhone: "",
-          address: {
-            street: "",
-            city: "",
-            district: "",
-            state: "Kerala",
-            pincode: "",
-          },
-          preferredLanguage: "en",
-          emergencyContact: {
-            name: "",
-            relationship: "",
-            phone: "",
-          },
-          kycVerified: false,
-          notificationPreferences: {
-            whatsapp: true,
-            email: true,
-            inApp: true,
-            courtHearingAlerts: true,
-          },
-        };
-      }
+      const user = this.getUserById(userId);
+      const userFullName = user?.fullName || user?.name || "";
+      const userUsername = user?.username || (user?.email ? user.email.split("@")[0] : "");
+      profile = {
+        userId,
+        username: userUsername,
+        fullName: userFullName,
+        email: user?.email || "",
+        phone: user?.phone || "",
+        alternatePhone: "",
+        address: {
+          street: "",
+          city: "",
+          district: "",
+          state: "Kerala",
+          pincode: "",
+        },
+        preferredLanguage: "en",
+        emergencyContact: {
+          name: "",
+          relationship: "",
+          phone: "",
+        },
+        kycVerified: false,
+        notificationPreferences: {
+          whatsapp: true,
+          email: true,
+          inApp: true,
+          courtHearingAlerts: true,
+        },
+      };
       profiles.push(profile);
       writeFile("dev_citizen_profiles.json", profiles);
     }
@@ -1722,7 +625,6 @@ export const devStore = {
   getGrievances(userId) {
     const grvs = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
     if (!userId) return [];
-    if (userId === "default_citizen") return grvs;
     return grvs.filter((g) => g.citizenId === userId || g.userId === userId);
   },
 
@@ -1743,7 +645,7 @@ export const devStore = {
     return newGrv;
   },
 
-  matchAdvocateToGrievance(grievanceId, advocateId, citizenId = "default_citizen") {
+  matchAdvocateToGrievance(grievanceId, advocateId, citizenId = "") {
     const grvs = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
     const index = grvs.findIndex((g) => g._id === grievanceId);
     if (index === -1) return null;
@@ -2024,7 +926,6 @@ export const devStore = {
   getConsultations(userId) {
     const list = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
     if (!userId) return [];
-    if (userId === "default_citizen") return list;
     return list.filter(
       (c) => c.citizenId === userId || c.userId === userId
     );
@@ -2044,10 +945,10 @@ export const devStore = {
     const newCon = {
       _id: "con_" + Date.now().toString(),
       id: "con_" + Date.now().toString(),
-      citizenId: data.citizenId || "default_citizen",
+      citizenId: data.citizenId || "",
       citizenName: data.citizenName || citizenInfo.citizenName,
       citizenEmail: data.citizenEmail || citizenInfo.citizenEmail,
-      barCouncilNumber: data.barCouncilNumber || resolvedAdv.barCouncilNumber || "K/001429/2012",
+      barCouncilNumber: data.barCouncilNumber || resolvedAdv.barCouncilNumber || "",
       consultationType: finalType,
       scheduledDate: data.scheduledDate || new Date().toISOString(),
       timeSlot: data.timeSlot || "10:30 AM - 11:15 AM",
@@ -2108,10 +1009,7 @@ export const devStore = {
   getDocuments(userId, filter = {}) {
     const docs = readFile("dev_documents.json", DEFAULT_DOCUMENTS);
     if (!userId) return [];
-    const userDocs =
-      userId === "default_citizen"
-        ? docs
-        : docs.filter((d) => d.citizenId === userId || d.userId === userId);
+    const userDocs = docs.filter((d) => d.citizenId === userId || d.userId === userId);
     return userDocs.filter((d) => {
       if (filter.subType && filter.subType !== "all") {
         if (filter.subType === "contracts" && d.category !== "Contract" && d.subType !== "contracts") return false;
@@ -2263,12 +1161,12 @@ export const devStore = {
     return entries;
   },
 
-  getAdvocateIdentities(advocateId = "adv_1") {
-    const ids = new Set([String(advocateId || "adv_1")]);
+  getAdvocateIdentities(advocateId = "") {
+    const ids = new Set(advocateId ? [String(advocateId)] : []);
     const names = new Set();
     const emails = new Set();
     let primaryName = "";
-    const registry = this.getAdvocateRegistry();
+    const registry = advocateId ? this.getAdvocateRegistry() : [];
 
     const matchedEntries = registry.filter(
       (e) => e.id === String(advocateId) || e.userId === String(advocateId)
@@ -2291,11 +1189,6 @@ export const devStore = {
       }
     }
 
-    if (String(advocateId) === "adv_1") {
-      names.add("meera krishnan");
-      if (!primaryName) primaryName = "Adv. Meera Krishnan";
-    }
-
     if (primaryName && !/^adv[\.\s]/i.test(primaryName)) {
       primaryName = `Adv. ${primaryName}`;
     }
@@ -2314,8 +1207,8 @@ export const devStore = {
     const cleanId = advocateId && String(advocateId).trim();
     const normInputName = this.normalizeAdvocateName(advocateName);
 
-    // Prefer explicit non-default ID match, unless a distinct advocateName was explicitly chosen
-    if (cleanId && cleanId !== "adv_1") {
+    // Prefer explicit ID match, unless a distinct advocateName was explicitly chosen
+    if (cleanId) {
       const byId = registry.find((e) => e.id === cleanId || e.userId === cleanId);
       if (byId) {
         let formattedName = advocateName || byId.fullName || "Advocate";
@@ -2323,7 +1216,7 @@ export const devStore = {
         return {
           advocateId: byId.id || cleanId,
           advocateName: formattedName,
-          barCouncilNumber: byId.barCouncilNumber || "K/001429/2012",
+          barCouncilNumber: byId.barCouncilNumber || "",
         };
       }
     }
@@ -2337,17 +1230,17 @@ export const devStore = {
         let formattedName = advocateName || byName.fullName;
         if (!/^adv[\.\s]/i.test(formattedName)) formattedName = `Adv. ${formattedName}`;
         return {
-          advocateId: byName.id || byName.userId || cleanId || "adv_1",
+          advocateId: byName.id || byName.userId || cleanId || "",
           advocateName: formattedName,
-          barCouncilNumber: byName.barCouncilNumber || "K/001429/2012",
+          barCouncilNumber: byName.barCouncilNumber || "",
         };
       }
       let formattedName = advocateName.trim();
       if (!/^adv[\.\s]/i.test(formattedName)) formattedName = `Adv. ${formattedName}`;
       return {
-        advocateId: cleanId && cleanId !== "adv_1" ? cleanId : `adv_name_${normInputName.replace(/\s+/g, "_")}`,
+        advocateId: cleanId || `adv_name_${normInputName.replace(/\s+/g, "_")}`,
         advocateName: formattedName,
-        barCouncilNumber: "K/001429/2012",
+        barCouncilNumber: "",
       };
     }
 
@@ -2373,7 +1266,7 @@ export const devStore = {
   },
 
   getCitizenDisplayInfo(citizenId) {
-    if (!citizenId || citizenId === "default_citizen") {
+    if (!citizenId) {
       return { citizenName: "Registered Client", citizenEmail: "", citizenPhone: "" };
     }
     const profiles = readFile("dev_citizen_profiles.json", []);
@@ -2397,26 +1290,14 @@ export const devStore = {
     };
   },
 
-  matchesAdvocate(record, advocateId = "adv_1") {
-    if (!record) return false;
+  matchesAdvocate(record, advocateId = "") {
+    if (!record || !advocateId) return false;
     const identity = this.getAdvocateIdentities(advocateId);
     const recIds = [record.advocateId, record.assignedAdvocateId, record.matchedAdvocateId]
       .filter(Boolean)
       .map((v) => String(v));
 
     if (recIds.some((id) => identity.ids.has(id))) {
-      // Guard against stale "adv_1" when record explicitly names a different advocate
-      const recNormName = this.normalizeAdvocateName(
-        record.advocateName || record.assignedAdvocateName || record.assignedAdvocate || ""
-      );
-      if (
-        String(advocateId) === "adv_1" &&
-        recIds.includes("adv_1") &&
-        recNormName &&
-        !recNormName.includes("meera")
-      ) {
-        return false;
-      }
       return true;
     }
 
@@ -2436,7 +1317,7 @@ export const devStore = {
       return true;
     }
 
-    return String(advocateId) === "adv_1" && (!recIds.length || recIds.includes("adv_1"));
+    return false;
   },
 
   getAdvocateDocuments(advocateId) {
@@ -2451,10 +1332,7 @@ export const devStore = {
   getNotices(userId) {
     const notices = readFile("dev_notices.json", DEFAULT_NOTICES);
     if (!userId) return [];
-    const userNotices =
-      userId === "default_citizen"
-        ? notices
-        : notices.filter((n) => n.citizenId === userId || n.userId === userId);
+    const userNotices = notices.filter((n) => n.citizenId === userId || n.userId === userId);
     return userNotices.map((n) => {
       const dispatch = n.dispatchDate ? new Date(n.dispatchDate).getTime() : Date.now();
       const elapsedDays = Math.max(0, Math.floor((Date.now() - dispatch) / (1000 * 60 * 60 * 24)));
@@ -2502,8 +1380,8 @@ export const devStore = {
     const newNotice = {
       _id: "not_" + Date.now().toString(),
       id: "not_" + Date.now().toString(),
-      citizenId: data.citizenId || "default_citizen",
-      senderName: data.senderName || "Gopakumar Nambiar",
+      citizenId: data.citizenId || "",
+      senderName: data.senderName || "Client",
       recipientName: data.recipientName || "Recipient",
       recipientAddress: data.recipientAddress || "Address",
       claimAmount: data.claimAmount || "",
@@ -2514,7 +1392,7 @@ export const devStore = {
       speedPostTrackingNumber: trackingNum,
       deliveryStatus: data.deliveryStatus || "Item Booked",
       daysRemaining: Number(data.statutoryNoticeDays) || 15,
-      advocateName: data.advocateName || "Adv. Meera Krishnan",
+      advocateName: data.advocateName || "Counsel",
       draftContent: data.draftContent || "",
       trackingHistory: initialTracking,
       createdAt: now.toISOString(),
@@ -2683,7 +1561,8 @@ export const devStore = {
   },
 
   // --- Advocate Profile & Chambers ---
-  getAdvocateProfile(advocateId = "adv_1") {
+  getAdvocateProfile(advocateId = "") {
+    if (!advocateId) return null;
     const profiles = readFile("dev_advocate_profiles.json", DEFAULT_ADVOCATE_PROFILES);
     let profile = profiles.find((p) => p.userId === advocateId || p._id === advocateId);
     if (!profile) {
@@ -2701,30 +1580,30 @@ export const devStore = {
           userId: user._id,
           fullName: cleanName,
           email: user.email,
-          phone: user.phone || "+91 98470 12345",
-          barCouncilNumber: user.barCouncilId || "K/001429/2024",
-          experienceYears: 10,
-          primaryCourt: user.additionalDetails?.practiceCourt || "High Court of Kerala (Ernakulam)",
-          secondaryCourts: ["District Court, Ernakulam", "Sub Court, Ernakulam"],
-          chamberAddress: "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
-          specializations: ["Constitutional Writs", "Land Reforms & Property", "Commercial Arbitration"],
-          languages: ["English", "Malayalam"],
-          consultationFee: 1500,
-          rating: 4.9,
-          reviewCount: 38,
-          isVerified: true,
+          phone: user.phone || "",
+          barCouncilNumber: user.barCouncilId || "",
+          experienceYears: 0,
+          primaryCourt: user.additionalDetails?.practiceCourt || "",
+          secondaryCourts: [],
+          chamberAddress: "",
+          specializations: [],
+          languages: ["English"],
+          consultationFee: 0,
+          rating: 0,
+          reviewCount: 0,
+          isVerified: Boolean(user.isVerified),
           availableToday: true,
-          bio: "Practicing Advocate registered with the Bar Council.",
-          upiId: `${(user.email || "counsel").split("@")[0]}@okaxis`,
+          bio: "",
+          upiId: "",
         };
         profiles.push(profile);
         writeFile("dev_advocate_profiles.json", profiles);
       }
     }
-    return profile || profiles[0] || DEFAULT_ADVOCATE_PROFILES[0];
+    return profile || null;
   },
 
-  updateAdvocateProfile(advocateId = "adv_1", updates = {}) {
+  updateAdvocateProfile(advocateId = "", updates = {}) {
     const profiles = readFile("dev_advocate_profiles.json", DEFAULT_ADVOCATE_PROFILES);
     const idx = profiles.findIndex((p) => p.userId === advocateId || p._id === advocateId);
     if (idx !== -1) {
@@ -2772,7 +1651,8 @@ export const devStore = {
   },
 
   // --- Advocate Active Matters Pipeline ---
-  getAdvocateMatters(advocateId = "adv_1") {
+  getAdvocateMatters(advocateId = "") {
+    if (!advocateId) return [];
     const allMatters = readFile("dev_matters.json", DEFAULT_MATTERS);
     return allMatters
       .filter((m) => this.matchesAdvocate(m, advocateId))
@@ -2780,7 +1660,8 @@ export const devStore = {
   },
 
   // --- Advocate Consultations & Chamber Bookings ---
-  getAdvocateConsultations(advocateId = "adv_1") {
+  getAdvocateConsultations(advocateId = "") {
+    if (!advocateId) return [];
     const allConsultations = readFile("dev_consultations.json", DEFAULT_CONSULTATIONS);
     return allConsultations
       .filter((c) => this.matchesAdvocate(c, advocateId))
@@ -2814,7 +1695,8 @@ export const devStore = {
   },
 
   // --- Advocate Invoices & Fee Billing ---
-  getInvoices(advocateId = "adv_1") {
+  getInvoices(advocateId = "") {
+    if (!advocateId) return [];
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
     return invoices.filter((inv) => this.matchesAdvocate(inv, advocateId));
   },
@@ -2837,7 +1719,7 @@ export const devStore = {
       advocateId: resolvedAdv.advocateId,
       advocateName: resolvedAdv.advocateName,
       barCouncilNumber: data.barCouncilNumber || resolvedAdv.barCouncilNumber || "",
-      citizenId: data.citizenId || "default_citizen",
+      citizenId: data.citizenId || "",
       clientName: data.clientName || "Client",
       clientPhone: data.clientPhone || "",
       matterId: data.matterId || "",
@@ -2873,10 +1755,11 @@ export const devStore = {
   },
 
   // --- Chamber Notes & Case Briefings ---
-  getCaseNotes(advocateId = "adv_1", matterId = "") {
+  getCaseNotes(advocateId = "", matterId = "") {
+    if (!advocateId) return [];
     const notes = readFile("dev_casenotes.json", DEFAULT_CASE_NOTES);
     return notes.filter((n) => {
-      const matchAdv = !advocateId || n.advocateId === advocateId || advocateId === "adv_1";
+      const matchAdv = n.advocateId === advocateId;
       const matchMatter = !matterId || n.matterId === matterId;
       return matchAdv && matchMatter;
     });
@@ -2886,7 +1769,7 @@ export const devStore = {
     const notes = readFile("dev_casenotes.json", DEFAULT_CASE_NOTES);
     const newNote = {
       _id: "note_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
+      advocateId: data.advocateId || "",
       matterId: data.matterId || "",
       matterTitle: data.matterTitle || "General Chamber Memo",
       title: data.title || "Untitled Case Note",
@@ -2909,7 +1792,8 @@ export const devStore = {
   },
 
   // --- Incoming Leads / Grievances for Intake ---
-  getIncomingGrievances(advocateId = "adv_1") {
+  getIncomingGrievances(advocateId = "") {
+    if (!advocateId) return [];
     const grievances = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
     return grievances
       .filter((g) => {
@@ -2920,7 +1804,7 @@ export const devStore = {
       .map((g) => this.enrichWithCitizenInfo(g));
   },
 
-  acceptGrievance(grievanceId, advocateId = "adv_1") {
+  acceptGrievance(grievanceId, advocateId = "") {
     const grievances = readFile("dev_grievances.json", DEFAULT_GRIEVANCES);
     const grvIndex = grievances.findIndex((g) => g._id === grievanceId);
     if (grvIndex === -1) return null;
@@ -2941,7 +1825,7 @@ export const devStore = {
     if (!existing) {
       const newMatter = {
         _id: "mat_" + Date.now().toString(),
-        citizenId: grievances[grvIndex].citizenId || "default_citizen",
+        citizenId: grievances[grvIndex].citizenId || "",
         citizenName: grievances[grvIndex].citizenName || citizenInfo.citizenName,
         citizenEmail: citizenInfo.citizenEmail,
         grievanceId,
@@ -2979,7 +1863,6 @@ export const devStore = {
   getCitizenInvoices(citizenId) {
     const invoices = readFile("dev_invoices.json", DEFAULT_INVOICES);
     if (!citizenId) return [];
-    if (citizenId === "default_citizen") return invoices;
     return invoices.filter(
       (inv) => inv.citizenId === citizenId || inv.userId === citizenId
     );
@@ -3104,20 +1987,16 @@ export const devStore = {
   },
 
   // --- Secure Client-Advocate Messaging ---
-  getMessages(userId = "default_citizen", matterId = "") {
+  getMessages(userId = "", matterId = "") {
     const cleanUserId = String(userId || "").trim();
     if (!cleanUserId) return [];
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
-    const isLegacyCitizen = cleanUserId === "default_citizen";
 
     return messages
       .filter((m) => {
         const senderStr = m.senderId ? String(m.senderId) : "";
         const recipStr = m.recipientId ? String(m.recipientId) : "";
-        const matchUser =
-          senderStr === cleanUserId ||
-          recipStr === cleanUserId ||
-          (isLegacyCitizen && (senderStr === "default_citizen" || recipStr === "default_citizen"));
+        const matchUser = senderStr === cleanUserId || recipStr === cleanUserId;
         const matchMatter = !matterId || String(m.matterId || "") === String(matterId);
         return matchUser && matchMatter;
       })
@@ -3127,7 +2006,7 @@ export const devStore = {
   sendMessage(data) {
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
     const now = new Date();
-    const senderId = data.senderId ? String(data.senderId) : "default_citizen";
+    const senderId = data.senderId ? String(data.senderId) : "";
     const citizenInfo = this.getCitizenDisplayInfo(senderId);
 
     let resolvedAdv = null;
@@ -3137,11 +2016,11 @@ export const devStore = {
 
     const fallbackRecipientId = data.recipientId
       ? String(data.recipientId)
-      : resolvedAdv?.advocateId || (senderId === "default_citizen" ? "adv_1" : "");
+      : resolvedAdv?.advocateId || "";
     const fallbackRecipientName =
       data.recipientName ||
       resolvedAdv?.advocateName ||
-      (senderId === "default_citizen" ? "Adv. Meera Krishnan" : "Counsel");
+      "Counsel";
 
     const id = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newMsg = {
@@ -3151,7 +2030,8 @@ export const devStore = {
       senderRole: data.senderRole || "citizen",
       senderName:
         data.senderName ||
-        (senderId === "default_citizen" ? "Gopakumar Nambiar" : citizenInfo.citizenName || "Registered Citizen"),
+        citizenInfo.citizenName ||
+        "Registered Citizen",
       recipientId: fallbackRecipientId,
       recipientRole: data.recipientRole || "advocate",
       recipientName: fallbackRecipientName,
@@ -3182,7 +2062,7 @@ export const devStore = {
     return msg;
   },
 
-  getUnreadMessageCount(userId = "default_citizen") {
+  getUnreadMessageCount(userId = "") {
     const cleanUserId = String(userId || "").trim();
     if (!cleanUserId) return 0;
     const messages = this.getMessages(cleanUserId);
@@ -3190,12 +2070,11 @@ export const devStore = {
   },
 
   // --- Advocate Messaging & Threads ---
-  getAdvocateMessages(advocateId = "adv_1") {
+  getAdvocateMessages(advocateId = "") {
     const cleanId = String(advocateId || "").trim();
     if (!cleanId) return [];
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
     const identity = this.getAdvocateIdentities(cleanId);
-    const isLegacyDemoAdvocate = cleanId === "adv_1";
 
     return messages.filter((m) => {
       const senderStr = m.senderId ? String(m.senderId) : "";
@@ -3220,11 +2099,11 @@ export const devStore = {
         return true;
       }
 
-      return isLegacyDemoAdvocate && (senderStr === "adv_1" || recipStr === "adv_1");
+      return false;
     });
   },
 
-  getAdvocateThreads(advocateId = "adv_1") {
+  getAdvocateThreads(advocateId = "") {
     const cleanAdvId = String(advocateId || "").trim();
     const identity = this.getAdvocateIdentities(cleanAdvId);
     const messages = this.getAdvocateMessages(cleanAdvId);
@@ -3278,9 +2157,9 @@ export const devStore = {
     );
   },
 
-  getAdvocateThread(advocateId = "adv_1", citizenId = "") {
+  getAdvocateThread(advocateId = "", citizenId = "") {
     const cleanCitizenId = String(citizenId || "").trim();
-    if (!cleanCitizenId) return [];
+    if (!advocateId || !cleanCitizenId) return [];
     const messages = this.getAdvocateMessages(advocateId);
     return messages
       .filter(
@@ -3292,7 +2171,7 @@ export const devStore = {
   sendAdvocateMessage(data) {
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
     const now = new Date();
-    const senderId = data.senderId ? String(data.senderId) : "adv_1";
+    const senderId = data.senderId ? String(data.senderId) : "";
     const identity = this.getAdvocateIdentities(senderId);
     const recipientId = data.recipientId ? String(data.recipientId) : "";
     const citizenInfo = recipientId ? this.getCitizenDisplayInfo(recipientId) : { citizenName: "" };
@@ -3321,14 +2200,13 @@ export const devStore = {
     return newMsg;
   },
 
-  markAdvocateThreadRead(advocateId = "adv_1", citizenId = "") {
+  markAdvocateThreadRead(advocateId = "", citizenId = "") {
     const cleanAdvId = String(advocateId || "").trim();
     const cleanCitizenId = String(citizenId || "").trim();
     if (!cleanAdvId || !cleanCitizenId) return 0;
 
     const messages = readFile("dev_messages.json", DEFAULT_MESSAGES);
     const identity = this.getAdvocateIdentities(cleanAdvId);
-    const isLegacyDemoAdvocate = cleanAdvId === "adv_1";
     let updatedCount = 0;
 
     messages.forEach((m) => {
@@ -3341,8 +2219,7 @@ export const devStore = {
         this.matchesAdvocate(
           { advocateId: recipStr || m.advocateId, advocateName: m.recipientName || m.advocateName },
           cleanAdvId
-        ) ||
-        (isLegacyDemoAdvocate && m.recipientRole === "advocate" && (!recipStr || recipStr === "adv_1"));
+        );
 
       if (fromTargetCitizen && targetsThisAdvocate && !m.isRead) {
         m.isRead = true;
@@ -3357,7 +2234,7 @@ export const devStore = {
     return updatedCount;
   },
 
-  getAdvocateUnreadCount(advocateId = "adv_1") {
+  getAdvocateUnreadCount(advocateId = "") {
     const cleanAdvId = String(advocateId || "").trim();
     if (!cleanAdvId) return 0;
     const identity = this.getAdvocateIdentities(cleanAdvId);
@@ -3648,17 +2525,19 @@ export const devStore = {
   },
 
   // --- Advocate Notifications (Client Interest, Petitions, Consultations, Filings & Causelist) ---
-  getNotificationState(advocateId = "adv_1") {
+  getNotificationState(advocateId = "") {
     const store = readFile("dev_notification_state.json", {});
-    const key = String(advocateId || "adv_1");
+    const key = String(advocateId || "");
+    if (!key) return { readIds: [], dismissedIds: [] };
     const entry = store && typeof store === "object" && !Array.isArray(store) ? store[key] : null;
     return entry || { readIds: [], dismissedIds: [] };
   },
 
-  updateNotificationState(advocateId = "adv_1", field, notificationIds = []) {
+  updateNotificationState(advocateId = "", field, notificationIds = []) {
     const raw = readFile("dev_notification_state.json", {});
     const store = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-    const key = String(advocateId || "adv_1");
+    const key = String(advocateId || "");
+    if (!key) return { readIds: [], dismissedIds: [] };
     const current = store[key] || { readIds: [], dismissedIds: [] };
     const merged = new Set([...(current[field] || []).map(String), ...(notificationIds || []).map(String)]);
     store[key] = { ...current, [field]: Array.from(merged), updatedAt: new Date().toISOString() };
@@ -3666,15 +2545,16 @@ export const devStore = {
     return store[key];
   },
 
-  markAdvocateNotificationsRead(advocateId = "adv_1", notificationIds = []) {
+  markAdvocateNotificationsRead(advocateId = "", notificationIds = []) {
     return this.updateNotificationState(advocateId, "readIds", notificationIds);
   },
 
-  dismissAdvocateNotifications(advocateId = "adv_1", notificationIds = []) {
+  dismissAdvocateNotifications(advocateId = "", notificationIds = []) {
     return this.updateNotificationState(advocateId, "dismissedIds", notificationIds);
   },
 
-  getAdvocateNotifications(advocateId = "adv_1") {
+  getAdvocateNotifications(advocateId = "") {
+    if (!advocateId) return [];
     const leads = this.getIncomingGrievances(advocateId);
     const matters = this.getAdvocateMatters(advocateId);
     const consultations = this.getAdvocateConsultations(advocateId);
@@ -3707,7 +2587,8 @@ export const devStore = {
   },
 
   // --- Advocate Clients & Representation Roster ---
-  getClients(advocateId = "adv_1") {
+  getClients(advocateId = "") {
+    if (!advocateId) return [];
     const storedClients = readFile("dev_clients.json", DEFAULT_CLIENTS);
     const matchingStored = storedClients.filter((c) => this.matchesAdvocate(c, advocateId));
 
@@ -3800,7 +2681,7 @@ export const devStore = {
       _id: "cli_" + Date.now().toString(),
       id: "cli_" + Date.now().toString(),
       citizenId: data.citizenId || "cit_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
+      advocateId: data.advocateId || "",
       fullName: data.fullName,
       category: data.category || "Individual Citizen",
       contactPerson: data.contactPerson || "",
@@ -3842,13 +2723,10 @@ export const devStore = {
   },
 
   // --- Chamber Voice Dictations & Audio Notes ---
-  getDictations(advocateId = "adv_1") {
+  getDictations(advocateId = "") {
+    if (!advocateId) return [];
     const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
-    if (!dictations || dictations.length === 0) {
-      writeFile("dev_dictations.json", DEFAULT_DICTATIONS);
-      return DEFAULT_DICTATIONS;
-    }
-    return dictations;
+    return dictations.filter((d) => this.matchesAdvocate(d, advocateId));
   },
 
   getDictationById(id) {
@@ -3861,7 +2739,7 @@ export const devStore = {
     const newDictation = {
       _id: "dict_" + Date.now().toString(),
       id: "dict_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
+      advocateId: data.advocateId || "",
       title: data.title || `Chamber Dictation — ${new Date().toLocaleDateString("en-IN")}`,
       category: data.category || "General Chamber",
       matter: data.matter || "General Practice",
@@ -3887,7 +2765,7 @@ export const devStore = {
     return filtered.length < dictations.length;
   },
 
-  convertDictationToCaseNote(id, advocateId = "adv_1") {
+  convertDictationToCaseNote(id, advocateId = "") {
     const dictations = readFile("dev_dictations.json", DEFAULT_DICTATIONS);
     const dict = dictations.find((d) => d._id === id || d.id === id);
     if (!dict) return null;
@@ -3910,7 +2788,8 @@ export const devStore = {
   },
 
   // --- ERP: Trust / IOLTA Escrow Accounting ---
-  getTrustTransactions(advocateId = "adv_1") {
+  getTrustTransactions(advocateId = "") {
+    if (!advocateId) return [];
     const transactions = readFile("dev_trust.json", DEFAULT_TRUST_TRANSACTIONS);
     return transactions.filter((t) => this.matchesAdvocate(t, advocateId));
   },
@@ -3923,7 +2802,7 @@ export const devStore = {
       id: "tru_" + Date.now().toString(),
       type: data.type || "deposit",
       clientName: data.clientName || "Client Deposit",
-      citizenId: data.citizenId || "default_citizen",
+      citizenId: data.citizenId || "",
       matterTitle: data.matterTitle || "General Client Escrow",
       matterId: data.matterId || "",
       purpose: data.purpose || "Advance Retainer Escrow",
@@ -3943,7 +2822,8 @@ export const devStore = {
   },
 
   // --- ERP: Chamber Disbursements & Expenses ---
-  getExpenses(advocateId = "adv_1") {
+  getExpenses(advocateId = "") {
+    if (!advocateId) return [];
     const expenses = readFile("dev_expenses.json", DEFAULT_EXPENSES);
     return expenses.filter((e) => this.matchesAdvocate(e, advocateId));
   },
@@ -3976,7 +2856,8 @@ export const devStore = {
   },
 
   // --- ERP: Human Resource Management (Huremaso) ---
-  getAssociates(advocateId = "adv_1") {
+  getAssociates(advocateId = "") {
+    if (!advocateId) return [];
     const associates = readFile("dev_associates.json", DEFAULT_ASSOCIATES);
     return associates.filter((a) => this.matchesAdvocate(a, advocateId));
   },
@@ -4007,7 +2888,7 @@ export const devStore = {
   },
 
   // --- ERP: Overview & Financial Ledger Summary ---
-  getErpOverview(advocateId = "adv_1") {
+  getErpOverview(advocateId = "") {
     const invoices = this.getInvoices(advocateId);
     const trust = this.getTrustTransactions(advocateId);
     const expenses = this.getExpenses(advocateId);
@@ -4213,14 +3094,13 @@ export const devStore = {
   },
 
   // --- Case Preparation & Bench Argument Dossiers ---
-  getCasePrepDossier(matterId = "", advocateId = "adv_1") {
+  getCasePrepDossier(matterId = "", advocateId = "") {
     const cleanMatterId = String(matterId || "").trim();
-    const isLegacyDemoAdvocate = String(advocateId || "") === "adv_1";
-    if (!cleanMatterId && !isLegacyDemoAdvocate) {
+    if (!cleanMatterId || !advocateId) {
       return null;
     }
 
-    const targetId = cleanMatterId || "mat_wpc_19482";
+    const targetId = cleanMatterId;
     const store = readFile("dev_case_prep.json", {});
     const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
     const matchedMatter = matters.find(
@@ -4235,9 +3115,6 @@ export const devStore = {
     if (matchedMatter && !this.matchesAdvocate(matchedMatter, advocateId)) {
       return null;
     }
-    if (targetId === "mat_wpc_19482" && !isLegacyDemoAdvocate) {
-      return null;
-    }
 
     const canonicalId = matchedMatter?._id || targetId;
     const scopedKey = `${advocateId}::${canonicalId}`;
@@ -4247,38 +3124,23 @@ export const devStore = {
 
     if (store[canonicalId]) {
       const existing = store[canonicalId];
-      const isAutoSeededPlaceholder =
-        existing.precedents?.[0]?.id === "prec-dyn-1" &&
-        existing.precedents?.[0]?.caseName === "Valsamma & Ors. v. KSEB" &&
-        existing.issues?.length === 1 &&
-        existing.issues?.[0]?.id === "iss-dyn-1";
       const ownedByAdv =
         (existing.advocateId && String(existing.advocateId) === String(advocateId)) ||
-        (matchedMatter && this.matchesAdvocate(matchedMatter, advocateId)) ||
-        (isLegacyDemoAdvocate && canonicalId === "mat_wpc_19482");
+        (matchedMatter && this.matchesAdvocate(matchedMatter, advocateId));
 
-      if (ownedByAdv && !isAutoSeededPlaceholder) {
+      if (ownedByAdv) {
         return existing;
       }
     }
 
-    if (
-      isLegacyDemoAdvocate &&
-      (targetId === "mat_wpc_19482" ||
-        targetId.includes("19482") ||
-        targetId.toLowerCase().includes("gopakumar"))
-    ) {
-      return store["mat_wpc_19482"] || null;
-    }
-
-    if (!matchedMatter && !isLegacyDemoAdvocate) {
+    if (!matchedMatter) {
       return null;
     }
 
     const m = matchedMatter || {};
     return {
       matterId: canonicalId,
-      advocateId: String(advocateId || "adv_1"),
+      advocateId: String(advocateId || ""),
       matterTitle: m.matterTitle || m.title || "Untitled Matter",
       caseNumber: m.caseNumber || "Pending Filing",
       courtForum: m.courtForum || m.court || "Forum Not Specified",
@@ -4303,14 +3165,15 @@ export const devStore = {
     };
   },
 
-  saveCasePrepDossier(matterId, dossierData, advocateId = "adv_1") {
+  saveCasePrepDossier(matterId, dossierData, advocateId = "") {
+    if (!matterId || !advocateId) return null;
     const store = readFile("dev_case_prep.json", {});
     const cleanId = String(matterId || "").trim();
     const scopedKey = `${advocateId}::${cleanId}`;
     store[scopedKey] = {
       ...dossierData,
       matterId: cleanId,
-      advocateId: String(advocateId || "adv_1"),
+      advocateId: String(advocateId || ""),
       lastUpdated: new Date().toISOString(),
     };
     writeFile("dev_case_prep.json", store);
@@ -4319,12 +3182,7 @@ export const devStore = {
 
   // --- Autonomous AI Legal Agents & Workflows (Option 4) ---
   getAgents() {
-    const agents = readFile("dev_agents.json", DEFAULT_AGENTS);
-    if (!agents || agents.length === 0) {
-      writeFile("dev_agents.json", DEFAULT_AGENTS);
-      return DEFAULT_AGENTS;
-    }
-    return agents;
+    return readFile("dev_agents.json", DEFAULT_AGENTS);
   },
 
   toggleAgentStatus(agentId) {
@@ -4351,7 +3209,7 @@ export const devStore = {
     if (agentId === "agent_causelist") {
       newLogs = [
         { timestamp: nowTimeStr, level: "info", message: "Connecting to eCourts High Court of Kerala API Gateway..." },
-        { timestamp: nowTimeStr, level: "info", message: `Executing query for Advocate Roll No: ${agent.config?.barRollNumber || "K/1429/2016"}` },
+        { timestamp: nowTimeStr, level: "info", message: `Executing query for Advocate Roll No: ${agent.config?.barRollNumber || "Chamber Roll"}` },
         { timestamp: nowTimeStr, level: "info", message: "Parsing Court Hall 2A (Division Bench) & Court Hall 1 (Sub Court) daily rosters..." },
         { timestamp: nowTimeStr, level: "success", message: "Discovered 2 Active Items: Item #14 in Court Hall 2A (WP(C) 19482/2024) and Item #22 in Sub Court (OS 412/2023)." },
         { timestamp: nowTimeStr, level: "success", message: "Causelist synchronized with chamber calendar & WhatsApp alerts dispatched." },
@@ -4502,8 +3360,10 @@ export const devStore = {
     return readFile("dev_kb_articles.json", DEFAULT_KB_ARTICLES);
   },
 
-  getResearchBriefs(advocateId = "adv_1") {
-    return readFile("dev_research_briefs.json", DEFAULT_RESEARCH_BRIEFS);
+  getResearchBriefs(advocateId = "") {
+    if (!advocateId) return [];
+    const briefs = readFile("dev_research_briefs.json", DEFAULT_RESEARCH_BRIEFS);
+    return briefs.filter((b) => this.matchesAdvocate(b, advocateId));
   },
 
   createResearchBrief(data) {
@@ -4516,7 +3376,7 @@ export const devStore = {
       category: data.category || "Constitutional Law",
       legalPropositions: data.legalPropositions || [],
       citations: data.citations || [],
-      author: data.author || "Adv. Meera Krishnan",
+      author: data.author || "Counsel",
       summary: data.summary || "",
       createdAt: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
       ...data,
@@ -4527,13 +3387,19 @@ export const devStore = {
   },
 
   // --- Multi-Party Case Collaboration Room (Milestone 2) ---
-  getCollabRooms(advocateId = "adv_1") {
-    return readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
+  getCollabRooms(advocateId = "") {
+    if (!advocateId) return [];
+    const rooms = readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
+    return rooms.filter(
+      (r) =>
+        this.matchesAdvocate(r, advocateId) ||
+        (Array.isArray(r.participants) && r.participants.some((p) => String(p.id) === String(advocateId)))
+    );
   },
 
   getCollabRoomById(roomId) {
     const rooms = readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
-    return rooms.find((r) => r.id === roomId) || rooms[0];
+    return rooms.find((r) => r.id === roomId) || null;
   },
 
   createCollabRoom(data) {
@@ -4541,24 +3407,17 @@ export const devStore = {
     const newRoom = {
       id: data.id || "room_" + Date.now().toString(),
       subject: data.subject || "Chamber Case Collaboration Session",
-      matterId: data.matterId || "mat_wpc_19482",
-      matterTitle: data.matterTitle || "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
+      matterId: data.matterId || "",
+      matterTitle: data.matterTitle || "Active Chamber Matter",
       status: "ready",
       scheduledFor: data.scheduledFor || "Immediate Session",
-      pinnedExhibit: data.pinnedExhibit || {
-        id: "exh_survey_p1",
-        title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
-        pages: 4,
-        currentPage: 1,
-        type: "pdf",
-        matter: data.matterTitle || "WP(C) 19482/2024",
-      },
+      pinnedExhibit: data.pinnedExhibit || null,
       participants: data.participants || [
         {
-          id: "adv_1",
-          name: "Adv. Meera Krishnan",
+          id: data.advocateId || "",
+          name: data.hostName || "Lead Counsel",
           role: "Lead Advocate (Host)",
-          enrollment: "K/1429/2016",
+          enrollment: data.barCouncilNumber || "",
           isOnline: true,
           isMuted: false,
           isVideoOn: true,
@@ -4573,7 +3432,7 @@ export const devStore = {
     return newRoom;
   },
 
-  saveCollabNotes(roomId, notes, advocateId = "adv_1") {
+  saveCollabNotes(roomId, notes, advocateId = "") {
     const rooms = readFile("dev_collab_rooms.json", DEFAULT_COLLAB_ROOMS);
     const room = rooms.find((r) => r.id === roomId);
     if (room) {
@@ -4724,19 +3583,21 @@ export const devStore = {
     };
   },
 
-  getCourtroomSessions(advocateId = "adv_1") {
-    return readFile("dev_courtroom_sessions.json", DEFAULT_COURTROOM_SESSIONS);
+  getCourtroomSessions(advocateId = "") {
+    if (!advocateId) return [];
+    const sessions = readFile("dev_courtroom_sessions.json", DEFAULT_COURTROOM_SESSIONS);
+    return sessions.filter((s) => this.matchesAdvocate(s, advocateId));
   },
 
   saveCourtroomSession(data) {
     const sessions = readFile("dev_courtroom_sessions.json", DEFAULT_COURTROOM_SESSIONS);
     const newSession = {
       id: "session_" + Date.now().toString(),
-      advocateId: data.advocateId || "adv_1",
-      matterId: data.matterId || "mat_wpc_19482",
-      matterTitle: data.matterTitle || "WP(C) 19482/2024",
+      advocateId: data.advocateId || "",
+      matterId: data.matterId || "",
+      matterTitle: data.matterTitle || "Oral Argument Practice Session",
       benchPersona: data.benchPersona || "division_bench_2a",
-      benchName: data.benchName || "Kerala High Court Division Bench 2A",
+      benchName: data.benchName || "High Court Division Bench",
       finalScore: data.finalScore || 92,
       statutoryPrecision: data.statutoryPrecision || 94,
       disposition: data.disposition || "Interim Stay Granted",
@@ -4751,13 +3612,14 @@ export const devStore = {
   },
 
   // --- Personal AI Legal Twin & Autonomous Associate Workforce Studio (Milestone 4) ---
-  getAdvocateTwin(advocateId = "adv_1") {
-    const twins = readFile("dev_ai_twins.json", { [advocateId]: DEFAULT_AI_TWIN });
-    return twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
+  getAdvocateTwin(advocateId = "") {
+    const twins = readFile("dev_ai_twins.json", {});
+    return (advocateId && twins[advocateId]) || { ...DEFAULT_AI_TWIN, advocateId };
   },
 
-  updateAdvocateTwin(advocateId = "adv_1", updateData = {}) {
-    const twins = readFile("dev_ai_twins.json", { [advocateId]: DEFAULT_AI_TWIN });
+  updateAdvocateTwin(advocateId = "", updateData = {}) {
+    if (!advocateId) return { ...DEFAULT_AI_TWIN };
+    const twins = readFile("dev_ai_twins.json", {});
     const current = twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
     const updated = {
       ...current,
@@ -4771,7 +3633,7 @@ export const devStore = {
 
   simulateTwinReasoning(data = {}) {
     const {
-      advocateId = "adv_1",
+      advocateId = "",
       query = "",
       draftingStyle = "constitutional_assertive",
       primaryJurisdiction = "high_court_kerala",
@@ -4880,11 +3742,13 @@ export const devStore = {
       timestamp: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
     };
 
-    const twins = readFile("dev_ai_twins.json", { [advocateId]: DEFAULT_AI_TWIN });
-    const current = twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
-    current.recentSimulations = [simRecord, ...(current.recentSimulations || []).slice(0, 9)];
-    twins[advocateId] = current;
-    writeFile("dev_ai_twins.json", twins);
+    const twins = readFile("dev_ai_twins.json", {});
+    if (advocateId) {
+      const current = twins[advocateId] || { ...DEFAULT_AI_TWIN, advocateId };
+      current.recentSimulations = [simRecord, ...(current.recentSimulations || []).slice(0, 9)];
+      twins[advocateId] = current;
+      writeFile("dev_ai_twins.json", twins);
+    }
 
     return {
       success: true,
@@ -5207,11 +4071,13 @@ export const devStore = {
   // --- Calendar Fixtures & Backlog Suite ---
   // ==========================================================================
   getCalendarEvents(userId) {
-    return readFile("dev_calendar_fixtures.json", DEFAULT_CALENDAR_FIXTURES);
+    if (!userId) return [];
+    const events = readFile("dev_calendar_fixtures.json", DEFAULT_CALENDAR_FIXTURES);
+    return events.filter((e) => e.userId && String(e.userId) === String(userId));
   },
 
   addCalendarEvent(userId, data = {}) {
-    const events = this.getCalendarEvents(userId);
+    const events = readFile("dev_calendar_fixtures.json", DEFAULT_CALENDAR_FIXTURES);
     const newEvent = {
       id: `evt-${Date.now()}`,
       userId,
@@ -5220,9 +4086,9 @@ export const devStore = {
       date: data.date || new Date().toISOString().split("T")[0],
       time: data.time || "10:30 AM",
       duration: data.duration || "45m",
-      caseNumber: data.caseNumber || "WP(C) 19482/2024",
-      forum: data.forum || "High Court of Kerala",
-      clientName: data.clientName || "Gopakumar Nambiar",
+      caseNumber: data.caseNumber || "",
+      forum: data.forum || "",
+      clientName: data.clientName || "",
       notes: data.notes || "",
       status: data.status || "confirmed",
       createdAt: new Date().toISOString(),
@@ -5251,11 +4117,13 @@ export const devStore = {
   },
 
   getCalendarBacklog(userId) {
-    return readFile("dev_calendar_backlog.json", DEFAULT_CALENDAR_BACKLOG);
+    if (!userId) return [];
+    const backlog = readFile("dev_calendar_backlog.json", DEFAULT_CALENDAR_BACKLOG);
+    return backlog.filter((b) => b.userId && String(b.userId) === String(userId));
   },
 
   addCalendarBacklogItem(userId, data = {}) {
-    const backlog = this.getCalendarBacklog(userId);
+    const backlog = readFile("dev_calendar_backlog.json", DEFAULT_CALENDAR_BACKLOG);
     const newItem = {
       id: `task-bk-${Date.now()}`,
       userId,
@@ -6609,25 +5477,39 @@ export const devStore = {
   // --- Profiles (BCI Credentials & DigiLocker KYC) ---
   // ==========================================================================
   getBciCredentials(userId) {
-    return readFile("dev_bci_credentials.json", DEFAULT_BCI_CREDENTIALS);
+    const raw = readFile("dev_bci_credentials.json", {});
+    if (raw && typeof raw === "object" && !Array.isArray(raw) && !raw.advocateName && userId) {
+      return raw[userId] || { ...DEFAULT_BCI_CREDENTIALS };
+    }
+    return { ...DEFAULT_BCI_CREDENTIALS };
   },
 
   updateBciCredentials(userId, data = {}) {
-    let current = this.getBciCredentials(userId);
-    current = { ...current, ...data, updatedAt: new Date().toISOString() };
-    writeFile("dev_bci_credentials.json", current);
-    return current;
+    const raw = readFile("dev_bci_credentials.json", {});
+    const store = raw && typeof raw === "object" && !Array.isArray(raw) && !raw.advocateName ? raw : {};
+    const key = String(userId || "default");
+    const current = store[key] || { ...DEFAULT_BCI_CREDENTIALS };
+    store[key] = { ...current, ...data, updatedAt: new Date().toISOString() };
+    writeFile("dev_bci_credentials.json", store);
+    return store[key];
   },
 
   getDigiLockerKyc(userId) {
-    return readFile("dev_digilocker_kyc.json", DEFAULT_DIGILOCKER_KYC);
+    const raw = readFile("dev_digilocker_kyc.json", {});
+    if (raw && typeof raw === "object" && !Array.isArray(raw) && !raw.citizenName && userId) {
+      return raw[userId] || { ...DEFAULT_DIGILOCKER_KYC };
+    }
+    return { ...DEFAULT_DIGILOCKER_KYC };
   },
 
   updateDigiLockerKyc(userId, data = {}) {
-    let current = this.getDigiLockerKyc(userId);
-    current = { ...current, ...data, updatedAt: new Date().toISOString() };
-    writeFile("dev_digilocker_kyc.json", current);
-    return current;
+    const raw = readFile("dev_digilocker_kyc.json", {});
+    const store = raw && typeof raw === "object" && !Array.isArray(raw) && !raw.citizenName ? raw : {};
+    const key = String(userId || "default");
+    const current = store[key] || { ...DEFAULT_DIGILOCKER_KYC };
+    store[key] = { ...current, ...data, updatedAt: new Date().toISOString() };
+    writeFile("dev_digilocker_kyc.json", store);
+    return store[key];
   },
 
   // ==========================================================================
@@ -7158,143 +6040,29 @@ export const devStore = {
   },
 };
 
-const DEFAULT_AGENTS = [
-  {
-    id: "agent_causelist",
-    name: "Kerala High Court Causelist Scraper",
-    description: "Queries eCourts Kerala Judicial Gateway daily at 07:00 IST for advocate Bar Council Roll No. K/1429/2016. Scrapes Court Hall, Item No, and Bench stage.",
-    triggerType: "Scheduled (Cron: 0 7 * * 1-5)",
-    scheduleText: "Daily at 07:00 IST (Mon-Fri)",
-    target: "High Court of Kerala (Ernakulam) & Subordinate Courts",
-    status: "active",
-    lastRunAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    lastStatus: "success",
-    itemsProcessed: 2,
-    metrics: { totalRuns: 142, successRate: "99.2%", itemsDiscovered: 48 },
-    recentLogs: [
-      { timestamp: "07:00:02 IST", level: "info", message: "Connecting to eCourts Kerala High Court API Gateway..." },
-      { timestamp: "07:00:05 IST", level: "info", message: "Authenticating Advocate Roll: K/1429/2016 (Adv. Meera Krishnan)" },
-      { timestamp: "07:00:08 IST", level: "info", message: "Parsing Daily Cause List for Division Bench 2A (Coram: Mustaque & Eapen, JJ.)" },
-      { timestamp: "07:00:11 IST", level: "success", message: "Item #14 Discovered: WP(C) 19482/2024 (Gopakumar v. KSEB) - Listed for Interim Stay" },
-      { timestamp: "07:00:14 IST", level: "success", message: "Chamber Cause List updated and synced to ERP dashboard." },
-    ],
-    config: {
-      barRollNumber: "K/1429/2016",
-      autoSyncCalendar: true,
-      alertUrgentItemThreshold: 20,
-    },
-  },
-  {
-    id: "agent_caveat",
-    name: "High Court Caveat Monitoring Agent",
-    description: "Monitors the High Court of Kerala Section 148A CPC Caveat Registry for preemptive caveats filed against active chamber clients.",
-    triggerType: "Registry Polling (Hourly)",
-    scheduleText: "Every 60 Minutes",
-    target: "High Court Caveat Registry & Sub Court Ernakulam",
-    status: "active",
-    lastRunAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    lastStatus: "success",
-    itemsProcessed: 1,
-    metrics: { totalRuns: 420, successRate: "100%", itemsDiscovered: 3 },
-    recentLogs: [
-      { timestamp: "10:15:00 IST", level: "info", message: "Polling e-Filing Registry: Caveat Petitions under Section 148A CPC..." },
-      { timestamp: "10:15:03 IST", level: "info", message: "Cross-matching with active client roster (8 Active Litigants)..." },
-      { timestamp: "10:15:06 IST", level: "success", message: "Caveat verified: No new adverse caveat lodged against Gopakumar Nambiar in last 24h." },
-      { timestamp: "10:15:08 IST", level: "info", message: "Next scheduled check at 11:15 IST." },
-    ],
-    config: {
-      watchActiveClientsOnly: true,
-      expiryAlertDays: 14,
-    },
-  },
-  {
-    id: "agent_bns_concordance",
-    name: "BNS-BNSS Statutory Concordance Agent",
-    description: "Parses FIRs, criminal complaints, and chargesheets to cross-reference Indian Penal Code (IPC) and CrPC sections with the Bharatiya Nyaya Sanhita (BNS) 2023.",
-    triggerType: "Document Ingestion / On-Demand",
-    scheduleText: "Real-time Event Triggered",
-    target: "Criminal Law / Trial Chamber",
-    status: "active",
-    lastRunAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    lastStatus: "success",
-    itemsProcessed: 6,
-    metrics: { totalRuns: 89, successRate: "100%", itemsDiscovered: 89 },
-    recentLogs: [
-      { timestamp: "Yesterday 23:10 IST", level: "info", message: "Pleading ingested: Anticipatory Bail Application (BNSS Section 482)" },
-      { timestamp: "Yesterday 23:10 IST", level: "info", message: "Cross-checked legacy Section 438 CrPC with Section 482 BNSS 2023: Concordant." },
-      { timestamp: "Yesterday 23:11 IST", level: "success", message: "Verification completed with zero statutory conflict." },
-    ],
-    config: {
-      flagPunishmentChanges: true,
-      highlightCommunityService: true,
-    },
-  },
-  {
-    id: "agent_lead_triage",
-    name: "Client Lead Intake & Conflict Check Triage Agent",
-    description: "Evaluates citizen legal inquiries, performs automatic Bar Council Rule 33 conflict-of-interest screening against existing clients, and calculates forum jurisdiction.",
-    triggerType: "Citizen Submission Webhook",
-    scheduleText: "Instantaneous Webhook",
-    target: "Intake Pipeline",
-    status: "active",
-    lastRunAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    lastStatus: "success",
-    itemsProcessed: 1,
-    metrics: { totalRuns: 64, successRate: "98.4%", itemsDiscovered: 12 },
-    recentLogs: [
-      { timestamp: "05:30:12 IST", level: "info", message: "New Citizen Grievance received: 'Transmission line across rubber plantation'" },
-      { timestamp: "05:30:13 IST", level: "info", message: "Executing automated Conflict Check: Respondent KSEB vs Chamber Roster..." },
-      { timestamp: "05:30:14 IST", level: "success", message: "Conflict Check Clear: Advocate has not represented KSEB in past 3 years." },
-      { timestamp: "05:30:15 IST", level: "success", message: "Forum jurisdiction scored: High Court of Kerala (WP(C)) [Confidence: 94%]." },
-    ],
-    config: {
-      strictConflictCheck: true,
-      autoNotifyAdvocate: true,
-    },
-  },
-];
+const DEFAULT_AGENTS = [];
 
-// ============================================================================
-// DEFAULT SEED DATA FOR AI DIGITAL TWIN & WORKFORCE ACADEMY (Milestone 4)
-// ============================================================================
 export const DEFAULT_AI_TWIN = {
-  advocateId: "adv_1",
-  advocateName: "Adv. Meera Krishnan",
-  enrollmentNumber: "K/001429/2012",
-  barCouncil: "Bar Council of Kerala (Ernakulam)",
-  standingYears: 14,
-  calibrationScore: 99.4,
-  pleadingsTrainedCount: 1420,
-  activeSyncStatus: "Live Synchronized (Vault, Precedents & Causelists)",
+  advocateId: "",
+  advocateName: "",
+  enrollmentNumber: "",
+  barCouncil: "",
+  standingYears: 0,
+  calibrationScore: 0,
+  pleadingsTrainedCount: 0,
+  activeSyncStatus: "Awaiting Sync",
   draftingStyle: "constitutional_assertive",
   draftingStyleLabel: "Assertive Constitutional & Precedent-First",
   primaryJurisdiction: "high_court_kerala",
-  primaryJurisdictionLabel: "High Court of Kerala (Division & Single Benches)",
-  preferredCitations: ["KLT (Kerala Law Times)", "SCC (Supreme Court Cases)", "ILR (Kerala)"],
-  benchTemperamentPreference: "Rigorous statutory textualism with strong reliance on Whirlpool natural justice exceptions",
-  autonomousIntakeEnabled: true,
-  minimumConsultationFee: 3500,
+  primaryJurisdictionLabel: "High Court of Kerala",
+  preferredCitations: [],
+  benchTemperamentPreference: "",
+  autonomousIntakeEnabled: false,
+  minimumConsultationFee: 0,
   conflictCheckStrictness: "high",
-  emergencyBailAutoEscalate: true,
-  twinPersonaSummary: "Specialized in High Court Article 226 Writs, Telegraph Act Section 16 land objections, BNSS 482 anticipatory bail, and commercial contract litigation.",
-  recentSimulations: [
-    {
-      id: "sim_1",
-      query: "KSEB entry without DM referral under Section 16(1)",
-      legalOpinion: "Under Section 10(d) and 16(1) of the Indian Telegraph Act, 1885, entry without District Magistrate sanction once resistance is offered is ex-facie void as settled in Valsamma v. KSEB 2012 (2) KLT 368.",
-      proceduralRoadmap: [
-        "Issue statutory objection notice to AEE KSEB",
-        "Lodge caveat before District Magistrate, Ernakulam",
-        "Move High Court for ad-interim stay under Article 226",
-      ],
-      draftClause: "The unilateral entry by Respondent No. 2 without referral to the District Magistrate is non-est in the eyes of law.",
-      bindingCitations: ["Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)"],
-      confidenceScore: 99.1,
-      draftingStyle: "constitutional_assertive",
-      primaryJurisdiction: "high_court_kerala",
-      timestamp: "Yesterday, 14:20 IST",
-    },
-  ],
+  emergencyBailAutoEscalate: false,
+  twinPersonaSummary: "",
+  recentSimulations: [],
 };
 
 export const DEFAULT_TRAINING_MODULES = [
@@ -7302,7 +6070,7 @@ export const DEFAULT_TRAINING_MODULES = [
     id: "mod_bns_ipc",
     title: "BNS vs IPC & BNSS vs CrPC Statutory Concordance",
     category: "Criminal Law & Procedure",
-    instructor: "Adv. Meera Krishnan",
+    instructor: "Chamber Senior Counsel",
     level: "Senior Associate Level",
     estimatedMinutes: 45,
     progress: 100,
@@ -7372,50 +6140,7 @@ export const DEFAULT_TRAINING_MODULES = [
   },
 ];
 
-export const DEFAULT_CANDIDATES = [
-  {
-    id: "cand_1",
-    name: "Adv. Rahul Deshmukh",
-    college: "NLSIU Bengaluru (Batch of 2024)",
-    role: "Appellate & Writ Associate",
-    enrollmentNumber: "K/003412/2024",
-    status: "Interview Round 2",
-    score: "96%",
-    experienceYears: "2 Years Appellate",
-    appliedDate: "20 Oct 2024",
-    specialization: "Constitutional Law, Writ Petitions & Judicial Review",
-    barVerified: true,
-    cvHighlights: "Former Law Clerk at High Court of Kerala; drafted 40+ writ petitions.",
-  },
-  {
-    id: "cand_2",
-    name: "Adv. Ananya Iyer",
-    college: "NALSAR Hyderabad (Batch of 2023)",
-    role: "Commercial Law Clerk",
-    enrollmentNumber: "K/002189/2023",
-    status: "Offer Extended",
-    score: "98%",
-    experienceYears: "3 Years Corporate/Dispute",
-    appliedDate: "18 Oct 2024",
-    specialization: "Arbitration Act, Commercial Division Suits & NI Act 138",
-    barVerified: true,
-    cvHighlights: "Handled Section 11 & Section 34 Arbitration petitions before Commercial Court.",
-  },
-  {
-    id: "cand_3",
-    name: "Adv. Vikramaditya Roy",
-    college: "Government Law College, Ernakulam (2024)",
-    role: "Criminal Trial Junior",
-    enrollmentNumber: "K/004521/2024",
-    status: "Screening Review",
-    score: "91%",
-    experienceYears: "1 Year Criminal Chamber",
-    appliedDate: "24 Oct 2024",
-    specialization: "BNSS 2023 Bail Practice, Sessions Trials & Cross-Examination",
-    barVerified: true,
-    cvHighlights: "First Class with Distinction in Evidence Law & Criminal Procedure.",
-  },
-];
+export const DEFAULT_CANDIDATES = [];
 
 // ============================================================================
 // DEFAULT SEED DATA FOR CHAMBER KNOWLEDGE BASE & BARE ACT STUDIO (Milestone 1)
@@ -7862,569 +6587,12 @@ export const DEFAULT_PLAYBOOKS = [
   },
 ];
 
-export const DEFAULT_KB_ARTICLES = [
-  {
-    id: "art_valsamma_telegraph",
-    title: "Valsamma v. KSEB & Beyond: Navigating Section 16 Telegraph Act Injunctions in Kerala",
-    author: "Adv. Meera Krishnan",
-    designation: "Senior Chamber Counsel",
-    category: "Constitutional Writs & Utilities",
-    readTime: "8 min read",
-    date: "14 Oct 2024",
-    summary:
-      "A comprehensive review of the Full Bench doctrine in Valsamma v. KSEB (2012) regarding the mandatory requirement for electricity authorities to obtain an order from the District Magistrate upon landowner objection before drawing high-tension lines or felling yielding trees.",
-    keyTakeaways: [
-      "Telegraph authorities do not possess unilateral adjudicatory power to override private property resistance.",
-      "Any entry onto land following objection without an order under Section 16(1) is an actionable statutory trespass.",
-      "Landowners are entitled to comprehensive diminution-in-land-value compensation under Section 10(d) and Section 16(3).",
-    ],
-    fullContent: `
-### Background & The Statutory Scheme
-Under Section 10 of the Indian Telegraph Act, 1885, read with Section 164 of the Electricity Act, 2003, the transmission licensee is authorized to place electric lines and posts under, over, along, or across any immovable property. However, this power is conditioned by Section 10(b), which explicitly provides that the authority acquires ONLY a right of user, and by Section 10(d), which mandates that the authority shall do as little damage as possible and pay full compensation for all damages sustained.
-
-### The Landmark Full Bench Ruling in Valsamma
-In Valsamma v. K.S.E.B. [2012 (2) KLT 368], the Full Bench of the High Court of Kerala settled the long-standing controversy regarding what happens when a property owner objects to the entry of KSEB officials. The court held in unequivocal terms:
-
-1. **Mandatory Referral to District Magistrate**: When a landowner or lawful occupier raises an objection or resistance to the proposed line, the transmission authority has NO authority to determine the validity of the objection itself.
-2. **Cessation of Work**: The authority must immediately cease execution work on that parcel of land and approach the District Magistrate under Section 16(1) of the Act.
-3. **Quasi-Judicial Consideration**: The District Magistrate must issue notice to the landowner, consider alternative routes suggested, evaluate technical feasibility, and pass a speaking order.
-4. **Remedy under Article 226**: Any attempt by utility contractors to bypass the District Magistrate and enter with police protection without a Section 16(1) order constitutes an arbitrary exercise of state power, warranting an urgent Writ of Mandamus or Prohibition from the High Court of Kerala.
-
-### Diminution of Land Value: The Doddakka Precedent
-In Executive Engineer, KSEB v. Doddakka [(2015) 15 SCC 738], the Hon'ble Supreme Court affirmed that compensation under Section 10(d) is not limited to tree value or crop damage. The corridor beneath high-voltage lines (220kV / 110kV / 66kV) suffers severe building restrictions under the Indian Electricity Rules, leading to permanent diminution in land market value. The District Judge under Section 16(3) is bound to award diminution compensation, generally ranging between 30% and 50% of the land value within the corridor strip.
-    `,
-  },
-  {
-    id: "art_bns_concordance",
-    title: "The Practical Shift: Transitioning from CrPC 438 to BNSS 482 Before the Kerala High Court",
-    author: "Adv. Meera Krishnan",
-    designation: "Criminal Practice Desk",
-    category: "Criminal Law & Procedure",
-    readTime: "7 min read",
-    date: "20 Oct 2024",
-    summary:
-      "A strategic practitioner's guide to the procedural and substantive shifts in anticipatory bail practice following the commencement of the Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023 on 1 July 2024.",
-    keyTakeaways: [
-      "Section 482 BNSS 2023 replaces legacy Section 438 CrPC for anticipatory bail.",
-      "Section 35 BNSS notice of appearance replaces legacy Section 41A CrPC safeguards against arbitrary arrest.",
-      "Pleadings must explicitly reference concordance between old IPC sections and new BNS provisions.",
-    ],
-    fullContent: `
-### The New Statutory Landscape
-With the formal enforcement of the new criminal codes on 1 July 2024, criminal chamber practice has undergone significant structural realignment. Section 482 of the Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023, now embodies the provisions governing anticipatory bail, formerly codified under Section 438 of the Code of Criminal Procedure, 1973.
-
-### Concordance & The Principle of Prospective Application
-Where offences are alleged to have occurred prior to 1 July 2024, the substantive offences remain governed by the Indian Penal Code, 1860, while procedural remedies instituted post-July 1 are governed by BNSS 2023. Our chamber briefs adhere to strict concordance mapping:
-- Legacy IPC 420 (Cheating) corresponds to BNS Section 318(4).
-- Legacy IPC 406 (Criminal Breach of Trust) corresponds to BNS Section 316.
-- Legacy IPC 468/471 (Forgery) corresponds to BNS Section 336/340.
-
-### The Power of Section 35 BNSS (Legacy 41A CrPC)
-In matters where the alleged punishment is 7 years or less, Section 35 BNSS makes issuance of a notice of appearance mandatory unless reasons for immediate arrest are recorded in writing. High Court of Kerala practice demonstrates that demonstrating compliance with Section 35 BNSS is often the quickest path to obtaining interim protection against coercive steps.
-    `,
-  },
-  {
-    id: "art_perkins_arbitration",
-    title: "Unilateral Appointment of Arbitrators Post Perkins Eastman & TRF Limited",
-    author: "Chamber Commercial Desk",
-    designation: "Arbitration & Insolvency Desk",
-    category: "Commercial Arbitration",
-    readTime: "11 min read",
-    date: "16 Oct 2024",
-    summary:
-      "An in-depth analysis of Section 12(5) of the Arbitration and Conciliation Act 1996 and the Supreme Court rulings disqualifying unilateral appointment of sole arbitrators in government and commercial contracts.",
-    keyTakeaways: [
-      "A party interested in the dispute outcome cannot appoint a sole arbitrator.",
-      "Unilateral appointment clauses in standard form contracts are void ab initio.",
-      "Remedy lies in filing Section 11(6) petition before the High Court for independent arbitrator appointment.",
-    ],
-    fullContent: `
-### The Seventh Schedule Revolution
-Following the 2015 Amendments to the Arbitration and Conciliation Act, 1996, the legislature introduced Section 12(5) along with the Seventh Schedule, codifying non-derogable grounds of arbitrator ineligibility based on the IBA Guidelines on Conflicts of Interest.
-
-### From TRF Limited to Perkins Eastman
-In TRF Limited v. Energo Engineering Projects Ltd. [(2017) 8 SCC 377], the Supreme Court held that once a person becomes ineligible by operation of law under Section 12(5) (e.g., Managing Director), that person also loses the legal capacity to nominate someone else as arbitrator.
-
-This principle was expanded in Perkins Eastman Architects DPC v. HSCC (India) Ltd. [(2020) 20 SCC 760]. The Court ruled that even if the Managing Director is not acting as the arbitrator himself, he cannot have the unilateral power to choose the sole arbitrator, as the nominating authority has an inherent interest in the outcome.
-
-### Practical Implications for Active Contracts
-Any arbitral award rendered by a unilaterally appointed sole arbitrator is vulnerable to challenge under Section 34 on the ground of patent illegality and lack of jurisdiction. When served with a notice invoking arbitration under a unilateral clause, the recommended strategy is to reject the nomination and immediately petition the High Court under Section 11(6).
-    `,
-  },
-  {
-    id: "art_ni_postal_presumption",
-    title: "Postal Presumption & Section 142(2) Territorial Rules in S.138 Cheque Dishonour",
-    author: "Adv. Rajesh V. Varma",
-    designation: "Banking Litigation Desk",
-    category: "Banking & Negotiable Instruments",
-    readTime: "9 min read",
-    date: "08 Oct 2024",
-    summary:
-      "Navigating the statutory presumption of notice service under Section 27 General Clauses Act and establishing territorial jurisdiction based on payee bank branch location under the 2015 NI amendment.",
-    keyTakeaways: [
-      "Proof of dispatch to correct address raises presumption of service under Section 27 General Clauses Act.",
-      "Drawer's deliberate non-claiming or postal avoidance does not defeat statutory notice requirement.",
-      "Territorial jurisdiction is anchored to the payee's bank branch under Section 142(2).",
-    ],
-    fullContent: `
-### Section 27 General Clauses Act & Postal Presumption
-Under Section 138(c) of the NI Act, the cause of action arises only after the drawer fails to make payment within 15 days of the 'receipt' of the notice. Accused drawers frequently contend that notice was never served.
-
-In K. Bhaskaran v. Sankaran Vaidhyan Balan [(1999) 7 SCC 510] and C.C. Alavi Haji v. Palapetty Muhammed [(2007) 6 SCC 555], the Supreme Court held that once notice is dispatched by registered post / speed post with correct address prepaid, Section 27 of the General Clauses Act, 1897, and Section 114 of the Evidence Act raise a mandatory presumption of service. If the accused claims non-receipt, he has 15 days from the date of summons service in court to tender the cheque amount.
-
-### Section 142(2) Territorial Jurisdiction
-The Negotiable Instruments (Amendment) Act, 2015, definitively settled the forum shopping issue. Under Section 142(2)(a), if the cheque is delivered for collection through an account, the offence shall be inquired into and tried only by a court within whose local jurisdiction the branch of the bank where the payee or holder in due course maintains the account is situated.
-    `,
-  },
-];
-
-export const DEFAULT_RESEARCH_BRIEFS = [
-  {
-    id: "brief_001",
-    _id: "brief_001",
-    title: "Telegraph Act Section 16 Injunction & Mandatory Magistrate Referral",
-    matterReference: "WP(C) 19482/2024 (Gopakumar v. KSEB)",
-    category: "Constitutional Writs",
-    author: "Adv. Meera Krishnan",
-    createdAt: "18 Oct 2024",
-    summary:
-      "Precedent synthesis establishing that the transmission licensee has no authority to proceed with high-tension line drawing over agricultural holdings upon resistance without obtaining a prior order from the District Magistrate under Section 16(1).",
-    legalPropositions: [
-      "Transmission licensee acquires only right of user under Section 10(b), not proprietary ownership.",
-      "Upon objection by landowner or lawful occupier, work must be paused and referred to District Magistrate.",
-      "Land diminution compensation under Section 10(d) & 16(3) is mandatory for line corridor restriction.",
-    ],
-    citations: [
-      {
-        citation: "Valsamma v. K.S.E.B.",
-        court: "High Court of Kerala (Full Bench)",
-        reporter: "2012 (2) KLT 368",
-        proposition: "Telegraph authority has no power to adjudicate landowner resistance unilaterally.",
-      },
-      {
-        citation: "Executive Engineer, KSEB v. Doddakka",
-        court: "Supreme Court of India",
-        reporter: "(2015) 15 SCC 738",
-        proposition: "Permanent diminution in land market value must be assessed under Section 10(d).",
-      },
-      {
-        citation: "Power Grid Corp of India v. Century Textiles Ltd",
-        court: "Supreme Court of India",
-        reporter: "(2017) 5 SCC 143",
-        proposition: "Section 164 Electricity Act confers Telegraph Act powers subject to Section 10/16 safeguards.",
-      },
-    ],
-  },
-  {
-    id: "brief_002",
-    _id: "brief_002",
-    title: "Invalidity of Unilateral Arbitrator Appointment Clause in Commercial Contracts",
-    matterReference: "ARB/NCLT/KOCHI/2024/041 (Malabar Infotech)",
-    category: "Commercial Arbitration",
-    author: "Adv. Meera Krishnan",
-    createdAt: "15 Oct 2024",
-    summary:
-      "Authority bundle establishing that unilateral appointment of a sole arbitrator by one party or its Managing Director is void ab initio under Section 12(5) read with Seventh Schedule of the 1996 Act.",
-    legalPropositions: [
-      "A party interested in dispute outcome cannot unilaterally nominate a sole arbitrator.",
-      "Ineligible nominee cannot be cured by private contract terms without post-dispute written waiver.",
-      "The competent High Court under Section 11(6) must appoint an independent sole arbitrator.",
-    ],
-    citations: [
-      {
-        citation: "Perkins Eastman Architects DPC v. HSCC (India) Ltd.",
-        court: "Supreme Court of India",
-        reporter: "(2020) 20 SCC 760",
-        proposition: "A person disqualified from acting as arbitrator cannot nominate an arbitrator.",
-      },
-      {
-        citation: "TRF Limited v. Energo Engineering Projects Ltd.",
-        court: "Supreme Court of India",
-        reporter: "(2017) 8 SCC 377",
-        proposition: "Statutory disqualification under Section 12(5) renders nomination authority void.",
-      },
-      {
-        citation: "Bharat Broadband Network Ltd. v. United Telecoms Ltd.",
-        court: "Supreme Court of India",
-        reporter: "(2019) 5 SCC 755",
-        proposition: "Express agreement in writing required for waiver under Section 12(5) proviso.",
-      },
-    ],
-  },
-  {
-    id: "brief_003",
-    _id: "brief_003",
-    title: "Section 482 BNSS Anticipatory Bail for Commercial Dishonour / Cheating Allegations",
-    matterReference: "General Chamber Precedent Pool",
-    category: "Criminal Jurisprudence",
-    author: "Adv. Meera Krishnan",
-    createdAt: "12 Oct 2024",
-    summary:
-      "Synthesis of High Court and Supreme Court authorities guarding against criminalization of civil contractual breaches under IPC 420 / BNS 318 where Section 138 NI Act remedy exists.",
-    legalPropositions: [
-      "Mere failure to repay a loan or dishonour of a cheque does not constitute cheating without fraudulent intent from inception.",
-      "Simultaneous invocation of Section 138 NI Act and criminal cheating requires strict scrutiny to prevent abuse of process.",
-      "Custodial interrogation is unwarranted where transaction is fully evidenced by bank statements and contracts.",
-    ],
-    citations: [
-      {
-        citation: "Dalip Kaur v. Jagnar Singh",
-        court: "Supreme Court of India",
-        reporter: "(2009) 14 SCC 696",
-        proposition: "Breach of contractual promise does not amount to cheating without dishonest inception.",
-      },
-      {
-        citation: "Arnesh Kumar v. State of Bihar",
-        court: "Supreme Court of India",
-        reporter: "(2014) 8 SCC 273",
-        proposition: "Arrest cannot be made mechanically for offences punishable with up to 7 years imprisonment.",
-      },
-      {
-        citation: "Sushila Aggarwal v. State (NCT of Delhi)",
-        court: "Supreme Court of India (Constitution Bench)",
-        reporter: "(2020) 5 SCC 1",
-        proposition: "Anticipatory bail should not ordinarily be restricted to a predetermined time period.",
-      },
-    ],
-  },
-  {
-    id: "brief_004",
-    _id: "brief_004",
-    title: "Specific Performance & Discretionary Injunction under Specific Relief Act 1963",
-    matterReference: "OS 412/2023 (Gopakumar v. Varghese Builders)",
-    category: "Civil Property & Injunctions",
-    author: "Adv. Rajesh V. Varma",
-    createdAt: "09 Oct 2024",
-    summary:
-      "Analysis of Section 10 post-2018 amendment to Specific Relief Act removing judicial discretion in enforcing valid immovable property agreements.",
-    legalPropositions: [
-      "Specific performance of contracts is mandatory post-2018 amendment unless barred by Section 11, 14, or 16.",
-      "Injunction against alienation pendente lite is necessary to preserve property status quo under Section 52 TP Act.",
-    ],
-    citations: [
-      {
-        citation: "B. Santoshamma v. D. Sarala",
-        court: "Supreme Court of India",
-        reporter: "(2020) 19 SCC 80",
-        proposition: "Post-2018 amendment, court is bound to enforce specific performance of contracts.",
-      },
-      {
-        citation: "Maharwal Khewaji Trust v. Baldev Dass",
-        court: "Supreme Court of India",
-        reporter: "(2004) 8 SCC 488",
-        proposition: "Status quo must be maintained unless irreparable loss is demonstrated.",
-      },
-    ],
-  },
-];
-
-// ============================================================================
-// DEFAULT SEED DATA FOR MULTI-PARTY CASE COLLABORATION ROOM (Milestone 2)
-// ============================================================================
-export const DEFAULT_COLLAB_ROOMS = [
-  {
-    id: "room_wpc_19482",
-    subject: "WP(C) 19482/2024 — High Court Rejoinder & Precedent Briefing",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
-    status: "in_session",
-    scheduledFor: "Today, 10:30 AM",
-    meetingLink: "https://meet.wakheel.law/collab-room-wpc-19482",
-    pinnedExhibit: {
-      id: "exh_survey_p1",
-      title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
-      pages: 4,
-      currentPage: 1,
-      type: "pdf",
-      matter: "WP(C) 19482/2024 — Gopakumar v. KSEB",
-      verifiedDate: "18 Oct 2024",
-    },
-    participants: [
-      {
-        id: "adv_1",
-        name: "Adv. Meera Krishnan",
-        role: "Lead Advocate (Host)",
-        enrollment: "K/1429/2016",
-        isOnline: true,
-        isMuted: false,
-        isVideoOn: true,
-        isScreenSharing: false,
-      },
-      {
-        id: "adv_sr_01",
-        name: "Sr. Adv. K. Ramachandran Nair",
-        role: "Senior Counsel",
-        enrollment: "K/0412/1994",
-        isOnline: true,
-        isMuted: true,
-        isVideoOn: true,
-        isScreenSharing: false,
-      },
-      {
-        id: "adv_jr_02",
-        name: "Adv. Ananya Kurian",
-        role: "Chamber Associate",
-        enrollment: "K/2180/2021",
-        isOnline: true,
-        isMuted: true,
-        isVideoOn: false,
-        isScreenSharing: false,
-      },
-      {
-        id: "default_citizen",
-        name: "Gopakumar Nambiar",
-        role: "Citizen Litigant",
-        phone: "+91 94471 28400",
-        isOnline: true,
-        isMuted: false,
-        isVideoOn: true,
-        isScreenSharing: false,
-      },
-    ],
-    availableExhibits: [
-      {
-        id: "exh_survey_p1",
-        title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
-        pages: 4,
-        type: "Survey Sketch / Site Map",
-        verifiedDate: "18 Oct 2024",
-      },
-      {
-        id: "exh_counter_p2",
-        title: "Annexure P-2: KSEB Executive Engineer Counter Affidavit",
-        pages: 8,
-        type: "Pleading Counter",
-        verifiedDate: "22 Oct 2024",
-      },
-      {
-        id: "exh_telegraph_valsamma",
-        title: "Annexure P-3: Valsamma v. KSEB (2012 (2) KLT 368) Full Bench Ratio",
-        pages: 3,
-        type: "Precedent Ratio Copy",
-        verifiedDate: "Precedent",
-      },
-    ],
-    notes:
-      "Client Gopakumar confirmed tree-felling commenced without prior District Magistrate notice under Section 16(1). Senior Counsel recommended moving interim stay application tomorrow morning before Bench 2A.",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "room_ni_138",
-    subject: "Section 138 NI Act — Statutory Demand Notice & Trial Strategy",
-    matterId: "mat_not_701",
-    matterTitle: "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
-    status: "ready",
-    scheduledFor: "Today, 02:30 PM",
-    meetingLink: "https://meet.wakheel.law/collab-room-ni-138",
-    pinnedExhibit: {
-      id: "exh_speedpost_p2",
-      title: "Annexure P-2: Speed Post Certified Delivery Report (EK948102391IN)",
-      pages: 2,
-      currentPage: 1,
-      type: "pdf",
-      matter: "Sec 138 Notice",
-      verifiedDate: "16 Oct 2024",
-    },
-    participants: [
-      {
-        id: "adv_1",
-        name: "Adv. Meera Krishnan",
-        role: "Lead Advocate (Host)",
-        enrollment: "K/1429/2016",
-        isOnline: true,
-        isMuted: false,
-        isVideoOn: true,
-        isScreenSharing: false,
-      },
-      {
-        id: "default_citizen",
-        name: "Gopakumar Nambiar",
-        role: "Complainant Payee",
-        phone: "+91 94471 28400",
-        isOnline: false,
-        isMuted: true,
-        isVideoOn: false,
-        isScreenSharing: false,
-      },
-    ],
-    availableExhibits: [
-      {
-        id: "exh_speedpost_p2",
-        title: "Annexure P-2: Speed Post Certified Delivery Report (EK948102391IN)",
-        pages: 2,
-        type: "Postal Delivery Proof",
-        verifiedDate: "16 Oct 2024",
-      },
-      {
-        id: "exh_bankmemo_p1",
-        title: "Annexure P-1: Original Bank Dishonour Debit Advice",
-        pages: 1,
-        type: "Bank Memo",
-        verifiedDate: "10 Oct 2024",
-      },
-    ],
-    notes: "15-day statutory cure window expires in 6 days. Complaint draft ready for JFCM Ernakulam.",
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-// ============================================================================
-// DEFAULT SEED DATA FOR COURTROOM VOICE HEARING SIMULATOR (Milestone 3)
-// ============================================================================
-export const DEFAULT_COURTROOM_SESSIONS = [
-  {
-    id: "session_001",
-    advocateId: "adv_1",
-    matterId: "mat_wpc_19482",
-    matterTitle: "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
-    benchPersona: "division_bench_2a",
-    benchName: "Kerala High Court Division Bench 2A (Coram: Mustaque & Eapen, JJ.)",
-    finalScore: 94,
-    statutoryPrecision: 96,
-    disposition: "Interim Stay Granted (4 Weeks)",
-    duration: "08:15",
-    date: "24 Oct 2024",
-    summary:
-      "Oral argument successfully countered initial maintainability skepticism by invoking Whirlpool exceptions and secured 4-week interim stay on tree-felling based on the Valsamma Full Bench doctrine.",
-    turns: [
-      {
-        turnIndex: 1,
-        benchQuery:
-          "Counsel, before we examine the merits of your tree-felling grievance, why should this Division Bench exercise extraordinary prerogative writ jurisdiction when Section 16(3) of the Telegraph Act provides an alternate forum before the District Court?",
-        advocateArgument:
-          "My Lords, we rely directly on the four exceptions carved in Whirlpool Corporation (1998) 8 SCC 1. Here, the impugned entry is completely without jurisdiction and in ex-facie violation of principles of natural justice without prior notice.",
-        score: 88,
-        statutoryPrecision: 90,
-        disposition: "Engaged on Statutory Jurisdiction",
-        recommendedCitation: "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1",
-      },
-      {
-        turnIndex: 2,
-        benchQuery:
-          "Very well, Counsel. Valsamma is a Full Bench decision binding on us. If resistance was formally lodged and the licensee did not approach the District Magistrate, the entry appears prima facie without authority of law. What interim directions are you seeking?",
-        advocateArgument:
-          "My Lords, under Valsamma v. KSEB (2012) 2 KLT 368, the authority has no power to adjudicate resistance unilaterally. We pray for an ad-interim stay restraining the respondents from drawing lines or felling 45 yielding rubber trees in Sy. 142/3.",
-        score: 96,
-        statutoryPrecision: 98,
-        disposition: "Interim Stay Granted",
-        recommendedCitation: "Valsamma v. KSEB 2012 (2) KLT 368 (Full Bench)",
-      },
-    ],
-  },
-  {
-    id: "session_002",
-    advocateId: "adv_1",
-    matterId: "mat_not_701",
-    matterTitle: "Cheque Dishonour Statutory Demand Notice (Sec 138 NI Act)",
-    benchPersona: "single_bench_writs",
-    benchName: "Judicial Magistrate First Class (Court Hall 1)",
-    finalScore: 91,
-    statutoryPrecision: 93,
-    disposition: "Pre-Summoning Cognizance Issued",
-    duration: "05:40",
-    date: "22 Oct 2024",
-    summary:
-      "Established postal service presumption under Section 27 General Clauses Act and payee branch territorial jurisdiction under Section 142(2) post-2015 amendment.",
-    turns: [
-      {
-        turnIndex: 1,
-        benchQuery:
-          "Counsel, the postal tracking record shows the envelope was returned as 'Not Claimed'. How do you satisfy the statutory requirement of notice 'receipt' under Section 138(c)?",
-        advocateArgument:
-          "Your Honour, as held by the Supreme Court in C.C. Alavi Haji and K. Bhaskaran, when notice is sent to the correct address by registered post, deliberate evasion or non-claiming constitutes deemed service under Section 27 General Clauses Act.",
-        score: 91,
-        statutoryPrecision: 93,
-        disposition: "Satisfied on Deemed Service",
-        recommendedCitation: "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555",
-      },
-    ],
-  },
-];
-
-// ============================================================================
-// DEFAULT CALENDAR CONSTANTS
-// ============================================================================
-export const DEFAULT_CALENDAR_BACKLOG = [
-  {
-    id: "task-bk-1",
-    title: "Draft Section 14 Eviction Notice",
-    category: "drafting",
-    priority: "high",
-    estimatedTime: "1h 30m",
-    caseRef: "Tenancy 108/2026",
-  },
-  {
-    id: "task-bk-2",
-    title: "Research Article 226 telegraph deviation locus",
-    category: "research",
-    priority: "urgent",
-    estimatedTime: "2h",
-    caseRef: "WP(C) 19482/2024",
-  },
-  {
-    id: "task-bk-3",
-    title: "Prepare compilation of Supreme Court citations for Bench 4",
-    category: "evidence",
-    priority: "normal",
-    estimatedTime: "45m",
-    caseRef: "ARB/NCLT/041/2024",
-  },
-];
-
-export const DEFAULT_CALENDAR_FIXTURES = [
-  {
-    id: "evt-1",
-    title: "WP(C) 19482/2024 — Hearing on Stay Extension",
-    category: "hearing",
-    date: "2026-10-30",
-    time: "10:15 AM",
-    duration: "45m",
-    caseNumber: "WP(C) 19482/2024",
-    forum: "High Court of Kerala (Court Hall 2A)",
-    clientName: "Gopakumar Nambiar",
-    notes: "Division bench hearing on transmission line alignment stay.",
-    status: "confirmed",
-  },
-  {
-    id: "evt-2",
-    title: "OS 412/2023 — Plaintiff Witness Cross-Examination",
-    category: "hearing",
-    date: "2026-11-04",
-    time: "11:00 AM",
-    duration: "1h",
-    caseNumber: "OS 412/2023",
-    forum: "Principal Munsiff Court, Ernakulam",
-    clientName: "Gopakumar Nambiar",
-    notes: "Cross-examination on boundary encroachment and survey sketch.",
-    status: "confirmed",
-  },
-  {
-    id: "evt-3",
-    title: "ARB/NCLT/041/2024 — Section 17 Interim Relief Hearing",
-    category: "hearing",
-    date: "2026-11-18",
-    time: "02:30 PM",
-    duration: "1h 30m",
-    caseNumber: "ARB/NCLT/041/2024",
-    forum: "NCLT Kochi Bench & Arbitral Tribunal",
-    clientName: "Malabar Infotech Solutions",
-    notes: "Arguments on escrow deposit preservation.",
-    status: "confirmed",
-  },
-  {
-    id: "evt-4",
-    title: "Chamber Conference: Supreme Court SLP Strategy with Adv. Parasaran",
-    category: "consultation",
-    date: "2026-10-30",
-    time: "04:30 PM",
-    duration: "1h",
-    forum: "Chamber Virtual Gateway",
-    clientName: "Gopakumar Nambiar",
-    notes: "Constitution Bench reference strategy discussion.",
-    status: "urgent",
-  },
-];
-
+export const DEFAULT_KB_ARTICLES = [];
+export const DEFAULT_RESEARCH_BRIEFS = [];
+export const DEFAULT_COLLAB_ROOMS = [];
+export const DEFAULT_COURTROOM_SESSIONS = [];
+export const DEFAULT_CALENDAR_BACKLOG = [];
+export const DEFAULT_CALENDAR_FIXTURES = [];
 // ============================================================================
 // DEFAULT PROFESSIONAL NETWORK CONSTANTS
 // ============================================================================
@@ -8447,32 +6615,32 @@ export const DEFAULT_TASKMITE_NOTES = [];
 // DEFAULT PROFILES CONSTANTS (BCI & DIGILOCKER)
 // ============================================================================
 const DEFAULT_BCI_CREDENTIALS = {
-  advocateName: "Adv. Meera Krishnan",
-  enrollmentNumber: "K/001429/2012",
-  stateBarCouncil: "Bar Council of Kerala",
-  enrollmentYear: 2012,
-  verificationStatus: "Verified",
-  verifiedBy: "Bar Council of India Verification Portal",
-  verifiedOn: "2024-01-15T10:00:00.000Z",
-  certificateHash: "SHA256:4a8b92c1092e41fa89bc0192e482910fae",
-  practiceBenches: ["High Court of Kerala", "Supreme Court of India", "NCLT Kochi Bench"],
-  chamberName: "Meera Krishnan & Associates Chambers of Law",
-  chamberAddress: "Chamber #402, High Court Lawyers Chambers Complex, Ernakulam, Kochi 682031",
-  chamberEmail: "meera.krishnan@keralahc.gov.in",
-  chamberPhone: "+91 94470 12849",
+  advocateName: "",
+  enrollmentNumber: "",
+  stateBarCouncil: "",
+  enrollmentYear: "",
+  verificationStatus: "Pending",
+  verifiedBy: "",
+  verifiedOn: "",
+  certificateHash: "",
+  practiceBenches: [],
+  chamberName: "",
+  chamberAddress: "",
+  chamberEmail: "",
+  chamberPhone: "",
 };
 
 const DEFAULT_DIGILOCKER_KYC = {
-  citizenName: "Gopakumar Nambiar",
-  kycStatus: "Verified",
-  verificationSource: "DigiLocker / UIDAI Aadhaar e-KYC Gateway",
-  digiLockerDocId: "DL-AADHAAR-8921-4412-2024",
-  verifiedAt: "2024-02-10T14:30:00.000Z",
-  documentType: "Aadhaar e-KYC XML & Verification Hash",
-  maskedId: "XXXX-XXXX-4412",
-  address: "Sree Krishna Vilas, Near High Court Junction, Ernakulam, Kerala 682018",
-  phone: "+91 94471 28930",
-  email: "gopakumar.nambiar@inworth.gov.in",
+  citizenName: "",
+  kycStatus: "Pending",
+  verificationSource: "",
+  digiLockerDocId: "",
+  verifiedAt: "",
+  documentType: "",
+  maskedId: "",
+  address: "",
+  phone: "",
+  email: "",
 };
 
 // ============================================================================

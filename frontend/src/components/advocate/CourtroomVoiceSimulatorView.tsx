@@ -31,6 +31,17 @@ import { advocateApi } from "@/lib/api";
 export interface CourtroomVoiceSimulatorViewProps {
   advocateName?: string;
   initialMatterId?: string;
+  token?: string;
+}
+
+interface SimulatorMatterOption {
+  id: string;
+  title: string;
+  court: string;
+  coreIssue: string;
+  openingBenchPrompt: string;
+  openingCitation: string;
+  openingCritique: string;
 }
 
 interface TurnExchange {
@@ -61,33 +72,43 @@ interface SavedSession {
   summaryObservations: string[];
 }
 
+const DEFAULT_OPENING_PROMPT =
+  "Counsel, please begin by addressing threshold maintainability, jurisdiction, and the statutory foundation supporting the relief sought in this matter.";
+
+const DEFAULT_OPENING_CRITIQUE =
+  "Lead with threshold jurisdiction and statutory maintainability, then anchor your opening submission in the core facts and binding precedent.";
+
 export function CourtroomVoiceSimulatorView({
-  advocateName = "Adv. Meera Krishnan",
-  initialMatterId = "mat_wpc_19482",
+  advocateName = "",
+  initialMatterId = "",
+  token,
 }: CourtroomVoiceSimulatorViewProps) {
+  const resolveToken = () => {
+    if (token) return token;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+    }
+    return "";
+  };
+
   // Simulator configuration state
   const [selectedPersona, setSelectedPersona] = useState<
     "division_bench_2a" | "single_bench_writs" | "criminal_sessions"
   >("division_bench_2a");
+  const [matters, setMatters] = useState<SimulatorMatterOption[]>([]);
   const [selectedMatter, setSelectedMatter] = useState<string>(initialMatterId);
   const [voiceAudioEnabled, setVoiceAudioEnabled] = useState<boolean>(true);
   const [speechSynthesisAvailable, setSpeechSynthesisAvailable] = useState<boolean>(false);
 
   // Active rehearsal state
   const [turnIndex, setTurnIndex] = useState<number>(0);
-  const [currentBenchQuery, setCurrentBenchQuery] = useState<string>(
-    "Counsel, before you delve into the merits of Article 226, kindly satisfy this Court on the availability of an efficacious alternate statutory remedy under the Indian Telegraph Act. Why should this Court entertain a writ petition when statutory proceedings before the District Magistrate have not been exhausted?"
-  );
+  const [currentBenchQuery, setCurrentBenchQuery] = useState<string>(DEFAULT_OPENING_PROMPT);
   const [currentCounselInput, setCurrentCounselInput] = useState<string>("");
-  const [persuasiveness, setPersuasiveness] = useState<number>(75);
-  const [statutoryPrecision, setStatutoryPrecision] = useState<number>(72);
-  const [disposition, setDisposition] = useState<string>("Skeptical on Maintainability");
-  const [coachCritique, setCoachCritique] = useState<string>(
-    "The Bench is testing your threshold maintainability under Article 226. Cite the Whirlpool exceptions (jurisdiction or violation of natural justice) immediately to hold the bench's attention."
-  );
-  const [recommendedCitation, setRecommendedCitation] = useState<string>(
-    "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1"
-  );
+  const [persuasiveness, setPersuasiveness] = useState<number>(0);
+  const [statutoryPrecision, setStatutoryPrecision] = useState<number>(0);
+  const [disposition, setDisposition] = useState<string>("Awaiting Opening Submission");
+  const [coachCritique, setCoachCritique] = useState<string>(DEFAULT_OPENING_CRITIQUE);
+  const [recommendedCitation, setRecommendedCitation] = useState<string>("");
   const [interruptionAlert, setInterruptionAlert] = useState<string | null>(null);
 
   // History of dialogue in current session
@@ -113,63 +134,71 @@ export function CourtroomVoiceSimulatorView({
   const personas = {
     division_bench_2a: {
       name: "Kerala High Court — Division Bench 2A",
-      coram: "Coram: Mustaque & Eapen, JJ.",
-      description: "Appellate & Division Bench Writs. Strict scrutiny on administrative laches, Telegraph Act Section 16 procedures, digital land records, and non-est administrative actions.",
+      coram: "Coram: Division Bench",
+      description: "Appellate & Division Bench Writs. Scrutiny on administrative laches, statutory compliance, land/regulatory records, and administrative orders.",
       temperament: "Rigorous, questions jurisdictional competence and statutory alternate remedies immediately.",
-      primaryDoctrine: "Whirlpool Exceptions & Power Grid Century Textiles Ratio",
+      primaryDoctrine: "Whirlpool Exceptions & Article 226 Threshold Maintainability",
     },
     single_bench_writs: {
       name: "High Court Single Bench — Writs & Injunctions",
-      coram: "Coram: Justice V. G. Arun",
+      coram: "Coram: Writ & Injunction Bench",
       description: "Maintainability scrutiny, ad-interim stay parameters, balance of convenience, and prima facie jurisdictional defects in impugned state notices.",
       temperament: "Direct and impatient with repetitive factual reading; demands pinpointed statutory violations.",
       primaryDoctrine: "Article 226 Threshold Maintainability & Irreparable Injury",
     },
     criminal_sessions: {
       name: "Special Criminal & Sessions Court",
-      coram: "Coram: Principal Sessions Judge, Ernakulam",
+      coram: "Coram: Sessions & Special Court",
       description: "BNSS Section 482 / legacy 438 CrPC anticipatory bails, Section 138 Negotiable Instruments Act defenses, and custodial interrogation necessity.",
       temperament: "Investigative-minded; interrogates compliance with Arnesh Kumar guidelines and electronic notice proof.",
       primaryDoctrine: "BNSS 482 / 438 CrPC & Section 142 NI Act Strict Timelines",
     },
   };
 
-  // Pre-configured matters
-  const matters = [
-    {
-      id: "mat_wpc_19482",
-      title: "WP(C) 19482/2024 — Gopakumar v. KSEB & District Collector",
-      court: "High Court of Kerala (Division Bench)",
-      coreIssue: "Arbitrary drawing of 66kV transmission overhead line bisecting private homestead without referral to District Magistrate under Section 16(1) of Indian Telegraph Act, 1885.",
-      openingBenchPrompt:
-        "Counsel, before you delve into the merits of Article 226, kindly satisfy this Court on the availability of an efficacious alternate statutory remedy under the Indian Telegraph Act. Why should this Court entertain a writ petition when statutory proceedings before the District Magistrate have not been exhausted?",
-      openingCitation: "Whirlpool Corporation v. Registrar of Trade Marks (1998) 8 SCC 1",
-      openingCritique:
-        "The Bench is probing threshold maintainability under Article 226. Invoke Whirlpool exceptions immediately: establishing that the licensee acted without jurisdiction by bypassing mandatory Section 16(1) referral.",
-    },
-    {
-      id: "mat_cc_412",
-      title: "CC 412/2023 — Apex Logistics v. Royal Traders (Sec 138 NI Act)",
-      court: "Judicial First Class Magistrate Court-II, Kochi",
-      coreIssue: "Cheque dishonour of ₹14.5 Lakhs. Defense rests on postal return memo endorsement 'Addressee Left Without Instruction' versus deemed service under Section 27 General Clauses Act.",
-      openingBenchPrompt:
-        "Counsel, look at the statutory demand notice. The postal envelope was returned unserved with endorsement 'Door Locked'. How does your complaint establish deemed service when the recipient never acknowledged receipt?",
-      openingCitation: "C.C. Alavi Haji v. Palapetty Muhammed (2007) 6 SCC 555",
-      openingCritique:
-        "Address the 30-day limitation window and invoke the mandatory statutory presumption under Section 27 General Clauses Act read with the 3-Judge bench ruling in Alavi Haji.",
-    },
-    {
-      id: "mat_ba_8821",
-      title: "BA 8821/2024 — Dr. Radhakrishnan v. State of Kerala (BNSS 482)",
-      court: "High Court of Kerala (Criminal Jurisdiction)",
-      coreIssue: "Anticipatory bail petition under BNSS Section 482 (legacy Section 438 CrPC) in alleged corporate breach of trust FIR. Complainant alleges ₹85 Lakh diversion.",
-      openingBenchPrompt:
-        "Counsel, the Public Prosecutor submits that recovery of crucial digital ledgers and hardware tokens is pending, requiring custodial interrogation. Why should this Court exercise discretionary extraordinary powers under BNSS 482?",
-      openingCitation: "Arnesh Kumar v. State of Bihar (2014) 8 SCC 273",
-      openingCritique:
-        "Demonstrate voluntary joining of investigation, prior statutory notice under BNSS 35(3), and complete cooperation without custodial necessity.",
-    },
-  ];
+  // Load real matters for authenticated advocate
+  useEffect(() => {
+    let mounted = true;
+    const loadMatters = async () => {
+      const authToken = resolveToken();
+      if (!authToken) {
+        if (mounted) setMatters([]);
+        return;
+      }
+      try {
+        const res = await advocateApi.getMatters(authToken);
+        if (!mounted) return;
+        const rawMatters = Array.isArray(res?.matters) ? res.matters : [];
+        const mapped: SimulatorMatterOption[] = rawMatters.map((m: any) => {
+          const id = String(m._id || m.id || "");
+          const title = [m.caseNumber, m.matterTitle || m.title].filter(Boolean).join(" — ") || "Untitled Matter";
+          const court = m.courtForum || m.court || "Forum Not Specified";
+          const coreIssue = m.matterType || m.stage || m.status || "Active Litigation Matter";
+          return {
+            id,
+            title,
+            court,
+            coreIssue,
+            openingBenchPrompt: `Counsel, in ${title} (${court}), please satisfy this Bench on threshold maintainability and your primary statutory grounds.`,
+            openingCitation: Array.isArray(m.statutoryActs) && m.statutoryActs[0] ? String(m.statutoryActs[0]) : "",
+            openingCritique: DEFAULT_OPENING_CRITIQUE,
+          };
+        });
+        setMatters(mapped);
+        if (mapped.length > 0) {
+          const preferred = mapped.find((m) => m.id === initialMatterId) || mapped[0];
+          setSelectedMatter(preferred.id);
+          setCurrentBenchQuery(preferred.openingBenchPrompt);
+          setRecommendedCitation(preferred.openingCitation);
+        }
+      } catch (err) {
+        console.warn("Could not load advocate matters for courtroom simulator:", err);
+      }
+    };
+    loadMatters();
+    return () => {
+      mounted = false;
+    };
+  }, [token, initialMatterId]);
 
   // Initialize Speech Recognition & Synthesis check on client mount
   useEffect(() => {
@@ -273,20 +302,18 @@ export function CourtroomVoiceSimulatorView({
   const handleSelectMatter = (matterId: string) => {
     setSelectedMatter(matterId);
     const m = matters.find((item) => item.id === matterId);
-    if (m) {
-      setTurnIndex(0);
-      setExchanges([]);
-      setCurrentBenchQuery(m.openingBenchPrompt);
-      setRecommendedCitation(m.openingCitation);
-      setCoachCritique(m.openingCritique);
-      setPersuasiveness(75);
-      setStatutoryPrecision(72);
-      setDisposition("Skeptical on Maintainability");
-      setInterruptionAlert(null);
-      setCurrentCounselInput("");
-      if (voiceAudioEnabled) {
-        speakBenchQuery(m.openingBenchPrompt);
-      }
+    setTurnIndex(0);
+    setExchanges([]);
+    setCurrentBenchQuery(m?.openingBenchPrompt || DEFAULT_OPENING_PROMPT);
+    setRecommendedCitation(m?.openingCitation || "");
+    setCoachCritique(m?.openingCritique || DEFAULT_OPENING_CRITIQUE);
+    setPersuasiveness(0);
+    setStatutoryPrecision(0);
+    setDisposition("Awaiting Opening Submission");
+    setInterruptionAlert(null);
+    setCurrentCounselInput("");
+    if (voiceAudioEnabled && m?.openingBenchPrompt) {
+      speakBenchQuery(m.openingBenchPrompt);
     }
   };
 
@@ -298,13 +325,17 @@ export function CourtroomVoiceSimulatorView({
     setTurnIndex(0);
     setExchanges([]);
     const m = matters.find((item) => item.id === selectedMatter) || matters[0];
-    setCurrentBenchQuery(m.openingBenchPrompt);
-    setRecommendedCitation(m.openingCitation);
-    setCoachCritique(m.openingCritique);
+    const prompt = m?.openingBenchPrompt || DEFAULT_OPENING_PROMPT;
+    setCurrentBenchQuery(prompt);
+    setRecommendedCitation(m?.openingCitation || "");
+    setCoachCritique(m?.openingCritique || DEFAULT_OPENING_CRITIQUE);
+    setPersuasiveness(0);
+    setStatutoryPrecision(0);
+    setDisposition("Awaiting Opening Submission");
     setInterruptionAlert(null);
     setCurrentCounselInput("");
     if (voiceAudioEnabled) {
-      speakBenchQuery(m.openingBenchPrompt);
+      speakBenchQuery(prompt);
     }
   };
 
@@ -315,20 +346,27 @@ export function CourtroomVoiceSimulatorView({
     setCurrentCounselInput("");
     setInterruptionAlert(null);
     const m = matters.find((item) => item.id === selectedMatter) || matters[0];
-    setCurrentBenchQuery(m.openingBenchPrompt);
-    setRecommendedCitation(m.openingCitation);
-    setCoachCritique(m.openingCritique);
-    setPersuasiveness(75);
-    setStatutoryPrecision(72);
-    setDisposition("Skeptical on Maintainability");
+    const prompt = m?.openingBenchPrompt || DEFAULT_OPENING_PROMPT;
+    setCurrentBenchQuery(prompt);
+    setRecommendedCitation(m?.openingCitation || "");
+    setCoachCritique(m?.openingCritique || DEFAULT_OPENING_CRITIQUE);
+    setPersuasiveness(0);
+    setStatutoryPrecision(0);
+    setDisposition("Awaiting Opening Submission");
     if (voiceAudioEnabled) {
-      speakBenchQuery(m.openingBenchPrompt);
+      speakBenchQuery(prompt);
     }
   };
 
   // Submit Counsel Rebuttal Turn
   const handleSubmitRebuttal = async () => {
     if (!currentCounselInput.trim() || isSubmitting) return;
+
+    const authToken = resolveToken();
+    if (!authToken) {
+      alert("Please sign in to run the Courtroom Simulator.");
+      return;
+    }
 
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
@@ -344,22 +382,25 @@ export function CourtroomVoiceSimulatorView({
       // Call backend simulation endpoint with fallback
       let simResult: any = null;
       try {
-        simResult = await advocateApi.simulateBenchTurn({
-          matterId: selectedMatter,
-          benchPersona: selectedPersona,
-          argument: counselArgText,
-          turnIndex,
-        });
+        simResult = await advocateApi.simulateBenchTurn(
+          {
+            matterId: selectedMatter || "general_rehearsal",
+            benchPersona: selectedPersona,
+            argument: counselArgText,
+            turnIndex,
+          },
+          authToken
+        );
       } catch (err) {
         console.warn("Direct API call fallback:", err);
         const res = await fetch("/api/advocate/courtroom/simulate", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("wakheel_token") || "advocate_token"}`,
+            Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            matterId: selectedMatter,
+            matterId: selectedMatter || "general_rehearsal",
             benchPersona: selectedPersona,
             argument: counselArgText,
             turnIndex,
@@ -377,7 +418,7 @@ export function CourtroomVoiceSimulatorView({
           statutoryPrecision: simResult.statutoryPrecision || 82,
           disposition: simResult.disposition || "Engaged on Statutory Jurisdiction",
           coachCritique: simResult.coachCritique || "Strong rebuttal addressing jurisdiction.",
-          recommendedCitation: simResult.recommendedCitation || "Whirlpool Corp (1998) 8 SCC 1",
+          recommendedCitation: simResult.recommendedCitation || "",
           isInterrupted: simResult.isInterrupted || false,
           interruptionText: simResult.interruptionText || "",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -411,7 +452,7 @@ export function CourtroomVoiceSimulatorView({
         }, 150);
       }
     } catch (error: any) {
-      console.error("Failed to simulate bench turn:", error);
+      console.warn("Failed to simulate bench turn:", error);
       alert("Failed to reach Courtroom Simulator backend. Please check connection.");
     } finally {
       setIsSubmitting(false);
@@ -420,11 +461,16 @@ export function CourtroomVoiceSimulatorView({
 
   // Save current rehearsal session
   const handleSaveSession = async () => {
+    const authToken = resolveToken();
+    if (!authToken) {
+      alert("Please sign in to save courtroom rehearsal sessions.");
+      return;
+    }
     try {
       const activeMatter = matters.find((m) => m.id === selectedMatter);
       const sessionData = {
-        matterId: selectedMatter,
-        matterTitle: activeMatter?.title || "Courtroom Rehearsal",
+        matterId: selectedMatter || "general_rehearsal",
+        matterTitle: activeMatter?.title || "General Oral Argument Rehearsal",
         benchPersona: selectedPersona,
         durationMinutes: Math.max(1, Math.round((Date.now() - sessionStartTime) / 60000)),
         turnsCount: exchanges.length,
@@ -436,15 +482,15 @@ export function CourtroomVoiceSimulatorView({
           `Counsel Persuasiveness achieved: ${persuasiveness}%`,
           `Statutory Precision achieved: ${statutoryPrecision}%`,
           `Final Judicial Disposition: ${disposition}`,
-          `Key Precedent Cited: ${recommendedCitation}`,
+          `Key Precedent Cited: ${recommendedCitation || "None cited"}`,
         ],
       };
 
-      await advocateApi.saveCourtroomSession(sessionData);
+      await advocateApi.saveCourtroomSession(sessionData, authToken);
       setSaveSuccessMsg("Rehearsal session saved to Chamber Archives.");
       setTimeout(() => setSaveSuccessMsg(null), 3500);
     } catch (err) {
-      console.error("Save session failed:", err);
+      console.warn("Save session failed:", err);
       alert("Failed to save courtroom rehearsal session.");
     }
   };
@@ -452,14 +498,19 @@ export function CourtroomVoiceSimulatorView({
   // Open Past Sessions
   const handleOpenPastSessions = async () => {
     setShowPastSessionsModal(true);
+    const authToken = resolveToken();
+    if (!authToken) {
+      setPastSessions([]);
+      return;
+    }
     setLoadingPastSessions(true);
     try {
-      const res = await advocateApi.getCourtroomSessions();
+      const res = await advocateApi.getCourtroomSessions(authToken);
       if (res && res.success && res.sessions) {
         setPastSessions(res.sessions);
       }
     } catch (err) {
-      console.error("Failed to load past sessions:", err);
+      console.warn("Failed to load past sessions:", err);
     } finally {
       setLoadingPastSessions(false);
     }
@@ -473,7 +524,16 @@ export function CourtroomVoiceSimulatorView({
     });
   };
 
-  const activeMatterObj = matters.find((m) => m.id === selectedMatter) || matters[0];
+  const activeMatterObj: SimulatorMatterOption = matters.find((m) => m.id === selectedMatter) ||
+    matters[0] || {
+      id: selectedMatter || "general_rehearsal",
+      title: "General Oral Argument Practice",
+      court: "Chamber Simulator",
+      coreIssue: "No active matters linked yet — rehearsing against selected Bench persona.",
+      openingBenchPrompt: DEFAULT_OPENING_PROMPT,
+      openingCitation: "",
+      openingCritique: DEFAULT_OPENING_CRITIQUE,
+    };
   const activePersonaObj = personas[selectedPersona];
 
   // Helper for Disposition Badge styling
@@ -598,11 +658,15 @@ export function CourtroomVoiceSimulatorView({
               onChange={(e) => handleSelectMatter(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none cursor-pointer"
             >
-              {matters.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.title}
-                </option>
-              ))}
+              {matters.length === 0 ? (
+                <option value="">General Oral Argument Practice (No linked matters)</option>
+              ) : (
+                matters.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.title}
+                  </option>
+                ))
+              )}
             </select>
             <p className="text-[11px] text-zinc-500 italic truncate">
               {activeMatterObj.coreIssue}
@@ -730,7 +794,7 @@ export function CourtroomVoiceSimulatorView({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-black dark:text-white">
-                    Submissions of Counsel ({advocateName}):
+                    Submissions of Counsel ({advocateName || "Counsel"}):
                   </span>
                   {isListening && (
                     <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[10px] font-bold animate-pulse">
@@ -895,7 +959,7 @@ export function CourtroomVoiceSimulatorView({
                     {/* Counsel Rebuttal */}
                     <div className="space-y-1 text-xs">
                       <span className="font-bold text-black dark:text-white flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5" /> Counsel ({advocateName}):
+                        <User className="w-3.5 h-3.5" /> Counsel ({advocateName || "Counsel"}):
                       </span>
                       <p className="text-zinc-800 dark:text-zinc-200 pl-3 border-l-2 border-black dark:border-white">
                         {ex.counselArgument}
@@ -1103,7 +1167,7 @@ export function CourtroomVoiceSimulatorView({
                   <span className="font-bold text-black dark:text-white">
                     {activePersonaObj.name} ({activePersonaObj.coram})
                   </span>
-                  <p className="text-zinc-500 text-[11px] mt-1">Appearing Counsel: {advocateName}</p>
+                  <p className="text-zinc-500 text-[11px] mt-1">Appearing Counsel: {advocateName || "Counsel"}</p>
                 </div>
               </div>
 

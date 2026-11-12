@@ -92,127 +92,71 @@ interface MultiPartyCollaborationRoomProps {
   onConcludeAndRecordAdvice?: (notes: string) => void;
 }
 
-const DEFAULT_PARTICIPANTS: Participant[] = [
-  {
-    id: "adv_1",
-    name: "Adv. Meera Krishnan",
-    role: "Lead Advocate (Host)",
-    enrollment: "K/1429/2016",
-    isOnline: true,
-    isMuted: false,
-    isVideoOn: true,
-    isScreenSharing: false,
-  },
-  {
-    id: "adv_sr_01",
-    name: "Sr. Adv. K. Ramachandran Nair",
-    role: "Senior Counsel",
-    enrollment: "K/0412/1994",
-    isOnline: true,
-    isMuted: true,
-    isVideoOn: true,
-    isScreenSharing: false,
-  },
-  {
-    id: "adv_jr_02",
-    name: "Adv. Ananya Kurian",
-    role: "Chamber Associate",
-    enrollment: "K/2180/2021",
-    isOnline: true,
-    isMuted: true,
-    isVideoOn: false,
-    isScreenSharing: false,
-  },
-  {
-    id: "default_citizen",
-    name: "Gopakumar Nambiar",
-    role: "Citizen Litigant",
-    phone: "+91 94471 28400",
-    isOnline: true,
-    isMuted: false,
-    isVideoOn: true,
-    isScreenSharing: false,
-  },
-];
+const resolveToken = (token?: string) => {
+  if (token) return token;
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+  }
+  return "";
+};
 
-const AVAILABLE_EXHIBITS: PinnedExhibit[] = [
-  {
-    id: "exh_survey_p1",
-    title: "Annexure P-1: Survey Sketch Re-survey Plan Block 14",
-    pages: 4,
-    currentPage: 1,
-    type: "Survey Sketch / Site Map",
-    matter: "WP(C) 19482/2024",
-    verifiedDate: "18 Oct 2024",
-  },
-  {
-    id: "exh_counter_p2",
-    title: "Annexure P-2: KSEB Executive Engineer Counter Affidavit",
-    pages: 8,
-    currentPage: 1,
-    type: "Pleading Counter",
-    matter: "WP(C) 19482/2024",
-    verifiedDate: "22 Oct 2024",
-  },
-  {
-    id: "exh_telegraph_valsamma",
-    title: "Annexure P-3: Valsamma v. KSEB (2012 (2) KLT 368) Full Bench Ratio",
-    pages: 3,
-    currentPage: 1,
-    type: "Precedent Ratio Copy",
-    matter: "Telegraph Act Sec 16",
-    verifiedDate: "Precedent",
-  },
-  {
-    id: "exh_speedpost_p4",
-    title: "Annexure P-4: India Post Speed Post Delivery Report (EK948102391IN)",
-    pages: 2,
-    currentPage: 1,
-    type: "Postal Tracking Record",
-    matter: "Sec 138 Notice",
-    verifiedDate: "16 Oct 2024",
-  },
-];
+const resolveHostId = () => {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("wakheel_user") || localStorage.getItem("user");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const id = parsed?._id || parsed?.id;
+        if (id) return String(id);
+      }
+    } catch {
+      // ignore storage parse failure
+    }
+  }
+  return "host_counsel";
+};
 
 export default function MultiPartyCollaborationRoom({
-  roomId = "room_wpc_19482",
-  matterId = "mat_wpc_19482",
-  matterTitle = "WP(C) 19482/2024 — Gopakumar v. KSEB & Anr.",
-  subject = "WP(C) 19482/2024 — High Court Rejoinder & Precedent Briefing",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
+  roomId = "",
+  matterId = "",
+  matterTitle = "",
+  subject = "Chamber Collaboration Conference",
+  advocateName = "",
+  barCouncilNumber = "",
   token,
   onClose,
   onConcludeAndRecordAdvice,
 }: MultiPartyCollaborationRoomProps) {
+  const hostId = useMemo(() => resolveHostId(), []);
+  const displayAdvocateName = advocateName || "Lead Counsel";
+
   // Session State
   const [sessionSeconds, setSessionSeconds] = useState(0);
-  const [participants, setParticipants] = useState<Participant[]>(DEFAULT_PARTICIPANTS);
+  const [participants, setParticipants] = useState<Participant[]>(() => [
+    {
+      id: hostId,
+      name: displayAdvocateName,
+      role: "Lead Advocate (Host)",
+      enrollment: barCouncilNumber || undefined,
+      isOnline: true,
+      isMuted: false,
+      isVideoOn: true,
+      isScreenSharing: false,
+    },
+  ]);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [viewMode, setViewMode] = useState<"stage_focus" | "gallery_grid">("stage_focus");
 
   // Document & Exhibit State
-  const [pinnedExhibit, setPinnedExhibit] = useState<PinnedExhibit>(AVAILABLE_EXHIBITS[0]);
+  const [availableExhibits, setAvailableExhibits] = useState<PinnedExhibit[]>([]);
+  const [pinnedExhibit, setPinnedExhibit] = useState<PinnedExhibit | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showExhibitDrawer, setShowExhibitDrawer] = useState(false);
 
   // Annotations & Laser Pointer State
-  const [annotations, setAnnotations] = useState<AnnotationItem[]>([
-    {
-      id: "ann_1",
-      page: 1,
-      type: "highlight",
-      text: "Corridor strip passing through Sy. No. 142/3 is agricultural holding with 45 yielding rubber trees.",
-      author: advocateName,
-      role: "Lead Advocate",
-      color: "#ffffff",
-      x: 35,
-      y: 42,
-      timestamp: "10:32 AM",
-    },
-  ]);
+  const [annotations, setAnnotations] = useState<AnnotationItem[]>([]);
   const [laserPointerEnabled, setLaserPointerEnabled] = useState(false);
   const [laserPoint, setLaserPoint] = useState<{ x: number; y: number; author: string } | null>(null);
   const [newAnnotationText, setNewAnnotationText] = useState("");
@@ -222,42 +166,50 @@ export default function MultiPartyCollaborationRoom({
   // Chat & Notes State
   const [activeSideTab, setActiveSideTab] = useState<"notes" | "chat" | "participants">("notes");
   const [chatScope, setChatScope] = useState<"all" | "advocates_only">("all");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: "cmsg_1",
-      sender: "Adv. Meera Krishnan",
-      role: "Lead Advocate (Host)",
-      text: "Good morning Senior Counsel and Gopakumar. We are examining Annexure P-1 survey map.",
-      isPrivileged: true,
-      scope: "all",
-      timestamp: "10:30 AM",
-    },
-    {
-      id: "cmsg_2",
-      sender: "Sr. Adv. K. Ramachandran Nair",
-      role: "Senior Counsel",
-      text: "I have examined the KSEB counter. Page 3 paragraph 8 has an admission regarding absence of District Magistrate order.",
-      isPrivileged: true,
-      scope: "all",
-      timestamp: "10:31 AM",
-    },
-    {
-      id: "cmsg_3",
-      sender: "Adv. Meera Krishnan",
-      role: "Lead Advocate",
-      text: "[Private to Senior Counsel] Should we press for interim status quo under S.16(1) or S.10(d) valuation?",
-      isPrivileged: true,
-      scope: "advocates_only",
-      timestamp: "10:33 AM",
-    },
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
-  const [inCallNotes, setInCallNotes] = useState(
-    "Client Gopakumar confirmed tree-felling commenced without prior District Magistrate notice under Section 16(1). Senior Counsel recommended moving interim stay application tomorrow morning before Bench 2A."
-  );
+  const [inCallNotes, setInCallNotes] = useState("");
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [notesSaveStatus, setNotesSaveStatus] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Load real matter documents as selectable exhibits when authenticated
+  useEffect(() => {
+    let mounted = true;
+    const loadExhibits = async () => {
+      const authToken = resolveToken(token);
+      if (!authToken) return;
+      try {
+        const res = await advocateApi.getDocuments(authToken);
+        const docs = Array.isArray(res?.documents)
+          ? res.documents
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+        const filtered = matterId
+          ? docs.filter((d: any) => !d.matterId || String(d.matterId) === String(matterId))
+          : docs;
+        const mapped: PinnedExhibit[] = filtered.map((d: any) => ({
+          id: String(d._id || d.id || ""),
+          title: d.title || d.fileName || "Uploaded Document",
+          pages: Number(d.pages || 1),
+          currentPage: 1,
+          type: d.category || d.docType || "Case Document",
+          matter: d.matterTitle || matterTitle || matterId || undefined,
+          verifiedDate: d.createdAt ? new Date(d.createdAt).toLocaleDateString("en-GB") : undefined,
+        }));
+        if (mounted) {
+          setAvailableExhibits(mapped);
+        }
+      } catch (err) {
+        console.warn("Could not load chamber documents for collaboration room:", err);
+      }
+    };
+    loadExhibits();
+    return () => {
+      mounted = false;
+    };
+  }, [token, matterId, matterTitle]);
 
   // WebSocket Ref
   const wsRef = useRef<WebSocket | null>(null);
@@ -298,8 +250,8 @@ export default function MultiPartyCollaborationRoom({
             type: "collab:join",
             roomId,
             user: {
-              id: "adv_1",
-              name: advocateName,
+              id: hostId,
+              name: displayAdvocateName,
               role: "Lead Advocate (Host)",
               enrollment: barCouncilNumber,
               isMuted: isMicMuted,
@@ -375,7 +327,7 @@ export default function MultiPartyCollaborationRoom({
           type: "collab:pin_exhibit",
           roomId,
           exhibit,
-          user: { name: advocateName },
+          user: { name: displayAdvocateName },
         })
       );
     }
@@ -383,7 +335,7 @@ export default function MultiPartyCollaborationRoom({
 
   // Sync Page Change
   const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > pinnedExhibit.pages) return;
+    if (!pinnedExhibit || newPage < 1 || newPage > pinnedExhibit.pages) return;
     setCurrentPage(newPage);
 
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -392,7 +344,7 @@ export default function MultiPartyCollaborationRoom({
           type: "collab:change_page",
           roomId,
           page: newPage,
-          user: { name: advocateName },
+          user: { name: displayAdvocateName },
         })
       );
     }
@@ -405,7 +357,7 @@ export default function MultiPartyCollaborationRoom({
     const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
     const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
 
-    const point = { x, y, author: advocateName };
+    const point = { x, y, author: displayAdvocateName };
     setLaserPoint(point);
 
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -439,7 +391,7 @@ export default function MultiPartyCollaborationRoom({
       page: currentPage,
       type: "highlight",
       text: newAnnotationText.trim(),
-      author: advocateName,
+      author: displayAdvocateName,
       role: "Lead Advocate",
       x: annotationClickCoord.x,
       y: annotationClickCoord.y,
@@ -479,7 +431,7 @@ export default function MultiPartyCollaborationRoom({
     const next = !isMicMuted;
     setIsMicMuted(next);
     setParticipants((prev) =>
-      prev.map((p) => (p.id === "adv_1" ? { ...p, isMuted: next } : p))
+      prev.map((p) => (p.id === hostId ? { ...p, isMuted: next } : p))
     );
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(
@@ -496,7 +448,7 @@ export default function MultiPartyCollaborationRoom({
     const next = !isVideoMuted;
     setIsVideoMuted(next);
     setParticipants((prev) =>
-      prev.map((p) => (p.id === "adv_1" ? { ...p, isVideoOn: !next } : p))
+      prev.map((p) => (p.id === hostId ? { ...p, isVideoOn: !next } : p))
     );
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(
@@ -532,7 +484,7 @@ export default function MultiPartyCollaborationRoom({
 
     const message: ChatMessage = {
       id: "cmsg_" + Date.now().toString(),
-      sender: advocateName,
+      sender: displayAdvocateName,
       role: "Lead Advocate",
       text: chatInput.trim(),
       isPrivileged: true,
@@ -556,16 +508,21 @@ export default function MultiPartyCollaborationRoom({
 
   // Save Notes to Matter Case Notes
   const handleSaveNotes = async () => {
+    const authToken = resolveToken(token);
+    if (!authToken) {
+      setNotesSaveStatus("Please sign in to sync notes.");
+      return;
+    }
     setIsSavingNotes(true);
     setNotesSaveStatus(null);
     try {
       if (typeof advocateApi?.saveCollabNotes === "function") {
-        await advocateApi.saveCollabNotes(roomId, inCallNotes, token);
+        await advocateApi.saveCollabNotes(roomId, inCallNotes, authToken);
       } else {
         await fetch(`${BASE_URL}/advocate/collab/rooms/${encodeURIComponent(roomId)}/notes`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token || "advocate_token"}`,
+            Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ notes: inCallNotes }),
@@ -574,7 +531,7 @@ export default function MultiPartyCollaborationRoom({
       setNotesSaveStatus("Notes saved & synced to Matter File");
       setTimeout(() => setNotesSaveStatus(null), 3000);
     } catch (err) {
-      console.error("Failed to save collab notes:", err);
+      console.warn("Failed to save collab notes:", err);
       setNotesSaveStatus("Failed to sync notes.");
     } finally {
       setIsSavingNotes(false);
@@ -604,7 +561,6 @@ export default function MultiPartyCollaborationRoom({
   // Deduplicated participants roster
   const uniqueParticipants = useMemo(() => {
     const map = new Map<string, Participant>();
-    DEFAULT_PARTICIPANTS.forEach((dp) => map.set(dp.id, dp));
     participants.forEach((p) => {
       if (p && p.id) {
         const existing = map.get(p.id) || ({} as any);
@@ -629,9 +585,11 @@ export default function MultiPartyCollaborationRoom({
               <span className="text-xs font-bold text-white tracking-tight truncate max-w-xs sm:max-w-md">
                 {subject}
               </span>
-              <span className="px-2 py-0.5 text-[9px] font-mono uppercase font-bold rounded-md bg-zinc-900 border border-zinc-700 text-zinc-300">
-                {matterId}
-              </span>
+              {matterId && (
+                <span className="px-2 py-0.5 text-[9px] font-mono uppercase font-bold rounded-md bg-zinc-900 border border-zinc-700 text-zinc-300">
+                  {matterId}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 text-[10px] text-zinc-400 font-mono mt-0.5">
               <span className="flex items-center gap-1 text-emerald-400">
@@ -789,34 +747,38 @@ export default function MultiPartyCollaborationRoom({
                     PINNED EXHIBIT
                   </div>
                   <h3 className="text-xs font-bold text-white truncate max-w-xs sm:max-w-md">
-                    {pinnedExhibit.title}
+                    {pinnedExhibit ? pinnedExhibit.title : "No Exhibit Pinned"}
                   </h3>
-                  <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">
-                    ({pinnedExhibit.type})
-                  </span>
+                  {pinnedExhibit?.type && (
+                    <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">
+                      ({pinnedExhibit.type})
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
                   {/* Paging */}
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage <= 1}
-                      className="p-1 hover:text-white text-zinc-400 disabled:opacity-30 cursor-pointer"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="text-[11px] font-bold text-white px-1">
-                      Page {currentPage} of {pinnedExhibit.pages}
-                    </span>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage >= pinnedExhibit.pages}
-                      className="p-1 hover:text-white text-zinc-400 disabled:opacity-30 cursor-pointer"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {pinnedExhibit && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                        className="p-1 hover:text-white text-zinc-400 disabled:opacity-30 cursor-pointer"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-[11px] font-bold text-white px-1">
+                        Page {currentPage} of {pinnedExhibit.pages}
+                      </span>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= pinnedExhibit.pages}
+                        className="p-1 hover:text-white text-zinc-400 disabled:opacity-30 cursor-pointer"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Laser Pointer Toggle */}
                   <button
@@ -848,7 +810,7 @@ export default function MultiPartyCollaborationRoom({
                     className="px-3 py-1.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Pin className="w-3.5 h-3.5" />
-                    <span>Change Exhibit</span>
+                    <span>{pinnedExhibit ? "Change Exhibit" : "Pin Exhibit"}</span>
                   </button>
                 </div>
               </div>
@@ -860,129 +822,89 @@ export default function MultiPartyCollaborationRoom({
                 onMouseMove={handleStagePointerMove}
                 className="flex-1 rounded-3xl bg-zinc-950 border border-zinc-800 p-6 sm:p-8 relative overflow-y-auto cursor-crosshair shadow-inner"
               >
-                {/* Court Pleading Canvas Simulator */}
-                <div className="w-full max-w-3xl mx-auto bg-white text-zinc-900 min-h-[620px] rounded-2xl p-8 sm:p-12 shadow-2xl relative select-text font-serif leading-relaxed">
-                  {/* Kerala High Court 2-inch Margin Guide Visual */}
-                  <div className="border-b-2 border-zinc-900 pb-4 mb-6 text-center">
-                    <span className="text-[11px] font-mono tracking-widest uppercase block text-zinc-600 font-bold">
-                      IN THE HIGH COURT OF KERALA AT ERNAKULAM
-                    </span>
-                    <h4 className="text-sm font-bold mt-1 uppercase text-black">
-                      {pinnedExhibit.title}
-                    </h4>
-                    <span className="text-xs font-mono text-zinc-500">
-                      Verified Date: {pinnedExhibit.verifiedDate || "18-Oct-2024"} • Page {currentPage}
-                    </span>
-                  </div>
-
-                  {/* Simulated Legal Document Content depending on Exhibit */}
-                  {pinnedExhibit.id === "exh_survey_p1" && (
-                    <div className="space-y-4 text-xs sm:text-sm text-zinc-800 font-serif">
-                      <p>
-                        <strong>1. Identification of Survey Holding:</strong> The schedule property comprises 3.42 Acres of registered rubber agricultural land in Re-survey Block No. 14, Old Survey No. 412/1, Kanjirappally Village.
-                      </p>
-                      <div className="my-4 p-4 rounded-xl border-2 border-dashed border-zinc-400 bg-zinc-50 font-mono text-xs text-zinc-700 space-y-1">
-                        <div className="font-bold uppercase text-black">SURVEY BOUNDARY DELIMITATION:</div>
-                        <div>North: Registered holding of Thomas Chacko (Sy. 142/1)</div>
-                        <div>South: Panchayath PWD Tarred Road (Sy. 142/4)</div>
-                        <div>East: KSEB 110kV Proposed Alignment Strip (Disputed Corridor)</div>
-                        <div>West: Rubber Plantation with natural stream channel</div>
-                      </div>
-                      <p>
-                        <strong>2. Felling Assessment:</strong> The proposed transmission route cuts diagonally across Sy. 142/3, endangering 45 prime yielding rubber trees (RRII 105 clone) aged 9 years.
-                      </p>
-                      <p>
-                        <strong>3. Statutory Resistance:</strong> The petitioner formally lodged written resistance with the Assistant Executive Engineer on 14-Oct-2024. No District Magistrate order under Section 16(1) Telegraph Act has been produced.
-                      </p>
-                    </div>
-                  )}
-
-                  {pinnedExhibit.id === "exh_counter_p2" && (
-                    <div className="space-y-4 text-xs sm:text-sm text-zinc-800 font-serif">
-                      <p>
-                        <strong>AFFIDAVIT FILED ON BEHALF OF RESPONDENTS 1 &amp; 2 (KSEB):</strong>
-                      </p>
-                      <p>
-                        "I, Executive Engineer, Transmission Division, KSEB, do hereby solemnly affirm and state as follows: That the 110kV substation interlink was notified in the Kerala Gazette dated 12-01-2023 under Section 164 of the Electricity Act 2003."
-                      </p>
-                      <p className="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-500 font-medium">
-                        "Paragraph 8: It is true that formal proceedings before the District Magistrate, Kottayam under Section 16(1) were not instituted prior to initial line inspection, as the Board was under the impression that work fell within existing public road margins."
-                      </p>
-                      <p>
-                        "The Board undertakes to comply with statutory compensation mandates as assessed by the Revenue Department."
-                      </p>
-                    </div>
-                  )}
-
-                  {pinnedExhibit.id === "exh_telegraph_valsamma" && (
-                    <div className="space-y-4 text-xs sm:text-sm text-zinc-800 font-serif">
-                      <p className="font-bold text-center uppercase tracking-wide">
-                        VALSAMMA v. KERALA STATE ELECTRICITY BOARD
-                        <br />
-                        <span className="text-xs font-mono font-normal">2012 (2) KLT 368 (Full Bench)</span>
-                      </p>
-                      <p>
-                        <strong>Ratio Decidendi:</strong> "When power under Section 10 of the Indian Telegraph Act, 1885 is resisted or obstructed by the owner or occupier of the property, the authority has NO jurisdiction to decide whether the objection is valid or invalid. The only course open to the authority is to approach the District Magistrate under Section 16(1)."
-                      </p>
-                      <p>
-                        "Entering upon the property with police assistance without obtaining permission from the District Magistrate is contrary to law and renders the transmission licensee liable to actionable trespass."
-                      </p>
-                    </div>
-                  )}
-
-                  {pinnedExhibit.id === "exh_speedpost_p4" && (
-                    <div className="space-y-4 text-xs sm:text-sm text-zinc-800 font-serif">
-                      <div className="p-4 rounded-xl border border-zinc-300 bg-zinc-50 font-mono text-xs space-y-2">
-                        <div className="font-bold">INDIA POST CONSIGNMENT TRACKING REPORT</div>
-                        <div>Consignment No: <strong>EK948102391IN</strong></div>
-                        <div>Booked At: High Court SO (Ernakulam) on 12-Oct-2024</div>
-                        <div>Recipient: Coastal Logistics &amp; Infra Ltd, Willingdon Island</div>
-                        <div className="text-emerald-700 font-bold">Status: Item Delivered on 16-Oct-2024 at 14:12 IST</div>
-                      </div>
-                      <p>
-                        <strong>Statutory Consequence:</strong> Under Section 27 General Clauses Act and Section 138(c) NI Act, 15-day cure window commenced on 17-Oct-2024 and expires on 31-Oct-2024 midnight.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Render Annotations Pin markers on this page */}
-                  {pageAnnotations.map((ann) => (
-                    <div
-                      key={ann.id}
-                      style={{ left: `${ann.x}%`, top: `${ann.y}%` }}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 group z-20"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shadow-lg border border-white cursor-pointer animate-bounce">
-                        <Highlighter className="w-3 h-3" />
-                      </div>
-                      {/* Tooltip popup */}
-                      <div className="hidden group-hover:block absolute left-8 top-0 w-64 p-3 rounded-xl bg-black/95 text-white text-xs border border-zinc-700 shadow-2xl z-30">
-                        <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono mb-1">
-                          <span>{ann.author}</span>
-                          <span>{ann.timestamp}</span>
-                        </div>
-                        <p className="leading-snug">{ann.text}</p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Real-time Laser Pointer Indicator */}
-                  {laserPoint && (
-                    <div
-                      style={{ left: `${laserPoint.x}%`, top: `${laserPoint.y}%` }}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none transition-all duration-75"
-                    >
-                      <div className="w-4 h-4 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-ping" />
-                      <div className="w-3 h-3 rounded-full bg-rose-600 absolute top-0.5 left-0.5 shadow-[0_0_8px_#f43f5e]" />
-                      <span className="absolute left-5 top-0 bg-black/80 px-1.5 py-0.5 rounded text-[9px] text-rose-300 font-mono whitespace-nowrap">
-                        {laserPoint.author}
+                {pinnedExhibit ? (
+                  <div className="w-full max-w-3xl mx-auto bg-white text-zinc-900 min-h-[620px] rounded-2xl p-8 sm:p-12 shadow-2xl relative select-text font-serif leading-relaxed">
+                    <div className="border-b-2 border-zinc-900 pb-4 mb-6 text-center">
+                      <span className="text-[11px] font-mono tracking-widest uppercase block text-zinc-600 font-bold">
+                        CHAMBER CASE EXHIBIT RECORD
+                      </span>
+                      <h4 className="text-sm font-bold mt-1 uppercase text-black">
+                        {pinnedExhibit.title}
+                      </h4>
+                      <span className="text-xs font-mono text-zinc-500">
+                        {pinnedExhibit.type}
+                        {pinnedExhibit.verifiedDate ? ` • Dated ${pinnedExhibit.verifiedDate}` : ""} • Page {currentPage} of {pinnedExhibit.pages}
                       </span>
                     </div>
-                  )}
-                </div>
+
+                    <div className="space-y-4 text-xs sm:text-sm text-zinc-800 font-serif">
+                      {pinnedExhibit.matter && (
+                        <p>
+                          <strong>Matter Reference:</strong> {pinnedExhibit.matter}
+                        </p>
+                      )}
+                      <p className="text-zinc-600 leading-relaxed">
+                        Click anywhere on this document stage to place a collaborative annotation pin or toggle Laser Pointer mode to point participants to specific passages during conference review.
+                      </p>
+                    </div>
+
+                    {/* Render Annotations Pin markers on this page */}
+                    {pageAnnotations.map((ann) => (
+                      <div
+                        key={ann.id}
+                        style={{ left: `${ann.x}%`, top: `${ann.y}%` }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 group z-20"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shadow-lg border border-white cursor-pointer animate-bounce">
+                          <Highlighter className="w-3 h-3" />
+                        </div>
+                        <div className="hidden group-hover:block absolute left-8 top-0 w-64 p-3 rounded-xl bg-black/95 text-white text-xs border border-zinc-700 shadow-2xl z-30">
+                          <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono mb-1">
+                            <span>{ann.author}</span>
+                            <span>{ann.timestamp}</span>
+                          </div>
+                          <p className="leading-snug">{ann.text}</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Real-time Laser Pointer Indicator */}
+                    {laserPoint && (
+                      <div
+                        style={{ left: `${laserPoint.x}%`, top: `${laserPoint.y}%` }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none transition-all duration-75"
+                      >
+                        <div className="w-4 h-4 rounded-full bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-ping" />
+                        <div className="w-3 h-3 rounded-full bg-rose-600 absolute top-0.5 left-0.5 shadow-[0_0_8px_#f43f5e]" />
+                        <span className="absolute left-5 top-0 bg-black/80 px-1.5 py-0.5 rounded text-[9px] text-rose-300 font-mono whitespace-nowrap">
+                          {laserPoint.author}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="h-full min-h-[380px] flex flex-col items-center justify-center text-center space-y-3 px-6">
+                    <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-400">
+                      <FileText className="w-7 h-7" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">No Exhibit Pinned on Stage</h4>
+                    <p className="text-xs text-zinc-400 max-w-md">
+                      Pin an uploaded document from the matter vault using &ldquo;Pin Exhibit&rdquo; above, or share your screen for live collaborative inspection.
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowExhibitDrawer(true);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                    >
+                      Browse Case Exhibits ({availableExhibits.length})
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-4 text-center text-[11px] text-zinc-500 font-mono">
-                  Tip: Click anywhere on the document to place an annotation pin for all participants.
+                  Tip: Click anywhere on the document stage to place an annotation pin for all participants.
                 </div>
               </div>
             </div>
@@ -1114,7 +1036,7 @@ export default function MultiPartyCollaborationRoom({
                   <span>Bar Council Rule 33 Privileged</span>
                 </div>
                 <p>
-                  Notes recorded here are permanently attached to {matterId} as an internal Chamber Case Note.
+                  Notes recorded here are attached to {matterId || "this conference"} as an internal Chamber Case Note.
                 </p>
               </div>
             </div>
@@ -1150,27 +1072,33 @@ export default function MultiPartyCollaborationRoom({
 
               {/* Messages Scroll Area */}
               <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-                {visibleChatMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`p-3 rounded-2xl border text-xs space-y-1 ${
-                      msg.scope === "advocates_only"
-                        ? "bg-zinc-900 border-zinc-700"
-                        : "bg-zinc-950 border-zinc-800"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
-                      <span className="font-bold text-white truncate max-w-[140px]">{msg.sender}</span>
-                      <span>{msg.timestamp}</span>
-                    </div>
-                    {msg.scope === "advocates_only" && (
-                      <span className="inline-block px-1.5 py-0.2 rounded text-[8px] font-mono uppercase bg-zinc-800 text-zinc-300 font-bold">
-                        Counsel Whisper (Private)
-                      </span>
-                    )}
-                    <p className="text-zinc-200 leading-snug">{msg.text}</p>
+                {visibleChatMessages.length === 0 ? (
+                  <div className="py-10 text-center text-xs text-zinc-500">
+                    No messages yet in {chatScope === "all" ? "the public room" : "Counsel Whisper"}.
                   </div>
-                ))}
+                ) : (
+                  visibleChatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`p-3 rounded-2xl border text-xs space-y-1 ${
+                        msg.scope === "advocates_only"
+                          ? "bg-zinc-900 border-zinc-700"
+                          : "bg-zinc-950 border-zinc-800"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+                        <span className="font-bold text-white truncate max-w-[140px]">{msg.sender}</span>
+                        <span>{msg.timestamp}</span>
+                      </div>
+                      {msg.scope === "advocates_only" && (
+                        <span className="inline-block px-1.5 py-0.2 rounded text-[8px] font-mono uppercase bg-zinc-800 text-zinc-300 font-bold">
+                          Counsel Whisper (Private)
+                        </span>
+                      )}
+                      <p className="text-zinc-200 leading-snug">{msg.text}</p>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Chat Input */}
@@ -1198,7 +1126,7 @@ export default function MultiPartyCollaborationRoom({
             <div className="flex-1 p-4 space-y-4 overflow-y-auto">
               <div className="pb-3 border-b border-zinc-800">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                  CONNECTED ROSTER ({participants.length})
+                  CONNECTED ROSTER ({uniqueParticipants.length})
                 </span>
                 <p className="text-[11px] text-zinc-400 mt-1">
                   Active participants connected to this virtual conference.
@@ -1255,32 +1183,38 @@ export default function MultiPartyCollaborationRoom({
             </div>
 
             <p className="text-xs text-zinc-400">
-              Select any court exhibit or landmark precedent from the case vault. The chosen document immediately syncs across all participants' screens.
+              Select a document from the matter vault to pin across all connected conference participants.
             </p>
 
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {AVAILABLE_EXHIBITS.map((exh) => {
-                const isSelected = pinnedExhibit.id === exh.id;
-                return (
-                  <button
-                    key={exh.id}
-                    onClick={() => handlePinExhibit(exh)}
-                    className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? "bg-white text-black border-white font-bold"
-                        : "bg-zinc-900 border-zinc-800 text-white hover:border-zinc-700"
-                    }`}
-                  >
-                    <div>
-                      <div className="text-xs font-bold line-clamp-1">{exh.title}</div>
-                      <div className={`text-[10px] font-mono mt-0.5 ${isSelected ? "text-zinc-700" : "text-zinc-400"}`}>
-                        {exh.type} • {exh.pages} Pages
+              {availableExhibits.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 text-center text-xs text-zinc-400">
+                  No uploaded exhibits found for this matter yet. Upload pleadings or annexures in Document Vault first.
+                </div>
+              ) : (
+                availableExhibits.map((exh) => {
+                  const isSelected = pinnedExhibit?.id === exh.id;
+                  return (
+                    <button
+                      key={exh.id}
+                      onClick={() => handlePinExhibit(exh)}
+                      className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? "bg-white text-black border-white font-bold"
+                          : "bg-zinc-900 border-zinc-800 text-white hover:border-zinc-700"
+                      }`}
+                    >
+                      <div>
+                        <div className="text-xs font-bold line-clamp-1">{exh.title}</div>
+                        <div className={`text-[10px] font-mono mt-0.5 ${isSelected ? "text-zinc-700" : "text-zinc-400"}`}>
+                          {exh.type} • {exh.pages} Page{exh.pages === 1 ? "" : "s"}
+                        </div>
                       </div>
-                    </div>
-                    {isSelected && <Check className="w-4 h-4 text-black shrink-0" />}
-                  </button>
-                );
-              })}
+                      {isSelected && <Check className="w-4 h-4 text-black shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
             </div>
 
             <div className="pt-2 flex justify-end">

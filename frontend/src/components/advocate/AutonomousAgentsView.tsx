@@ -58,10 +58,18 @@ interface AgentItem {
 
 export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
   initialSubTab = "workflows",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
-  token = "advocate_token",
+  advocateName = "",
+  barCouncilNumber = "",
+  token,
 }) => {
+  const resolveToken = () => {
+    if (token) return token;
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+    }
+    return "";
+  };
+
   const [activeTab, setActiveTab] = useState<"workflows" | "chamber-skills" | "logs">(
     initialSubTab === "chamber-skills" ? "chamber-skills" : "workflows"
   );
@@ -90,9 +98,16 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
 
   // 1. Fetch Agents
   const fetchAgents = async () => {
+    const authToken = resolveToken();
+    if (!authToken) {
+      setAgents([]);
+      setTerminalLogs([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await advocateApi.getAdvocateAgents(token);
+      const res = await advocateApi.getAdvocateAgents(authToken);
       if (res && res.success && res.agents) {
         setAgents(res.agents);
         const current = res.agents.find((a: AgentItem) => a.id === selectedAgentId) || res.agents[0];
@@ -121,9 +136,14 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
 
   // 2. Trigger Agent Pipeline Manually
   const handleTriggerAgent = async (agentId: string) => {
+    const authToken = resolveToken();
+    if (!authToken) {
+      showToast("Please sign in to run autonomous pipelines.");
+      return;
+    }
     setRunningAgentId(agentId);
     try {
-      const res = await advocateApi.triggerAdvocateAgent(agentId, {}, token);
+      const res = await advocateApi.triggerAdvocateAgent(agentId, {}, authToken);
       if (res && res.success) {
         showToast(res.message);
         // Refresh agent data
@@ -133,7 +153,7 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
         }
       }
     } catch (err: any) {
-      console.error("Agent trigger failed:", err);
+      console.warn("Agent trigger failed:", err);
       showToast("Pipeline run failed: " + (err?.message || "Check connection"));
     } finally {
       setRunningAgentId(null);
@@ -142,36 +162,48 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
 
   // 3. Toggle Agent Status
   const handleToggleAgent = async (agentId: string) => {
+    const authToken = resolveToken();
+    if (!authToken) {
+      showToast("Please sign in to modify pipeline status.");
+      return;
+    }
     try {
-      const res = await advocateApi.toggleAdvocateAgent(agentId, token);
+      const res = await advocateApi.toggleAdvocateAgent(agentId, authToken);
       if (res && res.success) {
         showToast(res.message);
         await fetchAgents();
       }
     } catch (err: any) {
-      console.error("Agent toggle failed:", err);
+      console.warn("Agent toggle failed:", err);
       showToast("Status change failed: " + (err?.message || "Check connection"));
     }
   };
 
   // 4. BNS Converter Tool
   const handleConvertBns = async (sectionToLookup = bnsQuery) => {
+    const authToken = resolveToken();
+    if (!authToken) {
+      setBnsResult(null);
+      return;
+    }
     setIsConvertingBns(true);
     try {
-      const res = await advocateApi.convertBnsSection(sectionToLookup, token);
+      const res = await advocateApi.convertBnsSection(sectionToLookup, authToken);
       if (res && res.success && res.result) {
         setBnsResult(res.result);
       }
     } catch (err: any) {
-      console.error("BNS conversion failed:", err);
+      console.warn("BNS conversion failed:", err);
     } finally {
       setIsConvertingBns(false);
     }
   };
 
   useEffect(() => {
-    handleConvertBns("420");
-  }, []);
+    if (resolveToken()) {
+      handleConvertBns("420");
+    }
+  }, [token]);
 
   const selectedAgent = agents.find((a) => a.id === selectedAgentId) || agents[0];
 
@@ -406,7 +438,7 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
                   <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-1 font-mono text-[11px] text-zinc-600 dark:text-zinc-300">
                     <div>Trigger Mechanism: <span className="font-bold text-black dark:text-white">{selectedAgent.triggerType}</span></div>
                     <div>Target Court Jurisdiction: <span className="font-bold text-black dark:text-white">{selectedAgent.target}</span></div>
-                    <div>Advocate Enrolment Filter: <span className="font-bold text-black dark:text-white">{selectedAgent.config?.barRollNumber || barCouncilNumber}</span></div>
+                    <div>Advocate Enrolment Filter: <span className="font-bold text-black dark:text-white">{selectedAgent.config?.barRollNumber || barCouncilNumber || "Not specified"}</span></div>
                   </div>
                 </div>
 
@@ -587,31 +619,43 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
                 The Caveat Monitoring Agent polls the e-Courts Registry to ensure no unexpected caveat is lodged without counsel notice.
               </p>
 
-              <div className="space-y-2">
-                {[
-                  { client: "Gopakumar Nambiar", status: "Clear (0 Caveats Filed)", lastScan: "Today 10:15 IST", risk: "Safe" },
-                  { client: "Malabar Infotech Solutions", status: "Clear (0 Caveats Filed)", lastScan: "Today 10:15 IST", risk: "Safe" },
-                  { client: "Sreedharan Pillai & Ors.", status: "Clear (0 Caveats Filed)", lastScan: "Today 10:15 IST", risk: "Safe" },
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <span className="font-bold text-black dark:text-white block">
-                        {item.client}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        {item.lastScan}
-                      </span>
+              {(() => {
+                const caveatAgent = agents.find((a) => a.id === "agent_caveat");
+                const watchlist: Array<{ client: string; status: string; lastScan: string }> =
+                  Array.isArray(caveatAgent?.config?.watchlist)
+                    ? caveatAgent.config.watchlist
+                    : [];
+                if (watchlist.length === 0) {
+                  return (
+                    <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+                      No caveat registry targets queued yet. Run a scan to check Section 148A CPC caveats for your active matters.
                     </div>
+                  );
+                }
+                return (
+                  <div className="space-y-2">
+                    {watchlist.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <span className="font-bold text-black dark:text-white block">
+                            {item.client}
+                          </span>
+                          <span className="text-[10px] font-mono text-zinc-400">
+                            {item.lastScan}
+                          </span>
+                        </div>
 
-                    <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
-                      {item.status}
-                    </span>
+                        <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
+                          {item.status}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
 
               <button
                 onClick={() => handleTriggerAgent("agent_caveat")}
@@ -641,24 +685,30 @@ export const AutonomousAgentsView: React.FC<AutonomousAgentsViewProps> = ({
           </div>
 
           <div className="space-y-2 text-xs leading-relaxed max-h-[500px] overflow-y-auto">
-            {terminalLogs.map((log, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <span className="text-zinc-500 select-none">
-                  [{log.timestamp}]
-                </span>
-                <span
-                  className={
-                    log.level === "success"
-                      ? "text-zinc-100 font-bold"
-                      : log.level === "warn"
-                      ? "text-zinc-300"
-                      : "text-zinc-400"
-                  }
-                >
-                  {log.message}
-                </span>
+            {terminalLogs.length > 0 ? (
+              terminalLogs.map((log, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <span className="text-zinc-500 select-none">
+                    [{log.timestamp}]
+                  </span>
+                  <span
+                    className={
+                      log.level === "success"
+                        ? "text-zinc-100 font-bold"
+                        : log.level === "warn"
+                        ? "text-zinc-300"
+                        : "text-zinc-400"
+                    }
+                  >
+                    {log.message}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-zinc-500">
+                No execution logs recorded yet. Trigger an automated pipeline to stream trace output.
               </div>
-            ))}
+            )}
           </div>
 
           <div className="pt-3 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-500">

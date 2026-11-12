@@ -28,11 +28,26 @@ import { advocateApi, API_BASE_URL } from "@/lib/api";
 const BASE_URL =
   API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
+const resolveAuthToken = (token?: string) => {
+  if (token) return token;
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "";
+  }
+  return "";
+};
+
+const getAuthHeaders = (token?: string): Record<string, string> => {
+  const authToken = resolveAuthToken(token);
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+};
+
 // Safe API helpers to handle stale HMR/Turbopack module cache transitions gracefully
 const fetchBareActs = async (query: string = "", token?: string) => {
+  const authToken = resolveAuthToken(token);
+  if (!authToken) return { acts: [] };
   try {
     if (typeof advocateApi?.getBareActs === "function") {
-      return await advocateApi.getBareActs(query, token);
+      return await advocateApi.getBareActs(query, authToken);
     }
   } catch {
     // fallback to direct fetch
@@ -41,57 +56,67 @@ const fetchBareActs = async (query: string = "", token?: string) => {
     ? `${BASE_URL}/advocate/kb/acts?q=${encodeURIComponent(query)}`
     : `${BASE_URL}/advocate/kb/acts`;
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+    headers: getAuthHeaders(authToken),
   });
   return await res.json();
 };
 
 const fetchPlaybooks = async (token?: string) => {
+  const authToken = resolveAuthToken(token);
+  if (!authToken) return { playbooks: [] };
   try {
     if (typeof advocateApi?.getPlaybooks === "function") {
-      return await advocateApi.getPlaybooks(token);
+      return await advocateApi.getPlaybooks(authToken);
     }
   } catch {
     // fallback to direct fetch
   }
   const res = await fetch(`${BASE_URL}/advocate/kb/playbooks`, {
-    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+    headers: getAuthHeaders(authToken),
   });
   return await res.json();
 };
 
 const fetchKbArticles = async (token?: string) => {
+  const authToken = resolveAuthToken(token);
+  if (!authToken) return { articles: [] };
   try {
     if (typeof advocateApi?.getKbArticles === "function") {
-      return await advocateApi.getKbArticles(token);
+      return await advocateApi.getKbArticles(authToken);
     }
   } catch {
     // fallback to direct fetch
   }
   const res = await fetch(`${BASE_URL}/advocate/kb/articles`, {
-    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+    headers: getAuthHeaders(authToken),
   });
   return await res.json();
 };
 
 const fetchResearchBriefs = async (token?: string) => {
+  const authToken = resolveAuthToken(token);
+  if (!authToken) return { briefs: [] };
   try {
     if (typeof advocateApi?.getResearchBriefs === "function") {
-      return await advocateApi.getResearchBriefs(token);
+      return await advocateApi.getResearchBriefs(authToken);
     }
   } catch {
     // fallback to direct fetch
   }
   const res = await fetch(`${BASE_URL}/advocate/kb/briefs`, {
-    headers: { Authorization: `Bearer ${token || "advocate_token"}` },
+    headers: getAuthHeaders(authToken),
   });
   return await res.json();
 };
 
 const postResearchBrief = async (data: any, token?: string) => {
+  const authToken = resolveAuthToken(token);
+  if (!authToken) {
+    throw new Error("Authentication required to save a research brief.");
+  }
   try {
     if (typeof advocateApi?.createResearchBrief === "function") {
-      return await advocateApi.createResearchBrief(data, token);
+      return await advocateApi.createResearchBrief(data, authToken);
     }
   } catch {
     // fallback to direct fetch
@@ -99,7 +124,7 @@ const postResearchBrief = async (data: any, token?: string) => {
   const res = await fetch(`${BASE_URL}/advocate/kb/briefs`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token || "advocate_token"}`,
+      ...getAuthHeaders(authToken),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
@@ -188,8 +213,8 @@ interface ResearchBrief {
 
 export default function ChamberKnowledgeBaseView({
   initialSubTab = "library",
-  advocateName = "Adv. Meera Krishnan",
-  barCouncilNumber = "K/1429/2016",
+  advocateName = "",
+  barCouncilNumber = "",
   token,
 }: ChamberKnowledgeBaseViewProps) {
   // Active sub-tab state
@@ -234,7 +259,7 @@ export default function ChamberKnowledgeBaseView({
 
   // New Brief Form state
   const [newBriefTitle, setNewBriefTitle] = useState("");
-  const [newBriefMatter, setNewBriefMatter] = useState("WP(C) 19482/2024 — Gopakumar v. KSEB");
+  const [newBriefMatter, setNewBriefMatter] = useState("");
   const [newBriefCategory, setNewBriefCategory] = useState("Constitutional Writs");
   const [newBriefSummary, setNewBriefSummary] = useState("");
   const [newBriefPropositions, setNewBriefPropositions] = useState("");
@@ -255,13 +280,18 @@ export default function ChamberKnowledgeBaseView({
 
   // Fetch data
   const fetchData = async () => {
+    const authToken = resolveAuthToken(token);
+    if (!authToken) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const [actsRes, playbooksRes, articlesRes, briefsRes] = await Promise.all([
-        fetchBareActs("", token),
-        fetchPlaybooks(token),
-        fetchKbArticles(token),
-        fetchResearchBriefs(token),
+        fetchBareActs("", authToken),
+        fetchPlaybooks(authToken),
+        fetchKbArticles(authToken),
+        fetchResearchBriefs(authToken),
       ]);
 
       if (actsRes?.acts) {
@@ -286,7 +316,7 @@ export default function ChamberKnowledgeBaseView({
         }
       }
     } catch (err) {
-      console.error("Error loading chamber knowledge base:", err);
+      console.warn("Error loading chamber knowledge base:", err);
     } finally {
       setIsLoading(false);
     }
@@ -294,7 +324,7 @@ export default function ChamberKnowledgeBaseView({
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [token]);
 
   // Filtered Bare Acts
   const filteredActs = useMemo(() => {
@@ -411,7 +441,7 @@ export default function ChamberKnowledgeBaseView({
           summary: newBriefSummary,
           legalPropositions: propositions.length > 0 ? propositions : ["Statutory principles verified."],
           citations: citations.length > 0 ? citations : [],
-          author: advocateName,
+          author: advocateName || "Chamber Counsel",
         },
         token
       );
@@ -430,7 +460,7 @@ export default function ChamberKnowledgeBaseView({
         setNewBriefCitationProp("");
       }
     } catch (err) {
-      console.error("Failed to create research brief:", err);
+      console.warn("Failed to create research brief:", err);
     } finally {
       setIsSubmittingBrief(false);
     }
@@ -446,7 +476,7 @@ export default function ChamberKnowledgeBaseView({
               Chamber Precedent Suite
             </span>
             <span className="text-xs text-zinc-500 font-mono">
-              Roll: {barCouncilNumber}
+              {barCouncilNumber ? `Roll: ${barCouncilNumber}` : "Chamber Registry"}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-black dark:text-white tracking-tight mt-1">
@@ -1268,7 +1298,7 @@ export default function ChamberKnowledgeBaseView({
                       </label>
                       <input
                         type="text"
-                        placeholder="WP(C) 19482/2024 or General"
+                        placeholder="e.g. Case Number or General"
                         value={newBriefMatter}
                         onChange={(e) => setNewBriefMatter(e.target.value)}
                         className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden focus:border-black dark:focus:border-white"
@@ -1311,7 +1341,7 @@ export default function ChamberKnowledgeBaseView({
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="1. Telegraph authority acquires only user rights, not ownership.&#10;2. Magistrate referral is mandatory upon objection."
+                      placeholder="1. Primary statutory proposition...&#10;2. Binding jurisdictional principle..."
                       value={newBriefPropositions}
                       onChange={(e) => setNewBriefPropositions(e.target.value)}
                       className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-hidden focus:border-black dark:focus:border-white"
@@ -1326,7 +1356,7 @@ export default function ChamberKnowledgeBaseView({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <input
                         type="text"
-                        placeholder="Case Name (e.g. Valsamma v. KSEB)"
+                        placeholder="Case Name (e.g. Appellant v. Respondent)"
                         value={newBriefCitationCase}
                         onChange={(e) => setNewBriefCitationCase(e.target.value)}
                         className="px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-black dark:text-white"

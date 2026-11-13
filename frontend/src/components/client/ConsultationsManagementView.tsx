@@ -61,7 +61,7 @@ interface ConsultationsManagementViewProps {
 }
 
 export const ConsultationsManagementView: React.FC<ConsultationsManagementViewProps> = ({
-  token = "dev_token",
+  token = "",
   onOpenBookingModal,
 }) => {
   const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
@@ -424,7 +424,7 @@ export const ConsultationsManagementView: React.FC<ConsultationsManagementViewPr
                       Venue / Chamber Coordinates
                     </span>
                     <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      {c.chamberAddress || "Chamber #412, KHCAA Complex, Marine Drive, Kochi 682031"}
+                      {c.chamberAddress || "Chamber Office on Record"}
                     </p>
                   </div>
 
@@ -433,7 +433,7 @@ export const ConsultationsManagementView: React.FC<ConsultationsManagementViewPr
                       Consultation Retainer Fee
                     </span>
                     <span className="font-mono font-bold text-black dark:text-white text-sm block">
-                      ₹{(c.feeAmount || 1500).toLocaleString("en-IN")}
+                      ₹{(c.feeAmount || 0).toLocaleString("en-IN")}
                     </span>
                     <span className="text-[10px] text-zinc-500 font-mono">Status: {c.paymentStatus?.toUpperCase()}</span>
                   </div>

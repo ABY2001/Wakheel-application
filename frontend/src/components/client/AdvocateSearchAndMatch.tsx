@@ -107,7 +107,7 @@ function getLocallyStoredAdvocates(): Advocate[] {
             : Array.isArray(prof?.specializations) && prof.specializations.length > 0
             ? prof.specializations
             : ["Civil Litigation", "Constitutional Writs", "Commercial Law"];
-        const fee = prof?.consultationFee ? `₹${Number(prof.consultationFee).toLocaleString()} / session` : "₹1,500 / session";
+        const fee = prof?.consultationFee ? `₹${Number(prof.consultationFee).toLocaleString()} / session` : "₹0 / session";
 
         const currentAdv: Advocate = {
           id: u.id || u._id || "current_advocate_user",
@@ -172,7 +172,7 @@ export function AdvocateSearchAndMatch({
       const fee =
         typeof a.consultationFee === "number"
           ? `₹${a.consultationFee.toLocaleString()} / session`
-          : a.fee || "₹1,500 / session";
+          : a.fee || "₹0 / session";
 
       return {
         id: a.id || a._id || `adv_${Math.random()}`,

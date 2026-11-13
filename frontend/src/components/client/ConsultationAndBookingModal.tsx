@@ -217,10 +217,10 @@ export function ConsultationAndBookingModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || "dev_token" : "dev_token";
+    const token = typeof window !== "undefined" ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "" : "";
 
     try {
-      const parsedFee = advocate.fee ? parseInt(advocate.fee.replace(/[^0-9]/g, ""), 10) || 1500 : 1500;
+      const parsedFee = advocate.fee ? parseInt(advocate.fee.replace(/[^0-9]/g, ""), 10) || 0 : 0;
       let fullSubject = consultationNote || `Legal Consultation with ${advocate.name}`;
       if (attachedFiles.length > 0 || voiceNoteUrl) {
         const parts = [];

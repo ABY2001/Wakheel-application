@@ -186,7 +186,7 @@ export function LegalProblemSubmission({
             experienceYears: 12,
             primaryCourt: "High Court of Kerala (Ernakulam)",
             specializations: ["Constitutional Writs", "Land Reforms & Property"],
-            consultationFee: 1500,
+            consultationFee: 0,
             rating: 4.9,
           },
         ],
@@ -703,7 +703,7 @@ export function LegalProblemSubmission({
                               </span>
                             </div>
                             <div className="text-[11px] font-mono text-zinc-400">
-                              Consultation: ₹{(adv.consultationFee || 1500).toLocaleString("en-IN")} • Chambers: {adv.chamberAddress?.split(",")[0] || "High Court Road"}
+                              Consultation: ₹{(adv.consultationFee || 0).toLocaleString("en-IN")} • Chambers: {adv.chamberAddress?.split(",")[0] || "High Court Road"}
                             </div>
                           </div>
                         </div>

@@ -69,7 +69,7 @@ interface InvoicesAndPaymentsViewProps {
 }
 
 export const InvoicesAndPaymentsView: React.FC<InvoicesAndPaymentsViewProps> = ({
-  token = "dev_token",
+  token = "",
   onInvoicePaid,
 }) => {
   const [invoices, setInvoices] = useState<CitizenInvoiceItem[]>([]);
@@ -83,7 +83,7 @@ export const InvoicesAndPaymentsView: React.FC<InvoicesAndPaymentsViewProps> = (
   // Payment Gateway Modal State
   const [payingInvoice, setPayingInvoice] = useState<CitizenInvoiceItem | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"UPI" | "NetBanking" | "Card" | "Portal_Escrow">("UPI");
-  const [upiId, setUpiId] = useState<string>("gopakumar@okhdfcbank");
+  const [upiId, setUpiId] = useState<string>("");
   const [selectedBank, setSelectedBank] = useState<string>("State Bank of India");
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState<{
@@ -94,9 +94,9 @@ export const InvoicesAndPaymentsView: React.FC<InvoicesAndPaymentsViewProps> = (
 
   // Request New Invoice Modal State
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
-  const [reqMatterTitle, setReqMatterTitle] = useState<string>("WP(C) 19482/2024 — High Court Writ Representation");
-  const [reqServiceDesc, setReqServiceDesc] = useState<string>("Senior Counsel Conference & Counter Affidavit Drafting");
-  const [reqAmount, setReqAmount] = useState<number>(12000);
+  const [reqMatterTitle, setReqMatterTitle] = useState<string>("");
+  const [reqServiceDesc, setReqServiceDesc] = useState<string>("");
+  const [reqAmount, setReqAmount] = useState<number>(0);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState<boolean>(false);
 
   // Copy feedback
@@ -194,8 +194,8 @@ export const InvoicesAndPaymentsView: React.FC<InvoicesAndPaymentsViewProps> = (
 Invoice No: ${inv.invoiceNumber}
 Date: ${inv.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0]}
 Status: ${inv.status.toUpperCase()}
-Advocate: ${inv.advocateName || "Adv. Meera Krishnan"} (${inv.barCouncilNumber || "K/001429/2012"})
-Chambers: ${inv.chamberAddress || "High Court Road, Ernakulam, Kochi"}
+Advocate: ${inv.advocateName || "Chamber Counsel"}${inv.barCouncilNumber ? ` (${inv.barCouncilNumber})` : ""}
+Chambers: ${inv.chamberAddress || "Chamber Office on Record"}
 Client: ${inv.clientName}
 Matter: ${inv.matterTitle || "Legal Retainer"}
 
@@ -425,7 +425,7 @@ ${inv.status === "paid" ? `\nPAYMENT DETAILS:\nPaid At: ${inv.paidAt}\nPayment M
                       {inv.matterTitle || "Legal Representation & Retainer Fee"}
                     </h3>
                     <p className="text-xs text-zinc-500">
-                      Counsel: {inv.advocateName || "Adv. Meera Krishnan"} &bull; {inv.barCouncilNumber || "K/001429/2012"}
+                      Counsel: {inv.advocateName || "Chamber Counsel"}{inv.barCouncilNumber ? ` • ${inv.barCouncilNumber}` : ""}
                     </p>
                   </div>
 
@@ -544,7 +544,7 @@ ${inv.status === "paid" ? `\nPAYMENT DETAILS:\nPaid At: ${inv.paidAt}\nPayment M
                   </h3>
                 </div>
                 <p className="text-xs text-zinc-500 mt-0.5">
-                  Beneficiary: {payingInvoice.advocateName || "Adv. Meera Krishnan"} (Chamber Escrow)
+                  Beneficiary: {payingInvoice.advocateName || "Chamber Counsel"} (Chamber Escrow)
                 </p>
               </div>
               <button
@@ -810,13 +810,13 @@ ${inv.status === "paid" ? `\nPAYMENT DETAILS:\nPaid At: ${inv.paidAt}\nPayment M
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b-2 border-black dark:border-white">
                 <div>
                   <h2 className="text-lg font-bold uppercase tracking-tight">
-                    {activeInvoice.advocateName || "Adv. Meera Krishnan"}
+                    {activeInvoice.advocateName || "Chamber Counsel"}
                   </h2>
                   <p className="text-xs text-zinc-500 font-mono">
-                    Advocate &bull; Bar Council Roll No: {activeInvoice.barCouncilNumber || "K/001429/2012"}
+                    Advocate &bull; Bar Council Roll No: {activeInvoice.barCouncilNumber || "Verified Advocate"}
                   </p>
                   <p className="text-xs text-zinc-500 mt-1 max-w-md">
-                    {activeInvoice.chamberAddress || "Chamber 12, Ernakulam Law Chambers, High Court Road, Kochi 682031"}
+                    {activeInvoice.chamberAddress || "Chamber Office on Record"}
                   </p>
                 </div>
 
@@ -826,7 +826,7 @@ ${inv.status === "paid" ? `\nPAYMENT DETAILS:\nPaid At: ${inv.paidAt}\nPayment M
                   </span>
                   <div className="text-xs mt-2 text-zinc-500">
                     <span className="font-bold text-black dark:text-white block">{activeInvoice.invoiceNumber}</span>
-                    <span>Issued: {activeInvoice.createdAt ? new Date(activeInvoice.createdAt).toLocaleDateString("en-IN") : "2026-10-18"}</span>
+                    <span>Issued: {activeInvoice.createdAt ? new Date(activeInvoice.createdAt).toLocaleDateString("en-IN") : "Recent"}</span>
                   </div>
                 </div>
               </div>
@@ -836,8 +836,8 @@ ${inv.status === "paid" ? `\nPAYMENT DETAILS:\nPaid At: ${inv.paidAt}\nPayment M
                 <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <span className="text-[10px] text-zinc-400 uppercase font-bold block">BILLED TO (CLIENT)</span>
                   <span className="font-bold text-black dark:text-white text-sm block">{activeInvoice.clientName}</span>
-                  <p className="text-zinc-500">{activeInvoice.clientAddress || "Panampilly Nagar, Ernakulam, Kerala"}</p>
-                  <p className="text-zinc-500">{activeInvoice.clientPhone || "+91 94471 28400"}</p>
+                  <p className="text-zinc-500">{activeInvoice.clientAddress || "Address on Record"}</p>
+                  <p className="text-zinc-500">{activeInvoice.clientPhone || "Phone on Record"}</p>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">

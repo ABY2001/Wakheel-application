@@ -272,7 +272,7 @@ export function ClientPortalView() {
               reviewsCount: a.reviewCount || 16,
               matchScore: 98,
               specialties: Array.isArray(a.specializations) ? a.specializations : ["Civil Law", "Litigation"],
-              fee: typeof a.consultationFee === "number" ? `₹${a.consultationFee.toLocaleString()} / session` : "₹1,500 / session",
+              fee: typeof a.consultationFee === "number" ? `₹${a.consultationFee.toLocaleString()} / session` : "₹0 / session",
               email: a.email,
               barCouncilNumber: a.barCouncilNumber,
             };

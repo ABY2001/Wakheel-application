@@ -1515,18 +1515,69 @@ export const advocateApi = {
     recentInvoices: AdvocateInvoice[];
     mode: string;
   }> {
-    const res = await fetch(`${API_BASE_URL}/advocate/dashboard`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/dashboard`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getDashboard fallback:", err?.message || err);
+      return {
+        success: false,
+        kpis: {
+          activeMattersCount: 0,
+          todayHearingsCount: 0,
+          totalHearingsListed: 0,
+          pendingInvoicesCount: 0,
+          pendingFeesAmount: 0,
+          totalRevenueCollected: 0,
+          upcomingConsultationsCount: 0,
+          caseNotesCount: 0,
+          incomingLeadsCount: 0,
+          erpModulesCount: 46,
+        },
+        todayHearings: [],
+        recentMatters: [],
+        incomingLeads: [],
+        upcomingConsultations: [],
+        recentInvoices: [],
+        mode: "offline_fallback",
+      };
+    }
   },
 
   // 2. Profile & Chamber Configuration
   async getProfile(token?: string): Promise<{ success: boolean; profile: AdvocateProfileData }> {
-    const res = await fetch(`${API_BASE_URL}/advocate/profile`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/profile`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getProfile fallback:", err?.message || err);
+      return {
+        success: false,
+        profile: {
+          userId: "",
+          fullName: "",
+          email: "",
+          barCouncilNumber: "",
+          experienceYears: 0,
+          primaryCourt: "",
+          secondaryCourts: [],
+          chamberAddress: "",
+          specializations: [],
+          languages: [],
+          consultationFee: 0,
+          rating: 0,
+          reviewCount: 0,
+          isVerified: false,
+          availableToday: true,
+        },
+      };
+    }
   },
 
   async updateProfile(data: Partial<AdvocateProfileData>, token?: string) {
@@ -1543,10 +1594,20 @@ export const advocateApi = {
 
   // 3. Daily Cause List (Court Board)
   async getCauseList(token?: string): Promise<{ success: boolean; causeList: CauseListItem[]; count: number }> {
-    const res = await fetch(`${API_BASE_URL}/advocate/causelist`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/causelist`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getCauseList fallback:", err?.message || err);
+      return {
+        success: false,
+        causeList: [],
+        count: 0,
+      };
+    }
   },
 
   async addCauseListItem(data: Partial<CauseListItem>, token?: string) {
@@ -1652,10 +1713,20 @@ export const advocateApi = {
   },
 
   async getDocuments(token?: string) {
-    const res = await fetch(`${API_BASE_URL}/advocate/documents`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/documents`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getDocuments fallback:", err?.message || err);
+      return {
+        success: false,
+        documents: [],
+        count: 0,
+      };
+    }
   },
 
   async uploadDocument(data: any, token?: string) {
@@ -1692,10 +1763,20 @@ export const advocateApi = {
 
   // 5. Invoices & Billing
   async getInvoices(token?: string): Promise<{ success: boolean; invoices: AdvocateInvoice[]; count: number }> {
-    const res = await fetch(`${API_BASE_URL}/advocate/invoices`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/invoices`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getInvoices fallback:", err?.message || err);
+      return {
+        success: false,
+        invoices: [],
+        count: 0,
+      };
+    }
   },
 
   async createInvoice(data: Partial<AdvocateInvoice>, token?: string) {
@@ -1724,11 +1805,21 @@ export const advocateApi = {
 
   // 6. Chamber Notes & Precedent Research
   async getCaseNotes(matterId?: string, token?: string): Promise<{ success: boolean; notes: CaseNoteItem[]; count: number }> {
-    const query = matterId ? `?matterId=${encodeURIComponent(matterId)}` : "";
-    const res = await fetch(`${API_BASE_URL}/advocate/notes${query}`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const query = matterId ? `?matterId=${encodeURIComponent(matterId)}` : "";
+      const res = await fetch(`${API_BASE_URL}/advocate/notes${query}`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getCaseNotes fallback:", err?.message || err);
+      return {
+        success: false,
+        notes: [],
+        count: 0,
+      };
+    }
   },
 
   async createCaseNote(data: Partial<CaseNoteItem>, token?: string) {
@@ -1753,10 +1844,21 @@ export const advocateApi = {
 
   // 7. Consultations & Client Appointments
   async getConsultations(token?: string): Promise<{ success: boolean; consultations: any[]; count: number; mode: string }> {
-    const res = await fetch(`${API_BASE_URL}/advocate/consultations`, {
-      headers: advocateApi.getAuthHeader(token),
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE_URL}/advocate/consultations`, {
+        headers: advocateApi.getAuthHeader(token),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (err: any) {
+      console.warn("advocateApi.getConsultations fallback:", err?.message || err);
+      return {
+        success: false,
+        consultations: [],
+        count: 0,
+        mode: "offline_fallback",
+      };
+    }
   },
 
   async getConsultationById(id: string, token?: string): Promise<{ success: boolean; consultation: any; mode: string }> {

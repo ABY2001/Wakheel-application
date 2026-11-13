@@ -41,7 +41,18 @@ export function ERPDashboardView({
 }: ERPDashboardViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "profile" | "reports" | "settings" | "all">("dashboard");
   const [loading, setLoading] = useState<boolean>(true);
-  const [kpis, setKpis] = useState<AdvocateKpis | null>(null);
+  const [kpis, setKpis] = useState<AdvocateKpis>({
+    activeMattersCount: 0,
+    todayHearingsCount: 0,
+    totalHearingsListed: 0,
+    pendingInvoicesCount: 0,
+    pendingFeesAmount: 0,
+    totalRevenueCollected: 0,
+    upcomingConsultationsCount: 0,
+    caseNotesCount: 0,
+    incomingLeadsCount: 0,
+    erpModulesCount: 46,
+  });
   const [todayHearings, setTodayHearings] = useState<CauseListItem[]>([]);
   const [recentMatters, setRecentMatters] = useState<any[]>([]);
   const [incomingLeads, setIncomingLeads] = useState<any[]>([]);
@@ -62,8 +73,8 @@ export function ERPDashboardView({
       try {
         setLoading(true);
         const data = await advocateApi.getDashboard(token);
-        if (isMounted && data.success) {
-          setKpis(data.kpis);
+        if (isMounted && data) {
+          if (data.kpis) setKpis(data.kpis);
           setTodayHearings(data.todayHearings || []);
           setRecentMatters(data.recentMatters || []);
           setIncomingLeads(data.incomingLeads || []);

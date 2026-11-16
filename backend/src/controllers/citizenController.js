@@ -17,6 +17,7 @@ import { TaskMiteNote } from "../models/TaskMiteNote.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
 import { resolveECourtsLiveCnr } from "../utils/eCourtsService.js";
+import { resolveCopilotQuery } from "../utils/copilotEngine.js";
 import { broadcastMessageToUser, broadcastMatterEvent } from "../socket.js";
 
 // Check if dummy data mode is requested or if MongoDB is offline
@@ -2871,44 +2872,26 @@ export const citizenAiChat = async (req, res) => {
   try {
     const { prompt, language } = req.body;
 
-    if (!prompt) {
+    if (!prompt || !prompt.trim()) {
       return res.status(400).json({ success: false, message: "Prompt is required" });
     }
 
     const lang = language === "ml" ? "ml" : "en";
-    const lower = prompt.toLowerCase();
-
-    let responseText = "";
-
-    if (lang === "ml") {
-      responseText = `നമസ്കാരം. നിങ്ങളുടെ നിയമപരമായ ചോദ്യം ഞങ്ങൾ പരിശോധിച്ചു. കേരളത്തിലെ ഹൈക്കോടതി, ജില്ലാ കോടതി നടപടികൾ പ്രകാരം ഇതിന് നിയമപരമായ പരിഹാരങ്ങൾ ലഭ്യമാണ്. വിശദമായ വാദം തയ്യാറാക്കാൻ ഒരു യോഗ്യതയുള്ള അഭിഭാഷകനെ ബന്ധപ്പെടുക. (നിരാകരണം: ഇത് നിയമപരമായ ഉപദേശമല്ല, വിവരങ്ങൾക്ക് മാത്രമാണ്).`;
-    } else if (lower.includes("cheque") || lower.includes("138")) {
-      responseText = `Under Section 138 of the Negotiable Instruments Act, 1881, when a cheque is dishonoured due to insufficient funds:
-1. You must issue a formal Statutory Demand Notice within 30 days of receiving the Bank Return Memo.
-2. The drawer is given 15 days from receipt of the notice to clear the payment.
-3. If payment is not made within 15 days, you have 30 days to file a Criminal Complaint before the Judicial First Class Magistrate (JFCM).
-Tip: Retain the original cheque, bank return memo, and registered postal receipt with delivery tracking.`;
-    } else if (lower.includes("tree") || lower.includes("electric") || lower.includes("line")) {
-      responseText = `Under Section 10 and 16 of the Indian Telegraph Act, 1885 and Kerala High Court Division Bench rulings (e.g. Valsamma v. KSEB):
-1. The licensee cannot unilaterally cut yielding trees or draw high-tension lines without prior notice.
-2. If the landowner objects, the licensee must seek an order from the District Magistrate.
-3. The District Judge evaluates full compensation including timber loss, fruit-bearing yield capitalization, and land diminution value.`;
-    } else {
-      responseText = `Thank you for your question. Under Indian law and Kerala High Court practice, procedural steps depend on whether your matter falls under civil, criminal, or constitutional writ jurisdiction. 
-
-Recommended next steps:
-1. Submit your grievance under "Find Legal Help" for automatic statutory triage.
-2. Secure all supporting documents in your Document Vault.
-3. Book a 30-minute consultation with an empaneled High Court counsel through the directory.
-
-Disclaimer: This automated guidance is for informational reference and does not substitute for licensed legal representation.`;
-    }
+    const copilotResult = resolveCopilotQuery({
+      prompt,
+      mode: "Ask",
+      language: lang,
+    });
 
     res.json({
       success: true,
-      answer: responseText,
+      answer: copilotResult.text,
+      domain: copilotResult.domain,
+      isClarificationRequest: copilotResult.isClarificationRequest,
+      citations: copilotResult.citations,
+      actionRecommendation: copilotResult.actionRecommendation,
       timestamp: new Date().toISOString(),
-      mode: "dummy_data",
+      mode: "intelligent_copilot",
     });
   } catch (error) {
     console.error("citizenAiChat error:", error);

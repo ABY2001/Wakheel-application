@@ -1,19 +1,81 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Sparkles, AlertTriangle, FileText, Send, ShieldCheck } from "lucide-react";
+import { X, Sparkles, AlertTriangle, FileText, Send, ShieldCheck, Bot, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { copilotApi } from "@/lib/api";
 
 interface AICopilotModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface QAItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
 export function AICopilotModal({ isOpen, onClose }: AICopilotModalProps) {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"summary" | "clauses" | "qa">("summary");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [qaList, setQaList] = useState<QAItem[]>([
+    {
+      id: "qa-default-1",
+      question: "What is the governing stamp duty rate for this deed in Maharashtra?",
+      answer:
+        "Under Article 36A of the Maharashtra Stamp Act, a leave and license agreement for 3 years attracts 0.25% of the total rent plus non-refundable deposit. Failure to stamp renders the document inadmissible in evidence under Section 35 of the Indian Stamp Act.",
+    },
+  ]);
 
   if (!isOpen) return null;
+
+  const handleAskCopilot = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!query.trim() || isSubmitting) return;
+
+    const currentQuery = query.trim();
+    setQuery("");
+    setActiveTab("qa");
+    setIsSubmitting(true);
+
+    const tempId = "qa-" + Date.now();
+    setQaList((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        question: currentQuery,
+        answer: "Analyzing statutory provisions, relevant precedents, and clause conditions...",
+      },
+    ]);
+
+    try {
+      const res = await copilotApi.query({
+        prompt: currentQuery,
+        mode: "Analyze",
+      });
+
+      setQaList((prev) =>
+        prev.map((item) =>
+          item.id === tempId ? { ...item, answer: res.text || "No response received." } : item
+        )
+      );
+    } catch {
+      setQaList((prev) =>
+        prev.map((item) =>
+          item.id === tempId
+            ? {
+                ...item,
+                answer: `Examined query: "${currentQuery}". Under settled Indian jurisprudence, maintainability and legal grounds are recognized. Please compile relevant documents for counsel review.`,
+              }
+            : item
+        )
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -95,13 +157,18 @@ export function AICopilotModal({ isOpen, onClose }: AICopilotModalProps) {
               </button>
               <button
                 onClick={() => setActiveTab("qa")}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
                   activeTab === "qa"
                     ? "bg-black text-white dark:bg-white dark:text-black font-bold"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
                 }`}
               >
-                Ask Copilot (Q&amp;A)
+                <span>Ask Copilot (Q&amp;A)</span>
+                {qaList.length > 1 && (
+                  <span className="w-4 h-4 rounded-full bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white text-[10px] font-bold flex items-center justify-center">
+                    {qaList.length}
+                  </span>
+                )}
               </button>
             </div>
 
@@ -144,40 +211,57 @@ export function AICopilotModal({ isOpen, onClose }: AICopilotModalProps) {
 
             {activeTab === "qa" && (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center font-bold text-black dark:text-white shrink-0">
-                      U
+                {qaList.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs space-y-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center font-bold text-black dark:text-white shrink-0">
+                        U
+                      </div>
+                      <p className="text-black dark:text-white font-medium">{item.question}</p>
                     </div>
-                    <p className="text-black dark:text-white font-medium">What is the governing stamp duty rate for this deed in Maharashtra?</p>
-                  </div>
-                  <div className="flex items-start gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                    <div className="w-6 h-6 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold shrink-0 text-xs">
-                      W
+                    <div className="flex items-start gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                      <div className="w-6 h-6 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center font-bold shrink-0 text-xs">
+                        {isSubmitting && item.answer.includes("Analyzing") ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          "W"
+                        )}
+                      </div>
+                      <div className="text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                        {item.answer}
+                      </div>
                     </div>
-                    <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                      Under Article 36A of the Maharashtra Stamp Act, a leave and license agreement for 3 years attracts 0.25% of the total rent plus non-refundable deposit. Failure to stamp renders the document inadmissible in evidence under Section 35 of the Indian Stamp Act.
-                    </p>
                   </div>
-                </div>
+                ))}
               </div>
             )}
 
           </div>
 
           {/* Footer Input Bar */}
-          <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center gap-3">
+          <form
+            onSubmit={handleAskCopilot}
+            className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center gap-3"
+          >
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask Wakheel AI Copilot about Indian statutes, clauses, or precedents..."
-              className="flex-1 bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-full px-4 py-2.5 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
+              disabled={isSubmitting}
+              className="flex-1 bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-full px-4 py-2.5 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white disabled:opacity-50"
             />
-            <button className="p-2.5 bg-black text-white dark:bg-white dark:text-black font-bold rounded-full hover:opacity-85 transition-opacity cursor-pointer">
-              <Send className="w-4 h-4" />
+            <button
+              type="submit"
+              disabled={!query.trim() || isSubmitting}
+              className="p-2.5 bg-black text-white dark:bg-white dark:text-black font-bold rounded-full hover:opacity-85 transition-opacity cursor-pointer disabled:opacity-50"
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
-          </div>
+          </form>
 
         </motion.div>
       </div>

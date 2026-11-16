@@ -464,6 +464,7 @@ export function ClientPortalView() {
         mode: currentMode,
         isAgentMode: isAgent,
         isDeepResearch: isDeep,
+        language: lang,
       });
 
       let assistantText = res.text || "";
@@ -3170,6 +3171,9 @@ export function ClientPortalView() {
                     "Kerala High Court stay grounds on electricity lines",
                     "BNS Section 304A IPC equivalent comparison",
                     "Section 138 NI Act statutory notice 15-day period",
+                    "Anticipatory bail safeguards under Section 35 BNSS",
+                    "Tenant eviction notice and security deposit recovery",
+                    "ഭൂമി അതിർത്തി തർക്കവും ഇടക്കാല നിരോധനാജ്ഞയും (Injunction)",
                   ].map((chip, idx) => (
                     <button
                       key={idx}

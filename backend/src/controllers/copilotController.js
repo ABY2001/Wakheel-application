@@ -4,6 +4,8 @@
 // Zero-cloud-quota local engine with deep statutory concordance
 // ============================================================================
 
+import { resolveCopilotQuery } from "../utils/copilotEngine.js";
+
 // ----------------------------------------------------------------------------
 // 1. KERALA LEGAL GLOSSARY & REVENUE TRANSLATION DICTIONARY
 // ----------------------------------------------------------------------------
@@ -958,92 +960,26 @@ export const copilotQuery = async (req, res) => {
       mode = "Ask",
       isAgentMode = false,
       isDeepResearch = false,
+      language = "en",
+      specialization = null,
+      consultMode = null,
     } = req.body;
 
     if (!prompt || !prompt.trim()) {
       return res.status(400).json({ success: false, message: "Prompt is required" });
     }
 
-    const lower = prompt.toLowerCase();
-    let responseText = "";
-    let deepResearchData = null;
-    let agentSteps = null;
-
-    if (isDeepResearch) {
-      deepResearchData = {
-        scannedSources: 38,
-        scJudgements: 20,
-        hcJudgements: 15,
-        bareActs: 3,
-        precedents: [
-          {
-            citation: "2024 (2) KHC 401 (DB)",
-            court: "High Court of Kerala (Division Bench)",
-            ratio: "Power transmission licensee cannot unilaterally change sanctioned route over private holdings without affording prior hearing.",
-            treatment: "Binding Kerala Precedent",
-          },
-          {
-            citation: "2020 (9) SCC 1",
-            court: "Supreme Court of India (Full Bench)",
-            ratio: "Daughters acquire coparcenary rights by birth on equal footing with sons with retroactive effect.",
-            treatment: "Binding Constitutional Ratio",
-          },
-        ],
-      };
-    }
-
-    if (isAgentMode) {
-      agentSteps = [
-        {
-          title: "1. Jurisdiction & Forum Discovery",
-          detail: "Verified jurisdiction: Article 226 before High Court of Kerala; evaluated alternate remedy exhaustion doctrine.",
-          status: "completed",
-        },
-        {
-          title: "2. Kerala High Court Precedent Concordance",
-          detail: "Screened 15 Division Bench rulings on Kerala Land Reforms Act and Indian Telegraph Act.",
-          status: "completed",
-        },
-        {
-          title: "3. Limitation Audit & Court Fee Valuation",
-          detail: "Limitation period active; court fees assessed under Kerala Court Fees and Suits Valuation Act, 1959.",
-          status: "completed",
-        },
-        {
-          title: "4. Relief Formulation & Verification",
-          detail: "Drafted formal synopsis, interim prayer for stay, and verified Bar Council compliance.",
-          status: "completed",
-        },
-      ];
-    }
-
-    if (lower.includes("telegraph") || lower.includes("kseb") || lower.includes("tree") || lower.includes("line")) {
-      responseText = `Analysis for [${mode} Mode]: Under Kerala High Court jurisprudence (Valsamma v. KSEB 2024 (2) KHC 401 DB):
-1. A transmission licensee (KSEB) has no authority to cut trees or draw lines across private land without notice.
-2. If the landholder objects in writing, Section 16(1) of the Indian Telegraph Act, 1885 compels the licensee to approach the District Magistrate.
-3. The District Magistrate must evaluate feasibility of alternate routes and ensure minimal damage under Section 10(d).`;
-    } else if (lower.includes("138") || lower.includes("cheque") || lower.includes("dishonour")) {
-      responseText = `Analysis for [${mode} Mode]: Section 138 Negotiable Instruments Act Statutory Roadmap:
-1. Statutory Demand Notice must be dispatched within 30 days of receiving the Bank Dishonour Memo.
-2. Payee must afford mandatory 15-day cure window from date of receipt by drawer.
-3. Criminal complaint under Section 142 must be filed before the JFCM within 30 days following expiry of the 15-day period.
-4. Jurisdiction lies with the JFCM court where your payee bank branch is situated (Section 142(2)).`;
-    } else {
-      responseText = `Wakheel Legal Copilot [${mode} Mode]:
-Examined legal proposition: "${prompt}".
-Under Kerala High Court procedure and relevant Central statutes, maintainability and cause of action are established. Recommend compiling relevant revenue documents into your vault and generating a formal statutory notice or pleading.`;
-    }
-
-    res.json({
-      success: true,
-      text: responseText,
+    const result = resolveCopilotQuery({
+      prompt,
       mode,
       isAgentMode,
-      agentSteps,
       isDeepResearch,
-      deepResearchData,
-      timestamp: new Date().toISOString(),
+      language,
+      specialization,
+      consultMode,
     });
+
+    res.json(result);
   } catch (error) {
     console.error("copilotQuery error:", error);
     res.status(500).json({ success: false, message: error.message });

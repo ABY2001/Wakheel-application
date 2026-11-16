@@ -3407,6 +3407,9 @@ export const copilotApi = {
     mode?: string;
     isAgentMode?: boolean;
     isDeepResearch?: boolean;
+    language?: string;
+    specialization?: string;
+    consultMode?: string;
   }) {
     const res = await fetch(`${API_BASE_URL}/copilot/query`, {
       method: "POST",

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { X, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { GoogleIcon } from "@/components/GoogleIcon";
+import { authApi } from "@/lib/api";
 
 export type RoleOption = "advocate" | "client";
 export type AuthMode = "signup" | "login";
@@ -28,6 +30,7 @@ export function AuthModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
@@ -119,6 +122,48 @@ export function AuthModal({
         }
       }, 800);
     }, 600);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const emailPrefix = role === "advocate" ? "adv.google" : "citizen.google";
+      const mockEmail = `${emailPrefix}.${Math.floor(1000 + Math.random() * 9000)}@gmail.com`;
+      const mockName = role === "advocate" ? "Adv. Google Counsel" : "Google User";
+
+      const res = await authApi.googleLogin({
+        email: mockEmail,
+        name: mockName,
+        role: role,
+      });
+
+      const userPayload = res.user || {
+        id: "google_" + Date.now(),
+        fullName: mockName,
+        email: mockEmail,
+        role: role,
+        verifyMethod: "google",
+      };
+
+      if (res.token) {
+        localStorage.setItem("wakheel_token", res.token);
+      }
+      localStorage.setItem("wakheel_user", JSON.stringify({ ...userPayload, role }));
+
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+        if (role === "advocate") {
+          localStorage.removeItem("wakheel_advocate_first_signup");
+          router.push("/advocate-workspace");
+        } else {
+          localStorage.setItem("wakheel_citizen_first_signup", "true");
+          router.push("/client-portal");
+        }
+      }, 600);
+    } catch {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -252,6 +297,24 @@ export function AuthModal({
                       ? "Create account →"
                       : "Log in →"}
                   </span>
+                </button>
+
+                {/* Alternative: Google Sign-In */}
+                <div className="relative flex items-center justify-center my-2">
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
+                  <span className="bg-white dark:bg-black px-2 text-[10px] uppercase font-mono tracking-wider text-zinc-400">
+                    OR
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isGoogleLoading}
+                  onClick={handleGoogleSignIn}
+                  className="w-full py-3 px-4 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+                >
+                  <GoogleIcon className="w-4 h-4 shrink-0" />
+                  <span>{isGoogleLoading ? "Connecting with Google..." : "Continue with Google"}</span>
                 </button>
               </form>
 

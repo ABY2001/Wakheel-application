@@ -74,7 +74,7 @@
     "fullName": "Counsel 3210",
     "email": "919876543210@whatsapp.wakheel.law",
     "password": "$2a$10$wQNsgoCreGcOiwmhySP3hOc8ub5rKZ39X6uF7VF3S69WeocWXGK5u",
-    "role": "advocate",
+    "role": "client",
     "verifyMethod": "whatsapp",
     "isVerified": false,
     "createdAt": "2026-10-14T09:32:25.827Z"
@@ -191,5 +191,36 @@
     "icsiNumber": "",
     "icaiNumber": "",
     "createdAt": "2026-11-10T11:08:08.715Z"
+  },
+  {
+    "_id": "dev_1794818467695",
+    "fullName": "Counsel 9999",
+    "email": "919876599999@whatsapp.wakheel.law",
+    "password": "$2a$10$cz1aGQH98w8Rh/39dzBfBeEEVpmaROsTHEhD2LgjaIzfEn/tSddDy",
+    "role": "advocate",
+    "verifyMethod": "whatsapp",
+    "isVerified": false,
+    "phone": "+919876599999",
+    "createdAt": "2026-11-16T08:41:07.698Z"
+  },
+  {
+    "_id": "dev_1794818467801",
+    "fullName": "Priya Nair",
+    "email": "priya.nair.test@gmail.com",
+    "password": "$2a$10$FTYDXCChHKWz4mjAPduUH.e5X6V8SEZEQn7K7/Muvo.VsVBtX1.S.",
+    "role": "client",
+    "verifyMethod": "google",
+    "isVerified": false,
+    "createdAt": "2026-11-16T08:41:07.801Z"
+  },
+  {
+    "_id": "dev_1794818467943",
+    "fullName": "Adv. Suresh Menon",
+    "email": "adv.suresh.menon@gmail.com",
+    "password": "$2a$10$tlibbQ19pq27B357Go6zXe2m278.88GjNfC7rVMzzK5ev5YKahnD2",
+    "role": "advocate",
+    "verifyMethod": "google",
+    "isVerified": false,
+    "createdAt": "2026-11-16T08:41:07.943Z"
   }
 ]

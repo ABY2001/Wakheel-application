@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { BrandLogo } from "@/components/BrandLogo";
+import { GoogleIcon } from "@/components/GoogleIcon";
 import { authApi, UserRole, AccountCategory } from "@/lib/api";
 
 interface GetStartedViewProps {
@@ -78,7 +79,90 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // ==============================================================
+  // GOOGLE SIGN-IN HANDLER
+  // ==============================================================
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setErrorMessage("");
+    try {
+      let loginRole: UserRole = "client";
+      if (tier === "citizen") {
+        loginRole = "client";
+      } else {
+        if (selectedBubble === "independent_advocate") loginRole = "advocate";
+        else if (selectedBubble === "ca") loginRole = "ca";
+        else loginRole = "cs";
+      }
+
+      const emailPrefix =
+        loginRole === "advocate"
+          ? "adv.google"
+          : loginRole === "ca" || loginRole === "cs"
+          ? "firm.google"
+          : "citizen.google";
+      const mockEmail = `${emailPrefix}.${Math.floor(1000 + Math.random() * 9000)}@gmail.com`;
+      const mockName =
+        loginRole === "advocate"
+          ? "Adv. Google Counsel"
+          : loginRole === "ca"
+          ? "CA Google Advisor"
+          : loginRole === "cs"
+          ? "CS Google Secretary"
+          : "Google Verified Citizen";
+
+      const res = await authApi.googleLogin({
+        email: mockEmail,
+        name: mockName,
+        role: loginRole,
+      });
+
+      const userPayload = res.user || {
+        id: "google_" + Date.now(),
+        fullName: mockName,
+        email: mockEmail,
+        role: loginRole,
+        verifyMethod: "google",
+      };
+
+      if (res.token) {
+        localStorage.setItem("wakheel_token", res.token);
+      }
+      localStorage.setItem("wakheel_user", JSON.stringify({ ...userPayload, role: loginRole }));
+
+      if (loginRole === "client") {
+        localStorage.setItem("wakheel_citizen_first_signup", "true");
+        router.push("/client-portal");
+      } else if (loginRole === "advocate") {
+        const onboarded = localStorage.getItem("wakheel_advocate_onboarded");
+        if (!onboarded) {
+          localStorage.setItem("wakheel_advocate_first_signup", "true");
+        }
+        router.push("/advocate-workspace");
+      } else {
+        let hasFirm = localStorage.getItem("wakheel_firm_profile");
+        if (!hasFirm) {
+          const firmProfile = {
+            id: "firm_" + Date.now(),
+            name: `${mockName} & Partners`,
+            category: loginRole,
+            founderName: mockName,
+            contactEmail: mockEmail,
+            createdAt: new Date().toISOString(),
+          };
+          localStorage.setItem("wakheel_firm_profile", JSON.stringify(firmProfile));
+        }
+        router.push("/firm-workspace");
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Google Sign-In failed. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   // ==============================================================
   // 1. CITIZEN SIGNUP (Strictly Name, Email & Password ONLY - Zero legal questions)
@@ -757,6 +841,17 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                     <span>Sign Up with WhatsApp OTP</span>
                     <span className="text-zinc-400">→</span>
                   </Link>
+
+                  {/* Google Sign-In Alternative */}
+                  <button
+                    type="button"
+                    disabled={isGoogleLoading}
+                    onClick={handleGoogleSignIn}
+                    className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+                  >
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span>{isGoogleLoading ? "Connecting with Google..." : "Continue with Google"}</span>
+                  </button>
                 </form>
               ) : (
                 /* CITIZEN REGULAR SIGN IN FORM */
@@ -823,6 +918,17 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                     <span>Log in with WhatsApp OTP</span>
                     <span className="text-zinc-400">→</span>
                   </Link>
+
+                  {/* Google Sign-In Alternative */}
+                  <button
+                    type="button"
+                    disabled={isGoogleLoading}
+                    onClick={handleGoogleSignIn}
+                    className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+                  >
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span>{isGoogleLoading ? "Connecting with Google..." : "Continue with Google"}</span>
+                  </button>
                 </form>
               )}
             </div>
@@ -963,6 +1069,24 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                       >
                         <span>Continue to Category Selection</span>
                         <ChevronRight className="w-4 h-4" />
+                      </button>
+
+                      {/* Google Quick Onboarding Alternative */}
+                      <div className="relative flex items-center justify-center my-3">
+                        <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
+                        <span className="bg-white dark:bg-black px-2 text-[10px] uppercase font-mono tracking-wider text-zinc-400">
+                          OR
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isGoogleLoading}
+                        onClick={handleGoogleSignIn}
+                        className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+                      >
+                        <GoogleIcon className="w-4 h-4 shrink-0" />
+                        <span>{isGoogleLoading ? "Connecting with Google..." : "Fast Sign Up with Google"}</span>
                       </button>
                     </form>
                   )}
@@ -1466,6 +1590,17 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                     <span>Log in with WhatsApp OTP</span>
                     <span className="text-zinc-400">→</span>
                   </Link>
+
+                  {/* Google Sign-In Alternative */}
+                  <button
+                    type="button"
+                    disabled={isGoogleLoading}
+                    onClick={handleGoogleSignIn}
+                    className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
+                  >
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span>{isGoogleLoading ? "Connecting with Google..." : "Continue with Google"}</span>
+                  </button>
                 </form>
               )}
             </div>

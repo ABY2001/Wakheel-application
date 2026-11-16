@@ -22,6 +22,8 @@ import {
   ExternalLink,
   Smartphone,
   HeartHandshake,
+  Scale,
+  Info,
 } from "lucide-react";
 
 export interface CitizenProfileData {
@@ -84,6 +86,60 @@ export const DEFAULT_CITIZEN_PROFILE: CitizenProfileData = {
   primaryCourtJurisdiction: "Kerala (High Court of Kerala)",
 };
 
+export const COMPULSORY_PROFILE_FIELDS = [
+  {
+    key: "fullName",
+    label: "Full Legal Name",
+    reason: "Mandatory under High Court e-filing rules for Vakalatnama execution, verified affidavits, and official memo of parties.",
+    check: (d: CitizenProfileData) => Boolean(d.fullName && d.fullName.trim().length >= 2),
+  },
+  {
+    key: "fatherOrSpouseName",
+    label: "Father / Spouse Name",
+    reason: "Statutory requirement under CPC Order VI Rule 14 & CrPC for party parentage identification in judicial pleadings.",
+    check: (d: CitizenProfileData) => Boolean(d.fatherOrSpouseName && d.fatherOrSpouseName.trim().length >= 2),
+  },
+  {
+    key: "mobileNumber",
+    label: "Verified Mobile Number",
+    reason: "Required for e-Courts automated hearing alerts, digital summons notifications, and advocate consultation dispatch.",
+    check: (d: CitizenProfileData) => {
+      const clean = (d.mobileNumber || "").replace(/\D/g, "");
+      return clean.length >= 10;
+    },
+  },
+  {
+    key: "primaryCourtJurisdiction",
+    label: "Primary Court Jurisdiction",
+    reason: "Routes your petitions to the competent forum and matches your matter with enrolled Bar Council advocates in that jurisdiction.",
+    check: (d: CitizenProfileData) => Boolean(d.primaryCourtJurisdiction && d.primaryCourtJurisdiction.trim().length >= 2),
+  },
+  {
+    key: "residentialAddress",
+    label: "Permanent Residential Address",
+    reason: "Essential for establishing territorial cause of action, memo of parties service, and court bail verification.",
+    check: (d: CitizenProfileData) => Boolean(d.residentialAddress && d.residentialAddress.trim().length >= 5),
+  },
+  {
+    key: "district",
+    label: "District & City",
+    reason: "Determines District & Sessions Court territorial jurisdiction and local Bar Association advocate assignment.",
+    check: (d: CitizenProfileData) => Boolean(d.district && d.district.trim().length >= 2),
+  },
+  {
+    key: "state",
+    label: "State / UT",
+    reason: "Determines state High Court jurisdiction and applicability of state court fees and local procedural rules.",
+    check: (d: CitizenProfileData) => Boolean(d.state && d.state.trim().length >= 2),
+  },
+  {
+    key: "pincode",
+    label: "Postal PIN Code",
+    reason: "Mandatory for postal and electronic summons delivery under Order V Rule 9 CPC and registry jurisdiction mapping.",
+    check: (d: CitizenProfileData) => /^\d{6}$/.test((d.pincode || "").trim()),
+  },
+] as const;
+
 interface CitizenProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -103,6 +159,8 @@ export default function CitizenProfileModal({
   >("identity");
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [refreshingKyc, setRefreshingKyc] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [validationBanner, setValidationBanner] = useState<string>("");
 
   useEffect(() => {
     if (profile) {
@@ -120,6 +178,13 @@ export default function CitizenProfileModal({
       ...prev,
       [field]: value,
     }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
   const handleRefreshKyc = () => {
@@ -131,8 +196,53 @@ export default function CitizenProfileModal({
     }, 600);
   };
 
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName || formData.fullName.trim().length < 2) {
+      newErrors.fullName = "Full Legal Name is mandatory for Vakalatnama filing, affidavits, and cause lists.";
+    }
+    if (!formData.fatherOrSpouseName || formData.fatherOrSpouseName.trim().length < 2) {
+      newErrors.fatherOrSpouseName = "Father / Spouse Name is required under CPC Order VI Rule 14 for memo of parties.";
+    }
+    const cleanMobile = (formData.mobileNumber || "").replace(/\D/g, "");
+    if (!cleanMobile || cleanMobile.length < 10) {
+      newErrors.mobileNumber = "Valid 10-digit mobile number is required for court SMS alerts and counsel consultation.";
+    }
+    if (!formData.primaryCourtJurisdiction || formData.primaryCourtJurisdiction.trim().length < 2) {
+      newErrors.primaryCourtJurisdiction = "Primary Court Jurisdiction is required to route petitions and match advocates.";
+    }
+    if (!formData.residentialAddress || formData.residentialAddress.trim().length < 5) {
+      newErrors.residentialAddress = "Permanent Residential Address is required for territorial jurisdiction and summons service.";
+    }
+    if (!formData.district || formData.district.trim().length < 2) {
+      newErrors.district = "District & City is required for local court and advocate matching.";
+    }
+    if (!formData.state || formData.state.trim().length < 2) {
+      newErrors.state = "State / UT is required to determine High Court jurisdiction and applicable rules.";
+    }
+    const cleanPincode = (formData.pincode || "").replace(/\D/g, "");
+    if (!cleanPincode || cleanPincode.length !== 6) {
+      newErrors.pincode = "Valid 6-digit postal PIN code is required for registry summons dispatch.";
+    }
+
+    return newErrors;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setValidationBanner(
+        `Please complete all ${Object.keys(validationErrors).length} compulsory fields marked with * before saving. These details are legally required for court case intake, Vakalatnama filing, and advocate assignment.`
+      );
+      setActiveTab("identity");
+      return;
+    }
+
+    setErrors({});
+    setValidationBanner("");
     onSave(formData);
     setSaveSuccess(true);
     setTimeout(() => {
@@ -140,6 +250,11 @@ export default function CitizenProfileModal({
       onClose();
     }, 1200);
   };
+
+  const completedRequiredCount = COMPULSORY_PROFILE_FIELDS.filter((f) => f.check(formData)).length;
+  const totalRequiredCount = COMPULSORY_PROFILE_FIELDS.length;
+  const completionPercentage = Math.round((completedRequiredCount / totalRequiredCount) * 100);
+  const isProfileComplete = completedRequiredCount === totalRequiredCount;
 
   const initials = formData.fullName
     ? formData.fullName
@@ -248,6 +363,49 @@ export default function CitizenProfileModal({
           </div>
         </div>
 
+        {/* Profile Completeness & Case Intake Readiness Bar */}
+        <div className="px-6 sm:px-8 py-3.5 bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+              <Scale className="w-3.5 h-3.5 text-zinc-500" />
+              <span>Court Case Intake &amp; Counsel Readiness:</span>
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1 ${
+                isProfileComplete
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
+              }`}
+            >
+              {isProfileComplete ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>100% Ready for Court Filing</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>{completedRequiredCount} of {totalRequiredCount} Compulsory Fields Complete ({completionPercentage}%)</span>
+                </>
+              )}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="w-full sm:w-44 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  isProfileComplete ? "bg-emerald-500" : "bg-amber-500"
+                }`}
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+            <span className="font-mono text-[11px] font-bold text-zinc-500 min-w-[32px] text-right">
+              {completionPercentage}%
+            </span>
+          </div>
+        </div>
+
         {/* Tab Strip */}
         <div className="flex items-center gap-1.5 px-6 pt-3 border-b border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-x-auto scrollbar-none">
           <button
@@ -260,7 +418,12 @@ export default function CitizenProfileModal({
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>Personal &amp; Identity</span>
+            <span>Personal &amp; Court Intake</span>
+            {Object.keys(errors).length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-red-500 text-white leading-tight">
+                {Object.keys(errors).length}
+              </span>
+            )}
           </button>
 
           <button
@@ -318,14 +481,331 @@ export default function CitizenProfileModal({
 
         {/* Tab Contents */}
         <div className="p-6 sm:p-8 overflow-y-auto max-h-[65vh]">
-          {/* TAB 1: PERSONAL & IDENTITY */}
+          {/* TAB 1: PERSONAL & COURT INTAKE */}
           {activeTab === "identity" && (
             <div className="space-y-6">
+              {/* Validation Alert Banner */}
+              {validationBanner && (
+                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-300 dark:border-red-800 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-red-900 dark:text-red-200">
+                      Compulsory Court Intake Details Missing
+                    </h4>
+                    <p className="text-xs text-red-700 dark:text-red-300 leading-relaxed">
+                      {validationBanner}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Informational Guidance Box */}
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-start gap-3">
+                <Info className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  Fields marked with <span className="text-red-500 font-bold">*</span> and <span className="font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1 py-0.2 rounded text-[10px]">Required</span> are legally compulsory under High Court e-filing rules and CPC Order VI/V to generate court petitions, memo of parties, Vakalatnama representation, and match specialized Bar Council advocates.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Full Legal Name (Compulsory) */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
-                    <span>Username / Handle</span>
-                    <span className="text-[10px] font-normal text-zinc-500">Unique identifier</span>
+                    <span className="flex items-center gap-1">
+                      <span>Full Legal Name</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">As per Aadhaar / Official ID</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) => handleInputChange("fullName", e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.fullName
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    }`}
+                  />
+                  {errors.fullName ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.fullName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Mandatory under High Court e-filing rules for Vakalatnama filing, verified affidavits, and cause list party listings.
+                    </span>
+                  )}
+                </div>
+
+                {/* Father / Spouse Name (Compulsory) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <span>Father / Spouse Name</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Parentage for Court Memo</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.fatherOrSpouseName}
+                    onChange={(e) => handleInputChange("fatherOrSpouseName", e.target.value)}
+                    placeholder="e.g. S. Gopakumar Nambiar"
+                    className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.fatherOrSpouseName
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    }`}
+                  />
+                  {errors.fatherOrSpouseName ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.fatherOrSpouseName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Statutory requirement under CPC Order VI Rule 14 &amp; CrPC for memo of parties in civil and criminal petitions.
+                    </span>
+                  )}
+                </div>
+
+                {/* Verified Mobile (Compulsory) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <span>Verified Mobile Number</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">10-Digit Mobile</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.mobileNumber}
+                    onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
+                    placeholder="e.g. 9847122334"
+                    className={`w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.mobileNumber
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    }`}
+                  />
+                  {errors.mobileNumber ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.mobileNumber}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Required for automated court hearing alerts, e-filing OTPs, digital summons service, and counsel consultations.
+                    </span>
+                  )}
+                </div>
+
+                {/* Primary Court Jurisdiction (Compulsory) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <span>Primary Court Jurisdiction</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Judicial Forum</span>
+                  </label>
+                  <select
+                    value={formData.primaryCourtJurisdiction}
+                    onChange={(e) => handleInputChange("primaryCourtJurisdiction", e.target.value)}
+                    className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.primaryCourtJurisdiction
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    }`}
+                  >
+                    <option value="Kerala (High Court of Kerala)">Kerala (High Court of Kerala)</option>
+                    <option value="Delhi (Delhi High Court)">Delhi (Delhi High Court)</option>
+                    <option value="Maharashtra (Bombay High Court)">Maharashtra (Bombay High Court)</option>
+                    <option value="Karnataka (Karnataka High Court)">Karnataka (Karnataka High Court)</option>
+                    <option value="Tamil Nadu (Madras High Court)">Tamil Nadu (Madras High Court)</option>
+                  </select>
+                  {errors.primaryCourtJurisdiction ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.primaryCourtJurisdiction}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Routes petitions to the competent forum and matches your matter with enrolled Bar Council advocates in that court.
+                    </span>
+                  )}
+                </div>
+
+                {/* Permanent Residential Address (Compulsory) */}
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <span>Permanent Residential Address</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">For Court Summons &amp; Service</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.residentialAddress}
+                    onChange={(e) => handleInputChange("residentialAddress", e.target.value)}
+                    placeholder="House/Door No., Building, Street Name, Locality..."
+                    className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.residentialAddress
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    }`}
+                  />
+                  {errors.residentialAddress ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.residentialAddress}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Mandatory under Order VI Rule 14A CPC to establish territorial jurisdiction, bail verification, and service of summons.
+                    </span>
+                  )}
+                </div>
+
+                {/* District & City (Compulsory) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <span>District &amp; City</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">District Forum</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.district}
+                    onChange={(e) => handleInputChange("district", e.target.value)}
+                    placeholder="e.g. Ernakulam"
+                    className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.district
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                    }`}
+                  />
+                  {errors.district ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.district}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Determines District Court territorial competence and local Bar Association advocate assignment.
+                    </span>
+                  )}
+                </div>
+
+                {/* State / UT & Postal Pincode (Compulsory) */}
+                <div className="space-y-1.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* State */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <span>State / UT</span>
+                          <span className="text-red-500 font-bold">*</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1 py-0.2 rounded">
+                          Required
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.state}
+                        onChange={(e) => handleInputChange("state", e.target.value)}
+                        placeholder="e.g. Kerala"
+                        className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                          errors.state
+                            ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                            : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Postal PIN Code */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <span>PIN Code</span>
+                          <span className="text-red-500 font-bold">*</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1 py-0.2 rounded">
+                          Required
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.pincode}
+                        onChange={(e) => handleInputChange("pincode", e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="682036"
+                        maxLength={6}
+                        className={`w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                          errors.pincode
+                            ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                            : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  {errors.state || errors.pincode ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.state || errors.pincode}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Why required: Determines High Court territorial jurisdiction and postal summons delivery under Order V Rule 9 CPC.
+                    </span>
+                  )}
+                </div>
+
+                {/* Additional Non-Compulsory Information Separator */}
+                <div className="md:col-span-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                      Additional Profile &amp; KYC Information (Optional)
+                    </span>
+                    <span className="text-[10px] text-zinc-400">
+                      Helpful for expedited verification &amp; commercial cases
+                    </span>
+                  </div>
+                </div>
+
+                {/* Username / Handle (Optional) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span>Username / Handle</span>
+                      <span className="text-[10px] text-zinc-400 font-normal">Optional</span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Portal ID</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400">@</span>
@@ -338,41 +818,18 @@ export default function CitizenProfileModal({
                     />
                   </div>
                   <span className="text-[10px] text-zinc-500">
-                    Your unique username for portal sign-in, case updates, and lawyer consultations.
+                    Unique handle for portal sign-in, case updates, and lawyer consultations.
                   </span>
                 </div>
 
+                {/* Age & Date of Birth (Optional) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Full Legal Name (as per Aadhaar / Passport)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.fullName}
-                    onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
-                  />
-                  <span className="text-[10px] text-zinc-500">
-                    Used for e-filing Vakalatnamas, court summons, and verified affidavits.
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Father / Spouse Name (for Court Pleadings)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.fatherOrSpouseName}
-                    onChange={(e) => handleInputChange("fatherOrSpouseName", e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Age &amp; Date of Birth
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span>Age &amp; Date of Birth</span>
+                      <span className="text-[10px] text-zinc-400 font-normal">Optional</span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Senior Citizen / Minor Benefit</span>
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -390,90 +847,51 @@ export default function CitizenProfileModal({
                       className="w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                     />
                   </div>
+                  <span className="text-[10px] text-zinc-500">
+                    Used for court priority listing (Senior Citizen Act) and legal capacity verification.
+                  </span>
                 </div>
 
+                {/* Occupation / Profession (Optional) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Occupation / Profession
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span>Occupation / Profession</span>
+                      <span className="text-[10px] text-zinc-400 font-normal">Optional</span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Matter Context</span>
                   </label>
                   <input
                     type="text"
                     value={formData.occupation}
                     onChange={(e) => handleInputChange("occupation", e.target.value)}
-                    placeholder="e.g. Industrialist & Exporter"
+                    placeholder="e.g. Industrialist &amp; Exporter"
                     className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                   />
+                  <span className="text-[10px] text-zinc-500">
+                    Assists matching advocates with sector-specific expertise (e.g. commercial, labor).
+                  </span>
                 </div>
 
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Permanent Residential Address
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.residentialAddress}
-                    onChange={(e) => handleInputChange("residentialAddress", e.target.value)}
-                    placeholder="House/Door No., Building, Street Name..."
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-                  />
-                </div>
-
+                {/* Permanent Account Number (PAN) (Optional) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    District &amp; City
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.district}
-                    onChange={(e) => handleInputChange("district", e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Pincode &amp; State
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      value={formData.pincode}
-                      onChange={(e) => handleInputChange("pincode", e.target.value)}
-                      placeholder="682036"
-                      className="w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      value={formData.state}
-                      onChange={(e) => handleInputChange("state", e.target.value)}
-                      placeholder="Kerala"
-                      className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Verified Mobile (WhatsApp OTP Enabled)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.mobileNumber}
-                    onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs font-mono rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Permanent Account Number (PAN)
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span>Permanent Account Number (PAN)</span>
+                      <span className="text-[10px] text-zinc-400 font-normal">Optional</span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Commercial / Tax</span>
                   </label>
                   <input
                     type="text"
                     value={formData.panNumber}
-                    onChange={(e) => handleInputChange("panNumber", e.target.value)}
+                    onChange={(e) => handleInputChange("panNumber", e.target.value.toUpperCase())}
+                    placeholder="e.g. ABCDE1234F"
                     className="w-full px-3.5 py-2 text-xs font-mono uppercase rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
                   />
+                  <span className="text-[10px] text-zinc-500">
+                    Required for commercial matters, e-court fee refund deposits, and GST invoicing.
+                  </span>
                 </div>
               </div>
             </div>
@@ -724,20 +1142,41 @@ export default function CitizenProfileModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-black dark:text-white">
-                    Primary Court Jurisdiction
+                  <label className="text-xs font-bold text-black dark:text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <span>Primary Court Jurisdiction</span>
+                      <span className="text-red-500 font-bold">*</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/50 px-1.5 py-0.5 rounded ml-1">
+                        Required
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-normal text-zinc-500">Judicial Forum</span>
                   </label>
                   <select
                     value={formData.primaryCourtJurisdiction}
                     onChange={(e) => handleInputChange("primaryCourtJurisdiction", e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                    className={`w-full px-3.5 py-2 text-xs rounded-xl bg-zinc-50 dark:bg-zinc-900 border ${
+                      errors.primaryCourtJurisdiction
+                        ? "border-red-500 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:ring-1 focus:ring-red-500"
+                        : "border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none"
+                    }`}
                   >
-                    <option>Kerala (High Court of Kerala)</option>
-                    <option>Delhi (Delhi High Court)</option>
-                    <option>Maharashtra (Bombay High Court)</option>
-                    <option>Karnataka (Karnataka High Court)</option>
-                    <option>Tamil Nadu (Madras High Court)</option>
+                    <option value="Kerala (High Court of Kerala)">Kerala (High Court of Kerala)</option>
+                    <option value="Delhi (Delhi High Court)">Delhi (Delhi High Court)</option>
+                    <option value="Maharashtra (Bombay High Court)">Maharashtra (Bombay High Court)</option>
+                    <option value="Karnataka (Karnataka High Court)">Karnataka (Karnataka High Court)</option>
+                    <option value="Tamil Nadu (Madras High Court)">Tamil Nadu (Madras High Court)</option>
                   </select>
+                  {errors.primaryCourtJurisdiction ? (
+                    <div className="flex items-center gap-1 text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.primaryCourtJurisdiction}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-zinc-500 block">
+                      Routes petitions and advocate matching to this specific High Court forum.
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">

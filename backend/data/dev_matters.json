@@ -1,5 +1,168 @@
 [
   {
+    "_id": "mat_1794806335347",
+    "citizenId": "dev_1791777513227",
+    "citizenName": "Alex Morgan",
+    "citizenEmail": "alex@example.com",
+    "grievanceId": "grv_1794806335329",
+    "advocateId": "dev_1791778298749",
+    "advocateName": "Adv. Sarah Jenkins",
+    "assignedAdvocate": "Adv. Sarah Jenkins",
+    "matterTitle": "WP(C) 66265/2026 — VAK-02 Verification: Encroachment onto family ancestral parcel",
+    "title": "WP(C) 66265/2026 — VAK-02 Verification: Encroachment onto family ancestral parcel",
+    "matterType": "Property & Real Estate",
+    "caseNumber": "WP(C) 66265/2026",
+    "cnrNumber": "KLHC01-819676-2026",
+    "courtForum": "Munsiff Court / Sub Court, Ernakulam (Appeals: District Court / High Court of Kerala)",
+    "court": "Munsiff Court / Sub Court, Ernakulam (Appeals: District Court / High Court of Kerala)",
+    "courtHall": "Registry Scrutiny Counter",
+    "status": "active",
+    "filingDate": "2026-11-16",
+    "nextHearingDate": "2026-11-30T05:18:55.347Z",
+    "statutoryActs": [
+      "Kerala Land Reforms Act, 1963 (Tenancy rights and ceiling provisions)",
+      "Specific Relief Act, 1963 (Section 5, 6 for recovery of possession, Section 38 for Perpetual Injunction)",
+      "Transfer of Property Act, 1882 (Section 52 Lis Pendens, Section 54 Sale, Section 105 Lease)",
+      "Kerala Survey and Boundaries Act, 1961 (Section 9 & 10 demarcation)",
+      "Real Estate (Regulation and Development) Act, 2016 (K-RERA) (if builder dispute)",
+      "Indian Telegraph Act, 1885 (Section 10/16 compensation if power grid/utility lines)"
+    ],
+    "timeline": [
+      {
+        "date": "16 Nov 2026",
+        "title": "Counsel Engaged & Retained",
+        "remarks": "Retained Adv. Sarah Jenkins for formal legal representation. Consultation and vakalatnama scheduled.",
+        "stage": "Completed"
+      },
+      {
+        "date": "16 Nov 2026",
+        "title": "Legal Grievance & Pre-Filing Intake Submitted",
+        "remarks": "Initial case particulars cataloged for WP(C) 66265/2026. Pre-filing statutory assessment completed.",
+        "stage": "Completed"
+      }
+    ],
+    "totalFeesBilled": 15000,
+    "feesPaid": 0
+  },
+  {
+    "_id": "mat_1794804750377",
+    "citizenId": "dev_1791777513227",
+    "citizenName": "Alex Morgan",
+    "citizenEmail": "alex@example.com",
+    "grievanceId": "grv_1794804750285",
+    "advocateId": "dev_1791778298749",
+    "advocateName": "Adv. Sarah Jenkins",
+    "matterTitle": "OS 94615/2026 — Commercial lease renewal dispute",
+    "matterType": "Commercial Law",
+    "caseNumber": "OS 94615/2026",
+    "cnrNumber": "KLHC01-276944-2026",
+    "courtForum": "Commercial Court / NCLT Kochi Bench / High Court of Kerala",
+    "courtHall": "Court Hall 2A",
+    "status": "active",
+    "nextHearingDate": "2026-11-30T04:52:30.377Z",
+    "statutoryActs": [
+      "Companies Act, 2013 (Section 241/242 Oppression & Mismanagement, Section 447 Fraud)",
+      "Insolvency and Bankruptcy Code (IBC), 2016 (Section 7, 9 Corporate Insolvency Resolution Process)",
+      "Commercial Courts Act, 2015 (Section 12A Mandatory Pre-Institution Mediation)",
+      "Indian Contract Act, 1872 (Section 73, 74 Damages for breach of commercial contract)"
+    ],
+    "timeline": [
+      {
+        "date": "16 Nov 2026",
+        "title": "Legal Grievance Triaged & Counsel Engaged",
+        "remarks": "Initial consultation scheduled with Adv. Sarah Jenkins. Preliminary case grounds drafted.",
+        "stage": "Completed"
+      },
+      {
+        "date": "23 Nov 2026",
+        "title": "Chamber Conference & Document Scrutiny",
+        "remarks": "Verification of title deeds, revenue extracts, and drafting of formal pleadings.",
+        "stage": "Scheduled"
+      }
+    ],
+    "totalFeesBilled": 15000,
+    "feesPaid": 0
+  },
+  {
+    "_id": "mat_1794804356170",
+    "citizenId": "dev_1791777513227",
+    "citizenName": "Alex Morgan",
+    "citizenEmail": "alex@example.com",
+    "grievanceId": "grv_1794804340518",
+    "advocateId": "adv_1",
+    "advocateName": "Adv. Meera Krishnan",
+    "matterTitle": "WP(C) 64801/2026 — Boundary encroachment dispute",
+    "matterType": "Property & Real Estate",
+    "caseNumber": "WP(C) 64801/2026",
+    "cnrNumber": "KLHC01-166478-2026",
+    "courtForum": "Munsiff Court / Sub Court, Kottayam (Appeals: District Court / High Court of Kerala)",
+    "courtHall": "Court Hall 2A",
+    "status": "active",
+    "nextHearingDate": "2026-11-30T04:45:56.171Z",
+    "statutoryActs": [
+      "Kerala Land Reforms Act, 1963 (Tenancy rights and ceiling provisions)",
+      "Specific Relief Act, 1963 (Section 5, 6 for recovery of possession, Section 38 for Perpetual Injunction)",
+      "Transfer of Property Act, 1882 (Section 52 Lis Pendens, Section 54 Sale, Section 105 Lease)",
+      "Kerala Survey and Boundaries Act, 1961 (Section 9 & 10 demarcation)",
+      "Real Estate (Regulation and Development) Act, 2016 (K-RERA) (if builder dispute)",
+      "Indian Telegraph Act, 1885 (Section 10/16 compensation if power grid/utility lines)"
+    ],
+    "timeline": [
+      {
+        "date": "16 Nov 2026",
+        "title": "Legal Grievance Triaged & Counsel Engaged",
+        "remarks": "Initial consultation scheduled with Adv. Meera Krishnan. Preliminary case grounds drafted.",
+        "stage": "Completed"
+      },
+      {
+        "date": "23 Nov 2026",
+        "title": "Chamber Conference & Document Scrutiny",
+        "remarks": "Verification of title deeds, revenue extracts, and drafting of formal pleadings.",
+        "stage": "Scheduled"
+      }
+    ],
+    "totalFeesBilled": 25000,
+    "feesPaid": 0
+  },
+  {
+    "_id": "mat_1794371081332",
+    "citizenId": "dev_1791778051045",
+    "grievanceId": "grv_1794371064821",
+    "advocateId": "dev_1791865395506",
+    "advocateName": "Adv. aby p",
+    "matterTitle": "OS 88204/2026 — Property demarcation and route alignment dispute.",
+    "matterType": "Family & Matrimonial",
+    "caseNumber": "OS 88204/2026",
+    "cnrNumber": "KLHC01-502002-2026",
+    "courtForum": "Family Court, Ernakulam",
+    "courtHall": "Court Hall 2A",
+    "status": "active",
+    "nextHearingDate": "2026-11-25T04:24:41.333Z",
+    "statutoryActs": [
+      "Family Courts Act, 1984 (Section 7 exclusive jurisdiction and conciliation mandate)",
+      "Special Marriage Act, 1954 / Hindu Marriage Act, 1955 / Indian Divorce Act, 1869 (Divorce grounds)",
+      "Protection of Women from Domestic Violence Act, 2005 (PWDVA Section 12, 18, 19, 20, 22)",
+      "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 144 maintenance; corresponds to CrPC 125)",
+      "Guardians and Wards Act, 1890 (Section 7 & 17 child custody and visitation)"
+    ],
+    "timeline": [
+      {
+        "date": "11 Nov 2026",
+        "title": "Legal Grievance Triaged & Counsel Engaged",
+        "remarks": "Initial consultation scheduled with Adv. aby p. Preliminary case grounds drafted.",
+        "stage": "Completed"
+      },
+      {
+        "date": "18 Nov 2026",
+        "title": "Chamber Conference & Document Scrutiny",
+        "remarks": "Verification of title deeds, revenue extracts, and drafting of formal pleadings.",
+        "stage": "Scheduled"
+      }
+    ],
+    "totalFeesBilled": 21000,
+    "feesPaid": 0
+  },
+  {
     "_id": "mat_1792557595989",
     "advocateId": "adv_1",
     "citizenId": "default_citizen",

@@ -525,10 +525,13 @@ export const submitGrievance = async (req, res) => {
         evidenceDocs: evidenceDocs || [],
       });
 
+      const matter = grievance?.matter ? normalizeMatterForClient(grievance.matter) : undefined;
+
       return res.status(201).json({
         success: true,
         message: "Legal grievance submitted and analyzed by Wakheel AI Triage Engine",
         grievance,
+        matter,
         matchedAdvocates,
         mode: "dummy_data",
       });
@@ -548,10 +551,46 @@ export const submitGrievance = async (req, res) => {
       evidenceDocs: evidenceDocs || [],
     });
 
+    const year = new Date().getFullYear();
+    const isWrit =
+      (category || "").includes("Property") ||
+      (category || "").includes("Writ") ||
+      (category || "").includes("Constitutional");
+    const casePrefix = isWrit ? "WP(C)" : "OS";
+    const caseNumber = `${casePrefix} ${Math.floor(10000 + Math.random() * 90000)}/${year}`;
+    const matter = await Matter.create({
+      citizenId: userId,
+      grievanceId: grievance._id,
+      advocateName: "Counsel Matching in Progress",
+      assignedAdvocate: "Counsel Matching in Progress",
+      matterTitle: `${caseNumber} — ${title.trim()}`,
+      title: `${caseNumber} — ${title.trim()}`,
+      matterType: category || "Civil Litigation",
+      caseNumber,
+      cnrNumber: `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${year}`,
+      courtForum: preferredCourt || aiTriageResult.jurisdictionForum || "High Court of Kerala / District Court",
+      court: preferredCourt || aiTriageResult.jurisdictionForum || "High Court of Kerala / District Court",
+      courtHall: "Registry Scrutiny Counter",
+      status: "Pre Filing",
+      filingDate: new Date().toISOString().split("T")[0],
+      statutoryActs: aiTriageResult.applicableActs || [],
+      timeline: [
+        {
+          date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+          title: "Legal Grievance & Pre-Filing Intake Submitted",
+          remarks: `Initial case particulars cataloged for ${caseNumber}. Pre-filing statutory assessment completed.`,
+          stage: "Completed",
+        },
+      ],
+    });
+    grievance.linkedMatterId = matter._id;
+    await grievance.save();
+
     res.status(201).json({
       success: true,
       message: "Legal grievance submitted and analyzed by Wakheel AI Triage",
       grievance,
+      matter: normalizeMatterForClient(matter),
       matchedAdvocates,
       mode: "cloud_db",
     });
@@ -651,7 +690,13 @@ export const matchAdvocateForGrievance = async (req, res) => {
     await grievance.save();
 
     let matter = await Matter.findOne({ grievanceId: grievance._id });
-    if (!matter) {
+    if (matter) {
+      matter.advocateId = advocateId;
+      matter.advocateName = advDisplayName;
+      matter.assignedAdvocate = advDisplayName;
+      matter.status = "active";
+      await matter.save();
+    } else {
       const year = new Date().getFullYear();
       const caseNumber = `OS ${Math.floor(10000 + Math.random() * 90000)}/${year}`;
       matter = await Matter.create({
@@ -659,7 +704,9 @@ export const matchAdvocateForGrievance = async (req, res) => {
         grievanceId: grievance._id,
         advocateId,
         advocateName: advDisplayName,
-        matterTitle: `${caseNumber} - ${grievance.title}`,
+        assignedAdvocate: advDisplayName,
+        matterTitle: `${caseNumber} — ${grievance.title}`,
+        title: `${caseNumber} — ${grievance.title}`,
         matterType: grievance.category || "Civil Litigation",
         caseNumber,
         cnrNumber: `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${year}`,
@@ -673,7 +720,7 @@ export const matchAdvocateForGrievance = async (req, res) => {
       success: true,
       message: "Advocate successfully engaged for grievance",
       grievance,
-      matter,
+      matter: normalizeMatterForClient(matter),
       advocate,
       mode: "cloud_db",
     });

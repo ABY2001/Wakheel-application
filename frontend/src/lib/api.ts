@@ -236,6 +236,22 @@ export const citizenApi = {
     } catch (err) {
       console.warn("Failed to submit grievance to backend, using fallback:", err);
       const fallbackId = `grv_${Date.now()}`;
+      const fallbackYear = new Date().getFullYear();
+      const fallbackCaseNo = `OS ${Math.floor(10000 + Math.random() * 90000)}/${fallbackYear}`;
+      const fallbackMatter = {
+        _id: `mat_${fallbackId}`,
+        id: `mat_${fallbackId}`,
+        caseNumber: fallbackCaseNo,
+        cnrNumber: `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${fallbackYear}`,
+        matterTitle: `${fallbackCaseNo} — ${data.title}`,
+        title: `${fallbackCaseNo} — ${data.title}`,
+        matterType: data.category || "Civil Litigation",
+        courtForum: `High Court of Kerala / District Court, ${data.jurisdictionDistrict || "Ernakulam"}`,
+        advocateName: "Counsel Matching in Progress",
+        assignedAdvocate: "Counsel Matching in Progress",
+        status: "Pre Filing",
+        filingDate: new Date().toISOString().split("T")[0],
+      };
       return {
         success: true,
         grievance: {
@@ -247,6 +263,8 @@ export const citizenApi = {
           jurisdictionDistrict: data.jurisdictionDistrict,
           urgencyLevel: data.urgencyLevel,
           status: "triage_analyzed",
+          caseNumber: fallbackCaseNo,
+          linkedMatterId: fallbackMatter._id,
           createdAt: new Date().toISOString(),
           aiTriage: {
             summary: `Preliminary AI assessment cataloged under Kerala ${data.category || "Civil"} Jurisdiction. Matches with empanelled High Court advocates.`,
@@ -267,6 +285,7 @@ export const citizenApi = {
             recommendedSpecialization: "Civil & Land Revenue Practice",
           },
         },
+        matter: fallbackMatter,
         matchedAdvocates: [],
         mode: "fallback",
       };

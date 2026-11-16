@@ -195,5 +195,68 @@
       }
     ],
     "lastUpdated": "2026-10-23T06:15:44.500Z"
+  },
+  "mat_1792557595960": {
+    "matterId": "mat_1792557595960",
+    "matterTitle": "Test Petitioner v. State of Kerala",
+    "caseNumber": "WP(C) 99881/2026",
+    "courtForum": "High Court of Kerala (Ernakulam)",
+    "bench": "Court Hall 2A",
+    "coram": "Hon'ble Presiding Judge",
+    "hearingStage": "Hearing on Admission / Preliminary Objections",
+    "itemNumber": "Item #12",
+    "listedDate": "04 Nov 2026",
+    "issues": [
+      {
+        "id": "iss-dyn-1",
+        "issueNumber": "I",
+        "title": "Maintainability & Prima Facie Cause of Action",
+        "question": "Whether the matter discloses a justiciable cause of action under Article 226 of the Constitution of India?",
+        "status": "Strong Favourable",
+        "governingLaw": "Article 226 of the Constitution of India",
+        "isCore": true
+      }
+    ],
+    "precedents": [
+      {
+        "id": "prec-dyn-1",
+        "citation": "2024 (2) KHC 401",
+        "caseName": "Valsamma & Ors. v. KSEB",
+        "court": "High Court of Kerala",
+        "benchCoram": "Division Bench",
+        "ratio": "Statutory powers must be exercised strictly within prescribed statutory procedural parameters.",
+        "keyParagraphs": "Para 14",
+        "howToApply": "Cite in opening arguments.",
+        "isBookmarked": true
+      }
+    ],
+    "benchInquiries": [
+      {
+        "id": "bi-dyn-1",
+        "question": "Counsel, what is the precise ad-interim relief sought today?",
+        "rebuttalAnswer": "My Lord, maintaining status quo pending receipt of respondent records.",
+        "difficulty": "Medium",
+        "supportingExhibits": "Pleading Affidavit"
+      }
+    ],
+    "speakingNotes": [
+      {
+        "order": 1,
+        "timeMark": "00:00 - 02:00",
+        "heading": "Brief Factual Background",
+        "content": "May it please your Honour: Outlining the sequence of events leading to this petition under Article 226 of the Constitution of India.",
+        "focusExhibit": "Exhibit P-1"
+      }
+    ],
+    "witnessQuestions": [],
+    "evidenceExhibits": [
+      {
+        "mark": "Ext. 1",
+        "title": "Primary Impugned Document / Deed",
+        "verified": true,
+        "admissibility": "Admitted"
+      }
+    ],
+    "lastUpdated": "2026-11-11T04:25:47.802Z"
   }
 }

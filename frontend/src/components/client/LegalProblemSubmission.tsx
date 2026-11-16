@@ -14,6 +14,8 @@ import {
   Star,
   Clock,
   ShieldCheck,
+  LayoutDashboard,
+  Briefcase,
 } from "lucide-react";
 import { citizenApi } from "@/lib/api";
 
@@ -21,6 +23,7 @@ interface LegalProblemSubmissionProps {
   onSubmitted?: () => void;
   onViewMatters?: () => void;
   onOpenConsultation?: (advocateName: string) => void;
+  onNavigateTab?: (tab: string) => void;
 }
 
 const CATEGORIES = [
@@ -54,6 +57,7 @@ const KERALA_DISTRICTS = [
 export function LegalProblemSubmission({
   onSubmitted,
   onViewMatters,
+  onNavigateTab,
 }: LegalProblemSubmissionProps = {}) {
   // Stepper state: 1: Category, 2: Location & Details, 3: Review & Submit, 4: Confirmed Success
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -133,7 +137,10 @@ export function LegalProblemSubmission({
       });
 
       const grievance = res?.grievance || {};
+      const matter = res?.matter || grievance?.matter || {};
       const grvId = grievance._id || grievance.id || `grv_${Date.now()}`;
+      const caseNumber =
+        matter.caseNumber || grievance.caseNumber || `KLHC01-${Math.floor(10000 + Math.random() * 90000)}/${new Date().getFullYear()}`;
       const triage = grievance.aiTriage || {};
       const matched =
         res?.matchedAdvocates && res.matchedAdvocates.length > 0
@@ -144,6 +151,8 @@ export function LegalProblemSubmission({
 
       setSubmissionSuccess({
         referenceId: grievance._id || `KL-LEAD-${Date.now().toString().slice(-4)}`,
+        caseNumber,
+        matterId: matter._id || matter.id,
         grievanceId: grvId,
         category: selectedCategory,
         location: `${selectedDistrict}, ${stateCountry}`,
@@ -173,8 +182,10 @@ export function LegalProblemSubmission({
     } catch (err) {
       console.warn("Using offline submission fallback:", err);
       const fallbackId = `grv_offline_${Date.now()}`;
+      const fallbackCaseNo = `OS ${Math.floor(10000 + Math.random() * 90000)}/${new Date().getFullYear()}`;
       setSubmissionSuccess({
         referenceId: `KL-LEAD-${Date.now().toString().slice(-4)}`,
+        caseNumber: fallbackCaseNo,
         grievanceId: fallbackId,
         category: selectedCategory,
         location: `${selectedDistrict}, ${stateCountry}`,
@@ -556,22 +567,48 @@ export function LegalProblemSubmission({
         {currentStep === 4 && submissionSuccess && (
           <div className="space-y-6 animate-in zoom-in-95 duration-200">
             {/* Success Banner */}
-            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs font-bold">
-                <Check className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="text-sm sm:text-base font-extrabold text-black dark:text-white">
-                    Legal Grievance Successfully Submitted!
-                  </h4>
-                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-black dark:text-white">
-                    Ref: {submissionSuccess.referenceId}
-                  </span>
+            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs font-bold">
+                  <Check className="w-5 h-5" />
                 </div>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Your grievance has been logged and matched for advocate review in {selectedDistrict}.
-                </p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-sm sm:text-base font-extrabold text-black dark:text-white">
+                      Legal Grievance &amp; Matter Successfully Filed!
+                    </h4>
+                    <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-black border border-zinc-300 dark:border-zinc-700 text-black dark:text-white">
+                      Docket: {submissionSuccess.caseNumber || submissionSuccess.referenceId}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+                      Pre-Filing Docket Active
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    Your legal matter has been cataloged into your active docket and matched for advocate review in {selectedDistrict}. You can engage counsel below or view this matter directly on your dashboard.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => (onNavigateTab ? onNavigateTab("dashboard") : onViewMatters?.())}
+                  className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs shadow-xs hover:opacity-90 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>View in Dashboard</span>
+                </button>
+                {onViewMatters && (
+                  <button
+                    type="button"
+                    onClick={onViewMatters}
+                    className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-black dark:text-white font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    <span>My Matters</span>
+                  </button>
+                )}
               </div>
             </div>
 

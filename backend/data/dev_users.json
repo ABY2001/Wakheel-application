@@ -11,10 +11,10 @@
   },
   {
     "_id": "dev_1791778051045",
-    "fullName": "gggg",
+    "fullName": "shabin",
     "email": "abyworkmail123@gmail.com",
     "password": "$2a$10$eb2U7hOcHBlJ6vehAXFKKe5y37Zwqzhh12G7fgQ.ZqQmMUbJzjeem",
-    "role": "advocate",
+    "role": "client",
     "verifyMethod": "email",
     "isVerified": false,
     "createdAt": "2026-10-12T04:07:31.046Z",
@@ -24,7 +24,8 @@
     "teamSize": "6-20 Attorneys & Staff",
     "firmRegistration": "",
     "icsiNumber": "444",
-    "icaiNumber": ""
+    "icaiNumber": "",
+    "username": "shabin"
   },
   {
     "_id": "dev_1791778298749",

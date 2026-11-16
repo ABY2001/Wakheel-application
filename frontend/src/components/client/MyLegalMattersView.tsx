@@ -46,6 +46,7 @@ interface MyLegalMattersViewProps {
   onOpenConsultation?: () => void;
   onNavigateTab?: (tab: string) => void;
   initialShowCnrTracker?: boolean;
+  onMatterCreated?: (matter?: any) => void;
 }
 
 export function MyLegalMattersView({
@@ -53,6 +54,7 @@ export function MyLegalMattersView({
   onOpenConsultation,
   onNavigateTab,
   initialShowCnrTracker = false,
+  onMatterCreated,
 }: MyLegalMattersViewProps = {}) {
   const [matters, setMatters] = useState<LegalMatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,6 +149,7 @@ export function MyLegalMattersView({
         ],
       };
       setMatters((prev) => [createdItem, ...prev]);
+      onMatterCreated?.(createdItem);
       setShowCreateModal(false);
       setNewPetitionTitle("");
       setNewPetitionSummary("");
@@ -176,6 +179,7 @@ export function MyLegalMattersView({
         ],
       };
       setMatters((prev) => [createdItem, ...prev]);
+      onMatterCreated?.(createdItem);
       setShowCreateModal(false);
       setNewPetitionTitle("");
       setNewPetitionSummary("");
@@ -185,46 +189,42 @@ export function MyLegalMattersView({
   };
 
   // Sync matters from backend API on mount
-  useEffect(() => {
-    const fetchMatters = async () => {
-      setIsLoading(true);
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("wakheel_token") || ""
-          : "";
-      try {
-        if (!token) {
-          setMatters([]);
-          setIsLoading(false);
-          return;
-        }
-        const res = await citizenApi.getMatters(token);
-        if (res?.success && Array.isArray(res.matters)) {
-          const normalized: LegalMatter[] = res.matters.map((m: any) => ({
-            id: m.id || m._id,
-            caseNumber: m.caseNumber || "Pending Case No.",
-            title: m.title || m.matterTitle || "Legal Matter",
-            court: m.court || m.courtForum || "Court Forum Pending",
-            assignedAdvocate: m.assignedAdvocate || m.advocateName || "Pending Counsel Assignment",
-            nextHearing: m.nextHearing || (m.nextHearingDate ? `${new Date(m.nextHearingDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${m.courtHall || "Bench Pending"})` : "Not Scheduled"),
-            filingDate: m.filingDate || (m.createdAt ? m.createdAt.split("T")[0] : new Date().toISOString().split("T")[0]),
-            status: m.status === "active" ? "Admitted" : m.status === "notice_issued" ? "Notice Issued" : (m.status || "Pre Filing"),
-            cnrNumber: m.cnrNumber || "",
-            courtHall: m.courtHall || "Pending",
-            statutoryActs: m.statutoryActs || [],
-            timeline: m.timeline || [],
-          }));
-          setMatters(normalized);
-        } else {
-          setMatters([]);
-        }
-      } catch (err) {
-        console.warn("Could not fetch matters from backend:", err);
+  const fetchMatters = async () => {
+    setIsLoading(true);
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "dev_token"
+        : "dev_token";
+    try {
+      const res = await citizenApi.getMatters(token);
+      if (res?.success && Array.isArray(res.matters)) {
+        const normalized: LegalMatter[] = res.matters.map((m: any) => ({
+          id: m.id || m._id,
+          caseNumber: m.caseNumber || "Pending Case No.",
+          title: m.title || m.matterTitle || "Legal Matter",
+          court: m.court || m.courtForum || "Court Forum Pending",
+          assignedAdvocate: m.assignedAdvocate || m.advocateName || "Pending Counsel Assignment",
+          nextHearing: m.nextHearing || (m.nextHearingDate ? `${new Date(m.nextHearingDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} (${m.courtHall || "Bench Pending"})` : "Not Scheduled"),
+          filingDate: m.filingDate || (m.createdAt ? m.createdAt.split("T")[0] : new Date().toISOString().split("T")[0]),
+          status: m.status === "active" ? "Admitted" : m.status === "notice_issued" ? "Notice Issued" : (m.status || "Pre Filing"),
+          cnrNumber: m.cnrNumber || "",
+          courtHall: m.courtHall || "Pending",
+          statutoryActs: m.statutoryActs || [],
+          timeline: m.timeline || [],
+        }));
+        setMatters(normalized);
+      } else {
         setMatters([]);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (err) {
+      console.warn("Could not fetch matters from backend:", err);
+      setMatters([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMatters();
   }, []);
 

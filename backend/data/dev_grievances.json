@@ -1,5 +1,442 @@
 [
   {
+    "_id": "grv_1794806335329",
+    "citizenId": "dev_1791777513227",
+    "title": "VAK-02 Verification: Encroachment onto family ancestral parcel",
+    "description": "Adjoining landowner has encroached 4 meters into our survey demarcated parcel in Ernakulam.",
+    "category": "Property & Real Estate",
+    "jurisdictionDistrict": "Ernakulam",
+    "preferredCourt": "Munsiff Court / Sub Court, Ernakulam (Appeals: District Court / High Court of Kerala)",
+    "urgencyLevel": "High",
+    "status": "matter_opened",
+    "aiTriage": {
+      "summary": "Dispute involves immovable landed property or title demarcation within Ernakulam. Prima facie concerns ownership chain, boundary encroachment, or utility route compliance.",
+      "applicableActs": [
+        "Kerala Land Reforms Act, 1963 (Tenancy rights and ceiling provisions)",
+        "Specific Relief Act, 1963 (Section 5, 6 for recovery of possession, Section 38 for Perpetual Injunction)",
+        "Transfer of Property Act, 1882 (Section 52 Lis Pendens, Section 54 Sale, Section 105 Lease)",
+        "Kerala Survey and Boundaries Act, 1961 (Section 9 & 10 demarcation)",
+        "Real Estate (Regulation and Development) Act, 2016 (K-RERA) (if builder dispute)",
+        "Indian Telegraph Act, 1885 (Section 10/16 compensation if power grid/utility lines)"
+      ],
+      "suggestedRemedies": [
+        "Issue formal Statutory Legal Notice demanding immediate cessation of encroachment",
+        "File Original Suit (OS) for Permanent Prohibitory Injunction before Munsiff Court",
+        "Petition under Order XXVI Rule 9 CPC for Advocate Commissioner inspection with Taluk Surveyor to prepare Mahazar",
+        "Lodge Caveat Petition under Section 148A CPC before Sub Court / Munsiff Court to prevent ex-parte orders"
+      ],
+      "estimatedCourtFee": "₹1,500 - ₹5,000 as per Section 27 / Schedule I of Kerala Court Fees and Suits Valuation Act, 1959",
+      "recommendedSpecialization": "Civil, Property & Land Revenue Counsel",
+      "jurisdictionForum": "Munsiff Court / Sub Court, Ernakulam (Appeals: District Court / High Court of Kerala)",
+      "riskScore": "Moderate",
+      "statutoryLimitation": "3 years from the date of threat or dispossession (Articles 64, 65, 58 of Limitation Act, 1963)"
+    },
+    "matchedAdvocates": [
+      {
+        "id": "dev_1791778298749",
+        "fullName": "Adv. Sarah Jenkins",
+        "barCouncilNumber": "K/001429/2024",
+        "experienceYears": 10,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Constitutional Writs",
+          "Land Reforms & Property",
+          "Commercial Arbitration"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 38,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791865395506",
+        "fullName": "Adv. aby p",
+        "barCouncilNumber": "K/004766/2012",
+        "experienceYears": 7,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 2100,
+        "rating": 4.9,
+        "reviewCount": 34,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791970345826",
+        "fullName": "Adv. Counsel 3210",
+        "barCouncilNumber": "K/002062/2020",
+        "experienceYears": 18,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 30,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      }
+    ],
+    "evidenceDocs": [],
+    "createdAt": "2026-11-16T05:18:55.330Z",
+    "linkedMatterId": "mat_1794806335347",
+    "caseNumber": "WP(C) 66265/2026",
+    "assignedAdvocateId": "dev_1791778298749",
+    "assignedAdvocateName": "Adv. Sarah Jenkins",
+    "citizenName": "Alex Morgan"
+  },
+  {
+    "_id": "grv_1794804750285",
+    "citizenId": "dev_1791777513227",
+    "title": "Commercial lease renewal dispute",
+    "description": "Tenant refusal to vacate commercial property at MG Road, Kochi",
+    "category": "Commercial Law",
+    "jurisdictionDistrict": "Ernakulam",
+    "preferredCourt": "Commercial Court / NCLT Kochi Bench / High Court of Kerala",
+    "urgencyLevel": "Medium",
+    "status": "matter_opened",
+    "aiTriage": {
+      "summary": "Commercial enterprise grievance within Ernakulam. Evaluated under statutory company law, director duties, contract enforcement, and insolvency frameworks.",
+      "applicableActs": [
+        "Companies Act, 2013 (Section 241/242 Oppression & Mismanagement, Section 447 Fraud)",
+        "Insolvency and Bankruptcy Code (IBC), 2016 (Section 7, 9 Corporate Insolvency Resolution Process)",
+        "Commercial Courts Act, 2015 (Section 12A Mandatory Pre-Institution Mediation)",
+        "Indian Contract Act, 1872 (Section 73, 74 Damages for breach of commercial contract)"
+      ],
+      "suggestedRemedies": [
+        "Initiate mandatory Pre-Institution Mediation under Section 12A of Commercial Courts Act before Kerala DLSA",
+        "Issue Statutory Demand Notice in Form 3/4 under Section 8 of IBC for undisputed operational/financial debts",
+        "File Company Petition before National Company Law Tribunal (NCLT) Kochi Bench",
+        "File Commercial Summary Suit with application for urgent Attachment Before Judgment (Order XXXVIII Rule 5 CPC)"
+      ],
+      "estimatedCourtFee": "Prescribed NCLT schedule fees / Ad-valorem commercial court fee under Kerala Court Fees Act",
+      "recommendedSpecialization": "Corporate, NCLT & Commercial Litigation Counsel",
+      "jurisdictionForum": "Commercial Court / NCLT Kochi Bench / High Court of Kerala",
+      "riskScore": "High",
+      "statutoryLimitation": "3 years from the date of contract default / financial debt maturity (Article 55 Limitation Act, 1963)"
+    },
+    "matchedAdvocates": [
+      {
+        "id": "dev_1791778298749",
+        "fullName": "Adv. Sarah Jenkins",
+        "barCouncilNumber": "K/001429/2024",
+        "experienceYears": 10,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Constitutional Writs",
+          "Land Reforms & Property",
+          "Commercial Arbitration"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 38,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791865395506",
+        "fullName": "Adv. aby p",
+        "barCouncilNumber": "K/004766/2012",
+        "experienceYears": 7,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 2100,
+        "rating": 4.9,
+        "reviewCount": 34,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791970345826",
+        "fullName": "Adv. Counsel 3210",
+        "barCouncilNumber": "K/002062/2020",
+        "experienceYears": 18,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 30,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      }
+    ],
+    "evidenceDocs": [],
+    "createdAt": "2026-11-16T04:52:30.286Z",
+    "assignedAdvocateId": "dev_1791778298749",
+    "assignedAdvocateName": "Adv. Sarah Jenkins",
+    "citizenName": "Alex Morgan",
+    "linkedMatterId": "mat_1794804750377"
+  },
+  {
+    "_id": "grv_1794804340518",
+    "citizenId": "dev_1791777513227",
+    "title": "Boundary encroachment dispute",
+    "description": "Neighbour moved boundary markers on family land in Kottayam",
+    "category": "Property & Real Estate",
+    "jurisdictionDistrict": "Kottayam",
+    "preferredCourt": "Munsiff Court / Sub Court, Kottayam (Appeals: District Court / High Court of Kerala)",
+    "urgencyLevel": "Medium",
+    "status": "matter_opened",
+    "aiTriage": {
+      "summary": "Dispute involves immovable landed property or title demarcation within Kottayam. Prima facie concerns ownership chain, boundary encroachment, or utility route compliance.",
+      "applicableActs": [
+        "Kerala Land Reforms Act, 1963 (Tenancy rights and ceiling provisions)",
+        "Specific Relief Act, 1963 (Section 5, 6 for recovery of possession, Section 38 for Perpetual Injunction)",
+        "Transfer of Property Act, 1882 (Section 52 Lis Pendens, Section 54 Sale, Section 105 Lease)",
+        "Kerala Survey and Boundaries Act, 1961 (Section 9 & 10 demarcation)",
+        "Real Estate (Regulation and Development) Act, 2016 (K-RERA) (if builder dispute)",
+        "Indian Telegraph Act, 1885 (Section 10/16 compensation if power grid/utility lines)"
+      ],
+      "suggestedRemedies": [
+        "Issue formal Statutory Legal Notice demanding immediate cessation of encroachment",
+        "File Original Suit (OS) for Permanent Prohibitory Injunction before Munsiff Court",
+        "Petition under Order XXVI Rule 9 CPC for Advocate Commissioner inspection with Taluk Surveyor to prepare Mahazar",
+        "Lodge Caveat Petition under Section 148A CPC before Sub Court / Munsiff Court to prevent ex-parte orders"
+      ],
+      "estimatedCourtFee": "₹1,500 - ₹5,000 as per Section 27 / Schedule I of Kerala Court Fees and Suits Valuation Act, 1959",
+      "recommendedSpecialization": "Civil, Property & Land Revenue Counsel",
+      "jurisdictionForum": "Munsiff Court / Sub Court, Kottayam (Appeals: District Court / High Court of Kerala)",
+      "riskScore": "Moderate",
+      "statutoryLimitation": "3 years from the date of threat or dispossession (Articles 64, 65, 58 of Limitation Act, 1963)"
+    },
+    "matchedAdvocates": [
+      {
+        "id": "dev_1791778298749",
+        "fullName": "Adv. Sarah Jenkins",
+        "barCouncilNumber": "K/001429/2024",
+        "experienceYears": 10,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Constitutional Writs",
+          "Land Reforms & Property",
+          "Commercial Arbitration"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 38,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791865395506",
+        "fullName": "Adv. aby p",
+        "barCouncilNumber": "K/004766/2012",
+        "experienceYears": 7,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 2100,
+        "rating": 4.9,
+        "reviewCount": 34,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791970345826",
+        "fullName": "Adv. Counsel 3210",
+        "barCouncilNumber": "K/002062/2020",
+        "experienceYears": 18,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 30,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      }
+    ],
+    "evidenceDocs": [],
+    "createdAt": "2026-11-16T04:45:40.519Z",
+    "assignedAdvocateId": "adv_1",
+    "assignedAdvocateName": "Adv. Meera Krishnan",
+    "citizenName": "Alex Morgan",
+    "linkedMatterId": "mat_1794804356170"
+  },
+  {
+    "_id": "grv_1794371064821",
+    "citizenId": "dev_1791778051045",
+    "title": "Property demarcation and route alignment dispute.",
+    "description": "Property demarcation and route alignment dispute.",
+    "category": "Family & Matrimonial",
+    "jurisdictionDistrict": "Ernakulam",
+    "preferredCourt": "Family Court, Ernakulam",
+    "urgencyLevel": "Medium",
+    "status": "matter_opened",
+    "aiTriage": {
+      "summary": "Domestic relations grievance within Ernakulam requiring matrimonial conciliation, custody determination, or statutory protection.",
+      "applicableActs": [
+        "Family Courts Act, 1984 (Section 7 exclusive jurisdiction and conciliation mandate)",
+        "Special Marriage Act, 1954 / Hindu Marriage Act, 1955 / Indian Divorce Act, 1869 (Divorce grounds)",
+        "Protection of Women from Domestic Violence Act, 2005 (PWDVA Section 12, 18, 19, 20, 22)",
+        "Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023 (Section 144 maintenance; corresponds to CrPC 125)",
+        "Guardians and Wards Act, 1890 (Section 7 & 17 child custody and visitation)"
+      ],
+      "suggestedRemedies": [
+        "Participate in pre-litigation Family Court counselling and mediation session",
+        "File Original Petition (OP) for Dissolution of Marriage / Restitution of Conjugal Rights before Family Court",
+        "File Application for Interim Maintenance under Section 144 BNSS / Section 24 HMA",
+        "Petition for Interim Protection & Residence Order under Section 12 PWDVA if immediate safety concerns exist"
+      ],
+      "estimatedCourtFee": "Fixed nominal court fees (₹50 to ₹100 per petition) under Kerala Court Fees Act",
+      "recommendedSpecialization": "Family Law & Matrimonial Advocate",
+      "jurisdictionForum": "Family Court, Ernakulam",
+      "riskScore": "Moderate",
+      "statutoryLimitation": "Continuing cause of action for maintenance and residence; statutory periods apply for fault-based divorce"
+    },
+    "matchedAdvocates": [
+      {
+        "id": "adv_3",
+        "fullName": "Adv. Fathima Zahra",
+        "barCouncilNumber": "K/002105/2017",
+        "experienceYears": 7,
+        "primaryCourt": "District & Sessions Court, Kozhikode",
+        "chamberAddress": "Courts Road, Kozhikode, Kerala",
+        "specializations": [
+          "Family & Matrimonial",
+          "Criminal Law & Bail",
+          "Consumer Disputes"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1000,
+        "rating": 4.9,
+        "reviewCount": 29,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 90
+      },
+      {
+        "id": "dev_1791778298749",
+        "fullName": "Adv. Sarah Jenkins",
+        "barCouncilNumber": "K/001429/2024",
+        "experienceYears": 10,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Constitutional Writs",
+          "Land Reforms & Property",
+          "Commercial Arbitration"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 1500,
+        "rating": 4.9,
+        "reviewCount": 38,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 50
+      },
+      {
+        "id": "dev_1791865395506",
+        "fullName": "Adv. aby p",
+        "barCouncilNumber": "K/004766/2012",
+        "experienceYears": 7,
+        "primaryCourt": "High Court of Kerala (Ernakulam)",
+        "chamberAddress": "Chamber Suite, High Court Road, Marine Drive, Kochi 682031",
+        "specializations": [
+          "Civil Litigation",
+          "Constitutional Writs",
+          "Commercial Law"
+        ],
+        "languages": [
+          "English",
+          "Malayalam"
+        ],
+        "consultationFee": 2100,
+        "rating": 4.9,
+        "reviewCount": 34,
+        "isVerified": true,
+        "availableToday": true,
+        "matchScore": 50
+      }
+    ],
+    "evidenceDocs": [],
+    "createdAt": "2026-11-11T04:24:24.821Z",
+    "assignedAdvocateId": "dev_1791865395506",
+    "assignedAdvocateName": "Adv. aby p",
+    "linkedMatterId": "mat_1794371081332"
+  },
+  {
     "_id": "grv_1792497331439",
     "citizenId": "default_citizen",
     "title": "Rubber plantation boundary dispute",

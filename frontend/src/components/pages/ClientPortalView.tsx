@@ -2279,7 +2279,7 @@ export function ClientPortalView() {
                       </p>
                     </div>
                     <button
-                      onClick={() => setActiveTab("case-tracking")}
+                      onClick={() => setActiveTab("my-matters")}
                       className="text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white inline-flex items-center gap-1 cursor-pointer"
                     >
                       <span>View All</span>
@@ -2288,47 +2288,76 @@ export function ClientPortalView() {
                   </div>
 
                   {matters.length > 0 ? (
-                    matters.map((matter) => (
-                      <div
-                        key={matter._id}
-                        className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-bold text-black dark:text-white">
-                            {matter.caseNumber || matter.cnrNumber}
-                          </span>
-                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />
-                            {matter.status === "active" ? "Admitted" : matter.status === "notice_issued" ? "Notice Issued" : "In Progress"}
-                          </span>
-                        </div>
+                    matters.map((matter) => {
+                      const matterId = matter._id || matter.id;
+                      const caseRef = matter.caseNumber || matter.cnrNumber || "Pre-Filing Docket";
+                      const matterTitle = matter.matterTitle || matter.title || "Legal Matter";
+                      const courtForum = matter.courtForum || matter.court || "High Court of Kerala / District Court";
+                      const advocateName = matter.advocateName || matter.assignedAdvocate || "Counsel Matching in Progress";
+                      const isPreFiling =
+                        matter.status === "Pre Filing" ||
+                        matter.status === "pending_review" ||
+                        matter.status === "triage_analyzed";
+                      const statusLabel =
+                        matter.status === "active"
+                          ? "Admitted"
+                          : matter.status === "notice_issued"
+                          ? "Notice Issued"
+                          : isPreFiling
+                          ? "Pre-Filing Docket"
+                          : (matter.status || "In Progress");
 
-                        <div className="space-y-1">
-                          <h4 className="text-base font-bold text-black dark:text-white">
-                            {matter.matterTitle}
-                          </h4>
-                          <p className="text-xs text-zinc-500">
-                            Court: {matter.courtForum} • Advocate: {matter.advocateName}
-                          </p>
-                        </div>
+                      return (
+                        <div
+                          key={matterId}
+                          className="p-6 rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-mono font-bold text-black dark:text-white">
+                              {caseRef}
+                            </span>
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5">
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  isPreFiling ? "bg-amber-500 animate-pulse" : "bg-black dark:bg-white"
+                                }`}
+                              />
+                              {statusLabel}
+                            </span>
+                          </div>
 
-                        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-900 text-xs">
-                          <span className="text-zinc-400 font-mono text-[11px]">
-                            Next Hearing: {matter.nextHearingDate ? new Date(matter.nextHearingDate).toLocaleDateString() : "Listed for hearing"}
-                          </span>
-                          <button
-                            onClick={() => {
-                              setTrackerCnr(matter.cnrNumber || matter.caseNumber);
-                              setTrackedMatter(matter);
-                              setActiveTab("case-tracking");
-                            }}
-                            className="px-4 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold text-xs text-black dark:text-white cursor-pointer"
-                          >
-                            Matter Details
-                          </button>
+                          <div className="space-y-1">
+                            <h4 className="text-base font-bold text-black dark:text-white">
+                              {matterTitle}
+                            </h4>
+                            <p className="text-xs text-zinc-500">
+                              Court: {courtForum} • Advocate: {advocateName}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-900 text-xs">
+                            <span className="text-zinc-400 font-mono text-[11px]">
+                              Next Hearing:{" "}
+                              {matter.nextHearing ||
+                                (matter.nextHearingDate
+                                  ? new Date(matter.nextHearingDate).toLocaleDateString()
+                                  : "Listed for hearing / Scrutiny")}
+                            </span>
+                            <button
+                              onClick={() => {
+                                setTrackerCnr(matter.cnrNumber || matter.caseNumber);
+                                setTrackedMatter(matter);
+                                setSelectedMatter(matterTitle);
+                                setActiveTab("case-tracking");
+                              }}
+                              className="px-4 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold text-xs text-black dark:text-white cursor-pointer"
+                            >
+                              Matter Details
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="p-8 text-center rounded-2xl bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 space-y-3">
                       <Scale className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700" />
@@ -2336,13 +2365,22 @@ export function ClientPortalView() {
                       <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                         You do not have any court matters on your docket yet. Track an active case by CNR or submit a new grievance to get started.
                       </p>
-                      <button
-                        onClick={() => setActiveTab("case-tracking")}
-                        className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90 inline-flex items-center gap-1.5"
-                      >
-                        <Activity className="w-3.5 h-3.5" />
-                        <span>Track Case by CNR</span>
-                      </button>
+                      <div className="flex items-center justify-center gap-3 pt-1">
+                        <button
+                          onClick={() => setActiveTab("find-legal-help")}
+                          className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer hover:opacity-90 inline-flex items-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Submit Legal Issue</span>
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("case-tracking")}
+                          className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold text-xs cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 inline-flex items-center gap-1.5 text-black dark:text-white"
+                        >
+                          <Activity className="w-3.5 h-3.5" />
+                          <span>Track by CNR</span>
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -2473,6 +2511,7 @@ export function ClientPortalView() {
               <LegalProblemSubmission
                 onSubmitted={loadCitizenData}
                 onViewMatters={() => setActiveTab("my-matters")}
+                onNavigateTab={(tab) => setActiveTab(tab)}
               />
             </div>
           )}
@@ -2566,6 +2605,7 @@ export function ClientPortalView() {
               }
               onSelectMatter={(matterTitle) => setSelectedMatter(matterTitle)}
               onNavigateTab={(tab) => setActiveTab(tab)}
+              onMatterCreated={loadCitizenData}
               onOpenConsultation={() => {
                 setSelectedAdvocate(registeredAdvocates[0] || mockAdvocates[0]);
                 setBookingDefaultTab("booking");

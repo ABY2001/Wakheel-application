@@ -642,7 +642,79 @@ export const devStore = {
     };
     grvs.unshift(newGrv);
     writeFile("dev_grievances.json", grvs);
-    return newGrv;
+
+    // Auto-create initial pre-filing matter docket in dev_matters.json so the filed case immediately appears in Dashboard and My Legal Matters!
+    const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(10000 + Math.random() * 90000);
+    const isWrit =
+      (data.category || "").includes("Property") ||
+      (data.category || "").includes("Writ") ||
+      (data.category || "").includes("Constitutional");
+    const casePrefix = isWrit ? "WP(C)" : "OS";
+    const caseNumber = `${casePrefix} ${randomNum}/${year}`;
+    const cnrNumber = `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${year}`;
+    const citizenInfo = this.getCitizenDisplayInfo(data.citizenId);
+
+    const hasDirectAdv = Boolean(data.advocateId);
+    const directAdv = hasDirectAdv
+      ? this.resolveAdvocateByIdOrName(data.advocateId, data.advocateName)
+      : null;
+    const initialAdvName = directAdv?.advocateName || data.advocateName || "Counsel Matching in Progress";
+
+    const newMatter = {
+      _id: "mat_" + Date.now().toString(),
+      citizenId: data.citizenId || "default_citizen",
+      citizenName: data.citizenName || citizenInfo.citizenName,
+      citizenEmail: citizenInfo.citizenEmail,
+      grievanceId: newGrv._id,
+      advocateId: directAdv?.advocateId || data.advocateId || "",
+      advocateName: initialAdvName,
+      assignedAdvocate: initialAdvName,
+      matterTitle: `${caseNumber} — ${data.title}`,
+      title: `${caseNumber} — ${data.title}`,
+      matterType: data.category || "Civil Litigation",
+      caseNumber,
+      cnrNumber,
+      courtForum:
+        data.preferredCourt ||
+        (data.aiTriage && data.aiTriage.jurisdictionForum) ||
+        "High Court of Kerala / District Court",
+      court:
+        data.preferredCourt ||
+        (data.aiTriage && data.aiTriage.jurisdictionForum) ||
+        "High Court of Kerala / District Court",
+      courtHall: hasDirectAdv ? "Court Hall 2A" : "Registry Scrutiny Counter",
+      status: hasDirectAdv ? "active" : "Pre Filing",
+      filingDate: new Date().toISOString().split("T")[0],
+      nextHearingDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      statutoryActs: data.aiTriage?.applicableActs || [
+        "Specific Relief Act, 1963",
+        "Constitution of India Article 226",
+      ],
+      timeline: [
+        {
+          date: new Date().toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+          title: "Legal Grievance & Pre-Filing Intake Submitted",
+          remarks: `Initial case particulars cataloged for ${caseNumber}. Pre-filing statutory assessment completed.`,
+          stage: "Completed",
+        },
+      ],
+      totalFeesBilled: 0,
+      feesPaid: 0,
+    };
+    matters.unshift(newMatter);
+    writeFile("dev_matters.json", matters);
+
+    newGrv.linkedMatterId = newMatter._id;
+    newGrv.caseNumber = caseNumber;
+    writeFile("dev_grievances.json", grvs);
+
+    return { ...newGrv, matter: newMatter };
   },
 
   matchAdvocateToGrievance(grievanceId, advocateId, citizenId = "") {
@@ -674,9 +746,37 @@ export const devStore = {
     grvs[index].status = "matter_opened";
     writeFile("dev_grievances.json", grvs);
 
-    // Auto-create an active matter in dev_matters.json so it immediately appears in My Matters
+    // Auto-create or update active matter in dev_matters.json so it immediately appears in My Matters
     const matters = readFile("dev_matters.json", DEFAULT_MATTERS);
     const existing = matters.find((m) => m.grievanceId === grievanceId);
+    if (existing) {
+      existing.advocateId = advocate.id;
+      existing.advocateName = advocate.fullName;
+      existing.assignedAdvocate = advocate.fullName;
+      existing.status = "active";
+      if (!existing.citizenId && (grvs[index].citizenId || citizenId)) {
+        existing.citizenId = grvs[index].citizenId || citizenId;
+      }
+      existing.courtForum = existing.courtForum || advocate.primaryCourt || "High Court of Kerala (Ernakulam)";
+      existing.court = existing.courtForum;
+      existing.timeline = existing.timeline || [];
+      existing.timeline.unshift({
+        date: new Date().toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }),
+        title: "Counsel Engaged & Retained",
+        remarks: `Retained ${advocate.fullName} for formal legal representation. Consultation and vakalatnama scheduled.`,
+        stage: "Completed",
+      });
+      existing.totalFeesBilled = advocate.consultationFee ? advocate.consultationFee * 10 : 25000;
+      writeFile("dev_matters.json", matters);
+      grvs[index].linkedMatterId = existing._id;
+      writeFile("dev_grievances.json", grvs);
+      return { grievance: grvs[index], matter: existing, advocate };
+    }
+
     if (!existing) {
       const year = new Date().getFullYear();
       const randomNum = Math.floor(10000 + Math.random() * 90000);
@@ -741,18 +841,22 @@ export const devStore = {
         String(m.userId || "") === uid ||
         String(m.clientId || "") === uid ||
         String(m.advocateId || "") === uid ||
-        String(m.assignedAdvocateId || "") === uid
+        String(m.assignedAdvocateId || "") === uid ||
+        (String(m.citizenId || "") === "default_citizen" && (uid.startsWith("dev_") || uid === "default_citizen"))
     );
   },
 
   getMatterById(id) {
+    if (!id) return null;
+    const cleanId = String(id).toLowerCase();
     const matters = readFile("dev_matters.json", []);
     return (
       matters.find(
         (m) =>
-          m._id === id ||
-          (m.caseNumber && m.caseNumber.toLowerCase() === id.toLowerCase()) ||
-          (m.cnrNumber && m.cnrNumber.toLowerCase() === id.toLowerCase())
+          String(m._id || m.id || "").toLowerCase() === cleanId ||
+          (m.caseNumber && m.caseNumber.toLowerCase() === cleanId) ||
+          (m.cnrNumber && m.cnrNumber.toLowerCase() === cleanId) ||
+          (m.grievanceId && String(m.grievanceId).toLowerCase() === cleanId)
       ) || null
     );
   },

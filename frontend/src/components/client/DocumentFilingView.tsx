@@ -230,8 +230,8 @@ export function DocumentFilingView({ onFilingSubmitted, initialMatter }: Documen
     setIsSubmitting(true);
     const token =
       typeof window !== "undefined"
-        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || ""
-        : "";
+        ? localStorage.getItem("wakheel_token") || localStorage.getItem("token") || "dev_token"
+        : "dev_token";
 
     let fileName = "";
     let fileSize = "";

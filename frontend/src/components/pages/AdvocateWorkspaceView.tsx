@@ -1647,18 +1647,20 @@ export function AdvocateWorkspaceView() {
 
         </header>
 
-        {/* Workspace Pilot Notice Bar */}
-        <div className="px-6 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse" />
-            <span className="font-medium text-black dark:text-white">
-              Wakheel Simulated Intelligence Workspace • Kerala, India Legal Practice Pilot
+        {/* Workspace Pilot Notice Bar (Only displayed when clearly identified as part of a testing environment) */}
+        {process.env.NEXT_PUBLIC_TEST_MODE === "true" && (
+          <div className="px-6 py-1.5 bg-zinc-100 dark:bg-zinc-900/80 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="font-medium text-black dark:text-white">
+                Wakheel Practice Workspace • Testing &amp; Staging Environment
+              </span>
+            </div>
+            <span className="font-mono text-[10px] uppercase text-zinc-500 font-bold">
+              Testing Environment Active
             </span>
           </div>
-          <span className="font-mono text-[10px] uppercase text-zinc-500 font-bold">
-            NO REAL EXTERNAL API CALLS
-          </span>
-        </div>
+        )}
 
         {/* Dynamic Content Views */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8">

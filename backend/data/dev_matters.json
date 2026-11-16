@@ -1,5 +1,41 @@
 [
   {
+    "_id": "mat_1794807301473",
+    "citizenId": "dev_1791777513227",
+    "citizenName": "Alex Morgan",
+    "citizenEmail": "alex@example.com",
+    "caseNumber": "OP(FC) 50086/2026",
+    "matterTitle": "Mutual Consent Divorce Petition under Sec. 13B HMA",
+    "title": "Mutual Consent Divorce Petition under Sec. 13B HMA",
+    "matterType": "Family & Matrimonial",
+    "description": "Parties have lived separately for more than one year and mutually agreed to dissolution of marriage without maintenance claims.",
+    "courtForum": "Family Court, Ernakulam / High Court of Kerala",
+    "court": "Family Court, Ernakulam / High Court of Kerala",
+    "advocateId": "dev_1791778298749",
+    "assignedAdvocateId": "dev_1791778298749",
+    "advocateName": "Adv. Sarah Jenkins",
+    "assignedAdvocate": "Adv. Sarah Jenkins",
+    "cnrNumber": "KLHC01-568770-2026",
+    "courtHall": "Filing Counter",
+    "status": "Pre Filing",
+    "filingDate": "2026-11-16",
+    "nextHearingDate": "2026-11-30T05:35:01.452Z",
+    "statutoryActs": [
+      "Family & Matrimonial"
+    ],
+    "timeline": [
+      {
+        "date": "16 Nov 2026",
+        "title": "Formal Petition Drafted & Assigned to Counsel",
+        "remarks": "Petition filed by citizen for OP(FC) 50086/2026. Transmitted to Adv. Sarah Jenkins chamber for scrutiny.",
+        "stage": "Completed"
+      }
+    ],
+    "totalFeesBilled": 15000,
+    "feesPaid": 0,
+    "createdAt": "2026-11-16T05:35:01.474Z"
+  },
+  {
     "_id": "mat_1794806335347",
     "citizenId": "dev_1791777513227",
     "citizenName": "Alex Morgan",

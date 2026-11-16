@@ -1042,19 +1042,43 @@ export const createMatter = async (req, res) => {
       filingDate,
     } = req.body;
 
-    const finalCaseNumber = (caseNumber || "").trim() || `MATTER-${Date.now().toString().slice(-6)}`;
-    const finalTitle = title || matterTitle || `${finalCaseNumber} Legal Matter`;
-    const finalCourt = court || courtForum || "Court Forum Pending";
+    const year = new Date().getFullYear();
+    const isWrit =
+      (matterType || "").includes("Property") ||
+      (matterType || "").includes("Writ") ||
+      (matterType || "").includes("Constitutional");
+    const isFamily =
+      (matterType || "").includes("Family") ||
+      (matterType || "").includes("Matrimonial");
+    const prefix = isFamily ? "OP(FC)" : isWrit ? "WP(C)" : "OS";
+    const generatedCaseNo = `${prefix} ${Math.floor(10000 + Math.random() * 90000)}/${year}`;
+    const finalCaseNumber = (caseNumber || "").trim() || generatedCaseNo;
+    const finalTitle = title || matterTitle || `${finalCaseNumber} — ${matterType || "Legal Petition"}`;
+    const finalCourt =
+      court ||
+      courtForum ||
+      (isFamily ? "Family Court, Ernakulam / High Court of Kerala" : "High Court of Kerala / District Court");
     const finalAdvocate = assignedAdvocate || advocateName || "Pending Counsel Assignment";
-    const finalCnr = (cnrNumber || "").trim();
+    const finalCnr =
+      (cnrNumber || "").trim() ||
+      `KLHC01-${Math.floor(100000 + Math.random() * 900000)}-${year}`;
 
     const requestedAdvName = advocateName || assignedAdvocate || "";
     const resolvedAdv = shouldUseDevStore()
       ? devStore.resolveAdvocateByIdOrName(advocateId, requestedAdvName)
       : { advocateId: advocateId || undefined, advocateName: requestedAdvName || finalAdvocate };
 
+    const citizenInfo = shouldUseDevStore()
+      ? devStore.getCitizenDisplayInfo(userId)
+      : {
+          citizenName: req.user?.fullName || "Citizen Petitioner",
+          citizenEmail: req.user?.email || "citizen@wakheel.law",
+        };
+
     const matterData = {
       citizenId: userId,
+      citizenName: citizenInfo.citizenName || req.user?.fullName || "Citizen Petitioner",
+      citizenEmail: citizenInfo.citizenEmail || req.user?.email || "citizen@wakheel.law",
       caseNumber: finalCaseNumber,
       matterTitle: finalTitle,
       title: finalTitle,
@@ -1062,23 +1086,34 @@ export const createMatter = async (req, res) => {
       description: description || "",
       courtForum: finalCourt,
       court: finalCourt,
-      advocateId: resolvedAdv.advocateId,
+      advocateId: resolvedAdv.advocateId || advocateId || "",
+      assignedAdvocateId: resolvedAdv.advocateId || advocateId || "",
       advocateName: resolvedAdv.advocateName || finalAdvocate,
       assignedAdvocate: resolvedAdv.advocateName || finalAdvocate,
       cnrNumber: finalCnr,
       courtHall: courtHall || "Filing Counter",
-      status: status || "Admitted",
+      status: status || "Pre Filing",
       filingDate: filingDate || new Date().toISOString().split("T")[0],
-      nextHearingDate: nextHearingDate || undefined,
-      statutoryActs: statutoryActs || [],
+      nextHearingDate:
+        nextHearingDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      statutoryActs:
+        statutoryActs && statutoryActs.length > 0
+          ? statutoryActs
+          : [matterType || "Civil Procedure Code, 1908"],
       timeline: [
         {
-          date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-          title: "Matter Registered in Case Tracker",
-          remarks: `Matter docket opened for ${finalCaseNumber}.`,
+          date: new Date().toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+          title: "Formal Petition Drafted & Assigned to Counsel",
+          remarks: `Petition filed by citizen for ${finalCaseNumber}. Transmitted to ${resolvedAdv.advocateName || finalAdvocate} chamber for scrutiny.`,
           stage: "Completed",
         },
       ],
+      totalFeesBilled: 15000,
+      feesPaid: 0,
     };
 
     if (shouldUseDevStore()) {

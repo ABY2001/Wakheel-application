@@ -59,8 +59,23 @@ import {
   PanelLeftOpen,
   PanelLeftClose,
   Folder,
+  Download,
+  Trash2,
+  Eye,
+  BookMarked,
+  BookText,
+  Box,
+  Award,
+  ClipboardList,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  LawBook,
+  getStoredBooks,
+  saveBook,
+  deleteBook,
+  downloadBookFile,
+} from "./booksData";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -93,23 +108,23 @@ export function TeacherDashboardView({
   onSwitchToStudent,
   onSignOut,
 }: TeacherDashboardProps) {
-  // Navigation section - default to 'home' matching EduPye Teachers home TASK
+  // Navigation section - default to 'home' Task Management
   const [activeSection, setActiveSection] = useState<TeacherNavSection>("home");
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Desktop sidebar expand/collapse state (matching student dashboard rail)
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  // Desktop sidebar expand/collapse state (expanded by default matching student dashboard in reference)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const toggleSidebar = () => {
     setIsSidebarExpanded((prev) => !prev);
   };
 
-  // Home Sub-Tabs (matching EduPye screenshot: Calendars Planers, Task List, Kanban board, Lesson Planers, Projects)
+  // Home Sub-Tabs: Calendars Planers, Task List, Kanban board, Lesson Planers, Projects
   const [homeSubTab, setHomeSubTab] = useState<
     "tasks" | "kanban" | "calendars" | "lesson_planers" | "projects"
   >("tasks");
 
-  // Top Bar Filters (matching EduPye screenshot: Department, Subject v)
+  // Top Bar Filters: Department, Subject v
   const [selectedDepartment, setSelectedDepartment] = useState("Constitutional & Criminal Law");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
   const [showDepartmentDropdown, setShowDepartmentDropdown] = useState(false);
@@ -125,7 +140,7 @@ export function TeacherDashboardView({
   });
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
 
-  // Task Management State (matching EduPye screenshot table)
+  // Task Management State
   const [tasksList, setTasksList] = useState([
     {
       id: "task_1",
@@ -478,29 +493,101 @@ export function TeacherDashboardView({
     );
   };
 
-  // EduPye exact sidebar items list (matching the green circled sidebar in the screenshot)
-  const eduPyeSidebarItems: Array<{ id: TeacherNavSection; label: string; icon: any }> = [
+  // ==============================================================
+  // FACULTY BOOK PUBLISHING & UPLOAD STATE (OPTION 3)
+  // ==============================================================
+  const [booksList, setBooksList] = useState<LawBook[]>([]);
+  const [showUploadBookModal, setShowUploadBookModal] = useState(false);
+  const [bookUploadSuccess, setBookUploadSuccess] = useState(false);
+  const [newBookTitle, setNewBookTitle] = useState("");
+  const [newBookAuthor, setNewBookAuthor] = useState("Prof. Dr. Rajesh Varma");
+  const [newBookDept, setNewBookDept] = useState("Constitutional Law");
+  const [newBookEdition, setNewBookEdition] = useState("2026 Academic Edition");
+  const [newBookDesc, setNewBookDesc] = useState("");
+  const [newBookChapterTitle, setNewBookChapterTitle] = useState("");
+  const [newBookChapterContent, setNewBookChapterContent] = useState("");
+  const [selectedBookForPreview, setSelectedBookForPreview] = useState<LawBook | null>(null);
+
+  useEffect(() => {
+    setBooksList(getStoredBooks());
+  }, []);
+
+  const handlePublishBook = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBookTitle.trim()) return;
+
+    const createdBook: LawBook = {
+      id: `book_faculty_${Date.now()}`,
+      title: newBookTitle.trim(),
+      author: newBookAuthor.trim() || teacherProfile.fullName,
+      department: newBookDept,
+      edition: newBookEdition.trim() || "2026 Academic Edition",
+      fileSize: "15.4 MB",
+      totalPages: 180,
+      format: "PDF",
+      coverGradient: "from-amber-600 via-amber-700 to-zinc-950",
+      description:
+        newBookDesc.trim() ||
+        "Faculty authored law manual with comprehensive statutory breakdown, landmark judicial ratios, and model exam problems.",
+      uploadedBy: `${newBookAuthor.trim()} (Faculty)`,
+      uploadedDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      downloadCount: 0,
+      chapters: [
+        {
+          id: `ch_1_${Date.now()}`,
+          chapterNumber: 1,
+          title: newBookChapterTitle.trim() || "Foundational Doctrines & Statutory Overview",
+          pageNumber: 1,
+          content:
+            newBookChapterContent.trim() ||
+            "This volume synthesizes landmark appellate rulings and statutory provisions curated for law scholars and competitive judicial aspirants. Students may reference these principles for appellate briefs and moot court memorials.",
+        },
+      ],
+    };
+
+    const updated = saveBook(createdBook);
+    setBooksList(updated);
+    setBookUploadSuccess(true);
+    setTimeout(() => {
+      setBookUploadSuccess(false);
+      setShowUploadBookModal(false);
+      setNewBookTitle("");
+      setNewBookDesc("");
+      setNewBookChapterTitle("");
+      setNewBookChapterContent("");
+    }, 1200);
+  };
+
+  const handleDeleteBook = (bookId: string) => {
+    const updated = deleteBook(bookId);
+    setBooksList(updated);
+    if (selectedBookForPreview?.id === bookId) {
+      setSelectedBookForPreview(null);
+    }
+  };
+
+  // Faculty 17-item sidebar navigation list
+  const facultySidebarItems: Array<{ id: TeacherNavSection; label: string; icon: any; badge?: string }> = [
     { id: "home", label: "Home", icon: Home },
+    { id: "lesson_plan", label: "Learn", icon: BookOpen },
     { id: "library", label: "Library", icon: Library },
-    { id: "notebook", label: "Note book", icon: BookOpen },
+    { id: "notebook", label: "Notebook", icon: BookText },
     { id: "upload", label: "Upload", icon: Upload },
-    { id: "lesson_plan", label: "Lesson Plan", icon: FileText },
-    { id: "batches", label: "Live Classes", icon: Video },
+    { id: "recorded_classes", label: "Record", icon: Mic },
+    { id: "batches", label: "Live Classes", icon: Video, badge: "Live" },
+    { id: "mentorship", label: "Tuition Mode", icon: UserCheck },
     { id: "calendar", label: "Calendar", icon: Calendar },
-    { id: "doubts_hub", label: "Ask", icon: HelpCircle },
-    { id: "test", label: "Test", icon: PenTool },
-    { id: "test_creator", label: "Examination", icon: CheckSquare },
-    { id: "assessment", label: "Assessment", icon: FileCheck },
-    { id: "new_folder", label: "New Folder", icon: Folder },
-    { id: "bookshelf", label: "Book Shelf", icon: Layers },
-    { id: "collaboration", label: "Collaboration", icon: Users },
-    { id: "mentorship", label: "Tuition", icon: UserCheck },
-    { id: "recorded_classes", label: "Recorded Classes", icon: Play },
-    { id: "smart_board", label: "Smart Board", icon: Presentation },
-    { id: "projects", label: "Project", icon: Layers },
+    { id: "assessment", label: "Exam Cracker", icon: Award },
+    { id: "test", label: "Homework", icon: ClipboardList },
+    { id: "test_creator", label: "Tests", icon: CheckSquare },
+    { id: "new_folder", label: "My Courses", icon: Layers },
+    { id: "bookshelf", label: "Book shelf", icon: BookMarked },
+    { id: "projects", label: "Projects", icon: TrendingUp },
+    { id: "smart_board", label: "3D Lab", icon: Box },
+    { id: "doubts_hub", label: "Bookmarks", icon: Bookmark },
   ];
 
-  // Right Studio >> Create Tools List (matching EduPye 12 tool buttons)
+  // Right Studio >> Create Tools List (12 tool buttons)
   const facultyCreateTools = [
     { id: "chat", label: "Chat", icon: MessageSquare, description: "AI Faculty Co-Counsel" },
     { id: "chapter", label: "Chapter", icon: BookOpen, description: "AI Lesson & Module Builder" },
@@ -517,149 +604,154 @@ export function TeacherDashboardView({
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-zinc-50/70 dark:bg-black text-black dark:text-white flex font-sans transition-colors duration-200">
       {/* ============================================================== */}
-      {/* 1. LEFT SIDEBAR (DESKTOP) - SPACIOUS & EXPANDABLE / COLLAPSIBLE */}
+      {/* 1. LEFT SIDEBAR (DESKTOP) - WAKHEEL BLACK, WHITE & YELLOW      */}
       {/* ============================================================== */}
       <aside
         className={`hidden md:flex shrink-0 ${
-          isSidebarExpanded ? "w-64" : "w-16"
-        } bg-white dark:bg-zinc-950 border-0 flex-col justify-between sticky top-0 h-screen z-30 select-none transition-all duration-300 overflow-visible`}
+          isSidebarExpanded ? "w-60" : "w-16"
+        } bg-black text-white flex-col justify-between sticky top-0 h-screen z-30 select-none transition-all duration-300 border-r border-zinc-900 shadow-md`}
       >
         {isSidebarExpanded ? (
-          /* ============================================================== */
-          /* EXPANDED SPACIOUS SIDEBAR (MATCHING STUDENT STYLE)             */
-          /* ============================================================== */
           <div className="flex flex-col h-full min-h-0 w-full">
-            {/* Header: Logo + Title + Collapse Button */}
-            <div className="p-4 flex items-center justify-between border-0 shrink-0">
-              <Link href="/teacher/home" className="flex items-center gap-2.5 group min-w-0" title="Wakheel Faculty Studio">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black shadow-sm group-hover:bg-black group-hover:text-white transition-colors shrink-0">
-                  <GraduationCap className="w-4 h-4" />
+            {/* Header: White/Zinc rounded card with WAKHEEL Logo + Collapse Button */}
+            <div className="p-3 shrink-0 flex items-center justify-between gap-1">
+              <Link
+                href="/teacher/home"
+                className="flex-1 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-2xl p-3 flex items-center gap-2.5 shadow-sm transition-all group min-w-0"
+                title="Wakheel Faculty Studio"
+              >
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black shrink-0 shadow-xs">
+                  <GraduationCap className="w-5 h-5 text-black" />
                 </div>
                 <div className="min-w-0 truncate">
-                  <div className="text-xs font-black tracking-wider text-black dark:text-white truncate">
-                    WAKHEEL <span className="text-amber-500">FACULTY</span>
+                  <div className="text-sm font-black tracking-tight text-white leading-none truncate">
+                    WAKHEEL <span className="text-amber-500 font-extrabold">FACULTY</span>
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-mono truncate">Faculty Workspace</div>
+                  <div className="text-[10px] text-zinc-400 font-medium mt-0.5 truncate">
+                    Faculty Studio
+                  </div>
                 </div>
               </Link>
               <button
                 onClick={toggleSidebar}
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0 ml-1"
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
                 title="Collapse to Icon Rail"
               >
                 <PanelLeftClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Navigation Items */}
-            <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-3 space-y-1 min-h-0">
-              <div className="px-2 text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-1">
-                Faculty Workspace
-              </div>
-              {eduPyeSidebarItems.map((item) => {
+            {/* Navigation Items: Styled in Wakheel Black, White & Yellow */}
+            <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-1 space-y-1 min-h-0">
+              {facultySidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
-                    className={`w-full px-3 py-2 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer group ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer group ${
                       isActive
                         ? "bg-amber-500 text-black font-extrabold shadow-sm"
-                        : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-medium"
+                        : "text-zinc-400 hover:text-white hover:bg-zinc-900 font-medium"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <Icon
                         className={`w-4 h-4 shrink-0 ${
-                          isActive ? "text-black" : "text-zinc-500 group-hover:text-amber-500 transition-colors"
+                          isActive ? "text-black" : "text-zinc-400 group-hover:text-amber-400 transition-colors"
                         }`}
                       />
                       <span className="text-xs truncate">{item.label}</span>
                     </div>
+                    {item.badge && (
+                      <span
+                        className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                          isActive
+                            ? "bg-black/15 text-black"
+                            : "bg-zinc-800 text-amber-400"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            {/* Bottom Stack */}
-            <div className="p-3 border-0 flex flex-col gap-2 shrink-0 bg-white dark:bg-zinc-950">
+            {/* Bottom Actions: Student Hub Switcher, ThemeToggle & SignOut */}
+            <div className="p-3 border-t border-zinc-900 flex flex-col gap-2 shrink-0 bg-black">
               {onSwitchToStudent ? (
                 <button
                   onClick={onSwitchToStudent}
-                  className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2"
+                  className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-2"
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
+                  <BookOpen className="w-3.5 h-3.5 text-black" />
                   <span>Student Hub</span>
                 </button>
               ) : (
                 <Link
                   href="/student/home"
-                  className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2"
+                  className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-2"
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
+                  <BookOpen className="w-3.5 h-3.5 text-black" />
                   <span>Student Hub</span>
                 </Link>
               )}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1 text-zinc-400">
                 <div className="flex items-center gap-2">
                   <ThemeToggle />
-                  <span className="text-[11px] text-zinc-500 font-medium">Theme</span>
+                  <span className="text-[11px] font-medium">Theme</span>
                 </div>
-                {onSignOut && (
+                {onSignOut ? (
                   <button
                     onClick={onSignOut}
-                    className="px-2.5 py-1.5 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                    className="px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
                     title="Sign Out"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Exit</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {}}
+                    className="px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                    title="Log out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log out</span>
                   </button>
                 )}
               </div>
             </div>
           </div>
         ) : (
-          /* ============================================================== */
-          /* COMPACT AIRY ICON RAIL (BORDER-0 & FULLY VISIBLE TOOLTIPS)     */
-          /* ============================================================== */
+          /* COMPACT ICON RAIL (when collapsed, in Black & Yellow) */
           <div className="flex flex-col h-full items-center justify-between py-3 min-h-0 w-full overflow-visible">
-            {/* Top: Logo + Expand Button */}
-            <div className="flex flex-col items-center gap-2.5 w-full shrink-0 pb-2 border-0">
-              <div className="relative group flex items-center justify-center w-full">
-                <Link
-                  href="/teacher/home"
-                  className="w-10 h-10 rounded-xl bg-amber-500 hover:bg-black text-black hover:text-white flex items-center justify-center font-black transition-all shadow-md cursor-pointer"
-                  title="Wakheel Faculty Studio"
-                >
-                  <GraduationCap className="w-5 h-5 text-current" />
-                </Link>
-                <div
-                  style={{
-                    left: "calc(100% + 12px)",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                  }}
-                  className="absolute px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white text-xs font-bold rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-[100] flex items-center gap-1.5"
-                >
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-zinc-950 border-l border-b border-zinc-800 rotate-45" />
-                  <span className="relative z-10">Wakheel Faculty</span>
-                </div>
-              </div>
+            {/* Top Logo + Expand Button */}
+            <div className="flex flex-col items-center gap-2.5 w-full shrink-0 pb-2 border-b border-zinc-900">
+              <Link
+                href="/teacher/home"
+                className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black shadow-md cursor-pointer hover:scale-105 transition-transform"
+                title="Wakheel Faculty Studio"
+              >
+                <GraduationCap className="w-5 h-5 text-black" />
+              </Link>
               <button
                 onClick={toggleSidebar}
-                className="w-8 h-8 rounded-lg text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 flex items-center justify-center transition-colors cursor-pointer"
                 title="Expand Sidebar"
               >
                 <PanelLeftOpen className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Navigation Icons - Generously spaced, border-0, and completely unclipped */}
-            <div className="flex-1 w-full py-1 flex flex-col items-center gap-1.5 min-h-0 overflow-y-auto scrollbar-none overflow-x-visible">
-              {eduPyeSidebarItems.map((item) => {
+            {/* Navigation Icons */}
+            <div className="flex-1 w-full py-1 flex flex-col items-center gap-1 min-h-0 overflow-y-auto scrollbar-none overflow-x-visible">
+              {facultySidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
                 return (
@@ -668,22 +760,21 @@ export function TeacherDashboardView({
                       onClick={() => setActiveSection(item.id)}
                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                         isActive
-                          ? "bg-amber-500 text-black shadow-md shadow-amber-500/20 font-bold scale-105"
-                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                          ? "bg-amber-500 text-black shadow-md font-bold scale-105"
+                          : "text-zinc-400 hover:text-white hover:bg-zinc-900"
                       }`}
                       aria-label={item.label}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
                     </button>
-
-                    {/* Floating Tooltip - Guaranteed 100% to the right with calc(100% + 12px) */}
+                    {/* Floating Tooltip */}
                     <div
                       style={{
                         left: "calc(100% + 12px)",
                         top: "50%",
                         transform: "translateY(-50%)",
                       }}
-                      className="absolute px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white text-xs font-bold rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-[100] flex items-center gap-2"
+                      className="absolute px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white text-xs font-bold rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-[100] flex items-center gap-1.5"
                     >
                       <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-zinc-950 border-l border-b border-zinc-800 rotate-45" />
                       <span className="relative z-10">{item.label}</span>
@@ -693,70 +784,33 @@ export function TeacherDashboardView({
               })}
             </div>
 
-            {/* Bottom Actions: Student Hub Switcher, ThemeToggle & SignOut */}
-            <div className="flex flex-col items-center gap-2 pt-2 border-0 w-full px-2 shrink-0">
-              <div className="relative group flex items-center justify-center w-full">
-                {onSwitchToStudent ? (
-                  <button
-                    onClick={onSwitchToStudent}
-                    className="w-10 h-10 rounded-xl bg-amber-500 hover:bg-black text-black hover:text-white flex items-center justify-center font-black transition-all shadow-xs cursor-pointer"
-                    title="Switch to Student Hub"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <Link
-                    href="/student/home"
-                    className="w-10 h-10 rounded-xl bg-amber-500 hover:bg-black text-black hover:text-white flex items-center justify-center font-black transition-all shadow-xs cursor-pointer"
-                    title="Switch to Student Hub"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                  </Link>
-                )}
-                <div
-                  style={{
-                    left: "calc(100% + 12px)",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                  }}
-                  className="absolute px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white text-xs font-bold rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-[100] flex items-center gap-1.5"
+            {/* Bottom Stack in Rail */}
+            <div className="flex flex-col items-center gap-2 pt-2 border-t border-zinc-900 w-full px-2 shrink-0">
+              {onSwitchToStudent ? (
+                <button
+                  onClick={onSwitchToStudent}
+                  className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center cursor-pointer shadow-xs hover:scale-105 transition-transform"
+                  title="Switch to Student Hub"
                 >
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-zinc-950 border-l border-b border-zinc-800 rotate-45" />
-                  <span className="relative z-10">Student Hub</span>
-                </div>
-              </div>
-
-              <ThemeToggle />
-
-              {onSignOut && (
-                <div className="relative group flex items-center justify-center w-full">
-                  <button
-                    onClick={onSignOut}
-                    className="w-8 h-8 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center cursor-pointer transition-colors"
-                    title="Sign Out"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                  </button>
-                  <div
-                    style={{
-                      left: "calc(100% + 12px)",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                    }}
-                    className="absolute px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-red-400 text-xs font-bold rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-[100] flex items-center gap-1.5"
-                  >
-                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-zinc-950 border-l border-b border-zinc-800 rotate-45" />
-                    <span className="relative z-10">Sign Out</span>
-                  </div>
-                </div>
+                  <BookOpen className="w-4 h-4" />
+                </button>
+              ) : (
+                <Link
+                  href="/student/home"
+                  className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center cursor-pointer shadow-xs hover:scale-105 transition-transform"
+                  title="Switch to Student Hub"
+                >
+                  <BookOpen className="w-4 h-4" />
+                </Link>
               )}
+              <ThemeToggle />
             </div>
           </div>
         )}
       </aside>
 
       {/* ============================================================== */}
-      {/* MOBILE DRAWER SIDEBAR                                          */}
+      {/* MOBILE DRAWER SIDEBAR - WAKHEEL BLACK & YELLOW                 */}
       {/* ============================================================== */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
@@ -764,27 +818,27 @@ export function TeacherDashboardView({
             className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setMobileSidebarOpen(false)}
           />
-          <aside className="relative z-10 w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col justify-between h-full p-4 space-y-4 shadow-2xl">
-            <div className="space-y-4 flex-1 overflow-y-auto">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-black flex items-center justify-center font-black">
-                    <GraduationCap className="w-4 h-4" />
+          <aside className="relative z-10 w-72 bg-black text-white flex flex-col justify-between h-full p-4 space-y-4 shadow-2xl border-r border-zinc-800">
+            <div className="space-y-4 flex-1 overflow-y-auto scrollbar-none">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black">
+                    <GraduationCap className="w-5 h-5 text-black" />
                   </div>
-                  <span className="font-black text-sm text-black dark:text-white">
+                  <span className="font-black text-sm text-white">
                     WAKHEEL <span className="text-amber-500">FACULTY</span>
                   </span>
                 </div>
                 <button
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-1">
-                {eduPyeSidebarItems.map((item) => {
+                {facultySidebarItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeSection === item.id;
                   return (
@@ -797,27 +851,32 @@ export function TeacherDashboardView({
                       className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${
                         isActive
                           ? "bg-amber-500 text-black font-extrabold shadow-xs"
-                          : "text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold"
+                          : "text-zinc-300 hover:bg-zinc-900 font-medium"
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <Icon className="w-4 h-4" />
                         <span className="text-xs">{item.label}</span>
                       </div>
+                      {item.badge && (
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/20 text-black">
+                          {item.badge}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+            <div className="space-y-2 pt-3 border-t border-zinc-800 shrink-0">
               {onSwitchToStudent ? (
                 <button
                   onClick={() => {
                     setMobileSidebarOpen(false);
                     onSwitchToStudent();
                   }}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 text-black text-xs font-bold cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold cursor-pointer"
                 >
                   Switch to Student Hub
                 </button>
@@ -825,7 +884,7 @@ export function TeacherDashboardView({
                 <Link
                   href="/student/home"
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 text-black text-xs font-bold flex items-center justify-center cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold flex items-center justify-center cursor-pointer"
                 >
                   Switch to Student Hub
                 </Link>
@@ -838,13 +897,13 @@ export function TeacherDashboardView({
       {/* ============================================================== */}
       {/* 2. MAIN DESKTOP BODY: TOP HEADER + CENTER CONTENT + RIGHT PANE */}
       {/* ============================================================== */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] dark:bg-black text-black dark:text-white min-h-screen">
-        {/* Top Header Strip with Filters (Soft shade of white) */}
-        <header className="sticky top-0 z-20 bg-slate-50/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 h-16 flex items-center justify-between px-4 sm:px-6 gap-3 shadow-2xs">
+      <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/70 dark:bg-black text-black dark:text-white min-h-screen">
+        {/* Top Header Strip with Filters (Wakheel White & Amber System) */}
+        <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 h-16 flex items-center justify-between px-4 sm:px-6 gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl text-black dark:text-white hover:bg-white dark:hover:bg-zinc-900 cursor-pointer"
+              className="md:hidden p-2 rounded-xl text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -853,7 +912,7 @@ export function TeacherDashboardView({
             <div className="relative">
               <button
                 onClick={() => setShowDepartmentDropdown(!showDepartmentDropdown)}
-                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors"
+                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors"
               >
                 <span>Department: {selectedDepartment.split(" ")[0]}...</span>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
@@ -881,7 +940,7 @@ export function TeacherDashboardView({
             <div className="relative">
               <button
                 onClick={() => setShowSubjectDropdown(!showSubjectDropdown)}
-                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors"
+                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors"
               >
                 <span>Subject: {selectedSubject}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
@@ -908,7 +967,7 @@ export function TeacherDashboardView({
 
           {/* Right Header Actions: Globe, Search, Trophy, Avatar */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-white dark:hover:bg-zinc-900 transition-colors cursor-pointer" title="Language">
+            <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Language">
               <Globe className="w-4 h-4 text-amber-500" />
             </button>
 
@@ -919,11 +978,11 @@ export function TeacherDashboardView({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks, rosters, statutes..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
+                className="w-full pl-8 pr-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
               />
             </div>
 
-            <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-white dark:hover:bg-zinc-900 transition-colors cursor-pointer" title="Rankings">
+            <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Rankings">
               <Trophy className="w-4 h-4 text-amber-500" />
             </button>
 
@@ -942,7 +1001,7 @@ export function TeacherDashboardView({
 
             <button
               onClick={() => setShowProfileDrawer(true)}
-              className="w-8 h-8 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs flex items-center justify-center uppercase cursor-pointer shadow-xs transition-colors"
+              className="w-8 h-8 rounded-full bg-amber-500 text-black font-black text-xs flex items-center justify-center uppercase cursor-pointer shadow-xs transition-colors hover:scale-105"
               title="Faculty Profile"
             >
               {teacherProfile.fullName.charAt(0)}
@@ -974,8 +1033,8 @@ export function TeacherDashboardView({
                         onClick={() => setHomeSubTab(tab.id as any)}
                         className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                           isActive
-                            ? "bg-amber-500 text-black font-black shadow-xs scale-102"
-                            : "bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-800"
+                            ? "bg-amber-500 text-black font-extrabold shadow-xs scale-102"
+                            : "bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs"
                         }`}
                       >
                         {tab.label}
@@ -994,12 +1053,12 @@ export function TeacherDashboardView({
                 </button>
               </div>
 
-              {/* VIEW: TASK LIST (Active in EduPye screenshot) */}
+              {/* VIEW: TASK LIST (Active in Wakheel screenshot) */}
               {homeSubTab === "tasks" && (
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 overflow-hidden shadow-xs">
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/70 dark:border-zinc-800 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.03)]">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-zinc-50/90 dark:bg-zinc-950/70 border-b border-zinc-200/80 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-[11px]">
+                      <thead className="bg-zinc-50 dark:bg-zinc-950/70 border-b border-zinc-200/70 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-[11px]">
                         <tr>
                           <th className="py-3 px-4 flex items-center gap-1.5">
                             <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
@@ -1012,12 +1071,12 @@ export function TeacherDashboardView({
                           <th className="py-3 px-4">Assignee</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                         {tasksList.map((task) => (
                           <tr
                             key={task.id}
-                            className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors ${
-                              task.completed ? "opacity-60 bg-zinc-50/40 dark:bg-zinc-950/40" : ""
+                            className={`hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors ${
+                              task.completed ? "opacity-60 bg-zinc-50/50 dark:bg-zinc-950/40" : ""
                             }`}
                           >
                             <td className="py-3.5 px-4">
@@ -1036,15 +1095,15 @@ export function TeacherDashboardView({
                             <td className="py-3.5 px-4">
                               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                                 task.status === "Completed"
-                                  ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
+                                  ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300"
                                   : task.status === "In Progress"
-                                  ? "bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300"
-                                  : "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                                  ? "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300"
+                                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200"
                               }`}>
                                 {task.status}
                               </span>
                             </td>
-                            <td className="py-3.5 px-4 font-medium text-zinc-600 dark:text-zinc-400">
+                            <td className="py-3.5 px-4 font-medium text-zinc-700 dark:text-zinc-300">
                               {task.type}
                             </td>
                             <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
@@ -1053,9 +1112,9 @@ export function TeacherDashboardView({
                             <td className="py-3.5 px-4">
                               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
                                 task.priority === "Urgent"
-                                  ? "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
+                                  ? "bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300"
                                   : task.priority === "High"
-                                  ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                                  ? "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300"
                                   : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
                               }`}>
                                 {task.priority}
@@ -1066,7 +1125,7 @@ export function TeacherDashboardView({
                                 <div className="w-5 h-5 rounded-full bg-amber-500 text-black flex items-center justify-center text-[10px] font-black">
                                   {task.assignee.charAt(0)}
                                 </div>
-                                <span className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300 truncate max-w-[130px]">
+                                <span className="text-[11px] font-medium text-zinc-800 dark:text-zinc-200 truncate max-w-[130px]">
                                   {task.assignee}
                                 </span>
                               </div>
@@ -1101,17 +1160,17 @@ export function TeacherDashboardView({
                     { col: "In Review", tasks: tasksList.filter((t) => t.status === "Scheduled") },
                     { col: "Completed", tasks: tasksList.filter((t) => t.status === "Completed") },
                   ].map((column) => (
-                    <div key={column.col} className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-4 space-y-3 shadow-xs">
+                    <div key={column.col} className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/70 dark:border-zinc-800 p-4 space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
                       <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
                         <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200">{column.col}</span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-bold">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold">
                           {column.tasks.length}
                         </span>
                       </div>
                       <div className="space-y-2">
                         {column.tasks.map((task) => (
-                          <div key={task.id} className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800 space-y-2">
-                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                          <div key={task.id} className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800/60 space-y-2">
+                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                               {task.type}
                             </span>
                             <h4 className="text-xs font-bold text-zinc-900 dark:text-white leading-snug">{task.title}</h4>
@@ -1129,12 +1188,12 @@ export function TeacherDashboardView({
 
               {/* VIEW: CALENDARS PLANERS */}
               {homeSubTab === "calendars" && (
-                <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-4 shadow-xs">
+                <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 space-y-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
                   <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Weekly Chambers &amp; Moot Timetable</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {teacherBatches.map((b) => (
-                      <div key={b.id} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800 space-y-1.5">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                      <div key={b.id} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800/60 space-y-1.5">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
                           {b.schedule}
                         </span>
                         <h4 className="text-xs font-bold text-zinc-900 dark:text-white">{b.title}</h4>
@@ -1149,7 +1208,7 @@ export function TeacherDashboardView({
               {homeSubTab === "lesson_planers" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {syllabusTracks.map((tr) => (
-                    <div key={tr.code} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-xs">
+                    <div key={tr.code} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 space-y-2 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
                       <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">{tr.code} • {tr.unitsCount} Units</span>
                       <h4 className="text-sm font-bold text-zinc-900 dark:text-white">{tr.title}</h4>
                       <p className="text-xs text-zinc-500">{tr.topics.join(" • ")}</p>
@@ -1160,9 +1219,9 @@ export function TeacherDashboardView({
 
               {/* VIEW: PROJECTS */}
               {homeSubTab === "projects" && (
-                <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+                <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 space-y-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
                   <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Active Faculty Legal Projects</h4>
-                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800">
+                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800/60">
                     <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">MOOT COURT MEMO</span>
                     <h5 className="text-xs font-bold text-zinc-900 dark:text-white mt-1">All-India Cyber Defamation Moot Problem 2027</h5>
                     <p className="text-[11px] text-zinc-500">Drafted on Article 19(1)(a) restrictions and AI intermediary liability.</p>
@@ -1171,8 +1230,8 @@ export function TeacherDashboardView({
               )}
             </div>
 
-            {/* RIGHT SIDEBAR PANE: >> CREATE (PERSISTENT ON DESKTOP, EXACT EDUPYE MATCH) */}
-            <div className="w-64 xl:w-72 shrink-0 bg-[#f8fafc] dark:bg-zinc-950 border-l border-zinc-200/80 dark:border-zinc-800 p-4 flex flex-col justify-between space-y-4 overflow-y-auto">
+            {/* RIGHT SIDEBAR PANE: >> CREATE (WAKHEEL BLACK, WHITE & YELLOW PALETTE) */}
+            <div className="w-64 xl:w-72 shrink-0 bg-white/70 dark:bg-zinc-950/80 border-l border-zinc-200/70 dark:border-zinc-800 p-4 flex flex-col justify-between space-y-4 overflow-y-auto">
               <div className="space-y-3">
                 {/* Header: >> Create */}
                 <div className="flex items-center gap-1.5 px-1">
@@ -1180,8 +1239,8 @@ export function TeacherDashboardView({
                   <h2 className="text-sm font-black text-zinc-900 dark:text-zinc-100 tracking-tight">Create</h2>
                 </div>
 
-                {/* 2-Column Grid of 12 Interactive Tools (Exact match) */}
-                <div className="bg-zinc-100/90 dark:bg-zinc-900/90 rounded-2xl p-2.5 border border-zinc-200/80 dark:border-zinc-800">
+                {/* 2-Column Grid of 12 Interactive Tools */}
+                <div className="bg-zinc-100/80 dark:bg-zinc-900/60 rounded-2xl p-2.5 border border-zinc-200/60 dark:border-zinc-800/80">
                   <div className="grid grid-cols-2 gap-2">
                     {facultyCreateTools.map((tool) => {
                       const Icon = tool.icon;
@@ -1189,13 +1248,15 @@ export function TeacherDashboardView({
                         <button
                           key={tool.id}
                           onClick={() => {
-                            if (tool.id === "quiz") {
+                            if (tool.id === "chapter" || tool.id === "notes") {
+                              setShowUploadBookModal(true);
+                            } else if (tool.id === "quiz") {
                               setActiveSection("test_creator");
                             } else {
                               setActiveCreateToolModal(tool.id);
                             }
                           }}
-                          className="bg-white dark:bg-zinc-800 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-zinc-700 rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1 shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer group border border-zinc-200/60 dark:border-transparent"
+                          className="bg-white dark:bg-zinc-800 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-zinc-700 rounded-xl p-2.5 flex flex-col items-center justify-center text-center gap-1 shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer group border border-zinc-200/60 dark:border-zinc-700/40"
                         >
                           <Icon className="w-4 h-4 text-zinc-700 dark:text-zinc-300 group-hover:text-amber-500 transition-colors" />
                           <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-200 truncate w-full">
@@ -1207,7 +1268,7 @@ export function TeacherDashboardView({
                   </div>
                 </div>
 
-                {/* 4 Action Cards matching EduPye Screenshot: Smart Bord /Projects, Combine Study, Slide, Info Graphics */}
+                {/* 4 Action Cards: Smart Bord /Projects, Combine Study, Slide, Info Graphics */}
                 <div className="space-y-2">
                   {[
                     { id: "smartboard", label: "Smart Bord /Projects", icon: Presentation },
@@ -1220,7 +1281,7 @@ export function TeacherDashboardView({
                       <div
                         key={card.id}
                         onClick={() => setActiveCreateToolModal(card.id)}
-                        className="bg-white dark:bg-zinc-900 rounded-2xl p-3 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between cursor-pointer hover:shadow-xs hover:border-amber-400/80 transition-all group"
+                        className="bg-white dark:bg-zinc-900 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between cursor-pointer hover:shadow-xs hover:border-amber-400 transition-all group shadow-2xs"
                       >
                         <div className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-amber-500 transition-colors">
                           {card.label}
@@ -1234,10 +1295,10 @@ export function TeacherDashboardView({
                 </div>
               </div>
 
-              {/* Quick AI Faculty Assistant */}
+              {/* Wakheel AI Assistant Pill */}
               <button
                 onClick={() => setActiveCreateToolModal("chat")}
-                className="w-full bg-zinc-950 dark:bg-white text-white dark:text-black px-4 py-2.5 rounded-full flex items-center justify-between shadow-md cursor-pointer hover:scale-102 transition-all border border-zinc-800 dark:border-zinc-200"
+                className="w-full bg-black dark:bg-white text-white dark:text-black px-4 py-2.5 rounded-full flex items-center justify-between shadow-md cursor-pointer hover:scale-102 transition-all border border-zinc-800 dark:border-zinc-200"
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -1466,9 +1527,353 @@ export function TeacherDashboardView({
                 </div>
               </div>
             )}
+
+            {/* SECTION: FACULTY BOOK SHELF & PUBLISHING STUDIO (OPTION 3) */}
+            {(activeSection === "bookshelf" || activeSection === "upload" || activeSection === "library") && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                        Courseware Repository
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">•</span>
+                      <span className="text-xs text-zinc-500 font-mono">Centralized Student Sync</span>
+                    </div>
+                    <h2 className="text-xl font-black text-zinc-900 dark:text-white mt-1">
+                      Faculty Book Shelf &amp; Courseware Publishing Studio
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Upload and publish textbooks, Bare Act digests, and statutory notes. Books published here immediately sync to students&apos; digital bookshelves for in-app reading and local downloading.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setShowUploadBookModal(true)}
+                    className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Upload New Book / Manuscript</span>
+                  </button>
+                </div>
+
+                {/* 3 Metrics Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Total Published Books</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {booksList.length} <span className="text-xs font-normal text-zinc-500">Volumes</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Accessible across all student cohorts</p>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Total Student Downloads</span>
+                    <div className="text-2xl font-black text-emerald-500 font-mono flex items-center gap-1.5">
+                      <Download className="w-5 h-5 text-emerald-500" />
+                      <span>{booksList.reduce((acc, b) => acc + b.downloadCount, 0)}</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Offline study copies retrieved</p>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Active Legal Disciplines</span>
+                    <div className="text-2xl font-black text-amber-500 font-mono">
+                      4 Curricula
+                    </div>
+                    <p className="text-[11px] text-zinc-500">BNS, Constitutional, Contracts, CPC</p>
+                  </div>
+                </div>
+
+                {/* Books Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {booksList.map((book) => (
+                    <div
+                      key={book.id}
+                      className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 space-y-4 flex flex-col justify-between shadow-xs hover:border-amber-400 transition-all group"
+                    >
+                      <div className="space-y-3">
+                        {/* Book Spine Cover Card */}
+                        <div
+                          className={`h-40 rounded-2xl bg-gradient-to-br ${book.coverGradient} p-4 text-white flex flex-col justify-between shadow-md relative overflow-hidden`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-xs text-[10px] font-mono font-bold uppercase">
+                              {book.department}
+                            </span>
+                            <span className="text-[10px] font-mono bg-white/20 px-2 py-0.5 rounded-full">
+                              {book.format} • {book.fileSize}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-black line-clamp-2 leading-snug">{book.title}</h4>
+                            <div className="text-[10px] text-white/80 font-mono mt-1">
+                              By {book.author}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Metadata Details */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-zinc-900 dark:text-white truncate">{book.title}</span>
+                          </div>
+                          <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                            {book.description}
+                          </p>
+                          <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
+                            <span>{book.totalPages} Pages • {book.chapters.length} Chapters</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                              <Download className="w-3 h-3" />
+                              <span>{book.downloadCount} dl</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Action Buttons */}
+                      <div className="space-y-2 pt-2">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedBookForPreview(book)}
+                            className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Preview Book</span>
+                          </button>
+                          <button
+                            onClick={() => downloadBookFile(book)}
+                            className="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            title="Download local manuscript"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBook(book.id)}
+                            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-400 text-xs transition-all cursor-pointer"
+                            title="Unpublish manuscript"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </main>
         )}
       </div>
+
+      {/* UPLOAD BOOK / MANUSCRIPT MODAL (OPTION 3) */}
+      {showUploadBookModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowUploadBookModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                Faculty Publishing Studio
+              </span>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
+                Upload &amp; Publish Law Textbook / Bare Act
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Published works are instantaneously synchronized to students&apos; digital bookshelves across all portals.
+              </p>
+            </div>
+
+            <form onSubmit={handlePublishBook} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Book / Manuscript Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newBookTitle}
+                  onChange={(e) => setNewBookTitle(e.target.value)}
+                  placeholder="e.g. Constitutional Law of India: Fundamental Rights Digest"
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Author / Faculty Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newBookAuthor}
+                    onChange={(e) => setNewBookAuthor(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Academic Department
+                  </label>
+                  <select
+                    value={newBookDept}
+                    onChange={(e) => setNewBookDept(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold"
+                  >
+                    <option>Constitutional Law</option>
+                    <option>Criminal Law (BNS)</option>
+                    <option>Law of Contracts &amp; Torts</option>
+                    <option>Civil Procedure &amp; Pleadings</option>
+                    <option>CLAT &amp; Entrance Pedagogy</option>
+                    <option>Judicial Services Reference</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Description &amp; Syllabus Coverage
+                </label>
+                <textarea
+                  rows={2}
+                  value={newBookDesc}
+                  onChange={(e) => setNewBookDesc(e.target.value)}
+                  placeholder="Summary of syllabus relevance, landmark case coverage, and recommended study cohorts..."
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+                />
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
+                <span className="text-[11px] font-mono font-bold text-amber-600 dark:text-amber-400 uppercase block">
+                  Chapter 1 Reader Transcript (For In-App Student Reading)
+                </span>
+                <div>
+                  <input
+                    type="text"
+                    value={newBookChapterTitle}
+                    onChange={(e) => setNewBookChapterTitle(e.target.value)}
+                    placeholder="Chapter 1 Title: e.g. The Doctrine of Severability &amp; Article 13"
+                    className="w-full p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold"
+                  />
+                </div>
+                <div>
+                  <textarea
+                    rows={4}
+                    value={newBookChapterContent}
+                    onChange={(e) => setNewBookChapterContent(e.target.value)}
+                    placeholder="Provide chapter excerpts, statutory commentary, and landmark ratios that students can read directly in their online reader..."
+                    className="w-full p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Drag & Drop simulated file upload */}
+              <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-amber-500 rounded-2xl p-4 text-center space-y-1 transition-colors cursor-pointer bg-zinc-50/50 dark:bg-zinc-950/50">
+                <Upload className="w-6 h-6 mx-auto text-amber-500" />
+                <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                  Click to select manuscript file (PDF, EPUB, TXT)
+                </div>
+                <p className="text-[10px] text-zinc-400 font-mono">Maximum file size: 50 MB • Full text indexing supported</p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUploadBookModal(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  {bookUploadSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Published to Student Bookshelf!</span>
+                    </>
+                  ) : (
+                    <span>Publish &amp; Sync to Students</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* BOOK PREVIEW MODAL FOR TEACHER */}
+      {selectedBookForPreview && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-4 max-h-[85vh] overflow-y-auto">
+            <button
+              onClick={() => setSelectedBookForPreview(null)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                Faculty Reading Inspector
+              </span>
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white">
+                {selectedBookForPreview.title}
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Author: {selectedBookForPreview.author} • {selectedBookForPreview.edition} • {selectedBookForPreview.totalPages} Pages
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
+              <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Description:</div>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                {selectedBookForPreview.description}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-xs font-mono font-bold uppercase text-zinc-400">Chapters &amp; Content Transcripts:</h4>
+              <div className="space-y-2">
+                {selectedBookForPreview.chapters.map((ch) => (
+                  <div key={ch.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
+                    <div className="font-bold text-black dark:text-white flex items-center justify-between">
+                      <span>Chapter {ch.chapterNumber}: {ch.title}</span>
+                      <span className="text-zinc-400 font-mono text-[10px]">Page {ch.pageNumber}</span>
+                    </div>
+                    <p className="text-zinc-600 dark:text-zinc-400 whitespace-pre-line leading-relaxed font-serif">
+                      {ch.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-zinc-200 dark:border-zinc-800">
+              <button
+                onClick={() => downloadBookFile(selectedBookForPreview)}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Sample (.txt)</span>
+              </button>
+              <button
+                onClick={() => setSelectedBookForPreview(null)}
+                className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-300 cursor-pointer"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CREATE TASK MODAL */}
       {showCreateTaskModal && (

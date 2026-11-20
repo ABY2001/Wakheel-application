@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -76,8 +76,20 @@ import {
   Square,
   BookText,
   FolderGit2,
+  Flag,
+  ChevronLeft,
+  XCircle,
+  AlertTriangle,
+  Eye,
+  BarChart3,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  LawBook,
+  getStoredBooks,
+  incrementDownloadCount,
+  downloadBookFile,
+} from "./booksData";
 
 interface StudentDashboardProps {
   initialSection?: StudentNavSection;
@@ -122,12 +134,12 @@ export function StudentDashboardView({
   const [activeExamFilter, setActiveExamFilter] = useState("For You");
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(true); // Expanded by default so all 17 items are visible matching EduPye
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(true); // Expanded by default so all 17 items are visible matching Wakheel
   const [activeLearnCourseId, setActiveLearnCourseId] = useState<string>("ai_legal_tech");
   const [learnActiveTab, setLearnActiveTab] = useState<"syllabus" | "resources" | "quizzes">("syllabus");
 
   // ==============================================================
-  // EDUPYE 3-PANE "LEARN" SECTION SUB-NAVIGATION & STUDIO STATE
+  // Wakheel 3-PANE "LEARN" SECTION SUB-NAVIGATION & STUDIO STATE
   // ==============================================================
   const [learnSubSection, setLearnSubSection] = useState<
     | "subject"
@@ -154,7 +166,7 @@ export function StudentDashboardView({
   const [gameStreak, setGameStreak] = useState<number>(3);
 
   // ==============================================================
-  // EDUPYE NEW STUDENT FEATURES STATE (RECORD, NOTEBOOK, UPLOADS, ETC)
+  // Wakheel NEW STUDENT FEATURES STATE (RECORD, NOTEBOOK, UPLOADS, ETC)
   // ==============================================================
   // 1. Audio / Video Recording Studio
   const [recordMode, setRecordMode] = useState<"audio" | "video">("audio");
@@ -317,7 +329,7 @@ export function StudentDashboardView({
       author: "Justice R. V. Sharma (Retd.)",
       category: "Criminal Law (BNS)",
       pages: 360,
-      cover: "from-blue-600 to-indigo-800",
+      cover: "from-zinc-900 via-amber-600/30 to-black",
       badge: "New Penal Code",
     },
     {
@@ -343,36 +355,49 @@ export function StudentDashboardView({
   // 7. 3D Courtroom Lab
   const [active3dZone, setActive3dZone] = useState<"bench" | "bar" | "podium" | "witness">("bench");
 
-  // 8. Book shelf
-  const bookshelfItems = [
-    {
-      id: "bs_1",
-      title: "Principles of Criminal Law (BNS 2023 Edition)",
-      progress: "68%",
-      currentPage: 142,
-      totalPages: 210,
-      lastRead: "Today, 9:30 AM",
-      accent: "from-blue-600 to-indigo-700",
-    },
-    {
-      id: "bs_2",
-      title: "Consortium CLAT Legal Aptitude Master Manual",
-      progress: "84%",
-      currentPage: 294,
-      totalPages: 350,
-      lastRead: "Yesterday",
-      accent: "from-amber-500 to-amber-700",
-    },
-    {
-      id: "bs_3",
-      title: "Manupatra Case Law Digest: Golden Triangle Article 21",
-      progress: "42%",
-      currentPage: 50,
-      totalPages: 120,
-      lastRead: "3 days ago",
-      accent: "from-emerald-600 to-teal-700",
-    },
-  ];
+  // 8. Book shelf & Digital Law Reader (Option 3: Faculty Uploads & Student Reading Hub)
+  const [booksList, setBooksList] = useState<LawBook[]>([]);
+  const [selectedBookForReading, setSelectedBookForReading] = useState<LawBook | null>(null);
+  const [readerActiveChapterIdx, setReaderActiveChapterIdx] = useState(0);
+  const [readerTheme, setReaderTheme] = useState<"light" | "dark" | "sepia">("light");
+  const [readerFontSize, setReaderFontSize] = useState<"sm" | "base" | "lg">("base");
+  const [readerSearchTerm, setReaderSearchTerm] = useState("");
+  const [bookShelfFilter, setBookShelfFilter] = useState("All");
+  const [bookShelfSearch, setBookShelfSearch] = useState("");
+  const [downloadedBookIds, setDownloadedBookIds] = useState<Record<string, boolean>>({});
+  const [bookmarkedPages, setBookmarkedPages] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setBooksList(getStoredBooks());
+  }, []);
+
+  const handleStudentDownloadBook = (book: LawBook) => {
+    downloadBookFile(book);
+    const updated = incrementDownloadCount(book.id);
+    setBooksList(updated);
+    setDownloadedBookIds((prev) => ({ ...prev, [book.id]: true }));
+  };
+
+  const handleOpenBookReader = (book: LawBook, chapterIdx = 0) => {
+    setSelectedBookForReading(book);
+    setReaderActiveChapterIdx(chapterIdx);
+    setReaderSearchTerm("");
+  };
+
+  const handleToggleBookmark = (bookId: string, chapterIdx: number) => {
+    const key = `${bookId}_ch_${chapterIdx}`;
+    setBookmarkedPages((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const bookshelfItems = booksList.map((b) => ({
+    id: b.id,
+    title: b.title,
+    progress: "65%",
+    currentPage: 48,
+    totalPages: b.totalPages,
+    lastRead: "Recent",
+    accent: b.coverGradient,
+  }));
 
   // 9. Projects
   const studentProjects = [
@@ -428,10 +453,23 @@ export function StudentDashboardView({
   const [bookingTopic, setBookingTopic] = useState("CLAT Legal Reasoning & Principle-Fact Analysis");
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
-  // Live CBT Mock Simulator State
+  // Live CBT Mock Simulator State (Option 2: 120-Min Consortium CBT Mock Engine)
   const [activeMockTest, setActiveMockTest] = useState<any | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [mockScore, setMockScore] = useState<number | null>(null);
+  const [cbtActive, setCbtActive] = useState<boolean>(false);
+  const [cbtActiveSectionTab, setCbtActiveSectionTab] = useState<"legal" | "gk" | "english" | "logical" | "quant">("legal");
+  const [cbtCurrentQuestionIndex, setCbtCurrentQuestionIndex] = useState(0);
+  const [cbtSelectedAnswers, setCbtSelectedAnswers] = useState<Record<number, number>>({});
+  const [cbtMarkedForReview, setCbtMarkedForReview] = useState<Record<number, boolean>>({});
+  const [cbtVisitedQuestions, setCbtVisitedQuestions] = useState<Record<number, boolean>>({ 0: true });
+  const [cbtTimeRemaining, setCbtTimeRemaining] = useState(7200); // 120 mins (7200 seconds)
+  const [cbtIsTimerRunning, setCbtIsTimerRunning] = useState(true);
+  const [cbtIsSubmitted, setCbtIsSubmitted] = useState(false);
+  const [cbtShowConfirmModal, setCbtShowConfirmModal] = useState(false);
+  const [cbtPassageFontSize, setCbtPassageFontSize] = useState<"sm" | "base" | "lg">("sm");
+  const [cbtReviewFilter, setCbtReviewFilter] = useState<"all" | "correct" | "incorrect" | "unattempted" | "marked">("all");
+  const [showCbtGuidelinesModal, setShowCbtGuidelinesModal] = useState(false);
 
   // AI Doubt Solver State
   const [aiChatMessages, setAiChatMessages] = useState<
@@ -461,7 +499,7 @@ export function StudentDashboardView({
   const [scheduleFilter, setScheduleFilter] = useState<"all" | "today">("all");
 
   // ==============================================================
-  // EDUPYE HYBRID APPLICATION FEATURES STATE
+  // Wakheel HYBRID APPLICATION FEATURES STATE
   // ==============================================================
   // 1. Floating AI Copilot Widget
   const [showFloatingAI, setShowFloatingAI] = useState(false); // Collapsed by default so it doesn't block dashboard view
@@ -486,7 +524,7 @@ export function StudentDashboardView({
   >([
     {
       sender: "ai",
-      text: "Namaste Advithya! I am your Wakheel EduPye Hybrid Legal Copilot (v2.5).\n\nI specialize in CLAT/KLEE legal aptitude drills, Bharatiya Nyaya Sanhita (BNS 2023) statutory concordance, and landmark Supreme Court & High Court ratio decidendi.",
+      text: "Namaste Advithya! I am your Wakheel Legal Copilot (v2.5).\n\nI specialize in CLAT/KLEE legal aptitude drills, Bharatiya Nyaya Sanhita (BNS 2023) statutory concordance, and landmark Supreme Court & High Court ratio decidendi.",
       time: "Online",
       mode: "aptitude",
       statutes: ["BNS 2023", "BNSS 2023", "Constitution of India", "CLAT NLU Curricula"],
@@ -762,7 +800,7 @@ export function StudentDashboardView({
     } catch {}
   }, []);
 
-  // Exam Filters matching EduPye category row
+  // Exam Filters matching Wakheel category row
   const examFilters = [
     "For You",
     "Education",
@@ -775,7 +813,7 @@ export function StudentDashboardView({
   ];
 
   // ==============================================================
-  // EDUPYE FEATURED MASTERCLASSES & CURRICULA (IMAGE CARDS)
+  // Wakheel FEATURED MASTERCLASSES & CURRICULA (IMAGE CARDS)
   // ==============================================================
   const masterclassCourses = [
     {
@@ -830,7 +868,7 @@ export function StudentDashboardView({
       title: "Constitutional Law: Fundamental Rights & Writs",
       exam: "Distance LL.B (IGNOU)",
       badge: "BARE ACT SYLLABUS",
-      badgeColor: "blue",
+      badgeColor: "amber",
       unitsCount: "24 Units",
       dateAdded: "2 Months ago",
       image: "/academy/explore-paper.png",
@@ -945,7 +983,7 @@ export function StudentDashboardView({
       title: "Law of Contracts & Specific Relief Compendium",
       exam: "Distance LL.B (IGNOU)",
       badge: "COMMERCIAL LAW",
-      badgeColor: "blue",
+      badgeColor: "amber",
       unitsCount: "20 Sections",
       dateAdded: "2 Months ago",
       image: "/academy/explore-paper.png",
@@ -1102,7 +1140,7 @@ export function StudentDashboardView({
   ];
 
   // ==============================================================
-  // EDUPYE LEARN SECTION DATA (11 SUB-SECTIONS, 6 SUBJECTS, 12 TOOLS)
+  // Wakheel LEARN SECTION DATA (11 SUB-SECTIONS, 6 SUBJECTS, 12 TOOLS)
   // ==============================================================
   const learnSubSectionsList = [
     { id: "subject" as const, label: "Subject", icon: BookOpen },
@@ -1148,14 +1186,14 @@ export function StudentDashboardView({
     {
       id: "legal_aptitude",
       category: "LEGAL APTITUDE & REASONING",
-      categoryColor: "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10",
+      categoryColor: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
       title: "Deductive Legal Aptitude Drills",
       chapters: 4,
       lessons: 14,
       badge: "CLAT Core Pattern",
-      accent: "from-indigo-500 to-purple-500",
+      accent: "from-amber-600 to-zinc-900",
       courseRefId: "ai_legal_tech",
-      colorTag: "indigo",
+      colorTag: "amber",
       metaDesc: "Passage-based inference, ratio decidendi isolation, deductive syllogisms, strict liability.",
     },
     {
@@ -1174,14 +1212,14 @@ export function StudentDashboardView({
     {
       id: "contracts_torts",
       category: "COMMERCIAL & TORTS",
-      categoryColor: "text-sky-600 dark:text-sky-400 bg-sky-500/10",
+      categoryColor: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
       title: "Law of Contracts & Tortious Liability",
       chapters: 3,
       lessons: 12,
       badge: "1st Year LL.B Core",
-      accent: "from-sky-500 to-blue-500",
+      accent: "from-amber-500 to-amber-700",
       courseRefId: "ai_legal_tech",
-      colorTag: "sky",
+      colorTag: "amber",
       metaDesc: "Offer, acceptance, breach remedies, negligence, volenti non fit injuria, strict liability.",
     },
     {
@@ -1554,32 +1592,310 @@ export function StudentDashboardView({
     },
   ];
 
-  // Sample Mock Test Data for Free CBT Mock
+  // ==============================================================
+  // OPTION 2: 120-MINUTE CONSORTIUM CLAT CBT MOCK EXAM DATASET
+  // ==============================================================
+  const cbtSections = [
+    { id: "legal" as const, label: "Legal Reasoning", count: 5, targetTime: "35 mins", color: "amber" },
+    { id: "gk" as const, label: "Current Affairs & GK", count: 3, targetTime: "15 mins", color: "amber" },
+    { id: "english" as const, label: "English Language", count: 2, targetTime: "20 mins", color: "emerald" },
+    { id: "logical" as const, label: "Logical Reasoning", count: 2, targetTime: "25 mins", color: "purple" },
+    { id: "quant" as const, label: "Quantitative Techniques", count: 2, targetTime: "25 mins", color: "rose" },
+  ];
+
+  interface CbtQuestionItem {
+    id: number;
+    section: "legal" | "gk" | "english" | "logical" | "quant";
+    sectionTitle: string;
+    passageId: string;
+    passageTitle: string;
+    passageText: string;
+    passageCitation: string;
+    question: string;
+    options: string[];
+    correct: number;
+    explanation: string;
+    legalRatio: string;
+  }
+
+  const cbtQuestions: CbtQuestionItem[] = [
+    {
+      id: 0,
+      section: "legal",
+      sectionTitle: "Legal Reasoning",
+      passageId: "legal_p1",
+      passageTitle: "Passage 1: Bharatiya Nyaya Sanhita (BNS) 2023, Section 69 — Deceitful Means vs Breach of Promise",
+      passageCitation: "BNS 2023 § 69; Pramod Suryabhoop Pawar v. State of Maharashtra (2019) 9 SCC 608",
+      passageText: "Section 69 of the Bharatiya Nyaya Sanhita, 2023 penalizes sexual intercourse by employing deceitful means or making a false promise to marry, punishable with imprisonment up to ten years. The provision statutorily distinguishes between a breach of promise (which arises when a person genuinely intends to marry at the inception of the relationship but subsequently fails or is unable to fulfill the promise due to unforeseen circumstances or familial opposition) and a false promise to marry made with mala fide intention from the very beginning to obtain sexual consent. The Explanation to Section 69 clarifies that 'deceitful means' includes the false promise of employment or promotion, inducement, or marrying after suppressing one's true identity. The Supreme Court in various precedents has affirmed that to constitute an offence under such provisions, the false promise must have been the direct catalyst and decisive reason for obtaining consent, and the perpetrator must have had no intention of marrying the victim at the time the representation was made.",
+      question: "A and B met in law school in 2022 and mutually agreed to marry. A introduced B to his parents, who initially approved. In 2024, after two years of a consensual intimate relationship, A's parents discovered caste incompatibility and threatened self-harm, causing A to call off the marriage. B lodges an FIR under Section 69 BNS alleging deceitful inducement. Determine A's criminal liability.",
+      options: [
+        "A is guilty under Section 69 BNS because failure to marry after entering an intimate relationship is an absolute statutory offence.",
+        "A is not guilty under Section 69 BNS because A had a genuine intention to marry at the inception; subsequent inability to fulfill the promise due to parental opposition constitutes a breach of promise, not fraudulent inducement.",
+        "A is guilty because caste considerations are unconstitutional under Article 15 and cannot serve as an excuse in criminal law.",
+        "A is liable for civil breach of contract only under Section 73 of the Indian Contract Act."
+      ],
+      correct: 1,
+      explanation: "Under established Supreme Court jurisprudence (Pramod Suryabhoop Pawar and the statutory Explanation to Section 69 BNS), there is a sharp demarcation between a false promise made with dishonest intent from inception (deceit) and a subsequent inability to marry due to intervening circumstances (breach of promise). Since A harbored genuine intent when the relationship commenced, Section 69 is not attracted.",
+      legalRatio: "Deceitful promise requires fraudulent intent ab initio; subsequent breach due to supervening factors does not constitute an offence under S. 69 BNS."
+    },
+    {
+      id: 1,
+      section: "legal",
+      sectionTitle: "Legal Reasoning",
+      passageId: "legal_p1",
+      passageTitle: "Passage 1: Bharatiya Nyaya Sanhita (BNS) 2023, Section 69 — Deceitful Means vs Breach of Promise",
+      passageCitation: "BNS 2023 § 69; Anurag Soni v. State of Chhattisgarh (2019) 10 SCC 660",
+      passageText: "Section 69 of the Bharatiya Nyaya Sanhita, 2023 penalizes sexual intercourse by employing deceitful means or making a false promise to marry, punishable with imprisonment up to ten years. The provision statutorily distinguishes between a breach of promise (which arises when a person genuinely intends to marry at the inception of the relationship but subsequently fails or is unable to fulfill the promise due to unforeseen circumstances or familial opposition) and a false promise to marry made with mala fide intention from the very beginning to obtain sexual consent. The Explanation to Section 69 clarifies that 'deceitful means' includes the false promise of employment or promotion, inducement, or marrying after suppressing one's true identity. The Supreme Court in various precedents has affirmed that to constitute an offence under such provisions, the false promise must have been the direct catalyst and decisive reason for obtaining consent, and the perpetrator must have had no intention of marrying the victim at the time the representation was made.",
+      question: "Rahul, a married corporate executive, suppressed his existing subsisting marriage and promised to marry Priya, a junior associate. Relying upon his assurance and bachelor representation, Priya consented to sexual intercourse. When Priya discovered his marriage certificate, Rahul argued that he genuinely intended to obtain a mutual-consent divorce in the future. Is Rahul liable under Section 69 BNS?",
+      options: [
+        "No, because Priya failed to exercise reasonable due diligence regarding Rahul's civil marital status before consenting.",
+        "Yes, because Rahul suppressed his existing marriage, which squarely falls under 'deceitful means' (suppressing true identity/marital status) under the Explanation to Section 69 BNS.",
+        "No, because Section 69 applies exclusively to unmarried men who refuse to solemnize marriage.",
+        "No, because adult consensual relationships outside marriage are protected under personal autonomy."
+      ],
+      correct: 1,
+      explanation: "The Explanation to Section 69 BNS explicitly defines 'deceitful means' to include inducement by suppressing one's true identity or marital status. Promising marriage while concealing a legal impediment to marry (an undissolved existing marriage) proves dishonest intent at inception.",
+      legalRatio: "Concealment of an existing valid marriage vitiates consent ab initio under the Explanation to Section 69 BNS."
+    },
+    {
+      id: 2,
+      section: "legal",
+      sectionTitle: "Legal Reasoning",
+      passageId: "legal_p2",
+      passageTitle: "Passage 2: Constitutional Law & Proportionality Test (Article 21 & Privacy)",
+      passageCitation: "Justice K.S. Puttaswamy (Retd.) v. Union of India (2017) 10 SCC 1",
+      passageText: "In the landmark nine-judge Constitution Bench decision in Justice K.S. Puttaswamy (Retd.) v. Union of India (2017), the Supreme Court unequivocally recognized the right to privacy as an intrinsic part of the right to life and personal liberty under Article 21. Any state encroachment upon personal privacy must satisfy the rigorous four-fold proportionality test: (1) Legality: The measure must have an express legislative basis (a valid law, not merely an executive order); (2) Legitimate State Aim: The objective must serve a legitimate public interest recognized by the Constitution; (3) Proportionality (Suitability & Necessity): The measure must be rationally connected to the objective, and there must be no less-intrusive alternative available; and (4) Balancing: The impact of the encroachment must not have a disproportionate negative bearing on the individual's fundamental rights.",
+      question: "The State Transport Commissioner issues an executive circular mandating that all private shared taxis must install continuous internal 360-degree biometric facial scanners transmitting live footage to a police dashboard, without any supporting legislative Act. Which prong of the Puttaswamy proportionality test is immediately violated?",
+      options: [
+        "Legitimate State Aim, because passenger safety is not an acknowledged public interest.",
+        "Legality, because intrusive state surveillance cannot be instituted via an administrative or executive circular without express statutory enactment by Parliament or the State Legislature.",
+        "Balancing, because biometric scanning is inherently less intrusive than luggage search.",
+        "None, because commercial taxi passengers waive all constitutional expectations of privacy."
+      ],
+      correct: 1,
+      explanation: "The first condition of the Puttaswamy proportionality doctrine is Legality—any state encroachment upon Article 21 privacy must emanate from an enacted statutory law passed by a competent legislature, not a mere executive fiat or departmental circular.",
+      legalRatio: "Executive circulars cannot abridge Article 21 fundamental privacy rights without statutory backing."
+    },
+    {
+      id: 3,
+      section: "legal",
+      sectionTitle: "Legal Reasoning",
+      passageId: "legal_p2",
+      passageTitle: "Passage 2: Constitutional Law & Proportionality Test (Article 21 & Privacy)",
+      passageCitation: "Justice K.S. Puttaswamy (Retd.) v. Union of India (2017) 10 SCC 1; Anuradha Bhasin v. UOI (2020)",
+      passageText: "In the landmark nine-judge Constitution Bench decision in Justice K.S. Puttaswamy (Retd.) v. Union of India (2017), the Supreme Court unequivocally recognized the right to privacy as an intrinsic part of the right to life and personal liberty under Article 21. Any state encroachment upon personal privacy must satisfy the rigorous four-fold proportionality test: (1) Legality: The measure must have an express legislative basis (a valid law, not merely an executive order); (2) Legitimate State Aim: The objective must serve a legitimate public interest recognized by the Constitution; (3) Proportionality (Suitability & Necessity): The measure must be rationally connected to the objective, and there must be no less-intrusive alternative available; and (4) Balancing: The impact of the encroachment must not have a disproportionate negative bearing on the individual's fundamental rights.",
+      question: "Under the Digital Personal Data Protection (DPDP) Act, 2023, Section 17 grants wide exemptions to State agencies from data principal consent on grounds of 'national security'. If challenged before the Supreme Court, what must the Government demonstrate for the provision to survive constitutional scrutiny?",
+      options: [
+        "That parliamentary statutes carrying national security tags enjoy absolute blanket immunity from judicial review.",
+        "That the exemption serves a legitimate state aim and is accompanied by procedural safeguards, judicial oversight, and narrow necessity to prevent arbitrary overreach under the Puttaswamy test.",
+        "That data privacy is a statutory privilege rather than a fundamental constitutional right.",
+        "That international trade treaties supersede Part III fundamental rights."
+      ],
+      correct: 1,
+      explanation: "While national security is recognized as a legitimate state aim, Puttaswamy mandates that any statutory encroachment must incorporate procedural safeguards, narrow tailoring, and institutional oversight to satisfy the proportionality standard.",
+      legalRatio: "National security exemptions must satisfy proportionality, necessity, and adequate procedural safeguards."
+    },
+    {
+      id: 4,
+      section: "legal",
+      sectionTitle: "Legal Reasoning",
+      passageId: "legal_p3",
+      passageTitle: "Passage 3: Law of Contracts — Remoteness of Damages under Section 73",
+      passageCitation: "Indian Contract Act, 1872 § 73; Hadley v. Baxendale (1854) 9 Exch 341",
+      passageText: "Under Section 73 of the Indian Contract Act, 1872, when a contract has been broken, the party who suffers by such breach is entitled to receive compensation for any loss or damage caused to him thereby, which naturally arose in the usual course of things from such breach, or which the parties knew, when they made the contract, to be likely to result from the breach. The section explicitly lays down that compensation is not to be given for any remote and indirect loss or damage sustained by reason of the breach. This statutory codification mirrors the classic English common law doctrine laid down in Hadley v. Baxendale: damages are divided into ordinary damages (arising naturally) and special damages (recoverable only if special circumstances were communicated to the defendant at the time of contract formation).",
+      question: "A courier agency accepts a parcel containing an advocate's original High Court chamber enrollment certificate for delivery within 24 hours. Due to the courier driver's negligence, delivery is delayed by 3 days. Consequently, the advocate misses the deadline to file a nomination for a ₹25,00,000 Bar Council arbitration panel appointment. The courier was never informed about the arbitration panel nomination. Can the advocate recover the ₹25,00,000 lost earnings under Section 73?",
+      options: [
+        "Yes, because breach of contract entitles the injured party to full indemnity for all consequential commercial injuries.",
+        "No, because the loss of the ₹25,00,000 arbitration panel appointment was a special/remote loss that was not communicated to the courier at the time the contract was concluded.",
+        "Yes, because advocates enjoy special professional protection under the Advocates Act, 1961.",
+        "No, because courier services are completely exempt from liability under postal statutory conventions."
+      ],
+      correct: 1,
+      explanation: "Under Section 73 and Hadley v. Baxendale, extraordinary profits or lost commercial opportunities constitute special damages. They are not recoverable unless the defendant was expressly put on notice of the special circumstances at the time the contract was made.",
+      legalRatio: "Remote and indirect losses are irrecoverable under Section 73 unless communicated at the time of agreement."
+    },
+    {
+      id: 5,
+      section: "gk",
+      sectionTitle: "Current Affairs & GK",
+      passageId: "gk_p1",
+      passageTitle: "Passage 4: Constitutional Jurisprudence — Supreme Court Collegium System",
+      passageCitation: "Special Reference No. 1 of 1998 (Third Judges Case) (1998) 7 SCC 739",
+      passageText: "The Collegium system for judicial appointments to the Supreme Court and High Courts evolved through a series of judicial pronouncements known as the Three Judges Cases: S.P. Gupta (First Judges Case, 1981), Supreme Court Advocates-on-Record Association (Second Judges Case, 1993), and the Special Reference 1 of 1998 (Third Judges Case). In the Third Judges Case, the Supreme Court laid down that the Chief Justice of India (CJI) must consult a collegium of the four senior-most puisne judges of the Supreme Court before recommending appointments to the apex court. For High Court appointments, the Supreme Court Collegium consists of the CJI and the two senior-most judges. While the Executive can seek reconsideration of a recommendation, if the Collegium reiterates the name unanimously, the appointment must be notified under established constitutional convention.",
+      question: "What is the mandatory composition of the Supreme Court Collegium for recommending appointments of judges to the Supreme Court of India under the Third Judges Case (1998)?",
+      options: [
+        "The Chief Justice of India and the two senior-most judges of the Supreme Court.",
+        "The Chief Justice of India and the four senior-most judges of the Supreme Court.",
+        "The Chief Justice of India, the Union Minister of Law and Justice, and the Attorney General for India.",
+        "A constitutional commission headed by the Prime Minister and the Leader of Opposition in Lok Sabha."
+      ],
+      correct: 1,
+      explanation: "In the Third Judges Case (1998), the Supreme Court clarified that for elevations to the Supreme Court, the Collegium comprises the CJI and the four senior-most puisne judges. For High Court elevations, it is CJI + two senior-most judges.",
+      legalRatio: "CJI + 4 senior-most judges constitute the apex court collegium for Supreme Court elevations."
+    },
+    {
+      id: 6,
+      section: "gk",
+      sectionTitle: "Current Affairs & GK",
+      passageId: "gk_p1",
+      passageTitle: "Passage 4: Constitutional Jurisprudence — Supreme Court Collegium System",
+      passageCitation: "Supreme Court Advocates-on-Record Association v. UOI (NJAC Case) (2015) 5 SCC 1",
+      passageText: "The Collegium system for judicial appointments to the Supreme Court and High Courts evolved through a series of judicial pronouncements known as the Three Judges Cases: S.P. Gupta (First Judges Case, 1981), Supreme Court Advocates-on-Record Association (Second Judges Case, 1993), and the Special Reference 1 of 1998 (Third Judges Case). In the Third Judges Case, the Supreme Court laid down that the Chief Justice of India (CJI) must consult a collegium of the four senior-most puisne judges of the Supreme Court before recommending appointments to the apex court. For High Court appointments, the Supreme Court Collegium consists of the CJI and the two senior-most judges. While the Executive can seek reconsideration of a recommendation, if the Collegium reiterates the name unanimously, the appointment must be notified under established constitutional convention.",
+      question: "In 2015, the Supreme Court struck down the 99th Constitutional Amendment Act and the National Judicial Appointments Commission (NJAC) Act. What was the central constitutional ratio of the majority judgment?",
+      options: [
+        "The amendment failed to receive the assent of the required number of State Legislatures under Article 368.",
+        "Judicial primacy in the appointment of judges is an essential facet of the Independence of the Judiciary, which constitutes an unamendable part of the Basic Structure of the Constitution.",
+        "The Law Minister cannot be an ex-officio member of any statutory body.",
+        "Judges can only be selected through a public competitive examination conducted by the UPSC."
+      ],
+      correct: 1,
+      explanation: "A five-judge Constitution Bench held that the primacy of the judiciary in appointments is indispensable to ensure judicial independence, which is an inviolable facet of the Basic Structure doctrine formulated in Kesavananda Bharati.",
+      legalRatio: "Independence of the judiciary and judicial primacy in appointments are part of the Basic Structure."
+    },
+    {
+      id: 7,
+      section: "gk",
+      sectionTitle: "Current Affairs & GK",
+      passageId: "gk_p2",
+      passageTitle: "Passage 5: International Law & Maritime Sovereignty",
+      passageCitation: "United Nations Convention on the Law of the Sea (UNCLOS), 1982",
+      passageText: "The United Nations Convention on the Law of the Sea (UNCLOS), 1982, codifies ocean sovereignty and maritime rights across defined zones measured from baseline: Territorial Sea (up to 12 nautical miles, where the coastal state exercises sovereignty subject to innocent passage), Contiguous Zone (up to 24 nautical miles, for customs, fiscal, immigration, and sanitary enforcement), and Exclusive Economic Zone (EEZ, extending up to 200 nautical miles, where coastal states have sovereign rights over marine resources and continental shelf exploration). In international straits used for international navigation, the regime of transit passage applies, which cannot be suspended even during peacetime disputes.",
+      question: "Under UNCLOS 1982, what is the maximum breadth of the Exclusive Economic Zone (EEZ) measured from the territorial sea baseline, and what rights does the coastal state possess within it?",
+      options: [
+        "200 nautical miles; sovereign rights for exploring, exploiting, conserving, and managing natural living and non-living resources.",
+        "12 nautical miles; absolute territorial sovereignty identical to land territory.",
+        "50 nautical miles; exclusive military patrol rights with total prohibition of foreign commercial merchant vessels.",
+        "350 nautical miles; full legislative jurisdiction over foreign flag vessels on all matters."
+      ],
+      correct: 0,
+      explanation: "Under Part V of UNCLOS (Article 57 & 56), the EEZ extends up to 200 nautical miles from the baseline, within which coastal states hold sovereign rights over natural resources (fisheries, seabed minerals) while foreign states retain navigation and overflight freedoms.",
+      legalRatio: "EEZ extends to 200 nm granting sovereign rights over resources without extinguishing navigation freedoms."
+    },
+    {
+      id: 8,
+      section: "english",
+      sectionTitle: "English Language",
+      passageId: "english_p1",
+      passageTitle: "Passage 6: Judicial Review vs. Judicial Overreach in Democratic Governance",
+      passageCitation: "Comparative Constitutional Jurisprudence (Oxford University Press, 2024)",
+      passageText: "The legitimacy of judicial review lies in the counter-majoritarian role assigned to the constitutional judiciary: to safeguard fundamental rights against transient political majorities and enforce constitutional limits upon legislative and executive power. However, a precarious boundary separates legitimate judicial activism from judicial overreach. When courts venture into polycentric socio-economic policymaking—such as directing the interlinking of rivers, fixing fuel prices, or framing taxation roadmaps—they suffer from institutional incapacity. Judges are trained in adjudicating bilateral disputes based on codified evidence; they lack the consultative machinery, fiscal resources, and electoral accountability required for managing complex socio-economic trade-offs. The institutional capital of the judiciary is not inexhaustible; squandering it on administrative micromanagement inevitably erodes public reverence for judicial decrees when state compliance proves unviable.",
+      question: "According to the passage, why is the judiciary institutionally ill-equipped to handle polycentric socio-economic policymaking?",
+      options: [
+        "Judges are predominantly appointed from corporate legal backgrounds without civil service exposure.",
+        "Courts lack the consultative machinery, fiscal resources, and electoral accountability required for balancing complex socio-economic trade-offs.",
+        "The Constitution expressly restricts writ jurisdiction under Article 32 to criminal habeas corpus matters.",
+        "State compliance is guaranteed only when policies are authored by elected legislative committees."
+      ],
+      correct: 1,
+      explanation: "The author explicitly identifies that courts lack consultative machinery, fiscal resources, and electoral accountability necessary to balance polycentric socio-economic trade-offs.",
+      legalRatio: "Institutional incapacity arises from lack of consultative machinery, budget controls, and electoral accountability."
+    },
+    {
+      id: 9,
+      section: "english",
+      sectionTitle: "English Language",
+      passageId: "english_p1",
+      passageTitle: "Passage 6: Judicial Review vs. Judicial Overreach in Democratic Governance",
+      passageCitation: "Comparative Constitutional Jurisprudence (Oxford University Press, 2024)",
+      passageText: "The legitimacy of judicial review lies in the counter-majoritarian role assigned to the constitutional judiciary: to safeguard fundamental rights against transient political majorities and enforce constitutional limits upon legislative and executive power. However, a precarious boundary separates legitimate judicial activism from judicial overreach. When courts venture into polycentric socio-economic policymaking—such as directing the interlinking of rivers, fixing fuel prices, or framing taxation roadmaps—they suffer from institutional incapacity. Judges are trained in adjudicating bilateral disputes based on codified evidence; they lack the consultative machinery, fiscal resources, and electoral accountability required for managing complex socio-economic trade-offs. The institutional capital of the judiciary is not inexhaustible; squandering it on administrative micromanagement inevitably erodes public reverence for judicial decrees when state compliance proves unviable.",
+      question: "What is the primary warning articulated by the author regarding excessive judicial intervention into administrative domains?",
+      options: [
+        "It provokes Parliament to immediately curtail appellate judicial salaries.",
+        "It squanders the judiciary's finite institutional capital and erodes public reverence when decrees cannot realistically be enforced by the state.",
+        "It forces commercial enterprises to register foreign arbitrations outside India.",
+        "It eliminates the doctrine of precedent in lower district courts."
+      ],
+      correct: 1,
+      explanation: "The concluding sentence emphasizes: 'The institutional capital of the judiciary is not inexhaustible; squandering it on administrative micromanagement inevitably erodes public reverence for judicial decrees when state compliance proves unviable.'",
+      legalRatio: "Squandering institutional capital on administrative micromanagement erodes judicial authority."
+    },
+    {
+      id: 10,
+      section: "logical",
+      sectionTitle: "Logical Reasoning",
+      passageId: "logical_p1",
+      passageTitle: "Passage 7: Legal Epistemology & Deductive Reasoning",
+      passageCitation: "Principles of Evidence & Formal Logic in Trial Advocacy",
+      passageText: "In Anglo-Indian jurisprudence, legal adjudication rests upon distinct standards of proof. In criminal trials, the prosecution must establish the guilt of the accused 'beyond reasonable doubt'—if two reasonable views are plausible based on the evidentiary record, the view favoring innocence must prevail. In civil disputes, claims are adjudicated on the 'preponderance of probabilities'—the party demonstrating that their narrative is more likely true than not succeeds. A common fallacy in legal rhetoric is the 'appeal to ignorance' (argumentum ad ignorantiam)—asserting that a claim must be true simply because it has not been conclusively disproven. In criminal jurisprudence, the failure of the defense to prove an alternative alibi cannot relieve the prosecution of its cardinal burden to establish the commission of the offence beyond reasonable doubt.",
+      question: "Consider the following syllogism: Premise 1: All offences under Section 302 IPC/BNS carry either life imprisonment or the death penalty. Premise 2: Offence X does not carry life imprisonment or the death penalty. Conclusion: Therefore, Offence X is not an offence under Section 302. What is the logical validity of this conclusion?",
+      options: [
+        "Invalid, because some criminal offences carry compoundable statutory fines.",
+        "Valid; it follows deductive Modus Tollens (If P then Q; Not Q; therefore Not P).",
+        "Invalid, because it commits the formal fallacy of affirming the consequent.",
+        "Uncertain, because statutory interpretations vary across High Court benches."
+      ],
+      correct: 1,
+      explanation: "This is a classic valid deductive argument conforming to Modus Tollens: If P (Offence is 302), then Q (Carries life/death). Not Q (Does not carry life/death). Therefore, Not P (Not an offence under 302).",
+      legalRatio: "Modus Tollens is a deductively valid rule of inference in statutory characterization."
+    },
+    {
+      id: 11,
+      section: "logical",
+      sectionTitle: "Logical Reasoning",
+      passageId: "logical_p1",
+      passageTitle: "Passage 7: Legal Epistemology & Deductive Reasoning",
+      passageCitation: "Principles of Evidence & Formal Logic in Trial Advocacy",
+      passageText: "In Anglo-Indian jurisprudence, legal adjudication rests upon distinct standards of proof. In criminal trials, the prosecution must establish the guilt of the accused 'beyond reasonable doubt'—if two reasonable views are plausible based on the evidentiary record, the view favoring innocence must prevail. In civil disputes, claims are adjudicated on the 'preponderance of probabilities'—the party demonstrating that their narrative is more likely true than not succeeds. A common fallacy in legal rhetoric is the 'appeal to ignorance' (argumentum ad ignorantiam)—asserting that a claim must be true simply because it has not been conclusively disproven. In criminal jurisprudence, the failure of the defense to prove an alternative alibi cannot relieve the prosecution of its cardinal burden to establish the commission of the offence beyond reasonable doubt.",
+      question: "A public prosecutor argues: 'The accused has failed to produce any witness or receipt demonstrating his whereabouts between 10:00 PM and midnight on the night of the burglary. Since he cannot disprove his presence at the scene, the court must conclude he committed the crime.' Based on the passage, which fallacy and legal flaw characterizes this submission?",
+      options: [
+        "Post hoc ergo propter hoc (faulty causal attribution).",
+        "Argumentum ad ignorantiam (appeal to ignorance), which impermissibly attempts to invert the burden of proof from the prosecution onto the accused.",
+        "Hasty Generalization based on insufficient empirical sample size.",
+        "Ad Hominem abusive attack against defense counsel."
+      ],
+      correct: 1,
+      explanation: "The prosecutor asserts guilt simply because innocence or an alibi was not affirmatively demonstrated. The passage explicitly highlights that this is an argumentum ad ignorantiam that cannot relieve the prosecution of proving guilt beyond reasonable doubt.",
+      legalRatio: "Failure of alibi does not relieve prosecution of proving guilt beyond reasonable doubt."
+    },
+    {
+      id: 12,
+      section: "quant",
+      sectionTitle: "Quantitative Techniques",
+      passageId: "quant_p1",
+      passageTitle: "Passage 8: Quantitative Data Interpretation — Indian Court Pendency & Sanctioned Strengths",
+      passageCitation: "National Judicial Data Grid (NJDG) Annual Statistics 2025",
+      passageText: "According to the National Judicial Data Grid (NJDG) data for 2025: Total sanctioned judge strength across the 25 High Courts is 1,114 judges. The working strength is 780 judges, leaving 334 vacancies. Across all High Courts, 60.00 Lakh cases are pending. In a representative High Court with 1,20,000 total pending cases: 60% are civil cases and 40% are criminal cases. During the year 2025, this High Court instituted 40,000 new civil cases and 25,000 new criminal cases. During the same year, the court disposed of 36,000 civil cases and 20,000 criminal cases.",
+      question: "What is the vacancy percentage among High Court judges across India based on the sanctioned strength of 1,114 and 334 vacancies? (Round to one decimal place).",
+      options: [
+        "24.5%",
+        "30.0%",
+        "35.2%",
+        "41.8%"
+      ],
+      correct: 1,
+      explanation: "Vacancy percentage = (334 / 1114) * 100 = 29.982% which rounds to 30.0%.",
+      legalRatio: "Vacancy % = (Vacancies / Sanctioned Strength) * 100."
+    },
+    {
+      id: 13,
+      section: "quant",
+      sectionTitle: "Quantitative Techniques",
+      passageId: "quant_p1",
+      passageTitle: "Passage 8: Quantitative Data Interpretation — Indian Court Pendency & Sanctioned Strengths",
+      passageCitation: "National Judicial Data Grid (NJDG) Annual Statistics 2025",
+      passageText: "According to the National Judicial Data Grid (NJDG) data for 2025: Total sanctioned judge strength across the 25 High Courts is 1,114 judges. The working strength is 780 judges, leaving 334 vacancies. Across all High Courts, 60.00 Lakh cases are pending. In a representative High Court with 1,20,000 total pending cases: 60% are civil cases and 40% are criminal cases. During the year 2025, this High Court instituted 40,000 new civil cases and 25,000 new criminal cases. During the same year, the court disposed of 36,000 civil cases and 20,000 criminal cases.",
+      question: "In the representative High Court, what was the net change in total pending cases (civil + criminal combined) over the course of 2025? (Net change = Total New Instituted minus Total Disposed).",
+      options: [
+        "Net reduction of 9,000 cases.",
+        "Net increase of 9,000 cases (65,000 instituted - 56,000 disposed).",
+        "Net increase of 14,000 cases.",
+        "Zero change (disposal matched institution exactly)."
+      ],
+      correct: 1,
+      explanation: "Total instituted = 40,000 (civil) + 25,000 (criminal) = 65,000. Total disposed = 36,000 (civil) + 20,000 (criminal) = 56,000. Net change = 65,000 - 56,000 = +9,000 cases increase in backlog.",
+      legalRatio: "Case Backlog Delta = Total Cases Instituted - Total Cases Disposed."
+    }
+  ];
+
+  // Backward compatibility alias for legacy mock buttons
   const sampleFreeMock = {
-    title: "CLAT 2027 Diagnostic Mock 01 (Consortium Pattern)",
+    title: "Consortium CLAT 2027 Full Length All-India Diagnostic CBT Mock",
     timeMinutes: 120,
-    questions: [
-      {
-        q: "Under Section 73 of the Indian Contract Act, compensation is payable for loss or damage that naturally arose in the usual course of things from a breach. Remote or indirect losses cannot be claimed unless specially agreed upon. If a printer delivers law exam papers 2 days late without being informed of the strict exam deadline, can the university claim damages for rescheduling the entire national exam?",
-        options: [
-          "Yes, because delay constitutes breach of contract.",
-          "No, because the exceptional severity of rescheduling the national exam was a remote loss not communicated to the printer (Hadley v. Baxendale rule).",
-          "Yes, because state universities have statutory immunity from commercial loss rules.",
-          "No, because liquidated damages must be specified in stamp paper.",
-        ],
-        correct: 1,
-      },
-      {
-        q: "A police officer detains an accused person without informing their nominated family member or advocate within 12 hours of arrest, citing confidential investigation. Does this violate statutory safeguards under Section 35(8) BNSS / S.41D CrPC?",
-        options: [
-          "No, investigating agencies have full discretion during initial 24 hours.",
-          "Yes, the right to have a relative or advocate informed is an absolute constitutional and statutory safeguard under D.K. Basu guidelines.",
-          "No, provided the accused is produced before a Magistrate within 48 hours.",
-          "Yes, but only if the accused is a woman or juvenile.",
-        ],
-        correct: 1,
-      },
-    ],
+    questions: cbtQuestions.map((q) => ({
+      q: q.question,
+      options: q.options,
+      correct: q.correct,
+    })),
   };
 
   // Filtered Test Series
@@ -1643,22 +1959,224 @@ export function StudentDashboardView({
     }, 1500);
   };
 
-  // Mock Test Submission
-  const handleSelectMockAnswer = (qIdx: number, optIdx: number) => {
-    setSelectedAnswers((prev) => ({ ...prev, [qIdx]: optIdx }));
+  // ==============================================================
+  // CBT ENGINE TIMER & ACTION HANDLERS
+  // ==============================================================
+  useEffect(() => {
+    if (cbtIsSubmitted || !cbtIsTimerRunning || !cbtActive) return;
+    const timer = setInterval(() => {
+      setCbtTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCbtIsSubmitted(true);
+          setCbtShowConfirmModal(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cbtIsSubmitted, cbtIsTimerRunning, cbtActive]);
+
+  const formatCbtTime = (totalSeconds: number) => {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const calculateMockScore = () => {
-    let score = 0;
-    sampleFreeMock.questions.forEach((q, idx) => {
-      const selected = selectedAnswers[idx];
+  const handleSelectCbtAnswer = (qIndex: number, optIndex: number) => {
+    setCbtSelectedAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
+    setCbtVisitedQuestions((prev) => ({ ...prev, [qIndex]: true }));
+    setSelectedAnswers((prev) => ({ ...prev, [qIndex]: optIndex }));
+  };
+
+  const handleClearCbtAnswer = (qIndex: number) => {
+    setCbtSelectedAnswers((prev) => {
+      const copy = { ...prev };
+      delete copy[qIndex];
+      return copy;
+    });
+    setSelectedAnswers((prev) => {
+      const copy = { ...prev };
+      delete copy[qIndex];
+      return copy;
+    });
+  };
+
+  const handleToggleMarkForReview = (qIndex: number) => {
+    setCbtMarkedForReview((prev) => ({ ...prev, [qIndex]: !prev[qIndex] }));
+    setCbtVisitedQuestions((prev) => ({ ...prev, [qIndex]: true }));
+  };
+
+  const handleCbtJumpToQuestion = (qIndex: number) => {
+    setCbtCurrentQuestionIndex(qIndex);
+    setCbtVisitedQuestions((prev) => ({ ...prev, [qIndex]: true }));
+    const targetSection = cbtQuestions[qIndex]?.section;
+    if (targetSection) {
+      setCbtActiveSectionTab(targetSection);
+    }
+  };
+
+  const handleCbtSaveAndNext = () => {
+    setCbtVisitedQuestions((prev) => ({ ...prev, [cbtCurrentQuestionIndex]: true }));
+    if (cbtCurrentQuestionIndex < cbtQuestions.length - 1) {
+      const nextIndex = cbtCurrentQuestionIndex + 1;
+      setCbtCurrentQuestionIndex(nextIndex);
+      const nextSection = cbtQuestions[nextIndex]?.section;
+      if (nextSection) {
+        setCbtActiveSectionTab(nextSection);
+      }
+    }
+  };
+
+  const handleCbtMarkForReviewAndNext = () => {
+    setCbtMarkedForReview((prev) => ({ ...prev, [cbtCurrentQuestionIndex]: true }));
+    setCbtVisitedQuestions((prev) => ({ ...prev, [cbtCurrentQuestionIndex]: true }));
+    if (cbtCurrentQuestionIndex < cbtQuestions.length - 1) {
+      const nextIndex = cbtCurrentQuestionIndex + 1;
+      setCbtCurrentQuestionIndex(nextIndex);
+      const nextSection = cbtQuestions[nextIndex]?.section;
+      if (nextSection) {
+        setCbtActiveSectionTab(nextSection);
+      }
+    }
+  };
+
+  const handleCbtPrevious = () => {
+    if (cbtCurrentQuestionIndex > 0) {
+      const prevIndex = cbtCurrentQuestionIndex - 1;
+      setCbtCurrentQuestionIndex(prevIndex);
+      const prevSection = cbtQuestions[prevIndex]?.section;
+      if (prevSection) {
+        setCbtActiveSectionTab(prevSection);
+      }
+    }
+  };
+
+  const handleStartCbtExam = () => {
+    setCbtActive(true);
+    setCbtIsSubmitted(false);
+    setCbtSelectedAnswers({});
+    setCbtMarkedForReview({});
+    setCbtVisitedQuestions({ 0: true });
+    setCbtCurrentQuestionIndex(0);
+    setCbtTimeRemaining(7200);
+    setCbtIsTimerRunning(true);
+    setCbtActiveSectionTab("legal");
+    setMockScore(null);
+  };
+
+  const handleRetakeCbtExam = () => {
+    handleStartCbtExam();
+  };
+
+  const handleSubmitCbtExam = () => {
+    setCbtIsSubmitted(true);
+    setCbtShowConfirmModal(false);
+    let legacyScore = 0;
+    cbtQuestions.forEach((q, idx) => {
+      const selected = cbtSelectedAnswers[idx];
       if (selected !== undefined) {
-        if (selected === q.correct) score += 1;
-        else score -= 0.25;
+        if (selected === q.correct) legacyScore += 1;
+        else legacyScore -= 0.25;
       }
     });
-    setMockScore(score);
+    setMockScore(legacyScore);
   };
+
+  // Aliases for legacy callbacks
+  const handleSelectMockAnswer = handleSelectCbtAnswer;
+  const calculateMockScore = handleSubmitCbtExam;
+
+  // Palette summary counts
+  const cbtAnsweredCount = Object.keys(cbtSelectedAnswers).length;
+  const cbtMarkedCount = Object.keys(cbtMarkedForReview).filter(
+    (k) => cbtMarkedForReview[Number(k)] && cbtSelectedAnswers[Number(k)] === undefined
+  ).length;
+  const cbtAnsweredAndMarkedCount = Object.keys(cbtMarkedForReview).filter(
+    (k) => cbtMarkedForReview[Number(k)] && cbtSelectedAnswers[Number(k)] !== undefined
+  ).length;
+  const cbtVisitedUnansweredCount = Object.keys(cbtVisitedQuestions).filter(
+    (k) => cbtSelectedAnswers[Number(k)] === undefined && !cbtMarkedForReview[Number(k)]
+  ).length;
+  const cbtNotVisitedCount = cbtQuestions.length - Object.keys(cbtVisitedQuestions).length;
+
+  // Comprehensive diagnostic scorecard computations
+  const cbtExamResults = (() => {
+    let totalScore = 0;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let unattemptedCount = 0;
+
+    const sectionBreakdown: Record<
+      string,
+      { total: number; attempted: number; correct: number; incorrect: number; unattempted: number; score: number }
+    > = {
+      legal: { total: 0, attempted: 0, correct: 0, incorrect: 0, unattempted: 0, score: 0 },
+      gk: { total: 0, attempted: 0, correct: 0, incorrect: 0, unattempted: 0, score: 0 },
+      english: { total: 0, attempted: 0, correct: 0, incorrect: 0, unattempted: 0, score: 0 },
+      logical: { total: 0, attempted: 0, correct: 0, incorrect: 0, unattempted: 0, score: 0 },
+      quant: { total: 0, attempted: 0, correct: 0, incorrect: 0, unattempted: 0, score: 0 },
+    };
+
+    cbtQuestions.forEach((q, idx) => {
+      const sec = q.section;
+      sectionBreakdown[sec].total += 1;
+      const ans = cbtSelectedAnswers[idx];
+      if (ans === undefined) {
+        unattemptedCount += 1;
+        sectionBreakdown[sec].unattempted += 1;
+      } else if (ans === q.correct) {
+        correctCount += 1;
+        totalScore += 1;
+        sectionBreakdown[sec].attempted += 1;
+        sectionBreakdown[sec].correct += 1;
+        sectionBreakdown[sec].score += 1;
+      } else {
+        incorrectCount += 1;
+        totalScore -= 0.25;
+        sectionBreakdown[sec].attempted += 1;
+        sectionBreakdown[sec].incorrect += 1;
+        sectionBreakdown[sec].score -= 0.25;
+      }
+    });
+
+    const attemptedCount = correctCount + incorrectCount;
+    const accuracy = attemptedCount > 0 ? (correctCount / attemptedCount) * 100 : 0;
+
+    let predictedAir = "AIR 3,500+";
+    let targetCollege = "State Law Universities & Private NLUs Tier";
+    if (totalScore >= 12) {
+      predictedAir = "AIR 1 – 45 (Top 0.1%)";
+      targetCollege = "NLSIU Bengaluru (National Law School) Call";
+    } else if (totalScore >= 9.5) {
+      predictedAir = "AIR 46 – 180 (Top 1%)";
+      targetCollege = "NALSAR Hyderabad / WBNUJS Kolkata Call";
+    } else if (totalScore >= 7) {
+      predictedAir = "AIR 181 – 650 (Top 3%)";
+      targetCollege = "NLU Jodhpur / GNLU Gandhinagar Call";
+    } else if (totalScore >= 4) {
+      predictedAir = "AIR 651 – 2,200 (Top 10%)";
+      targetCollege = "HNLU Raipur / RMLNLU Lucknow Call";
+    }
+
+    const percentile = Math.min(99.8, Math.max(35.0, ((Math.max(0, totalScore) + 3) / 17) * 100)).toFixed(1);
+
+    return {
+      totalScore: Number(totalScore.toFixed(2)),
+      rawScore: totalScore,
+      correctCount,
+      incorrectCount,
+      unattemptedCount,
+      attemptedCount,
+      accuracy: accuracy.toFixed(1),
+      predictedAir,
+      targetCollege,
+      percentile,
+      sectionBreakdown,
+    };
+  })();
 
   // AI Chat Assistant
   const handleSendAiMessage = (e: React.FormEvent) => {
@@ -1990,8 +2508,8 @@ export function StudentDashboardView({
     },
   ];
 
-  // Full 17-item EduPye Student Navigation matching live EduPye platform
-  const eduPyeStudentNavItems = [
+  // Full 17-item Student Navigation
+  const studentNavItems = [
     { id: "home" as StudentNavSection, label: "Home", icon: Home },
     { id: "learn" as StudentNavSection, label: "Learn", icon: BookOpen, badge: "Curricula" },
     { id: "library" as StudentNavSection, label: "Library", icon: Library },
@@ -2023,11 +2541,817 @@ export function StudentDashboardView({
 
   const handleNavClick = (id: StudentNavSection) => {
     setActiveSection(id);
-    if (id === "tests" || id === "free_mocks") {
+    if (id === "free_mocks") {
+      setCbtActive(true);
+      setCbtIsSubmitted(false);
       setActiveMockTest(sampleFreeMock);
-      setSelectedAnswers({});
-      setMockScore(null);
+    } else if (id === "tests") {
+      setActiveMockTest(sampleFreeMock);
     }
+  };
+
+  const renderCbtMockSimulator = () => {
+    const currentQ = cbtQuestions[cbtCurrentQuestionIndex] || cbtQuestions[0];
+    const fontSizeClass =
+      cbtPassageFontSize === "lg"
+        ? "text-base leading-relaxed"
+        : cbtPassageFontSize === "base"
+        ? "text-sm leading-relaxed"
+        : "text-xs sm:text-[13px] leading-relaxed";
+
+    const getQuestionStatus = (idx: number) => {
+      const isAnswered = cbtSelectedAnswers[idx] !== undefined;
+      const isMarked = !!cbtMarkedForReview[idx];
+      const isVisited = !!cbtVisitedQuestions[idx];
+      if (isAnswered && isMarked) return "answered_marked";
+      if (isAnswered) return "answered";
+      if (isMarked) return "marked";
+      if (isVisited) return "not_answered";
+      return "not_visited";
+    };
+
+    const filteredReviewQuestions = cbtQuestions.filter((q) => {
+      const ans = cbtSelectedAnswers[q.id];
+      const isMarked = !!cbtMarkedForReview[q.id];
+      if (cbtReviewFilter === "all") return true;
+      if (cbtReviewFilter === "correct") return ans === q.correct;
+      if (cbtReviewFilter === "incorrect") return ans !== undefined && ans !== q.correct;
+      if (cbtReviewFilter === "unattempted") return ans === undefined;
+      if (cbtReviewFilter === "marked") return isMarked;
+      return true;
+    });
+
+    if (cbtIsSubmitted) {
+      // Diagnostic Scorecard View
+      return (
+        <div className="space-y-6 animate-in fade-in duration-200 max-w-5xl mx-auto pb-12">
+          {/* Top Scorecard Hero Banner */}
+          <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-zinc-950 text-white border border-amber-500/30 shadow-2xl">
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-amber-500 text-black text-[10px] font-mono font-extrabold uppercase tracking-wider">
+                    Consortium CBT Diagnostic Scorecard
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                    Official Negative Marking (-0.25)
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  CLAT 2027 Full Length All-India Diagnostic Mock
+                </h2>
+                <p className="text-xs text-zinc-400 max-w-xl">
+                  Evaluated against National Law University (NLU) Consortium standards. Includes section-wise percentiles, AIR rank projection, and detailed statutory ratios.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={handleRetakeCbtExam}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Retake Mock Exam</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setCbtActive(false);
+                    setActiveSection("tests");
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 font-bold text-xs transition-all cursor-pointer"
+                >
+                  Back to Test Packs
+                </button>
+              </div>
+            </div>
+
+            {/* Scorecard KPI Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-zinc-800">
+              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Net Total Score</span>
+                <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
+                  {cbtExamResults.totalScore > 0 ? `+${cbtExamResults.totalScore.toFixed(2)}` : cbtExamResults.totalScore.toFixed(2)}
+                  <span className="text-xs text-zinc-500 font-normal"> / 14.00</span>
+                </div>
+                <div className="text-[11px] text-zinc-400">
+                  {cbtExamResults.correctCount} Correct • {cbtExamResults.incorrectCount} Wrong
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Predicted All-India Rank</span>
+                <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono flex items-center gap-1.5">
+                  <Trophy className="w-5 h-5 text-amber-400 shrink-0" />
+                  <span>{cbtExamResults.predictedAir}</span>
+                </div>
+                <div className="text-[11px] text-zinc-400">Simulated among 42,000+ test-takers</div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Accuracy &amp; Percentile</span>
+                <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+                  {cbtExamResults.percentile}
+                  <span className="text-xs text-zinc-500 font-normal"> %ile</span>
+                </div>
+                <div className="text-[11px] text-emerald-400 font-medium">
+                  {cbtExamResults.accuracy}% Accuracy Rate
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-1">
+                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Target NLU Projection</span>
+                <div className="text-sm font-bold text-amber-300 leading-snug pt-0.5">
+                  {cbtExamResults.targetCollege}
+                </div>
+                <div className="text-[10px] text-zinc-500 font-mono">Based on 2025 First List Cutoffs</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section-Wise Diagnostic Breakdown Table */}
+          <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-black dark:text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-amber-500" />
+                  <span>Section-Wise Performance Matrix</span>
+                </h3>
+                <p className="text-xs text-zinc-500">Breakdown of attempted questions, accuracy, and net marks per syllabus domain.</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-zinc-50 dark:bg-zinc-950 text-zinc-500 font-mono uppercase text-[10px] border-b border-zinc-200 dark:border-zinc-800">
+                  <tr>
+                    <th className="p-3">Section</th>
+                    <th className="p-3 text-center">Total Qs</th>
+                    <th className="p-3 text-center">Attempted</th>
+                    <th className="p-3 text-center text-emerald-600">Correct (+1)</th>
+                    <th className="p-3 text-center text-rose-500">Incorrect (-0.25)</th>
+                    <th className="p-3 text-center">Unattempted</th>
+                    <th className="p-3 text-center font-bold">Net Marks</th>
+                    <th className="p-3 text-right">Accuracy</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 font-medium">
+                  {cbtSections.map((sec) => {
+                    const data = cbtExamResults.sectionBreakdown[sec.id] || {
+                      total: sec.count,
+                      attempted: 0,
+                      correct: 0,
+                      incorrect: 0,
+                      unattempted: sec.count,
+                      score: 0,
+                    };
+                    const secAcc = data.attempted > 0 ? ((data.correct / data.attempted) * 100).toFixed(0) : "—";
+                    return (
+                      <tr key={sec.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                        <td className="p-3 font-bold text-black dark:text-white flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${
+                            sec.id === "legal" ? "bg-amber-500" :
+                            sec.id === "gk" ? "bg-amber-600" :
+                            sec.id === "english" ? "bg-emerald-500" :
+                            sec.id === "logical" ? "bg-purple-500" : "bg-rose-500"
+                          }`} />
+                          <span>{sec.label}</span>
+                        </td>
+                        <td className="p-3 text-center font-mono">{data.total}</td>
+                        <td className="p-3 text-center font-mono">{data.attempted}</td>
+                        <td className="p-3 text-center font-mono text-emerald-600 font-bold">{data.correct}</td>
+                        <td className="p-3 text-center font-mono text-rose-500 font-bold">{data.incorrect}</td>
+                        <td className="p-3 text-center font-mono text-zinc-400">{data.unattempted}</td>
+                        <td className="p-3 text-center font-mono font-bold text-black dark:text-white">
+                          {data.score > 0 ? `+${data.score.toFixed(2)}` : data.score.toFixed(2)}
+                        </td>
+                        <td className="p-3 text-right font-mono font-bold text-zinc-700 dark:text-zinc-300">
+                          {secAcc !== "—" ? `${secAcc}%` : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Solution & Explanation Review Keys */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold text-black dark:text-white flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4 text-amber-500" />
+                  <span>Question-by-Question Solution Keys &amp; Judicial Rationale</span>
+                </h3>
+                <p className="text-xs text-zinc-500">Every question with candidate choice, correct ratio decidendi, and statutory references.</p>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs">
+                {(
+                  [
+                    { id: "all", label: `All (${cbtQuestions.length})` },
+                    { id: "correct", label: `Correct (${cbtExamResults.correctCount})` },
+                    { id: "incorrect", label: `Incorrect (${cbtExamResults.incorrectCount})` },
+                    { id: "unattempted", label: `Unattempted (${cbtExamResults.unattemptedCount})` },
+                    { id: "marked", label: "Marked" },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setCbtReviewFilter(tab.id)}
+                    className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      cbtReviewFilter === tab.id
+                        ? "bg-white dark:bg-zinc-900 text-black dark:text-white shadow-xs"
+                        : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {filteredReviewQuestions.map((q) => {
+                const userAns = cbtSelectedAnswers[q.id];
+                const isCorrect = userAns === q.correct;
+                const isUnattempted = userAns === undefined;
+                const isMarked = !!cbtMarkedForReview[q.id];
+
+                return (
+                  <div
+                    key={q.id}
+                    className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs"
+                  >
+                    {/* Header Row */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-mono font-bold text-[11px] flex items-center justify-center shrink-0">
+                          {q.id + 1}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono font-bold text-[10px] uppercase">
+                          {q.sectionTitle}
+                        </span>
+                        {isMarked && (
+                          <span className="px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 text-[10px] font-mono font-bold flex items-center gap-1">
+                            <Flag className="w-3 h-3 fill-current" />
+                            <span>Marked for Review</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div>
+                        {isCorrect ? (
+                          <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono font-extrabold text-[11px] flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5" />
+                            <span>+1.00 Mark (Correct)</span>
+                          </span>
+                        ) : isUnattempted ? (
+                          <span className="px-3 py-1 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono font-bold text-[11px]">
+                            0.00 Marks (Unattempted)
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-mono font-extrabold text-[11px] flex items-center gap-1">
+                            <X className="w-3.5 h-3.5" />
+                            <span>-0.25 Mark (Negative Penalty)</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Passage Reference snippet */}
+                    <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 text-xs space-y-1">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                        <span className="font-bold">{q.passageTitle}</span>
+                        <span>{q.passageCitation}</span>
+                      </div>
+                      <p className="text-zinc-600 dark:text-zinc-400 line-clamp-2 italic">
+                        &quot;{q.passageText}&quot;
+                      </p>
+                    </div>
+
+                    {/* Question Statement */}
+                    <p className="text-xs sm:text-sm font-semibold text-black dark:text-zinc-100 leading-relaxed">
+                      {q.question}
+                    </p>
+
+                    {/* Options Grid */}
+                    <div className="grid grid-cols-1 gap-2 pt-1">
+                      {q.options.map((opt, optIdx) => {
+                        const isOfficialCorrect = optIdx === q.correct;
+                        const isUserChoice = optIdx === userAns;
+
+                        let styleClass = "bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300";
+                        if (isOfficialCorrect) {
+                          styleClass = "bg-emerald-500/10 dark:bg-emerald-950/40 border-2 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-bold";
+                        } else if (isUserChoice && !isCorrect) {
+                          styleClass = "bg-rose-500/10 dark:bg-rose-950/40 border-2 border-rose-500 text-rose-800 dark:text-rose-200 font-bold";
+                        }
+
+                        return (
+                          <div
+                            key={optIdx}
+                            className={`p-3 rounded-2xl text-xs flex items-start gap-3 transition-colors ${styleClass}`}
+                          >
+                            <span className="w-5 h-5 rounded-full flex items-center justify-center font-mono font-bold text-[10px] shrink-0 border border-current mt-0.5">
+                              {String.fromCharCode(65 + optIdx)}
+                            </span>
+                            <span className="flex-1 leading-snug">{opt}</span>
+                            {isOfficialCorrect && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-mono text-[10px] font-bold shrink-0">
+                                Correct Answer
+                              </span>
+                            )}
+                            {isUserChoice && !isOfficialCorrect && (
+                              <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white font-mono text-[10px] font-bold shrink-0">
+                                Your Choice
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Judicial Explanation & Statutory Ratio */}
+                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-2">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Judicial Rationale &amp; Statutory Analysis:</span>
+                      </div>
+                      <p className="text-zinc-800 dark:text-zinc-200 leading-relaxed">
+                        {q.explanation}
+                      </p>
+                      <div className="pt-1 text-[11px] font-mono text-amber-700 dark:text-amber-400">
+                        ⚖️ <strong>Core Legal Ratio:</strong> {q.legalRatio}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Exam Active / Taking Mode
+    return (
+      <div className="space-y-4 animate-in fade-in duration-200 max-w-7xl mx-auto pb-8">
+        {/* Exam Navigation & Timer Header */}
+        <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                Consortium CBT Live Simulator
+              </span>
+              <span className="text-zinc-400 font-mono text-xs hidden sm:inline">•</span>
+              <span className="text-xs text-zinc-500 font-mono hidden sm:inline">120 Mins Standard Format</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-black dark:text-white">
+              All-India CLAT 2027 Full Length Diagnostic Mock
+            </h3>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Live Countdown Timer */}
+            <div
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl border font-mono font-bold text-xs transition-colors ${
+                cbtTimeRemaining < 600
+                  ? "bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 animate-pulse"
+                  : cbtTimeRemaining < 1800
+                  ? "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
+                  : "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-black dark:text-white"
+              }`}
+            >
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>{formatCbtTime(cbtTimeRemaining)}</span>
+              <button
+                onClick={() => setCbtIsTimerRunning((prev) => !prev)}
+                title={cbtIsTimerRunning ? "Pause timer" : "Resume timer"}
+                className="ml-1 p-1 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer"
+              >
+                {cbtIsTimerRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              </button>
+            </div>
+
+            {/* Scheme button */}
+            <button
+              onClick={() => setShowCbtGuidelinesModal(true)}
+              className="px-3 py-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Scheme (+1 / -0.25)</span>
+            </button>
+
+            {/* Submit Test Button */}
+            <button
+              onClick={() => setCbtShowConfirmModal(true)}
+              className="px-5 py-2 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+            >
+              Submit Test
+            </button>
+          </div>
+        </div>
+
+        {/* Section Tabs Ribbon */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {cbtSections.map((sec) => {
+            const isActive = cbtActiveSectionTab === sec.id;
+            const secQuestions = cbtQuestions.filter((q) => q.section === sec.id);
+            const answeredInSec = secQuestions.filter((q) => cbtSelectedAnswers[q.id] !== undefined).length;
+
+            return (
+              <button
+                key={sec.id}
+                onClick={() => {
+                  setCbtActiveSectionTab(sec.id);
+                  const firstQ = cbtQuestions.find((q) => q.section === sec.id);
+                  if (firstQ) {
+                    setCbtCurrentQuestionIndex(firstQ.id);
+                    setCbtVisitedQuestions((prev) => ({ ...prev, [firstQ.id]: true }));
+                  }
+                }}
+                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
+                  isActive
+                    ? "bg-black text-white dark:bg-white dark:text-black shadow-md scale-102"
+                    : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white border border-zinc-200 dark:border-zinc-800"
+                }`}
+              >
+                <span>{sec.label}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                  isActive
+                    ? "bg-amber-500 text-black font-extrabold"
+                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                }`}>
+                  {answeredInSec}/{sec.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Main Split Layout: Passage on Left, Question & Palette on Right */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Left Pane: Reading Passage & Case Scenario (7 cols) */}
+          <div className="lg:col-span-7 p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4 min-h-[480px]">
+            {/* Passage Header with Font Size Toggle */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider">
+                  Reading Passage &amp; Legal Context
+                </span>
+                <h4 className="text-sm font-bold text-black dark:text-white">
+                  {currentQ.passageTitle}
+                </h4>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-zinc-400 font-mono">Font:</span>
+                <div className="flex items-center rounded-xl bg-zinc-100 dark:bg-zinc-800 p-0.5 text-xs font-bold font-mono">
+                  <button
+                    onClick={() => setCbtPassageFontSize("sm")}
+                    className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                      cbtPassageFontSize === "sm" ? "bg-white dark:bg-zinc-900 text-black dark:text-white shadow-2xs" : "text-zinc-500"
+                    }`}
+                  >
+                    A-
+                  </button>
+                  <button
+                    onClick={() => setCbtPassageFontSize("base")}
+                    className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                      cbtPassageFontSize === "base" ? "bg-white dark:bg-zinc-900 text-black dark:text-white shadow-2xs" : "text-zinc-500"
+                    }`}
+                  >
+                    A
+                  </button>
+                  <button
+                    onClick={() => setCbtPassageFontSize("lg")}
+                    className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                      cbtPassageFontSize === "lg" ? "bg-white dark:bg-zinc-900 text-black dark:text-white shadow-2xs" : "text-zinc-500"
+                    }`}
+                  >
+                    A+
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Citation Banner */}
+            <div className="px-3.5 py-2 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-500 flex items-center justify-between">
+              <span>Jurisprudential Reference:</span>
+              <span className="font-bold text-zinc-700 dark:text-zinc-300">{currentQ.passageCitation}</span>
+            </div>
+
+            {/* Passage Body */}
+            <div className={`text-zinc-800 dark:text-zinc-200 tracking-normal ${fontSizeClass} space-y-3 font-serif sm:font-sans p-1 overflow-y-auto max-h-[380px]`}>
+              <p className="leading-relaxed whitespace-pre-line">
+                {currentQ.passageText}
+              </p>
+            </div>
+          </div>
+
+          {/* Right Pane: Question, Options & Action Bar (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-5">
+              {/* Question Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-black dark:bg-white text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center">
+                    {currentQ.id + 1}
+                  </span>
+                  <span className="text-xs font-bold text-black dark:text-white">
+                    Question {currentQ.id + 1} of {cbtQuestions.length}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    +1.00 / -0.25
+                  </span>
+                  {cbtMarkedForReview[currentQ.id] && (
+                    <span className="p-1 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                      <Flag className="w-3.5 h-3.5 fill-current" />
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Question Text */}
+              <p className="text-xs sm:text-sm font-semibold text-black dark:text-zinc-100 leading-relaxed">
+                {currentQ.question}
+              </p>
+
+              {/* Options */}
+              <div className="space-y-2 pt-1">
+                {currentQ.options.map((opt, optIdx) => {
+                  const isSelected = cbtSelectedAnswers[currentQ.id] === optIdx;
+                  return (
+                    <button
+                      key={optIdx}
+                      onClick={() => handleSelectCbtAnswer(currentQ.id, optIdx)}
+                      className={`w-full p-3 rounded-2xl text-left text-xs sm:text-sm transition-all flex items-start gap-3 cursor-pointer ${
+                        isSelected
+                          ? "bg-amber-500 text-black font-bold shadow-md ring-2 ring-amber-500"
+                          : "bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-800"
+                      }`}
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold shrink-0 mt-0.5 ${
+                          isSelected
+                            ? "bg-black text-white"
+                            : "border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400"
+                        }`}
+                      >
+                        {String.fromCharCode(65 + optIdx)}
+                      </span>
+                      <span className="leading-snug">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action Toolbar */}
+              <div className="space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleToggleMarkForReview(currentQ.id)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      cbtMarkedForReview[currentQ.id]
+                        ? "bg-purple-600 text-white"
+                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
+                    }`}
+                  >
+                    <Flag className="w-3.5 h-3.5 fill-current" />
+                    <span>{cbtMarkedForReview[currentQ.id] ? "Marked" : "Mark Review"}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleClearCbtAnswer(currentQ.id)}
+                    disabled={cbtSelectedAnswers[currentQ.id] === undefined}
+                    className="px-3 py-2 rounded-xl text-xs font-medium text-zinc-500 hover:text-rose-500 disabled:opacity-30 disabled:hover:text-zinc-500 cursor-pointer"
+                  >
+                    Clear Response
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={handleCbtPrevious}
+                    disabled={cbtCurrentQuestionIndex === 0}
+                    className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer flex items-center gap-1"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Previous</span>
+                  </button>
+
+                  <button
+                    onClick={handleCbtSaveAndNext}
+                    className="px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-extrabold text-xs transition-all hover:bg-zinc-800 dark:hover:bg-zinc-200 cursor-pointer shadow-xs flex items-center gap-1"
+                  >
+                    <span>{cbtCurrentQuestionIndex === cbtQuestions.length - 1 ? "Review All" : "Save & Next"}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Question Palette Widget */}
+            <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-black dark:text-white uppercase tracking-wider font-mono">
+                  Question Palette ({cbtQuestions.length} Questions)
+                </h4>
+                <span className="text-[10px] font-mono text-zinc-400">Click to jump</span>
+              </div>
+
+              {/* Status Legend Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] font-mono">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="text-zinc-600 dark:text-zinc-400">Answered ({cbtAnsweredCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-rose-500 shrink-0" />
+                  <span className="text-zinc-600 dark:text-zinc-400">Unanswered ({cbtVisitedUnansweredCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
+                  <span className="text-zinc-600 dark:text-zinc-400">Not Visited ({cbtNotVisitedCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-purple-600 shrink-0" />
+                  <span className="text-zinc-600 dark:text-zinc-400">Marked ({cbtMarkedCount})</span>
+                </div>
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <span className="w-3 h-3 rounded-full bg-purple-600 relative shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 absolute -top-0.5 -right-0.5" />
+                  </span>
+                  <span className="text-zinc-600 dark:text-zinc-400">Ans &amp; Marked ({cbtAnsweredAndMarkedCount})</span>
+                </div>
+              </div>
+
+              {/* Question Buttons Grid */}
+              <div className="grid grid-cols-7 gap-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                {cbtQuestions.map((q) => {
+                  const status = getQuestionStatus(q.id);
+                  const isCurrent = q.id === cbtCurrentQuestionIndex;
+
+                  let bgClass = "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300";
+                  if (status === "answered") {
+                    bgClass = "bg-emerald-500 text-white font-bold";
+                  } else if (status === "answered_marked") {
+                    bgClass = "bg-purple-600 text-white font-bold";
+                  } else if (status === "marked") {
+                    bgClass = "bg-purple-600 text-white font-bold";
+                  } else if (status === "not_answered") {
+                    bgClass = "bg-rose-500 text-white font-bold";
+                  }
+
+                  return (
+                    <button
+                      key={q.id}
+                      onClick={() => handleCbtJumpToQuestion(q.id)}
+                      className={`h-8 rounded-xl font-mono text-xs flex items-center justify-center transition-all cursor-pointer relative ${bgClass} ${
+                        isCurrent
+                          ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-black scale-105 z-10"
+                          : "hover:opacity-85"
+                      }`}
+                    >
+                      <span>{q.id + 1}</span>
+                      {status === "answered_marked" && (
+                        <span className="w-2 h-2 rounded-full bg-emerald-300 absolute top-0.5 right-0.5 border border-purple-600" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Guidelines / Marking Scheme Modal */}
+        {showCbtGuidelinesModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4 animate-in zoom-in-95 duration-150">
+              <button
+                onClick={() => setShowCbtGuidelinesModal(false)}
+                className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                  Consortium Regulations
+                </span>
+                <h3 className="text-lg font-bold text-black dark:text-white">
+                  CLAT 2027 CBT Guidelines &amp; Evaluation Scheme
+                </h3>
+              </div>
+
+              <div className="space-y-3 text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                  <div className="font-bold text-black dark:text-white">Marking Pattern:</div>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li><strong className="text-emerald-600">+1.00 Mark</strong> for every correct response.</li>
+                    <li><strong className="text-rose-500">-0.25 Mark</strong> negative penalty deduction for every wrong response.</li>
+                    <li><strong>0.00 Marks</strong> for unattempted or left questions.</li>
+                  </ul>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                  <div className="font-bold text-black dark:text-white">Question Palette Status Colors:</div>
+                  <ul className="space-y-1 font-mono text-[11px]">
+                    <li className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                      <span>Green: Answered &amp; Saved</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-rose-500" />
+                      <span>Red: Visited but Unanswered</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-purple-600" />
+                      <span>Purple: Marked for Review</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                      <span>Gray: Not Visited Yet</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowCbtGuidelinesModal(false)}
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
+              >
+                Close &amp; Resume Test
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Submit Confirmation Modal */}
+        {cbtShowConfirmModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-5 animate-in zoom-in-95 duration-150">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                  Final Submission Check
+                </span>
+                <h3 className="text-lg font-bold text-black dark:text-white">
+                  Ready to Submit Exam?
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Review your completion status before calculating your All-India diagnostic percentile.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                <div>
+                  <span className="text-zinc-400">Total Questions:</span>
+                  <div className="font-bold text-black dark:text-white text-sm">{cbtQuestions.length}</div>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Answered:</span>
+                  <div className="font-bold text-emerald-500 text-sm">{cbtAnsweredCount}</div>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Marked for Review:</span>
+                  <div className="font-bold text-purple-500 text-sm">{cbtMarkedCount + cbtAnsweredAndMarkedCount}</div>
+                </div>
+                <div>
+                  <span className="text-zinc-400">Unanswered / Left:</span>
+                  <div className="font-bold text-rose-500 text-sm">{cbtVisitedUnansweredCount + cbtNotVisitedCount}</div>
+                </div>
+              </div>
+
+              <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                ⏱️ <strong>Time Remaining:</strong> {formatCbtTime(cbtTimeRemaining)}. Once submitted, responses are evaluated against official answer keys and cannot be altered.
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setCbtShowConfirmModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                >
+                  Return to Test
+                </button>
+                <button
+                  onClick={handleSubmitCbtExam}
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-md text-center"
+                >
+                  Yes, Submit Exam
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -2037,65 +3361,68 @@ export function StudentDashboardView({
       {/* ============================================================== */}
       <aside
         className={`hidden md:flex shrink-0 ${
-          isSidebarExpanded ? "w-64" : "w-16"
-        } bg-white dark:bg-zinc-950 border-0 flex-col justify-between sticky top-0 h-screen z-30 select-none transition-all duration-300 overflow-visible`}
+          isSidebarExpanded ? "w-60" : "w-16"
+        } bg-black text-white flex-col justify-between sticky top-0 h-screen z-30 select-none transition-all duration-300 border-r border-zinc-900 shadow-md`}
       >
         {isSidebarExpanded ? (
-          /* ============================================================== */
-          /* EXPANDED SPACIOUS SIDEBAR (DEFAULT)                            */
-          /* ============================================================== */
           <div className="flex flex-col h-full min-h-0 w-full">
-            {/* Header: Logo + Title + Collapse Button */}
-            <div className="p-4 flex items-center justify-between border-0 shrink-0">
-              <Link href="/academy" className="flex items-center gap-2.5 group min-w-0" title="EduPye Academy">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black shadow-sm group-hover:bg-black group-hover:text-white transition-colors shrink-0">
-                  <GraduationCap className="w-4 h-4" />
+            {/* Header: White/Zinc rounded card with WAKHEEL Logo + Collapse Button */}
+            <div className="p-3 shrink-0 flex items-center justify-between gap-1">
+              <Link
+                href="/academy"
+                className="flex-1 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-2xl p-3 flex items-center gap-2.5 shadow-sm transition-all group min-w-0"
+                title="Wakheel Academy"
+              >
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black shrink-0 shadow-xs">
+                  <GraduationCap className="w-5 h-5 text-black" />
                 </div>
                 <div className="min-w-0 truncate">
-                  <div className="text-xs font-black tracking-wider text-black dark:text-white truncate">
-                    EDUPYE <span className="text-amber-500">ACADEMY</span>
+                  <div className="text-sm font-black tracking-tight text-white leading-none truncate">
+                    WAKHEEL <span className="text-amber-500 font-extrabold">ACADEMY</span>
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-mono truncate">Student Workspace</div>
+                  <div className="text-[10px] text-zinc-400 font-medium mt-0.5 truncate">
+                    Student Hub
+                  </div>
                 </div>
               </Link>
               <button
                 onClick={toggleSidebar}
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer shrink-0 ml-1"
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors cursor-pointer shrink-0"
                 title="Collapse to Icon Rail"
               >
                 <PanelLeftClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Navigation List - Smoothly scrollable with generous padding */}
-            <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-2 space-y-1 min-h-0">
-              {eduPyeStudentNavItems.map((item) => {
+            {/* Navigation List - Smoothly scrollable with authentic Wakheel Black & Yellow styling */}
+            <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-1 space-y-1 min-h-0">
+              {studentNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isNavActive(item.id);
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className={`w-full px-3 py-2 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer group ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer group ${
                       isActive
                         ? "bg-amber-500 text-black font-extrabold shadow-sm"
-                        : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-medium"
+                        : "text-zinc-400 hover:text-white hover:bg-zinc-900 font-medium"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <Icon
                         className={`w-4 h-4 shrink-0 ${
-                          isActive ? "text-black" : "text-zinc-500 group-hover:text-amber-500 transition-colors"
+                          isActive ? "text-black" : "text-zinc-400 group-hover:text-amber-400 transition-colors"
                         }`}
                       />
                       <span className="text-xs truncate">{item.label}</span>
                     </div>
                     {item.badge && (
                       <span
-                        className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                        className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
                           isActive
                             ? "bg-black/15 text-black"
-                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                            : "bg-zinc-800 text-amber-400"
                         }`}
                       >
                         {item.badge}
@@ -2106,54 +3433,50 @@ export function StudentDashboardView({
               })}
             </div>
 
-            {/* Bottom Stack: Clean ThemeToggle & Exit */}
-            <div className="p-3 border-0 flex items-center justify-between shrink-0 bg-white dark:bg-zinc-950">
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <span className="text-[11px] text-zinc-500 font-medium">Theme</span>
-              </div>
-              {onSignOut && (
+            {/* Bottom Stack: Clean Faculty Switcher, ThemeToggle & Exit */}
+            <div className="p-3 border-t border-zinc-900 flex flex-col gap-2 shrink-0 bg-black">
+              {onSwitchToTeacher && (
                 <button
-                  onClick={onSignOut}
-                  className="px-2.5 py-1.5 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
-                  title="Log out"
+                  onClick={onSwitchToTeacher}
+                  className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-2"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Log out</span>
+                  <GraduationCap className="w-3.5 h-3.5 text-black" />
+                  <span>Faculty Studio</span>
                 </button>
               )}
+              <div className="flex items-center justify-between pt-1 text-zinc-400">
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <span className="text-[11px] font-medium">Theme</span>
+                </div>
+                {onSignOut && (
+                  <button
+                    onClick={onSignOut}
+                    className="px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                    title="Log out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log out</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ) : (
-          /* ============================================================== */
-          /* COMPACT AIRY ICON RAIL (BORDER-0 & FULLY VISIBLE TOOLTIPS)     */
-          /* ============================================================== */
+          /* COMPACT ICON RAIL (when collapsed, in Black & Yellow) */
           <div className="flex flex-col h-full items-center justify-between py-3 min-h-0 w-full overflow-visible">
             {/* Top: Logo + Expand Button */}
-            <div className="flex flex-col items-center gap-2 w-full shrink-0 pb-1 border-0">
-              <div className="relative group flex items-center justify-center w-full">
-                <Link
-                  href="/academy"
-                  className="w-10 h-10 rounded-xl bg-amber-500 hover:bg-black text-black hover:text-white flex items-center justify-center font-black transition-all shadow-md cursor-pointer"
-                  title="EduPye Academy"
-                >
-                  <GraduationCap className="w-5 h-5 text-current" />
-                </Link>
-                <div
-                  style={{
-                    left: "calc(100% + 12px)",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                  }}
-                  className="absolute px-3 py-1.5 bg-zinc-950 border border-zinc-800 text-white text-xs font-bold rounded-xl shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-[100] flex items-center gap-1.5"
-                >
-                  <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-zinc-950 border-l border-b border-zinc-800 rotate-45" />
-                  <span className="relative z-10">EduPye Academy</span>
-                </div>
-              </div>
+            <div className="flex flex-col items-center gap-2 w-full shrink-0 pb-2 border-b border-zinc-900">
+              <Link
+                href="/academy"
+                className="w-10 h-10 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black shadow-md cursor-pointer hover:scale-105 transition-transform"
+                title="Wakheel Academy"
+              >
+                <GraduationCap className="w-5 h-5 text-black" />
+              </Link>
               <button
                 onClick={toggleSidebar}
-                className="w-7 h-7 rounded-lg text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 flex items-center justify-center transition-colors cursor-pointer"
                 title="Expand Sidebar"
               >
                 <PanelLeftOpen className="w-4 h-4" />
@@ -2162,7 +3485,7 @@ export function StudentDashboardView({
 
             {/* Navigation Icons - Scrollable with Tooltips */}
             <div className="flex-1 w-full py-1 flex flex-col items-center gap-1 min-h-0 overflow-y-auto scrollbar-none overflow-x-visible">
-              {eduPyeStudentNavItems.map((item) => {
+              {studentNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isNavActive(item.id);
                 return (
@@ -2171,8 +3494,8 @@ export function StudentDashboardView({
                       onClick={() => handleNavClick(item.id)}
                       className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                         isActive
-                          ? "bg-amber-500 text-black shadow-md shadow-amber-500/20 font-bold scale-105"
-                          : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                          ? "bg-amber-500 text-black shadow-md font-bold scale-105"
+                          : "text-zinc-400 hover:text-white hover:bg-zinc-900"
                       }`}
                       aria-label={item.label}
                     >
@@ -2191,7 +3514,7 @@ export function StudentDashboardView({
                       <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-zinc-950 border-l border-b border-zinc-800 rotate-45" />
                       <span className="relative z-10">{item.label}</span>
                       {item.badge && (
-                        <span className="relative z-10 text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500 text-black font-extrabold">
+                        <span className="relative z-10 text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-amber-400 font-bold">
                           {item.badge}
                         </span>
                       )}
@@ -2202,13 +3525,13 @@ export function StudentDashboardView({
             </div>
 
             {/* Bottom Actions: ThemeToggle & SignOut */}
-            <div className="flex flex-col items-center gap-2 pt-1 border-0 w-full px-2 shrink-0">
+            <div className="flex flex-col items-center gap-2 pt-2 border-t border-zinc-900 w-full px-2 shrink-0">
               <ThemeToggle />
               {onSignOut && (
                 <div className="relative group flex items-center justify-center w-full">
                   <button
                     onClick={onSignOut}
-                    className="w-8 h-8 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-zinc-100 dark:hover:bg-zinc-900 flex items-center justify-center cursor-pointer transition-colors"
+                    className="w-8 h-8 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-zinc-900 flex items-center justify-center cursor-pointer transition-colors"
                     title="Log out"
                   >
                     <LogOut className="w-3.5 h-3.5" />
@@ -2232,7 +3555,7 @@ export function StudentDashboardView({
       </aside>
 
       {/* ============================================================== */}
-      {/* MOBILE DRAWER SIDEBAR                                          */}
+      {/* MOBILE DRAWER SIDEBAR - WAKHEEL BLACK & YELLOW                 */}
       {/* ============================================================== */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
@@ -2240,27 +3563,27 @@ export function StudentDashboardView({
             className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setMobileSidebarOpen(false)}
           />
-          <aside className="relative z-10 w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col justify-between h-full p-4 space-y-4 shadow-2xl">
+          <aside className="relative z-10 w-72 bg-black text-white flex flex-col justify-between h-full p-4 space-y-4 shadow-2xl border-r border-zinc-800">
             <div className="space-y-4 flex-1 overflow-y-auto scrollbar-none">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-black flex items-center justify-center font-black">
-                    <GraduationCap className="w-4 h-4" />
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-black">
+                    <GraduationCap className="w-5 h-5 text-black" />
                   </div>
-                  <span className="font-black text-sm text-black dark:text-white">
-                    EDUPYE <span className="text-amber-500">ACADEMY</span>
+                  <span className="font-black text-sm text-white">
+                    WAKHEEL <span className="text-amber-500">ACADEMY</span>
                   </span>
                 </div>
                 <button
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-1">
-                {eduPyeStudentNavItems.map((item) => {
+                {studentNavItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = isNavActive(item.id);
                   return (
@@ -2273,7 +3596,7 @@ export function StudentDashboardView({
                       className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${
                         isActive
                           ? "bg-amber-500 text-black font-extrabold shadow-xs"
-                          : "text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 font-bold"
+                          : "text-zinc-300 hover:bg-zinc-900 font-medium"
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
@@ -2281,7 +3604,7 @@ export function StudentDashboardView({
                         <span className="text-xs">{item.label}</span>
                       </div>
                       {item.badge && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 font-bold">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-black font-bold">
                           {item.badge}
                         </span>
                       )}
@@ -2291,14 +3614,14 @@ export function StudentDashboardView({
               </div>
             </div>
 
-            <div className="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+            <div className="space-y-2 pt-3 border-t border-zinc-800 shrink-0">
               {onSwitchToTeacher && (
                 <button
                   onClick={() => {
                     setMobileSidebarOpen(false);
                     onSwitchToTeacher();
                   }}
-                  className="w-full py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black text-xs font-bold cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold cursor-pointer"
                 >
                   Switch to Faculty Studio
                 </button>
@@ -2309,19 +3632,19 @@ export function StudentDashboardView({
       )}
 
       {/* ============================================================== */}
-      {/* 2. MAIN CONTENT AREA (RIGHT OF EDUPYE SIDEBAR)                 */}
+      {/* 2. MAIN CONTENT AREA (RIGHT OF Wakheel SIDEBAR)                 */}
       {/* ============================================================== */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#f8f9fa] dark:bg-black min-h-screen text-black dark:text-white">
         {/* ============================================================== */}
         {/* UNIFIED STICKY TOP NAVBAR (ANNOUNCEMENT STRIP + SUBHEADER)    */}
         {/* ============================================================== */}
         <div className="sticky top-0 z-20 w-full bg-slate-50/90 dark:bg-zinc-950 border-b border-zinc-200/80 dark:border-zinc-800 shadow-xs">
-          {/* Row 1: Top Announcement Strip matching EduPye reference */}
+          {/* Row 1: Top Announcement Strip matching Wakheel reference */}
           <div className="bg-[#0f172a] text-white px-4 sm:px-6 lg:px-8 py-2 border-b border-zinc-800/80 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
               <div className="flex items-center gap-1.5 shrink-0">
                 <GraduationCap className="w-4 h-4 text-amber-400" />
-                <span className="font-extrabold text-white tracking-tight">EduPye Centralized Tuition</span>
+                <span className="font-extrabold text-white tracking-tight">Wakheel Centralized Tuition</span>
               </div>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/40 shrink-0">
                 Code: STU-008AC5
@@ -2354,7 +3677,7 @@ export function StudentDashboardView({
             </div>
           </div>
 
-          {/* Row 2: Subheader matching EduPye style (Soft Shade-of-White) */}
+          {/* Row 2: Subheader matching Wakheel style (Soft Shade-of-White) */}
           <div className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 gap-4 bg-slate-50/95 dark:bg-zinc-950/95 backdrop-blur-md">
             <div className="flex items-center gap-3 min-w-0">
               <button
@@ -2373,7 +3696,7 @@ export function StudentDashboardView({
                   {activeSection === "upload" && "Document & Case Brief Upload Portal"}
                   {activeSection === "record" && "Moot Court & Oral Argument Recording Studio"}
                   {activeSection === "batches" && "Live Classes & Interactive Batches"}
-                  {activeSection === "tuition_mode" && "EduPye Centralized Tuition Mode"}
+                  {activeSection === "tuition_mode" && "Wakheel Centralized Tuition Mode"}
                   {activeSection === "calendar" && "Live Timetable & Academic Calendar"}
                   {activeSection === "exam_cracker" && "High-Yield Exam Cracker & Flashcard Drills"}
                   {activeSection === "homework" && "Homework & Assignment Tracker"}
@@ -2395,7 +3718,7 @@ export function StudentDashboardView({
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              {/* Globe Language Switcher (EduPye Style) */}
+              {/* Globe Language Switcher (Wakheel Style) */}
               <button
                 onClick={() => setShowLanguageModal(true)}
                 className="p-2 rounded-full text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold font-mono"
@@ -2405,7 +3728,7 @@ export function StudentDashboardView({
                 <span className="hidden xl:inline text-[11px]">{selectedLanguage.slice(0, 2).toUpperCase()}</span>
               </button>
 
-              {/* Bookmark Revision Notebook (EduPye Style) */}
+              {/* Bookmark Revision Notebook (Wakheel Style) */}
               <button
                 onClick={() => setShowBookmarksDrawer(true)}
                 className="p-2 rounded-full text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer relative"
@@ -2415,7 +3738,7 @@ export function StudentDashboardView({
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500" />
               </button>
 
-              {/* Search Bar matching EduPye */}
+              {/* Search Bar matching Wakheel */}
               <div className="hidden sm:flex items-center w-52 lg:w-72">
                 <div className="relative w-full">
                   <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -2429,7 +3752,7 @@ export function StudentDashboardView({
                 </div>
               </div>
 
-              {/* Interactive Trophy Leaderboard / Rank pill (EduPye Style) */}
+              {/* Interactive Trophy Leaderboard / Rank pill (Wakheel Style) */}
               <button
                 onClick={() => setShowLeaderboardDrawer(true)}
                 className="p-2 rounded-full text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
@@ -2442,7 +3765,7 @@ export function StudentDashboardView({
                 <ThemeToggle />
               </div>
 
-              {/* Circular Avatar matching EduPye */}
+              {/* Circular Avatar matching Wakheel */}
               <button
                 onClick={() => setShowProfileDrawer(true)}
                 className="w-9 h-9 rounded-full bg-amber-500 text-black font-extrabold text-xs flex items-center justify-center uppercase cursor-pointer shadow-xs ring-2 ring-amber-500/20 hover:scale-105 transition-all"
@@ -2456,7 +3779,7 @@ export function StudentDashboardView({
 
         {/* Main Content Body */}
         <main className={`flex-1 w-full ${activeSection === "learn" ? "p-0 space-y-0" : "px-4 sm:px-6 lg:px-8 py-6 space-y-6"}`}>
-          {/* EduPye-style Category Navigation Header for Explore & Other Sections */}
+          {/* Wakheel-style Category Navigation Header for Explore & Other Sections */}
           {activeSection !== "learn" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -2495,7 +3818,7 @@ export function StudentDashboardView({
                 </button>
               </div>
 
-              {/* Category Pills matching EduPye row for Explore */}
+              {/* Category Pills matching Wakheel row for Explore */}
               {(activeSection === "home" || activeSection === "test_series") && (
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                   {examFilters.map((filter) => {
@@ -2520,12 +3843,12 @@ export function StudentDashboardView({
           )}
 
           {/* ============================================================== */}
-          {/* SECTION 1: EXPLORE & COURSES (EDUPYE SCREENSHOT MATCH)         */}
+          {/* SECTION 1: EXPLORE & COURSES (Wakheel SCREENSHOT MATCH)         */}
           {/* ============================================================== */}
           {(activeSection === "test_series" || activeSection === "home") && (
             <div className="space-y-8 animate-in fade-in duration-150">
               {/* ============================================================== */}
-              {/* EDUPYE-STYLE FEATURED CURRICULA (3-COL MINIMALIST CARDS)      */}
+              {/* Wakheel-STYLE FEATURED CURRICULA (3-COL MINIMALIST CARDS)      */}
               {/* ============================================================== */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {masterclassCourses.map((course) => (
@@ -2549,14 +3872,14 @@ export function StudentDashboardView({
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
 
-                      {/* EduPye Sections Pill: [ ≡ 20 Sections ] */}
+                      {/* Wakheel Sections Pill: [ ≡ 20 Sections ] */}
                       <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white text-[11px] font-medium border border-white/10 shadow-xs">
                         <AlignLeft className="w-3.5 h-3.5 text-zinc-300" />
                         <span>{course.unitsCount}</span>
                       </div>
                     </div>
 
-                    {/* Card Body - Exactly 2 Clean Lines matching EduPye */}
+                    {/* Card Body - Exactly 2 Clean Lines matching Wakheel */}
                     <div className="p-4 sm:p-5 space-y-1">
                       <h3 className="text-base font-bold text-black dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">
                         {course.title}
@@ -2734,20 +4057,20 @@ export function StudentDashboardView({
         )}
 
                 {/* ============================================================== */}
-        {/* EDUPYE 3-PANE "LEARN" SECTION ARCHITECTURE                     */}
+        {/* Wakheel 3-PANE "LEARN" SECTION ARCHITECTURE                     */}
         {/* Pane 1 (Leftmost): Primary icon rail (rendered by aside)       */}
         {/* Pane 2: Secondary Sub-Navigation Sidebar (w-52)               */}
         {/* Pane 3: Center Main Content Canvas (flex-1)                   */}
         {/* Pane 4: Right Studio Palette Palette (w-64 to w-72)           */}
         {/* ============================================================== */}
         {activeSection === "learn" && (
-          <div className="flex flex-col lg:flex-row min-h-[calc(100vh-105px)] w-full bg-[#f8fafc] dark:bg-black text-slate-900 dark:text-white animate-in fade-in duration-150">
+          <div className="flex flex-col lg:flex-row min-h-[calc(100vh-105px)] w-full bg-zinc-50/70 dark:bg-black text-zinc-900 dark:text-white animate-in fade-in duration-150">
             {/* PANE 2: SECONDARY SUB-NAVIGATION BAR (w-52) */}
-            <div className="w-full lg:w-52 shrink-0 bg-[#eef4fa] dark:bg-zinc-950/90 border-r border-slate-200/80 dark:border-zinc-800/80 p-4 flex flex-col justify-between">
+            <div className="w-full lg:w-52 shrink-0 bg-white dark:bg-zinc-950 border-r border-zinc-200/80 dark:border-zinc-800/80 p-4 flex flex-col justify-between">
               <div className="space-y-4">
                 {/* Sub-header */}
                 <div className="px-3 pt-2 pb-1">
-                  <h2 className="text-base font-black text-slate-800 dark:text-zinc-100 tracking-tight">
+                  <h2 className="text-base font-black text-black dark:text-white tracking-tight">
                     Learn
                   </h2>
                 </div>
@@ -2761,15 +4084,15 @@ export function StudentDashboardView({
                       <button
                         key={item.id}
                         onClick={() => setLearnSubSection(item.id)}
-                        className={`w-full px-3.5 py-2.5 rounded-xl text-left text-xs transition-all flex items-center gap-3 cursor-pointer ${
+                        className={`w-full px-3.5 py-2.5 rounded-xl text-left text-xs transition-all flex items-center gap-3 cursor-pointer group ${
                           isActive
-                            ? "bg-white dark:bg-zinc-800 text-sky-600 dark:text-amber-400 font-extrabold shadow-xs"
-                            : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-900/40 font-semibold"
+                            ? "bg-amber-500 text-black font-extrabold shadow-xs"
+                            : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 font-semibold"
                         }`}
                       >
                         <Icon
                           className={`w-4 h-4 shrink-0 ${
-                            isActive ? "text-sky-600 dark:text-amber-400" : "text-slate-400 dark:text-zinc-500"
+                            isActive ? "text-black" : "text-zinc-400 group-hover:text-amber-500 transition-colors"
                           }`}
                         />
                         <span className="truncate">{item.label}</span>
@@ -2780,43 +4103,43 @@ export function StudentDashboardView({
               </div>
 
               {/* Bottom status badge */}
-              <div className="pt-4 px-3 border-t border-slate-200/60 dark:border-zinc-800/60 text-[11px] text-slate-500 dark:text-zinc-400 flex items-center justify-between">
+              <div className="pt-4 px-3 border-t border-zinc-200/60 dark:border-zinc-800/60 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
                 <span className="font-mono">Curriculum</span>
-                <span className="font-bold text-sky-600 dark:text-amber-400">v2.5 Sync</span>
+                <span className="font-bold text-amber-500">v2.5 Sync</span>
               </div>
             </div>
 
             {/* PANE 3: MAIN CENTER CANVAS (flex-1) */}
             <div className="flex-1 min-w-0 p-5 sm:p-7 lg:p-8 overflow-y-auto">
-              {/* SUB-SECTION 1: SUBJECT (Default & EduPye Screenshot Match) */}
+              {/* SUB-SECTION 1: SUBJECT */}
               {learnSubSection === "subject" && (
                 <div className="space-y-6">
                   {/* Header Row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                        <h1 className="text-2xl sm:text-3xl font-black text-black dark:text-white tracking-tight">
                           Subjects
                         </h1>
-                        <span className="px-3 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80 text-xs font-bold shadow-2xs">
+                        <span className="px-3 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold shadow-2xs">
                           {selectedCurriculumTrack}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium mt-1">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-1">
                         Curriculum subjects aligned with your Consortium of NLUs &amp; State Bar standards.
                       </p>
                     </div>
 
                     <button
                       onClick={() => setShowManageTrackModal(true)}
-                      className="self-start sm:self-auto px-4 py-2 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 hover:border-slate-400 dark:hover:border-zinc-500 text-slate-800 dark:text-zinc-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+                      className="self-start sm:self-auto px-4 py-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
                     >
                       <span>Manage Track</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
                     </button>
                   </div>
 
-                  {/* 2x3 Grid of 6 Subject Cards Matching EduPye */}
+                  {/* 2x3 Grid of 6 Subject Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {learnSubjects.map((subj) => {
                       const matchedCourse =
@@ -2829,7 +4152,7 @@ export function StudentDashboardView({
                             setPortalTab("video");
                             setPortalVideoPlaying(true);
                           }}
-                          className="rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 shadow-xs hover:shadow-md hover:border-sky-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between group cursor-pointer relative min-h-[175px]"
+                          className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 shadow-xs hover:shadow-md hover:border-amber-400/50 dark:hover:border-zinc-700 transition-all flex flex-col justify-between group cursor-pointer relative min-h-[175px]"
                         >
                           {/* Top Bar with Category, Title, Lesson count and + button */}
                           <div>
@@ -2840,15 +4163,15 @@ export function StudentDashboardView({
                                 >
                                   {subj.category}
                                 </span>
-                                <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1.5 group-hover:text-sky-600 dark:group-hover:text-amber-400 transition-colors leading-snug">
+                                <h3 className="text-base font-bold text-zinc-900 dark:text-white mt-1.5 group-hover:text-amber-500 transition-colors leading-snug">
                                   {subj.title}
                                 </h3>
-                                <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium mt-1">
+                                <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium mt-1">
                                   {subj.chapters} Chapters • {subj.lessons} Lessons
                                 </p>
                               </div>
 
-                              {/* Blue Circular [+] Button matching EduPye */}
+                              {/* Circular [+] Button in Amber/Yellow */}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -2856,7 +4179,7 @@ export function StudentDashboardView({
                                   setPortalTab("video");
                                   setPortalVideoPlaying(true);
                                 }}
-                                className="w-8 h-8 rounded-full bg-sky-500 hover:bg-sky-600 active:scale-95 text-white flex items-center justify-center font-black shadow-xs transition-transform group-hover:scale-110 shrink-0 cursor-pointer"
+                                className="w-8 h-8 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black flex items-center justify-center font-black shadow-xs transition-transform group-hover:scale-110 shrink-0 cursor-pointer"
                                 title="Open Subject Learning Portal"
                               >
                                 <Plus className="w-4 h-4 stroke-[3]" />
@@ -2865,19 +4188,19 @@ export function StudentDashboardView({
                           </div>
 
                           {/* Visual Motif & Meta Description */}
-                          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                          <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div
                                 className={`w-8 h-8 rounded-xl bg-gradient-to-br ${subj.accent} text-white flex items-center justify-center shadow-xs shrink-0`}
                               >
                                 <BookOpen className="w-4 h-4" />
                               </div>
-                              <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-zinc-400">
+                              <span className="text-[11px] font-mono font-semibold text-zinc-500 dark:text-zinc-400">
                                 {subj.badge}
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-1 text-xs font-bold text-sky-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform">
+                            <div className="flex items-center gap-1 text-xs font-bold text-amber-500 group-hover:translate-x-1 transition-transform">
                               <span>Enter Module</span>
                               <ChevronRight className="w-3.5 h-3.5" />
                             </div>
@@ -2939,8 +4262,8 @@ export function StudentDashboardView({
                           onClick={() => setLearnPracticeFilter(filt)}
                           className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                             learnPracticeFilter === filt
-                              ? "bg-sky-500 text-white shadow-xs"
-                              : "bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700"
+                              ? "bg-amber-500 text-black font-extrabold shadow-xs"
+                              : "bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
                           }`}
                         >
                           {filt}
@@ -2955,28 +4278,28 @@ export function StudentDashboardView({
                       .map((q, idx) => (
                         <div
                           key={q.id}
-                          className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 space-y-4 shadow-xs"
+                          className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-4 shadow-xs"
                         >
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-mono font-bold text-sky-600 dark:text-amber-400 bg-sky-50 dark:bg-zinc-800 px-2.5 py-1 rounded-md">
+                            <span className="font-mono font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-md">
                               Question {idx + 1} • {q.subject}
                             </span>
-                            <span className="text-slate-400 dark:text-zinc-500 font-medium">{q.tag}</span>
+                            <span className="text-zinc-400 dark:text-zinc-500 font-medium">{q.tag}</span>
                           </div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-zinc-100">{q.question}</p>
+                          <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{q.question}</p>
                           <div className="grid grid-cols-1 gap-2">
                             {q.options.map((opt, oIdx) => (
                               <button
                                 key={oIdx}
                                 onClick={() => setGameAnswerSelected(oIdx)}
-                                className="p-3 rounded-xl border border-slate-200/80 dark:border-zinc-800 text-left text-xs font-medium hover:border-sky-500 dark:hover:border-amber-400 hover:bg-sky-50/50 dark:hover:bg-zinc-800 transition-all cursor-pointer text-slate-700 dark:text-zinc-200"
+                                className="p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 text-left text-xs font-medium hover:border-amber-500 dark:hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-zinc-800 transition-all cursor-pointer text-zinc-700 dark:text-zinc-200"
                               >
                                 {opt}
                               </button>
                             ))}
                           </div>
-                          <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-950/80 border border-slate-200/60 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-400 font-medium">
-                            <span className="font-bold text-slate-900 dark:text-white">Ratio Decidendi: </span>
+                          <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                            <span className="font-bold text-zinc-900 dark:text-white">Ratio Decidendi: </span>
                             {q.ratio}
                           </div>
                         </div>
@@ -2989,10 +4312,10 @@ export function StudentDashboardView({
               {learnSubSection === "test" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                       Curricular Unit &amp; Mock Tests
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                       Standardized timed CBT assessments under Bar &amp; NLU examination conditions.
                     </p>
                   </div>
@@ -3000,22 +4323,22 @@ export function StudentDashboardView({
                     {testSeriesPacks.slice(0, 4).map((tPack) => (
                       <div
                         key={tPack.id}
-                        className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between space-y-4"
+                        className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between space-y-4"
                       >
                         <div>
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
                               {tPack.badge}
                             </span>
-                            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+                            <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">
                               ★ {tPack.rating}
                             </span>
                           </div>
-                          <h3 className="text-base font-bold text-slate-900 dark:text-white mt-2">
+                          <h3 className="text-base font-bold text-zinc-900 dark:text-white mt-2">
                             {tPack.title}
                           </h3>
-                          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{tPack.conductingBody}</p>
-                          <div className="text-xs font-mono text-slate-600 dark:text-zinc-300 mt-2 font-medium">
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{tPack.conductingBody}</p>
+                          <div className="text-xs font-mono text-zinc-600 dark:text-zinc-300 mt-2 font-medium">
                             {tPack.testsCount}
                           </div>
                         </div>
@@ -3026,7 +4349,7 @@ export function StudentDashboardView({
                             setSelectedAnswers({});
                             setMockScore(null);
                           }}
-                          className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-98 text-white font-bold text-xs transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
                           <span>Start Timed CBT Test</span>
@@ -3125,7 +4448,7 @@ export function StudentDashboardView({
                         className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 flex items-center justify-between gap-4 shadow-2xs"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-zinc-800 text-sky-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-zinc-800 text-amber-500 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
                             <History className="w-4 h-4" />
                           </div>
                           <div>
@@ -3162,7 +4485,7 @@ export function StudentDashboardView({
                       value={learnSearchInput}
                       onChange={(e) => setLearnSearchInput(e.target.value)}
                       placeholder="Search section number (e.g. 69 BNS), case title (e.g. Kesavananda), or legal maxim..."
-                      className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 shadow-xs"
+                      className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-xs"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3171,13 +4494,13 @@ export function StudentDashboardView({
                       .map((s) => (
                         <div
                           key={s.id}
-                          className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 space-y-1 shadow-2xs"
+                          className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-2xs"
                         >
-                          <span className="text-[10px] font-mono font-bold text-sky-600 dark:text-sky-400">
+                          <span className="text-[10px] font-mono font-bold text-amber-500">
                             {s.category}
                           </span>
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">{s.title}</h4>
-                          <p className="text-xs text-slate-500 dark:text-zinc-400">{s.metaDesc}</p>
+                          <h4 className="text-sm font-bold text-zinc-900 dark:text-white">{s.title}</h4>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">{s.metaDesc}</p>
                         </div>
                       ))}
                   </div>
@@ -3189,36 +4512,36 @@ export function StudentDashboardView({
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                      <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                         Bare Act Section Sprint (Game)
                       </h2>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                         Gamified speed challenges: Match BNS section numbers and Latin maxims before the timer runs out!
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xs">
+                    <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 px-4 py-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xs">
                       <div className="text-center">
-                        <span className="text-[10px] text-slate-400 font-mono block">SCORE</span>
+                        <span className="text-[10px] text-zinc-400 font-mono block">SCORE</span>
                         <span className="text-sm font-black text-amber-500 font-mono">{gameScore} pts</span>
                       </div>
-                      <div className="h-6 w-px bg-slate-200 dark:border-zinc-800" />
+                      <div className="h-6 w-px bg-zinc-200 dark:border-zinc-800" />
                       <div className="text-center">
-                        <span className="text-[10px] text-slate-400 font-mono block">STREAK</span>
+                        <span className="text-[10px] text-zinc-400 font-mono block">STREAK</span>
                         <span className="text-sm font-black text-emerald-500 font-mono">{gameStreak} 🔥</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Active Question Card */}
-                  <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 space-y-6 shadow-xs">
+                  <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-6 shadow-xs">
                     <div className="space-y-2 text-center max-w-md mx-auto">
                       <span className="text-[10px] font-mono font-bold uppercase px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400">
                         CRIMINAL OFFENSE
                       </span>
-                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
                         {gameSprintQuestions[gameSprintQuestionIdx].crime}
                       </h3>
-                      <p className="text-xs text-slate-400 dark:text-zinc-500 font-mono">
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono">
                         Reference: {gameSprintQuestions[gameSprintQuestionIdx].ipcOld}
                       </p>
                     </div>
@@ -3238,7 +4561,7 @@ export function StudentDashboardView({
                               }
                               setGameSprintQuestionIdx((prev) => (prev + 1) % gameSprintQuestions.length);
                             }}
-                            className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/80 hover:bg-sky-500 hover:text-white border border-slate-200 dark:border-zinc-700 text-sm font-bold text-slate-800 dark:text-white transition-all cursor-pointer shadow-2xs hover:scale-102 active:scale-98"
+                            className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/80 hover:bg-amber-500 hover:text-black border border-zinc-200 dark:border-zinc-700 text-sm font-bold text-zinc-800 dark:text-white transition-all cursor-pointer shadow-2xs hover:scale-102 active:scale-98"
                           >
                             {opt}
                           </button>
@@ -3268,7 +4591,7 @@ export function StudentDashboardView({
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-sky-100 dark:bg-zinc-800 text-sky-600 dark:text-amber-400">
+                            <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/10 dark:bg-zinc-800 text-amber-600 dark:text-amber-400">
                               {hw.badge}
                             </span>
                             <span className="text-xs text-slate-400 font-mono">Due: {hw.dueDate}</span>
@@ -3389,7 +4712,7 @@ export function StudentDashboardView({
                               features: tutor.specialties,
                             });
                           }}
-                          className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-98 text-white font-bold text-xs transition-all shadow-xs cursor-pointer"
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer"
                         >
                           Book 1-on-1 Chamber Slot (₹{tutor.hourlyRate}/hr)
                         </button>
@@ -3437,7 +4760,7 @@ export function StudentDashboardView({
                         </div>
                         <button
                           onClick={() => setShowFloatingAI(true)}
-                          className="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs transition-all shadow-xs cursor-pointer shrink-0"
+                          className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer shrink-0"
                         >
                           Enter Study Room
                         </button>
@@ -3449,20 +4772,20 @@ export function StudentDashboardView({
             </div>
 
             {/* PANE 4: RIGHT STUDIO PALETTE (w-64 to w-72) */}
-            <div className="w-full lg:w-64 xl:w-72 shrink-0 bg-[#eef4fa] dark:bg-zinc-950/90 border-l border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-5 flex flex-col justify-between">
+            <div className="w-full lg:w-64 xl:w-72 shrink-0 bg-white dark:bg-zinc-950 border-l border-zinc-200/80 dark:border-zinc-850 p-4 sm:p-5 flex flex-col justify-between">
               <div className="space-y-4">
                 {/* Header: >> Create */}
                 <div className="flex items-center gap-1.5 px-1">
-                  <span className="text-sky-700 dark:text-sky-400 font-black text-base tracking-tight font-mono">
+                  <span className="text-amber-500 font-black text-base tracking-tight font-mono">
                     &gt;&gt;
                   </span>
-                  <h2 className="text-base font-black text-slate-800 dark:text-zinc-100 tracking-tight">
+                  <h2 className="text-base font-black text-black dark:text-white tracking-tight">
                     Create
                   </h2>
                 </div>
 
                 {/* 2-Column Grid of 12 Interactive Tools */}
-                <div className="bg-[#e2edf7] dark:bg-zinc-900/90 rounded-3xl p-3 border border-sky-100 dark:border-zinc-800/80">
+                <div className="bg-zinc-50 dark:bg-zinc-900 rounded-3xl p-3 border border-zinc-200/80 dark:border-zinc-800">
                   <div className="grid grid-cols-2 gap-2">
                     {createToolsList.map((tool) => {
                       const Icon = tool.icon;
@@ -3482,11 +4805,11 @@ export function StudentDashboardView({
                               setActiveCreateModal(tool.id);
                             }
                           }}
-                          className="bg-white dark:bg-zinc-800/90 hover:bg-sky-50 dark:hover:bg-zinc-700 rounded-2xl p-2.5 flex flex-col items-center justify-center text-center gap-1 shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+                          className="bg-white dark:bg-zinc-800/90 hover:bg-amber-50 dark:hover:bg-zinc-700 hover:border-amber-400/50 rounded-2xl p-2.5 flex flex-col items-center justify-center text-center gap-1 shadow-2xs hover:shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer group"
                           title={tool.description}
                         >
-                          <Icon className="w-4 h-4 text-sky-600 dark:text-sky-400 group-hover:text-amber-500 transition-colors" />
-                          <span className="text-[11px] font-bold text-slate-700 dark:text-zinc-200 truncate w-full">
+                          <Icon className="w-4 h-4 text-zinc-600 dark:text-zinc-400 group-hover:text-amber-500 transition-colors" />
+                          <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 truncate w-full">
                             {tool.label}
                           </span>
                         </button>
@@ -3495,39 +4818,39 @@ export function StudentDashboardView({
                   </div>
                 </div>
 
-                {/* Smart Board / Projects Card matching EduPye */}
+                {/* Smart Board / Projects Card */}
                 <div
                   onClick={() => setActiveCreateModal("smartboard")}
-                  className="bg-[#e2edf7] dark:bg-zinc-900/90 rounded-2xl p-3.5 border border-sky-100 dark:border-zinc-800/80 flex items-center justify-between cursor-pointer hover:shadow-xs transition-all group"
+                  className="bg-zinc-50 dark:bg-zinc-900 rounded-2xl p-3.5 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between cursor-pointer hover:shadow-xs transition-all group"
                 >
                   <div>
-                    <div className="text-xs font-black text-slate-800 dark:text-zinc-100 group-hover:text-sky-600 dark:group-hover:text-amber-400 transition-colors leading-tight">
+                    <div className="text-xs font-black text-black dark:text-white group-hover:text-amber-500 transition-colors leading-tight">
                       Smart Board
                     </div>
-                    <div className="text-[11px] font-bold text-slate-500 dark:text-zinc-400">
+                    <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400">
                       /Projects
                     </div>
                   </div>
-                  <div className="w-9 h-9 rounded-xl bg-sky-500/10 dark:bg-sky-400/10 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Presentation className="w-5 h-5" />
                   </div>
                 </div>
               </div>
 
-              {/* Floating Pill Button: EduPye AI HYBRID */}
+              {/* Floating Pill Button: Wakheel AI */}
               <div className="pt-4">
                 <button
                   onClick={() => setShowFloatingAI(true)}
-                  className="w-full bg-gradient-to-r from-sky-950 via-slate-900 to-black text-white px-4 py-2.5 rounded-full flex items-center justify-between shadow-lg cursor-pointer hover:scale-102 active:scale-98 transition-all border border-sky-500/30 group"
+                  className="w-full bg-zinc-950 hover:bg-black text-white px-4 py-2.5 rounded-full flex items-center justify-between shadow-lg cursor-pointer hover:scale-102 active:scale-98 transition-all border border-zinc-800 hover:border-amber-500/50 group"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-sm shadow-amber-500" />
                     <span className="text-xs font-black tracking-wide text-white">
-                      EduPye AI
+                      Wakheel AI
                     </span>
                   </div>
-                  <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">
-                    HYBRID
+                  <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-black">
+                    CO-COUNSEL
                   </span>
                 </button>
               </div>
@@ -3735,96 +5058,7 @@ export function StudentDashboardView({
         {/* ============================================================== */}
         {/* SECTION 4: FREE CBT MOCK TEST SIMULATOR                        */}
         {/* ============================================================== */}
-        {activeSection === "free_mocks" && (
-          <div className="space-y-5 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-black text-black dark:text-white">
-                  {sampleFreeMock.title}
-                </h2>
-                <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
-                  Consortium pattern with +1 for correct and -0.25 negative marking.
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold">
-                <Clock className="w-3.5 h-3.5" />
-                <span>118:40 Remaining</span>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-5">
-              {sampleFreeMock.questions.map((q, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2.5"
-                >
-                  <div className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-black text-white dark:bg-white dark:text-black text-[11px] font-bold flex items-center justify-center shrink-0">
-                      {idx + 1}
-                    </span>
-                    <p className="text-xs sm:text-sm font-medium text-black dark:text-zinc-200 leading-relaxed">
-                      {q.q}
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5 pt-1">
-                    {q.options.map((opt, optIdx) => {
-                      const isSelected = selectedAnswers[idx] === optIdx;
-                      return (
-                        <button
-                          key={optIdx}
-                          onClick={() => handleSelectMockAnswer(idx, optIdx)}
-                          className={`w-full p-2.5 rounded-xl text-left text-xs transition-all flex items-center gap-2.5 cursor-pointer ${
-                            isSelected
-                              ? "bg-amber-500 text-black font-bold shadow-xs"
-                              : "bg-white dark:bg-zinc-900 text-black dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800"
-                          }`}
-                        >
-                          <span className="w-4 h-4 rounded-full border border-current flex items-center justify-center text-[10px] shrink-0 font-bold">
-                            {String.fromCharCode(65 + optIdx)}
-                          </span>
-                          <span>{opt}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-
-              {mockScore === null ? (
-                <div className="flex items-center justify-between pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                  <button
-                    onClick={() => setActiveSection("test_series")}
-                    className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                  >
-                    Back to Test Series
-                  </button>
-                  <button
-                    onClick={calculateMockScore}
-                    className="px-5 py-2 rounded-xl bg-black dark:bg-amber-500 text-white dark:text-black font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    Submit Responses &amp; Calculate Score
-                  </button>
-                </div>
-              ) : (
-                <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-center space-y-2">
-                  <div className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
-                    Score: {mockScore > 0 ? `+${mockScore.toFixed(2)}` : mockScore.toFixed(2)}
-                  </div>
-                  <p className="text-xs text-black dark:text-zinc-300">
-                    Your simulated diagnostic percentile is <strong>94.8%</strong>. Unlock the full 35-test series for comprehensive all-India ranking!
-                  </p>
-                  <button
-                    onClick={() => setActiveSection("test_series")}
-                    className="px-4 py-1.5 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold cursor-pointer"
-                  >
-                    Explore Full Test Series
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {activeSection === "free_mocks" && renderCbtMockSimulator()}
 
         {/* ============================================================== */}
         {/* SECTION 5: AI DOUBT SOLVER                                     */}
@@ -4341,7 +5575,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: DIGITAL LIBRARY (EDUPYE SCREENSHOT FEATURE)           */}
+        {/* SECTION: DIGITAL LIBRARY (Wakheel SCREENSHOT FEATURE)           */}
         {/* ============================================================== */}
         {(activeSection === "library" || activeSection === "bare_acts") && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -4427,7 +5661,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: CORNELL NOTEBOOK (EDUPYE SCREENSHOT FEATURE)          */}
+        {/* SECTION: CORNELL NOTEBOOK (Wakheel SCREENSHOT FEATURE)          */}
         {/* ============================================================== */}
         {activeSection === "notebook" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -4543,7 +5777,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: DOCUMENT & BRIEF UPLOAD (EDUPYE SCREENSHOT FEATURE)   */}
+        {/* SECTION: DOCUMENT & BRIEF UPLOAD (Wakheel SCREENSHOT FEATURE)   */}
         {/* ============================================================== */}
         {activeSection === "upload" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -4656,7 +5890,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: RECORDING STUDIO (EDUPYE SCREENSHOT FEATURE)          */}
+        {/* SECTION: RECORDING STUDIO (Wakheel SCREENSHOT FEATURE)          */}
         {/* ============================================================== */}
         {activeSection === "record" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -4806,7 +6040,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: TUITION MODE (EDUPYE SCREENSHOT FEATURE)              */}
+        {/* SECTION: TUITION MODE (Wakheel SCREENSHOT FEATURE)              */}
         {/* ============================================================== */}
         {activeSection === "tuition_mode" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -4889,7 +6123,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: EXAM CRACKER (EDUPYE SCREENSHOT FEATURE)              */}
+        {/* SECTION: EXAM CRACKER (Wakheel SCREENSHOT FEATURE)              */}
         {/* ============================================================== */}
         {activeSection === "exam_cracker" && (
           <div className="space-y-6 animate-in fade-in duration-150 max-w-4xl mx-auto">
@@ -4975,11 +6209,31 @@ export function StudentDashboardView({
                 </div>
               );
             })()}
+
+            {/* High-Yield Mock Drill CTA */}
+            <div className="p-5 rounded-3xl bg-zinc-950 text-white border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                  Timed CBT Simulation
+                </span>
+                <h4 className="text-sm font-bold">Ready to apply these constitutional ratios in a live 120-minute mock?</h4>
+                <p className="text-xs text-zinc-400">Consortium CLAT format with negative marking (-0.25) and instant diagnostic scorecard.</p>
+              </div>
+              <button
+                onClick={() => {
+                  handleStartCbtExam();
+                  setActiveSection("tests");
+                }}
+                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer shrink-0"
+              >
+                Launch Live CBT Mock →
+              </button>
+            </div>
           </div>
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: HOMEWORK TRACKER (EDUPYE SCREENSHOT FEATURE)           */}
+        {/* SECTION: HOMEWORK TRACKER (Wakheel SCREENSHOT FEATURE)           */}
         {/* ============================================================== */}
         {activeSection === "homework" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -5055,58 +6309,72 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: TESTS & CBT MOCKS (EDUPYE SCREENSHOT FEATURE)          */}
+        {/* SECTION: TESTS & CBT MOCKS (Wakheel SCREENSHOT FEATURE)          */}
         {/* ============================================================== */}
         {activeSection === "tests" && (
-          <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="p-6 rounded-3xl bg-amber-500 text-black flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
-              <div className="space-y-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-black text-white text-[10px] font-mono font-bold uppercase">
-                  Consortium CBT Simulation Window
-                </span>
-                <h3 className="text-xl font-black">All-India CLAT 2027 Full Length Diagnostic Mock</h3>
-                <p className="text-xs text-black/80 font-medium">120 Minutes • 120 Questions • Testbook / NLU Standard Negative Marking (-0.25)</p>
+          cbtActive || cbtIsSubmitted ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <button
+                  onClick={() => {
+                    setCbtActive(false);
+                    setCbtIsSubmitted(false);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Exit Simulator &amp; View Test Packs</span>
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  setActiveMockTest(sampleFreeMock);
-                  setSelectedAnswers({});
-                  setMockScore(null);
-                }}
-                className="px-6 py-3 rounded-2xl bg-black hover:bg-zinc-800 text-white font-extrabold text-xs transition-all cursor-pointer shadow-md shrink-0"
-              >
-                Launch CBT Simulator Now →
-              </button>
+              {renderCbtMockSimulator()}
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {testSeriesPacks.map((pack) => (
-                <div key={pack.id} className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-mono font-bold text-amber-500 uppercase">{pack.badge}</span>
-                    <h4 className="text-base font-bold text-black dark:text-white">{pack.title}</h4>
-                    <p className="text-xs text-zinc-500">{pack.testsCount} Total Mocks • Detailed Answer Keys</p>
-                  </div>
-                  <button
-                    onClick={() => setPurchaseItem({
-                      type: "test_series",
-                      title: pack.title,
-                      price: pack.price,
-                      originalPrice: pack.originalPrice,
-                      features: pack.features,
-                    })}
-                    className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
-                  >
-                    Unlock Test Pack (₹{pack.price})
-                  </button>
+          ) : (
+            <div className="space-y-6 animate-in fade-in duration-150">
+              <div className="p-6 rounded-3xl bg-amber-500 text-black flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+                <div className="space-y-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-black text-white text-[10px] font-mono font-bold uppercase">
+                    Consortium CBT Simulation Window
+                  </span>
+                  <h3 className="text-xl font-black">All-India CLAT 2027 Full Length Diagnostic Mock</h3>
+                  <p className="text-xs text-black/80 font-medium">120 Minutes • 14 Comprehensive Questions • Consortium Standard Negative Marking (-0.25)</p>
                 </div>
-              ))}
+                <button
+                  onClick={handleStartCbtExam}
+                  className="px-6 py-3 rounded-2xl bg-black hover:bg-zinc-800 text-white font-extrabold text-xs transition-all cursor-pointer shadow-md shrink-0"
+                >
+                  Launch CBT Simulator Now →
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {testSeriesPacks.map((pack) => (
+                  <div key={pack.id} className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-mono font-bold text-amber-500 uppercase">{pack.badge}</span>
+                      <h4 className="text-base font-bold text-black dark:text-white">{pack.title}</h4>
+                      <p className="text-xs text-zinc-500">{pack.testsCount} Total Mocks • Detailed Answer Keys</p>
+                    </div>
+                    <button
+                      onClick={() => setPurchaseItem({
+                        type: "test_series",
+                        title: pack.title,
+                        price: pack.price,
+                        originalPrice: pack.originalPrice,
+                        features: pack.features,
+                      })}
+                      className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
+                    >
+                      Unlock Test Pack (₹{pack.price})
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: MY ENROLLED COURSES (EDUPYE SCREENSHOT FEATURE)       */}
+        {/* SECTION: MY ENROLLED COURSES (Wakheel SCREENSHOT FEATURE)       */}
         {/* ============================================================== */}
         {activeSection === "my_courses" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -5159,45 +6427,391 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: BOOK SHELF (EDUPYE SCREENSHOT FEATURE)                */}
+        {/* SECTION: BOOK SHELF (OPTION 3: FACULTY UPLOADS & STUDENT HUB)  */}
         {/* ============================================================== */}
         {activeSection === "bookshelf" && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {bookshelfItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 flex flex-col justify-between shadow-sm"
-                >
-                  <div className="space-y-3">
-                    <div className={`h-40 rounded-2xl bg-gradient-to-br ${item.accent} p-4 text-white flex flex-col justify-between shadow-md`}>
-                      <BookMarked className="w-6 h-6 text-white/80" />
-                      <div>
-                        <div className="text-sm font-black line-clamp-2">{item.title}</div>
-                        <div className="text-[10px] text-white/70 font-mono mt-1">Last Read: {item.lastRead}</div>
+            {/* Header with Search and Filter */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                    Centralized Courseware
+                  </span>
+                  <span className="text-xs text-zinc-400 font-mono">•</span>
+                  <span className="text-xs text-zinc-500 font-mono">Faculty Published Library</span>
+                </div>
+                <h3 className="text-xl font-black text-black dark:text-white">
+                  Virtual Legal Book Shelf &amp; Reading Hub
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Access textbooks, Bare Act commentaries, and course readers uploaded by your law faculty. Read directly online or download for offline exam prep.
+                </p>
+              </div>
+
+              {/* Real-time Search Box */}
+              <div className="relative w-full md:w-72 shrink-0">
+                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={bookShelfSearch}
+                  onChange={(e) => setBookShelfSearch(e.target.value)}
+                  placeholder="Search books, author, statutes..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Department Filter Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {(
+                [
+                  { id: "All", label: `All Books (${booksList.length})` },
+                  { id: "Constitutional Law", label: "Constitutional Law" },
+                  { id: "Criminal Law", label: "Criminal Law (BNS)" },
+                  { id: "CLAT & Entrance", label: "CLAT & Entrance" },
+                  { id: "Civil Law & Litigation", label: "Civil Procedure" },
+                  { id: "Downloaded", label: `My Downloaded (${Object.keys(downloadedBookIds).length})` },
+                ] as const
+              ).map((tab) => {
+                const isActive = bookShelfFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setBookShelfFilter(tab.id)}
+                    className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      isActive
+                        ? "bg-black text-white dark:bg-white dark:text-black shadow-md scale-102"
+                        : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white border border-zinc-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Books Grid */}
+            {(() => {
+              const filtered = booksList.filter((b) => {
+                const matchesDept =
+                  bookShelfFilter === "All" ||
+                  (bookShelfFilter === "Downloaded" && downloadedBookIds[b.id]) ||
+                  b.department.toLowerCase().includes(bookShelfFilter.toLowerCase());
+                const matchesSearch =
+                  !bookShelfSearch.trim() ||
+                  b.title.toLowerCase().includes(bookShelfSearch.toLowerCase()) ||
+                  b.author.toLowerCase().includes(bookShelfSearch.toLowerCase()) ||
+                  b.description.toLowerCase().includes(bookShelfSearch.toLowerCase());
+                return matchesDept && matchesSearch;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="p-12 text-center rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <BookOpen className="w-8 h-8 text-zinc-400 mx-auto" />
+                    <h4 className="text-sm font-bold text-black dark:text-white">No books match your criteria</h4>
+                    <p className="text-xs text-zinc-500">Try adjusting your search query or department filter tab.</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filtered.map((book) => {
+                    const isDownloaded = downloadedBookIds[book.id];
+                    return (
+                      <div
+                        key={book.id}
+                        className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 flex flex-col justify-between shadow-sm hover:border-amber-400 dark:hover:border-amber-500/60 transition-all group"
+                      >
+                        <div className="space-y-3.5">
+                          {/* Styled Spine Cover */}
+                          <div
+                            className={`h-44 rounded-2xl bg-gradient-to-br ${book.coverGradient} p-4 text-white flex flex-col justify-between shadow-md relative overflow-hidden`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-xs text-[10px] font-mono font-bold uppercase">
+                                {book.department}
+                              </span>
+                              <span className="text-[10px] font-mono bg-white/20 px-2.5 py-0.5 rounded-full font-bold">
+                                {book.format} • {book.fileSize}
+                              </span>
+                            </div>
+
+                            <div>
+                              <h4 className="text-sm font-black line-clamp-2 leading-snug">{book.title}</h4>
+                              <div className="text-[10px] text-white/80 font-mono mt-1">
+                                By {book.author}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Info */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-black dark:text-white line-clamp-1">{book.title}</span>
+                            </div>
+                            <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                              {book.description}
+                            </p>
+                            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                              <span>{book.totalPages} Pages • {book.chapters.length} Chapters</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                <Download className="w-3 h-3" />
+                                <span>{book.downloadCount} downloads</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions: Read & Download */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={() => handleOpenBookReader(book)}
+                            className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>Read Book</span>
+                          </button>
+                          <button
+                            onClick={() => handleStudentDownloadBook(book)}
+                            className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isDownloaded
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                                : "border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                            }`}
+                            title="Download offline manuscript"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">{isDownloaded ? "Saved" : "Download"}</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-black dark:text-white">{item.title}</h4>
-                      <p className="text-xs text-zinc-500 font-mono mt-0.5">Page {item.currentPage} of {item.totalPages} ({item.progress})</p>
-                    </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* FULLSCREEN IN-APP LEGAL BOOK READER MODAL */}
+        {selectedBookForReading && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-in zoom-in-95 duration-150">
+            <div className={`w-full max-w-5xl h-[92vh] rounded-3xl border shadow-2xl flex flex-col overflow-hidden transition-colors ${
+              readerTheme === "dark"
+                ? "bg-zinc-950 text-zinc-100 border-zinc-800"
+                : readerTheme === "sepia"
+                ? "bg-[#fbf0d9] text-[#433422] border-[#e4d4b3]"
+                : "bg-white text-zinc-900 border-zinc-200"
+            }`}>
+              {/* Reader Header Toolbar */}
+              <div className={`p-4 border-b flex flex-wrap items-center justify-between gap-3 ${
+                readerTheme === "dark" ? "border-zinc-800 bg-zinc-900/60" : readerTheme === "sepia" ? "border-[#e4d4b3] bg-[#f4e4c3]/60" : "border-zinc-200 bg-zinc-50"
+              }`}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold shrink-0">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black truncate">{selectedBookForReading.title}</h3>
+                    <p className="text-[11px] text-zinc-500 truncate font-mono">
+                      By {selectedBookForReading.author} • {selectedBookForReading.edition}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Theme Switcher */}
+                  <div className="flex items-center rounded-xl bg-black/5 dark:bg-white/10 p-0.5 text-xs font-bold font-mono">
+                    <button
+                      onClick={() => setReaderTheme("light")}
+                      className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                        readerTheme === "light" ? "bg-white text-black shadow-xs" : "opacity-60"
+                      }`}
+                    >
+                      Light
+                    </button>
+                    <button
+                      onClick={() => setReaderTheme("sepia")}
+                      className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                        readerTheme === "sepia" ? "bg-[#e8d5b5] text-amber-950 font-bold shadow-xs" : "opacity-60"
+                      }`}
+                    >
+                      Sepia
+                    </button>
+                    <button
+                      onClick={() => setReaderTheme("dark")}
+                      className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                        readerTheme === "dark" ? "bg-zinc-800 text-white shadow-xs" : "opacity-60"
+                      }`}
+                    >
+                      Dark
+                    </button>
                   </div>
 
+                  {/* Font Sizer */}
+                  <div className="flex items-center rounded-xl bg-black/5 dark:bg-white/10 p-0.5 text-xs font-bold font-mono">
+                    <button
+                      onClick={() => setReaderFontSize("sm")}
+                      className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                        readerFontSize === "sm" ? "bg-white dark:bg-zinc-800 shadow-2xs" : "opacity-60"
+                      }`}
+                    >
+                      A-
+                    </button>
+                    <button
+                      onClick={() => setReaderFontSize("base")}
+                      className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                        readerFontSize === "base" ? "bg-white dark:bg-zinc-800 shadow-2xs" : "opacity-60"
+                      }`}
+                    >
+                      A
+                    </button>
+                    <button
+                      onClick={() => setReaderFontSize("lg")}
+                      className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+                        readerFontSize === "lg" ? "bg-white dark:bg-zinc-800 shadow-2xs" : "opacity-60"
+                      }`}
+                    >
+                      A+
+                    </button>
+                  </div>
+
+                  {/* Bookmark Button */}
                   <button
-                    onClick={() => alert(`Resuming reading: ${item.title}`)}
-                    className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    onClick={() => handleToggleBookmark(selectedBookForReading.id, readerActiveChapterIdx)}
+                    className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                      bookmarkedPages[`${selectedBookForReading.id}_ch_${readerActiveChapterIdx}`]
+                        ? "bg-amber-500 text-black border-amber-500"
+                        : "border-zinc-300 dark:border-zinc-700 hover:bg-black/5 dark:hover:bg-white/10"
+                    }`}
+                    title="Bookmark this chapter"
                   >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>Continue Reading</span>
+                    <Bookmark className="w-4 h-4 fill-current" />
+                  </button>
+
+                  {/* Download Copy Button */}
+                  <button
+                    onClick={() => handleStudentDownloadBook(selectedBookForReading)}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    title="Download manuscript file"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Download</span>
+                  </button>
+
+                  {/* Close Reader */}
+                  <button
+                    onClick={() => setSelectedBookForReading(null)}
+                    className="p-1.5 rounded-xl hover:bg-black/10 dark:hover:bg-white/10 text-zinc-500 hover:text-black dark:hover:text-white cursor-pointer ml-1"
+                  >
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Reader Split Body: Sidebar Table of Contents + Chapter Viewer */}
+              <div className="flex-1 flex overflow-hidden">
+                {/* Table of Contents Sidebar */}
+                <div className={`w-64 sm:w-72 border-r p-4 overflow-y-auto space-y-2 shrink-0 hidden md:block ${
+                  readerTheme === "dark" ? "border-zinc-800 bg-zinc-900/40" : readerTheme === "sepia" ? "border-[#e4d4b3] bg-[#f4e4c3]/30" : "border-zinc-200 bg-zinc-50/50"
+                }`}>
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                    Table of Contents ({selectedBookForReading.chapters.length} Chapters)
+                  </div>
+                  <div className="space-y-1">
+                    {selectedBookForReading.chapters.map((ch, idx) => {
+                      const isActive = readerActiveChapterIdx === idx;
+                      const isBookmarked = bookmarkedPages[`${selectedBookForReading.id}_ch_${idx}`];
+                      return (
+                        <button
+                          key={ch.id}
+                          onClick={() => setReaderActiveChapterIdx(idx)}
+                          className={`w-full p-2.5 rounded-xl text-left text-xs transition-all flex items-start justify-between gap-2 cursor-pointer ${
+                            isActive
+                              ? "bg-amber-500 text-black font-extrabold shadow-sm"
+                              : "hover:bg-black/5 dark:hover:bg-white/5 opacity-80 hover:opacity-100"
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <span className="text-[10px] font-mono block opacity-75">Chapter {ch.chapterNumber}</span>
+                            <span className="line-clamp-2 leading-snug">{ch.title}</span>
+                          </div>
+                          {isBookmarked && (
+                            <Bookmark className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-black fill-current" : "text-amber-500 fill-current"}`} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Chapter Content Viewport */}
+                {(() => {
+                  const currentCh = selectedBookForReading.chapters[readerActiveChapterIdx] || selectedBookForReading.chapters[0];
+                  const fontSizeClass =
+                    readerFontSize === "lg"
+                      ? "text-lg leading-loose"
+                      : readerFontSize === "base"
+                      ? "text-base leading-relaxed"
+                      : "text-sm leading-relaxed";
+
+                  return (
+                    <div className="flex-1 flex flex-col justify-between overflow-hidden">
+                      {/* Chapter Text Viewport */}
+                      <div className="flex-1 p-6 sm:p-10 overflow-y-auto space-y-6">
+                        <div className="max-w-3xl mx-auto space-y-4">
+                          <div className="space-y-1 border-b pb-4 border-current/15">
+                            <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                              Chapter {currentCh.chapterNumber} • Page {currentCh.pageNumber}
+                            </span>
+                            <h2 className="text-xl sm:text-2xl font-black tracking-tight font-serif">
+                              {currentCh.title}
+                            </h2>
+                          </div>
+
+                          <div className={`whitespace-pre-line font-serif ${fontSizeClass} opacity-90`}>
+                            {currentCh.content}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reading Navigation Footer */}
+                      <div className={`p-4 border-t flex items-center justify-between gap-4 ${
+                        readerTheme === "dark" ? "border-zinc-800 bg-zinc-900/60" : readerTheme === "sepia" ? "border-[#e4d4b3] bg-[#f4e4c3]/60" : "border-zinc-200 bg-zinc-50"
+                      }`}>
+                        <button
+                          disabled={readerActiveChapterIdx === 0}
+                          onClick={() => setReaderActiveChapterIdx((prev) => Math.max(0, prev - 1))}
+                          className="px-4 py-2 rounded-xl border border-current/20 disabled:opacity-30 hover:bg-black/5 dark:hover:bg-white/10 text-xs font-bold transition-all cursor-pointer"
+                        >
+                          ← Previous Chapter
+                        </button>
+
+                        <div className="text-xs font-mono opacity-70">
+                          Chapter {readerActiveChapterIdx + 1} of {selectedBookForReading.chapters.length} ({Math.round(((readerActiveChapterIdx + 1) / selectedBookForReading.chapters.length) * 100)}%)
+                        </div>
+
+                        <button
+                          disabled={readerActiveChapterIdx === selectedBookForReading.chapters.length - 1}
+                          onClick={() => setReaderActiveChapterIdx((prev) => Math.min(selectedBookForReading.chapters.length - 1, prev + 1))}
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all disabled:opacity-30 cursor-pointer"
+                        >
+                          Next Chapter →
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: MOOT PROJECTS (EDUPYE SCREENSHOT FEATURE)             */}
+        {/* SECTION: MOOT PROJECTS (Wakheel SCREENSHOT FEATURE)             */}
         {/* ============================================================== */}
         {activeSection === "projects" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -5242,7 +6856,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: 3D LAB (EDUPYE SCREENSHOT FEATURE)                    */}
+        {/* SECTION: 3D LAB (Wakheel SCREENSHOT FEATURE)                    */}
         {/* ============================================================== */}
         {activeSection === "three_d_lab" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -5307,7 +6921,7 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: BOOKMARKS (EDUPYE SCREENSHOT FEATURE)                 */}
+        {/* SECTION: BOOKMARKS (Wakheel SCREENSHOT FEATURE)                 */}
         {/* ============================================================== */}
         {activeSection === "bookmarks" && (
           <div className="space-y-6 animate-in fade-in duration-150">
@@ -5658,7 +7272,7 @@ export function StudentDashboardView({
       )}
 
       {/* ============================================================== */}
-      {/* 6. EDUPYE FLOATING AI COPILOT WIDGET ([★ Wakheel AI | HYBRID]) */}
+      {/* 6. Wakheel FLOATING AI COPILOT WIDGET ([★ Wakheel AI | HYBRID]) */}
       {/* ============================================================== */}
       {/* Backdrop scrim when drawer is open */}
       {showFloatingAI && (
@@ -5683,7 +7297,7 @@ export function StudentDashboardView({
             <div>
               <div className="text-xs sm:text-sm font-black flex items-center gap-1.5 text-white">
                 <span>Wakheel AI Copilot</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-bold">
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold">
                   HYBRID v2.5
                 </span>
               </div>
@@ -5824,8 +7438,8 @@ export function StudentDashboardView({
 
                 {/* Exam Tip */}
                 {msg.examTip && (
-                  <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-[10.5px] text-blue-800 dark:text-blue-300 flex items-start gap-1.5 leading-snug">
-                    <Sparkles className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[10.5px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5 leading-snug">
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <span>{msg.examTip}</span>
                   </div>
                 )}
@@ -5898,27 +7512,27 @@ export function StudentDashboardView({
         </form>
       </div>
 
-      {/* Floating Pill Button matching EduPye ([★ EduPye AI | HYBRID]) */}
+      {/* Floating Pill Button ([★ Wakheel AI | CO-COUNSEL]) */}
       <button
         onClick={() => setShowFloatingAI((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-40 px-4 py-2.5 rounded-full bg-gradient-to-r from-sky-950 via-slate-900 to-black text-white border border-sky-400/40 hover:border-sky-300 shadow-2xl hover:shadow-cyan-500/20 flex items-center gap-2.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group backdrop-blur-md"
-        title="EduPye AI Hybrid Legal Assistant"
+        className="fixed bottom-6 right-6 z-40 px-4 py-2.5 rounded-full bg-zinc-950 text-white border border-zinc-800 hover:border-amber-500/50 shadow-2xl flex items-center gap-2.5 cursor-pointer transition-all hover:scale-105 active:scale-95 group backdrop-blur-md"
+        title="Wakheel AI Legal Copilot"
       >
         <span className="relative flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
         </span>
         <div className="flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" />
-          <span className="text-xs font-black tracking-wide text-white">EduPye AI</span>
+          <Sparkles className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+          <span className="text-xs font-black tracking-wide text-white">Wakheel AI</span>
         </div>
-        <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-[10px] font-mono font-black uppercase tracking-wider">
-          HYBRID
+        <span className="px-2 py-0.5 rounded-md bg-amber-500 text-black text-[10px] font-mono font-black uppercase tracking-wider">
+          CO-COUNSEL
         </span>
       </button>
 
       {/* ============================================================== */}
-      {/* 7. EDUPYE COURSE LEARNING PORTAL MODAL (OPEN PORTAL >)          */}
+      {/* 7. Wakheel COURSE LEARNING PORTAL MODAL (OPEN PORTAL >)          */}
       {/* ============================================================== */}
       {selectedCourseForPortal && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
@@ -6012,7 +7626,7 @@ export function StudentDashboardView({
                       <span className="px-2 py-0.5 rounded bg-amber-500 text-black font-mono font-bold text-[10px]">
                         LIVE STREAM RECORDING
                       </span>
-                      <span className="font-mono text-zinc-400">1080p 60fps • EduPye HD</span>
+                      <span className="font-mono text-zinc-400">1080p 60fps • Wakheel HD</span>
                     </div>
 
                     {/* Center Play Button */}
@@ -6647,7 +8261,7 @@ export function StudentDashboardView({
         </div>
       )}
       {/* ============================================================== */}
-      {/* 11. MANAGE CURRICULUM TRACK MODAL (EDUPYE LEARN SECTION)       */}
+      {/* 11. MANAGE CURRICULUM TRACK MODAL (Wakheel LEARN SECTION)       */}
       {/* ============================================================== */}
       {showManageTrackModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -6661,7 +8275,7 @@ export function StudentDashboardView({
 
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                   CURRICULUM TRACK SWITCHER
                 </span>
               </div>
@@ -6716,20 +8330,20 @@ export function StudentDashboardView({
                     }}
                     className={`p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between cursor-pointer ${
                       isSelected
-                        ? "bg-sky-50 dark:bg-sky-950/40 border-sky-500 text-black dark:text-white shadow-xs ring-1 ring-sky-500"
+                        ? "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500 text-black dark:text-white shadow-xs ring-1 ring-amber-500"
                         : "border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-600"
                     }`}
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-slate-900 dark:text-white">{trk.title}</span>
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white">{trk.title}</span>
                         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-400">
                           {trk.badge}
                         </span>
                       </div>
                       <p className="text-xs text-zinc-500 mt-0.5">{trk.desc}</p>
                     </div>
-                    {isSelected && <Check className="w-5 h-5 text-sky-600 dark:text-sky-400 shrink-0" />}
+                    {isSelected && <Check className="w-5 h-5 text-amber-500 shrink-0" />}
                   </div>
                 );
               })}
@@ -6739,7 +8353,7 @@ export function StudentDashboardView({
       )}
 
       {/* ============================================================== */}
-      {/* 12. CREATE STUDIO TOOLS MODALS (EDUPYE >> CREATE PALETTE)     */}
+      {/* 12. CREATE STUDIO TOOLS MODALS (Wakheel >> CREATE PALETTE)     */}
       {/* ============================================================== */}
       {activeCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -6755,7 +8369,7 @@ export function StudentDashboardView({
             {activeCreateModal === "smartboard" && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold">
                     <Presentation className="w-4 h-4" />
                   </div>
                   <div>
@@ -6765,26 +8379,26 @@ export function StudentDashboardView({
                     </p>
                   </div>
                 </div>
-                <div className="aspect-video w-full rounded-2xl bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 p-4 flex flex-col justify-between">
-                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2">
-                    <span className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400">
+                <div className="aspect-video w-full rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col justify-between">
+                  <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                    <span className="text-xs font-mono font-bold text-zinc-600 dark:text-zinc-400">
                       Canvas: Kesavananda Basic Structure Flowchart
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
                       Ready to Draw
                     </span>
                   </div>
                   <div className="text-center space-y-2 my-auto">
-                    <PenTool className="w-8 h-8 text-sky-500 mx-auto" />
-                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                    <PenTool className="w-8 h-8 text-amber-500 mx-auto" />
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
                       Drag legal nodes, link articles, or annotate landmark rulings with advocate peers.
                     </p>
                   </div>
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200 dark:border-zinc-800">
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-zinc-200 dark:border-zinc-800">
                     <span className="text-[11px] text-zinc-400">Tools: Pen • Highlighting • Shapes • Export PDF</span>
                     <button
                       onClick={() => setActiveCreateModal(null)}
-                      className="px-4 py-1.5 rounded-lg bg-sky-500 text-white text-xs font-bold cursor-pointer hover:bg-sky-600"
+                      className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer transition-colors"
                     >
                       Save to My Projects
                     </button>
@@ -6797,7 +8411,7 @@ export function StudentDashboardView({
             {activeCreateModal === "mind_map" && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold">
                     <Brain className="w-4 h-4" />
                   </div>
                   <div>
@@ -6807,25 +8421,25 @@ export function StudentDashboardView({
                     </p>
                   </div>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 space-y-3">
-                  <div className="font-mono text-xs font-bold text-sky-600 dark:text-amber-400">
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                  <div className="font-mono text-xs font-bold text-amber-500">
                     PART III: FUNDAMENTAL RIGHTS (ARTICLES 12–35)
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-                      <strong className="text-slate-900 dark:text-white block">Right to Equality (Art. 14–18)</strong>
+                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <strong className="text-zinc-900 dark:text-white block">Right to Equality (Art. 14–18)</strong>
                       <span className="text-zinc-500 text-[11px]">Rule of law, non-arbitrariness, reservations.</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-                      <strong className="text-slate-900 dark:text-white block">Right to Freedom (Art. 19–22)</strong>
+                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <strong className="text-zinc-900 dark:text-white block">Right to Freedom (Art. 19–22)</strong>
                       <span className="text-zinc-500 text-[11px]">6 freedoms, reasonable restrictions, personal liberty.</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-                      <strong className="text-slate-900 dark:text-white block">Right to Life (Art. 21)</strong>
+                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <strong className="text-zinc-900 dark:text-white block">Right to Life (Art. 21)</strong>
                       <span className="text-zinc-500 text-[11px]">Privacy (Puttaswamy), dignity, speedy trial.</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-                      <strong className="text-slate-900 dark:text-white block">Constitutional Remedies (Art. 32)</strong>
+                    <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <strong className="text-zinc-900 dark:text-white block">Constitutional Remedies (Art. 32)</strong>
                       <span className="text-zinc-500 text-[11px]">Habeas Corpus, Mandamus, Quo Warranto, Certiorari.</span>
                     </div>
                   </div>
@@ -6904,16 +8518,17 @@ export function StudentDashboardView({
                   </div>
                 </div>
                 <div className="space-y-2 text-xs">
+                  {/* Timeline Items */}
                   {[
                     { year: "1950", case: "A.K. Gopalan v. State of Madras", desc: "Narrow interpretation of Article 21 ('procedure established by law')." },
                     { year: "1973", case: "Kesavananda Bharati v. State of Kerala", desc: "13-judge bench establishes the Basic Structure Doctrine." },
                     { year: "1978", case: "Maneka Gandhi v. Union of India", desc: "Article 21 procedure must be 'just, fair, and reasonable'; Golden Triangle created." },
                     { year: "2017", case: "K.S. Puttaswamy v. Union of India", desc: "9-judge bench declares Right to Privacy as an intrinsic Fundamental Right." },
                   ].map((t, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 flex items-start gap-3">
-                      <span className="font-mono font-bold text-sky-600 dark:text-amber-400 shrink-0">{t.year}</span>
+                    <div key={idx} className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-start gap-3">
+                      <span className="font-mono font-bold text-amber-500 shrink-0">{t.year}</span>
                       <div>
-                        <strong className="text-slate-900 dark:text-white block">{t.case}</strong>
+                        <strong className="text-zinc-900 dark:text-white block">{t.case}</strong>
                         <span className="text-zinc-500">{t.desc}</span>
                       </div>
                     </div>
@@ -6926,7 +8541,7 @@ export function StudentDashboardView({
             {activeCreateModal === "audio" && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold">
                     <Mic className="w-4 h-4" />
                   </div>
                   <div>
@@ -6962,7 +8577,7 @@ export function StudentDashboardView({
             {["video", "chapter", "notes"].includes(activeCreateModal) && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold">
                     <PenTool className="w-4 h-4" />
                   </div>
                   <div>
@@ -6974,8 +8589,8 @@ export function StudentDashboardView({
                     </p>
                   </div>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 space-y-2 text-xs">
-                  <p className="text-slate-700 dark:text-zinc-300">
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
+                  <p className="text-zinc-700 dark:text-zinc-300">
                     Ready to generate or review your {activeCreateModal} module for {selectedCurriculumTrack}.
                   </p>
                   <button
@@ -6987,7 +8602,7 @@ export function StudentDashboardView({
                         setPortalVideoPlaying(true);
                       }
                     }}
-                    className="px-4 py-2 rounded-xl bg-sky-500 text-white font-bold text-xs cursor-pointer hover:bg-sky-600"
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer transition-colors"
                   >
                     Launch in Full Portal
                   </button>

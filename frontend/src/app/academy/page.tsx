@@ -2,63 +2,97 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   GraduationCap,
-  Award,
   BookOpen,
-  Scale,
   Sparkles,
+  Award,
   CheckCircle2,
   Clock,
   FileText,
   Briefcase,
-  ArrowRight,
-  ExternalLink,
   ChevronRight,
-  Search,
-  Filter,
-  Check,
-  AlertCircle,
+  ArrowRight,
+  ArrowLeft,
   Play,
-  RotateCcw,
+  Check,
+  Search,
+  Users,
+  Layers,
+  Lock,
+  Mail,
   User,
+  X,
+  PenTool,
+  Plus,
+  Scale,
   ShieldCheck,
-  Building2,
-  Calendar,
+  Target,
+  BarChart3,
+  Bookmark,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { BrandLogo } from "@/components/BrandLogo";
+import { StudentDashboardView } from "@/components/academy/StudentDashboardView";
+import { TeacherDashboardView } from "@/components/academy/TeacherDashboardView";
 
-interface StudentProfile {
+// ==============================================================
+// TYPES (STUDENT & TEACHER ONLY)
+// ==============================================================
+export type AcademyJourneyRole = "student" | "teacher";
+
+export type StudentTrack =
+  | "entrance"
+  | "open_university"
+  | "ai_tutor"
+  | "internships";
+
+export type TeacherTrack =
+  | "curriculum"
+  | "moot_court"
+  | "test_creator"
+  | "cohorts";
+
+interface UserProfile {
   id?: string;
   fullName?: string;
   email?: string;
-  username?: string;
   role?: string;
-  academyGoal?: "entrance_coaching" | "open_university" | "llb_student" | "faculty";
   targetExam?: string;
   universityName?: string;
 }
 
 export default function AcademyPage() {
-  const [student, setStudent] = useState<StudentProfile>({
+  const router = useRouter();
+  // Current view: "journey_selection" vs "active_workspace"
+  const [viewMode, setViewMode] = useState<"journey_selection" | "active_workspace">("journey_selection");
+  const [selectedRole, setSelectedRole] = useState<AcademyJourneyRole>("student");
+  
+  // Tabs for Student & Teacher
+  const [studentTab, setStudentTab] = useState<StudentTrack>("entrance");
+  const [teacherTab, setTeacherTab] = useState<TeacherTrack>("curriculum");
+
+  // Sign In Modal State
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
+
+  // Profile
+  const [profile, setProfile] = useState<UserProfile>({
     fullName: "Advithya Sharma",
     email: "advithya.sharma@law.edu",
-    academyGoal: "entrance_coaching",
     targetExam: "CLAT 2027 (Common Law Admission Test)",
-    universityName: "National Law University Aspirant",
+    universityName: "National Law University Aspirant / IGNOU Law Scholar",
   });
 
-  const [activeTab, setActiveTab] = useState<
-    "entrance" | "open_university" | "ai_tutor" | "internships"
-  >("entrance");
-
-  // Mock Test Simulator State
+  // Mock Test Simulator State (Student)
   const [activeMockTest, setActiveMockTest] = useState<any | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [mockScore, setMockScore] = useState<number | null>(null);
 
-  // AI Legal Reasoning Generator State
+  // AI Legal Reasoning Generator State (Student)
   const [aiSubject, setAiSubject] = useState<string>("Constitutional Law");
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiGeneratedQuestion, setAiGeneratedQuestion] = useState<any | null>({
@@ -79,25 +113,44 @@ export default function AcademyPage() {
   });
   const [aiAnswerSelected, setAiAnswerSelected] = useState<number | null>(null);
 
+  // Faculty Test Creator State (Teacher)
+  const [facultyQuestionSubject, setFacultyQuestionSubject] = useState("Criminal Law (BNS)");
+  const [facultyPrinciple, setFacultyPrinciple] = useState("");
+  const [facultyFact, setFacultyFact] = useState("");
+  const [facultyQuestionText, setFacultyQuestionText] = useState("");
+  const [facultySavedSuccess, setFacultySavedSuccess] = useState(false);
+
   useEffect(() => {
     try {
-      const storedStudent = localStorage.getItem("wakheel_academy_student");
-      const storedUser = localStorage.getItem("wakheel_user");
-      if (storedStudent) {
-        setStudent((prev) => ({ ...prev, ...JSON.parse(storedStudent) }));
-      } else if (storedUser) {
-        const u = JSON.parse(storedUser);
-        setStudent((prev) => ({
-          ...prev,
-          fullName: u.fullName || u.name || "Law Scholar",
-          email: u.email || "",
-          academyGoal: u.academyGoal || "entrance_coaching",
-        }));
+      const storedUser = localStorage.getItem("wakheel_academy_user") || localStorage.getItem("wakheel_academy_student");
+      const storedRole = localStorage.getItem("wakheel_academy_role");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        setProfile((prev) => ({ ...prev, ...parsed }));
+        if (parsed.role === "teacher") {
+          router.push("/teacher/home");
+        } else if (parsed.role === "student") {
+          router.push("/student/home");
+        }
+      } else if (storedRole === "teacher") {
+        router.push("/teacher/home");
+      } else if (storedRole === "student") {
+        router.push("/student/home");
       }
     } catch {}
   }, []);
 
-  // Entrance Exam Data
+  const handleSignOut = () => {
+    localStorage.removeItem("wakheel_academy_user");
+    localStorage.removeItem("wakheel_academy_student");
+    localStorage.removeItem("wakheel_academy_token");
+    localStorage.removeItem("wakheel_academy_role");
+    setViewMode("journey_selection");
+  };
+
+  // ==============================================================
+  // LAW ENTRANCE EXAM DATA (FOR STUDENTS)
+  // ==============================================================
   const ENTRANCE_EXAMS = [
     {
       id: "clat_2027",
@@ -185,7 +238,9 @@ export default function AcademyPage() {
     },
   ];
 
-  // Open University Curriculum Tracks
+  // ==============================================================
+  // OPEN UNIVERSITY SYLLABI & BARE ACTS
+  // ==============================================================
   const OPEN_UNIV_MODULES = [
     {
       code: "LAW-OU-101",
@@ -249,36 +304,83 @@ export default function AcademyPage() {
     },
   ];
 
-  // Advocates Offering Internships & Mentorship
-  const MENTOR_ADVOCATES = [
+  // ==============================================================
+  // TEACHER WORKSPACE DATA
+  // ==============================================================
+  const MOOT_COURT_PROBLEMS = [
     {
-      name: "Adv. Gopakumar Nambiar",
-      barCouncil: "K/001429/2012",
-      court: "High Court of Kerala (Ernakulam)",
-      chambers: "Nambiar Law Chambers, Marine Drive, Kochi",
-      practiceAreas: ["Constitutional Writs", "Public Law", "Civil Appeals"],
-      internshipSlot: "Open for 2 Open Univ / Law Entrance Interns (Jan–Mar 2027)",
-      stipend: "Performance-Based + Court Filing Exposure",
+      id: "moot_01",
+      title: "National Constitutional Law Moot 2027",
+      theme: "Artificial Intelligence Surveillance vs Fundamental Right to Privacy (Art. 21)",
+      caseBench: "Supreme Court of India (5-Judge Constitution Bench)",
+      rules: "BCI Model Moot Court Rules 2024",
+      downloads: "Proposition PDF • Memorial Evaluation Sheet",
+      activeTeams: 18,
     },
     {
-      name: "Adv. Devika R. Pillai",
-      barCouncil: "K/002381/2016",
-      court: "High Court of Kerala & NCLT Kochi Bench",
-      chambers: "Pillai & Associates, Banerjee Road, Ernakulam",
-      practiceAreas: ["Commercial Arbitration", "Corporate & IPR"],
-      internshipSlot: "Virtual Research Clerkship for Distance Law Scholars",
-      stipend: "Virtual Certificate + Practical Drafting Mentorship",
-    },
-    {
-      name: "Adv. Suresh Kumar Menon",
-      barCouncil: "K/000984/2008",
-      court: "High Court of Kerala & District Courts",
-      chambers: "Menon Criminal Defense Chamber, Vanchi Square",
-      practiceAreas: ["Bail & Criminal Trial", "BNSS/CrPC Procedure"],
-      internshipSlot: "Bail Petition Drafting & Court Trial Observation",
-      stipend: "Full Chamber Access & Cause List Briefing",
+      id: "moot_02",
+      title: "All-India Criminal Law Trial Advocacy Moot",
+      theme: "Forensic Admissibility of Cloud Records under Section 63 Bharatiya Sakshya Adhiniyam (BSA)",
+      caseBench: "High Court of Judicature at Delhi",
+      rules: "BNS / BNSS / BSA Practice Guidelines",
+      downloads: "Fact Pattern • Witness Statements & Charge Sheet",
+      activeTeams: 12,
     },
   ];
+
+  const TEACHER_COHORTS = [
+    {
+      id: "cohort_01",
+      name: "CLAT 2027 All-India Morning Cohort",
+      enrolledCount: 64,
+      avgScore: "78.4 / 120",
+      topSubject: "Legal Reasoning",
+      nextMock: "Mock 02 — Saturday 10:00 AM",
+    },
+    {
+      id: "cohort_02",
+      name: "IGNOU Distance LLB — 1st Year Law of Writs Cohort",
+      enrolledCount: 42,
+      avgScore: "82% Syllabus Completion",
+      topSubject: "Constitutional Articles 32 & 226",
+      nextMock: "Assignment 03 Review — Sunday 4:00 PM",
+    },
+  ];
+
+  // Chamber Internships (Student)
+  const CHAMBER_INTERNSHIPS = [
+    {
+      id: "intern_01",
+      advocateName: "Adv. Rajesh Menon",
+      chamber: "Senior Standing Counsel, High Court of Kerala",
+      location: "Ernakulam / Kochi & Hybrid",
+      duration: "4 Weeks (Summer Cohort 2027)",
+      stipend: "₹10,000 / month + Court Pass",
+      criteria: "Open to CLAT/KLEE Qualifiers & Distance LLB Year 1–3",
+      focusArea: "Constitutional Writs, Commercial Arbitration & Land Acquisition",
+    },
+    {
+      id: "intern_02",
+      advocateName: "Adv. Priyadarshini Rao & Associates",
+      chamber: "Supreme Court & Delhi High Court Chambers",
+      location: "New Delhi & Virtual Research",
+      duration: "6 Weeks",
+      stipend: "₹15,000 / month + Certificate",
+      criteria: "Special Consideration for IGNOU / State Distance Law Scholars",
+      focusArea: "Criminal Appeals under BNS, Corporate Insolvency (IBC), SLPs",
+    },
+  ];
+
+  // Actions
+  const handleSelectRole = (role: AcademyJourneyRole) => {
+    setSelectedRole(role);
+    localStorage.setItem("wakheel_academy_role", role);
+    if (role === "student") {
+      router.push("/student/home");
+    } else {
+      router.push("/teacher/home");
+    }
+  };
 
   const handleStartMockTest = (test: any) => {
     setActiveMockTest(test);
@@ -328,7 +430,7 @@ export default function AcademyPage() {
           rationale:
             "In Shreya Singhal (2015), the Supreme Court struck down Section 66A IT Act, affirming that mere discussion or advocacy of an unpopular cause cannot be restricted under public order.",
         });
-      } else if (aiSubject === "Criminal Law (BNS/IPC)") {
+      } else {
         setAiGeneratedQuestion({
           principle:
             "Private defense under Section 34 BNS / S.96 IPC justifies causing harm to an assailant only to the extent reasonably necessary to avert imminent bodily danger. The right of self-defense cannot be turned into an act of retaliation after the danger has ceased.",
@@ -345,62 +447,125 @@ export default function AcademyPage() {
           rationale:
             "The right of private defense continues only as long as apprehension of danger to person or property continues. Once the assailant is in flight, shooting constitutes retaliation rather than defense.",
         });
-      } else {
-        setAiGeneratedQuestion({
-          principle:
-            "Under the law of Torts, Res Ipsa Loquitur (the thing speaks for itself) applies when an accident occurs that ordinarily does not happen without negligence, and the instrumentality was under the exclusive management of the defendant.",
-          facts:
-            "A pedestrian walking under an elevated hospital building is injured when a surgical scissor falls from an open upper-floor operating theater window onto their shoulder.",
-          question: "Does the pedestrian have to prove specific surgical negligence?",
-          options: [
-            "Yes, the plaintiff must always produce eyewitness medical testimony.",
-            "No, the doctrine of Res Ipsa Loquitur shifts the burden to the hospital to demonstrate absence of negligence.",
-            "Yes, sovereign medical immunity protects hospitals from tort liability.",
-            "No, the municipal corporation alone is strictly liable for roadside falling objects.",
-          ],
-          correctIndex: 1,
-          rationale:
-            "Surgical instruments do not fall out of windows in the ordinary course of prudent management. Res Ipsa Loquitur applies directly.",
-        });
       }
-    }, 700);
+    }, 600);
   };
 
+  const handleFacultySaveQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFacultySavedSuccess(true);
+    setTimeout(() => {
+      setFacultySavedSuccess(false);
+      setFacultyPrinciple("");
+      setFacultyFact("");
+      setFacultyQuestionText("");
+    }, 2000);
+  };
+
+  const handleSignInSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setTimeout(() => {
+      setAuthLoading(false);
+      setAuthSuccess(true);
+      setTimeout(() => {
+        setShowSignInModal(false);
+        setViewMode("active_workspace");
+      }, 700);
+    }, 600);
+  };
+
+  if (viewMode === "active_workspace" && selectedRole === "student") {
+    return (
+      <StudentDashboardView
+        onSwitchToTeacher={() => setSelectedRole("teacher")}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (viewMode === "active_workspace" && selectedRole === "teacher") {
+    return (
+      <TeacherDashboardView
+        onSwitchToStudent={() => setSelectedRole("student")}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black text-black dark:text-white flex flex-col">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-black text-[#111827] dark:text-white flex flex-col font-sans transition-colors duration-200">
+      {/* ============================================================== */}
+      {/* TOP HEADER                                                     */}
+      {/* ============================================================== */}
+      <header className="w-full bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800 sticky top-0 z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo on Left */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5">
-              <BrandLogo className="w-7 h-7" />
-              <span className="font-extrabold text-base tracking-tight text-black dark:text-white">
-                wakheel
-              </span>
-            </Link>
-
-            <span className="h-4 w-px bg-zinc-300 dark:bg-zinc-700" />
-
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-bold font-mono">
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>ACADEMY</span>
-            </div>
+            <button
+              onClick={() => setViewMode("journey_selection")}
+              className="flex items-center gap-2.5 cursor-pointer group text-left"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-amber-700 flex items-center justify-center text-black font-extrabold shadow-sm group-hover:scale-105 transition-transform">
+                <GraduationCap className="w-5 h-5 text-black" />
+              </div>
+              <div>
+                <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                  WAKHEEL <span className="text-amber-500">ACADEMY</span>
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 tracking-wider uppercase block -mt-1 font-mono">
+                  Student &amp; Faculty Platform
+                </span>
+              </div>
+            </button>
           </div>
 
+          {/* Right Header Navigation */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white hidden sm:block"
-            >
-              Sign In with Another Role
-            </Link>
+            {viewMode === "active_workspace" ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole(selectedRole === "student" ? "teacher" : "student")}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 text-xs font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 cursor-pointer transition-all flex items-center gap-1.5"
+                >
+                  {selectedRole === "student" ? <BookOpen className="w-3.5 h-3.5 text-blue-500" /> : <GraduationCap className="w-3.5 h-3.5 text-amber-500" />}
+                  <span>Switch to {selectedRole === "student" ? "Teacher View" : "Student View"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewMode("journey_selection")}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer transition-all"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>All Roles</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-950 bg-red-50 dark:bg-red-950/30 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 cursor-pointer transition-all"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/academy/auth"
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-white hover:text-black text-black text-xs font-bold transition-all shadow-sm border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
+                >
+                  Sign In / Register
+                </Link>
+              </div>
+            )}
 
             <Link
-              href="/client-portal"
-              className="px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-semibold flex items-center gap-1.5"
+              href="/login"
+              className="hidden md:inline-flex text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
             >
-              <Scale className="w-3.5 h-3.5 text-zinc-500" />
-              <span className="hidden sm:inline">Citizen Portal</span>
+              Wakheel Litigation →
             </Link>
 
             <ThemeToggle />
@@ -408,600 +573,1188 @@ export default function AcademyPage() {
         </div>
       </header>
 
-      {/* Main Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Student Welcome Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-zinc-900 via-zinc-950 to-black text-white border border-zinc-800 relative overflow-hidden shadow-xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ============================================================== */}
+      {/* SIGN IN MODAL                                                  */}
+      {/* ============================================================== */}
+      {showSignInModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-zinc-800 shadow-2xl relative space-y-5">
+            <button
+              onClick={() => setShowSignInModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Law Student &amp; Entrance Aspirant Workspace</span>
-                </span>
-                <span className="text-xs text-zinc-400 font-mono">
-                  Active Enrollment: {student.targetExam || student.universityName || "CLAT & Open University Law"}
-                </span>
+            <div className="text-center space-y-1.5 pt-2">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+                <GraduationCap className="w-6 h-6" />
               </div>
-
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-                Welcome, {student.fullName || "Law Scholar"}
-              </h1>
-
-              <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl leading-relaxed">
-                Your integrated legal learning platform. Take full-length AI mock tests for <strong>CLAT</strong>, <strong>KLEE</strong>, and <strong>AILET</strong>, track <strong>Open University (IGNOU / State)</strong> distance syllabi with bare acts, and secure direct internships with verified Bar Council advocates.
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Sign In to Wakheel Academy
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Access your law entrance mocks, coursework, and faculty workspace.
               </p>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 shrink-0">
-              <div className="p-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center">
-                <span className="text-xl sm:text-2xl font-black text-amber-400 font-mono block">120+</span>
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold">Mock Exams</span>
+            {authSuccess ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs text-center font-bold flex items-center justify-center gap-2">
+                <Check className="w-4 h-4" />
+                <span>Signed in successfully! Launching your workspace...</span>
               </div>
-              <div className="p-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center">
-                <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono block">100%</span>
-                <span className="text-[10px] text-zinc-400 uppercase font-semibold">Bare Acts Free</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Standalone Backend Bridge Banner */}
-          <div className="mt-6 pt-5 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-zinc-300">
-              <Building2 className="w-4 h-4 text-amber-400" />
-              <span>
-                Dedicated Academy Backend running on <code className="bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-amber-300">http://localhost:5001</code> with standalone database isolation.
-              </span>
-            </div>
-            <a
-              href="http://localhost:5174"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-1.5 rounded-full bg-white text-black font-bold text-xs hover:bg-zinc-200 transition flex items-center gap-1.5 w-fit shrink-0"
-            >
-              <span>Open EduPye Standalone UI</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        </div>
-
-        {/* Tab Strip */}
-        <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab("entrance")}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              activeTab === "entrance"
-                ? "bg-black text-white dark:bg-white dark:text-black shadow-md"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Award className="w-4 h-4 text-amber-500" />
-            <span>Law Entrance Test Series (CLAT &amp; KLEE)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("open_university")}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              activeTab === "open_university"
-                ? "bg-black text-white dark:bg-white dark:text-black shadow-md"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <BookOpen className="w-4 h-4 text-emerald-500" />
-            <span>Open University Legal Curriculum (IGNOU / State)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("ai_tutor")}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              activeTab === "ai_tutor"
-                ? "bg-black text-white dark:bg-white dark:text-black shadow-md"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-purple-500" />
-            <span>Gemini AI Legal Reasoning Tutor</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("internships")}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              activeTab === "internships"
-                ? "bg-black text-white dark:bg-white dark:text-black shadow-md"
-                : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-            }`}
-          >
-            <Briefcase className="w-4 h-4 text-blue-500" />
-            <span>Advocate Chamber Internships</span>
-          </button>
-        </div>
-
-        {/* TAB 1: LAW ENTRANCE TEST SERIES */}
-        {activeTab === "entrance" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-black dark:text-white">
-                  All-India Law Entrance Mock Examinations
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Timed test series modeled on official Consortium of NLUs and CEE Kerala patterns.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-mono">
-                  3 Full Mocks Ready
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {ENTRANCE_EXAMS.map((exam) => (
-                <div
-                  key={exam.id}
-                  className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 flex flex-col justify-between gap-5 hover:shadow-lg transition-all"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                        {exam.code}
-                      </span>
-                      <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{exam.durationMinutes} Mins</span>
-                      </span>
-                    </div>
-
-                    <h4 className="text-base font-bold text-black dark:text-white leading-snug">
-                      {exam.name}
-                    </h4>
-
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
-                      {exam.conductingBody}
-                    </p>
-
-                    <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span>Questions:</span>
-                        <span className="font-bold text-black dark:text-white font-mono">{exam.questionsCount}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span>Marking Scheme:</span>
-                        <span className="font-semibold text-black dark:text-white">{exam.markingScheme}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {exam.subjects.map((sub) => (
-                        <span
-                          key={sub}
-                          className="px-2 py-0.5 rounded-md text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                        >
-                          {sub}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleStartMockTest(exam)}
-                    className="w-full py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Launch Interactive Test Simulator</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Interactive Mock Test Simulator Modal */}
-            {activeMockTest && (
-              <div className="p-6 sm:p-8 rounded-3xl border-2 border-amber-500/40 bg-zinc-50 dark:bg-zinc-950 space-y-6 animate-in fade-in duration-300">
-                <div className="flex items-start sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
-                  <div>
-                    <span className="text-[10px] font-bold font-mono text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                      SIMULATOR MODE • {activeMockTest.code}
-                    </span>
-                    <h3 className="text-xl font-bold text-black dark:text-white">
-                      {activeMockTest.name}
-                    </h3>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveMockTest(null)}
-                    className="px-3 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 text-xs font-bold hover:bg-zinc-200 dark:hover:bg-zinc-800"
-                  >
-                    Close Simulator
-                  </button>
-                </div>
-
-                <div className="space-y-6">
-                  {activeMockTest.sampleQuestions.map((qObj: any, qIdx: number) => (
-                    <div
-                      key={qIdx}
-                      className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="font-mono text-xs font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded">
-                          Question {qIdx + 1} of {activeMockTest.sampleQuestions.length}
-                        </span>
-                        {mockScore !== null && (
-                          <span
-                            className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${
-                              selectedAnswers[qIdx] === qObj.correct
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-                            }`}
-                          >
-                            {selectedAnswers[qIdx] === qObj.correct
-                              ? "Correct"
-                              : "Incorrect (Key: Option " + (qObj.correct + 1) + ")"}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-xs sm:text-sm font-medium text-black dark:text-white leading-relaxed">
-                        {qObj.q}
-                      </p>
-
-                      <div className="space-y-2">
-                        {qObj.options.map((opt: string, optIdx: number) => {
-                          const isSelected = selectedAnswers[qIdx] === optIdx;
-                          return (
-                            <button
-                              key={optIdx}
-                              type="button"
-                              onClick={() => handleSelectMockAnswer(qIdx, optIdx)}
-                              className={`w-full text-left p-3 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between ${
-                                isSelected
-                                  ? "border-black dark:border-white bg-zinc-100 dark:bg-zinc-800 font-bold text-black dark:text-white ring-1 ring-black dark:ring-white"
-                                  : "border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 text-zinc-700 dark:text-zinc-300"
-                              }`}
-                            >
-                              <span>
-                                <span className="font-mono mr-2 font-bold">{String.fromCharCode(65 + optIdx)}.</span>
-                                {opt}
-                              </span>
-                              {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                  <span className="text-xs text-zinc-500 font-mono">
-                    {Object.keys(selectedAnswers).length} of {activeMockTest.sampleQuestions.length} Answered
-                  </span>
-
-                  <div className="flex items-center gap-3">
-                    {mockScore !== null && (
-                      <span className="text-sm font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
-                        Score: {mockScore > 0 ? `+${mockScore}` : mockScore} Marks
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={handleSubmitMockTest}
-                      className="px-6 py-2.5 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs hover:opacity-90 transition cursor-pointer shadow-sm"
-                    >
-                      {mockScore !== null ? "Re-evaluate Score" : "Submit & Calculate Score"}
-                    </button>
+            ) : (
+              <form onSubmit={handleSignInSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="student@law.edu or faculty@law.edu"
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                    />
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* TAB 2: OPEN UNIVERSITY LEGAL CURRICULUM */}
-        {activeTab === "open_university" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-black dark:text-white">
-                  Open University Distance Law Curriculum Hub
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Structured syllabus trackers, chapter summaries, and bare acts for IGNOU &amp; State Open University distance law programs.
-                </p>
-              </div>
-
-              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                Official UGC / BCI Compliant Modules
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {OPEN_UNIV_MODULES.map((mod) => (
-                <div
-                  key={mod.code}
-                  className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 space-y-4 hover:shadow-lg transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-md font-mono text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                      {mod.code}
-                    </span>
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      {mod.semester}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <h4 className="text-base font-bold text-black dark:text-white">
-                      {mod.title}
-                    </h4>
-                    <p className="text-xs text-zinc-500">{mod.university}</p>
-                  </div>
-
-                  <div className="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block font-mono">
-                      CORE SYLLABUS TOPICS
-                    </span>
-                    <ul className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-                      {mod.topics.map((t, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                          <span>{t}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                    <span className="font-mono text-[11px] text-zinc-500">
-                      Bare Act: <strong className="text-black dark:text-white">{mod.bareAct}</strong>
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => alert(`Opening ${mod.title} study reader and notes!`)}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-black dark:text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
-                    >
-                      <BookOpen className="w-3 h-3" />
-                      <span>Study Module</span>
-                    </button>
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      required
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: GEMINI AI LEGAL REASONING TUTOR */}
-        {activeTab === "ai_tutor" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-black dark:text-white">
-                  Gemini AI Legal Reasoning Question Generator &amp; Tutor
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Powered by Gemini 2.5 Flash. Generates principle-and-fact caselets to master legal reasoning and precedent application.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <select
-                  value={aiSubject}
-                  onChange={(e) => setAiSubject(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-black dark:text-white"
-                >
-                  <option value="Constitutional Law">Constitutional Law</option>
-                  <option value="Criminal Law (BNS/IPC)">Criminal Law (BNS/IPC)</option>
-                  <option value="Law of Torts">Law of Torts</option>
-                  <option value="Contract Law">Contract Law</option>
-                </select>
 
                 <button
-                  type="button"
-                  disabled={aiGenerating}
-                  onClick={handleGenerateAiQuestion}
-                  className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  <Sparkles className={`w-3.5 h-3.5 ${aiGenerating ? "animate-spin" : ""}`} />
-                  <span>{aiGenerating ? "Synthesizing Caselet..." : "Generate New Caselet"}</span>
+                  {authLoading ? "Authenticating..." : "Sign In & Enter Academy"}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SCREEN 1: REDESIGNED STUDENT & TEACHER SELECTION               */}
+      {/* ============================================================== */}
+      {viewMode === "journey_selection" && (
+        <main className="flex-1 flex flex-col items-center justify-center py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full animate-in fade-in duration-200">
+          {/* Hero Heading */}
+          <div className="w-full text-center space-y-4 mb-14">
+            <div className="inline-flex items-center justify-center">
+              <span className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest font-mono">
+                WAKHEEL ACADEMY • SELECT YOUR ROLE
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+              Where Future Advocates Learn.<br className="hidden sm:inline" />
+              Where Law Faculty Teach.
+            </h1>
+
+            <p className="text-sm sm:text-base font-medium text-slate-500 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              An independent legal education platform built for law students, entrance exam aspirants, and faculty educators.
+            </p>
+          </div>
+
+          {/* TWO REDESIGNED SPLIT HERO CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
+            {/* CARD 1: STUDENT */}
+            <div
+              onClick={() => handleSelectRole("student")}
+              className="p-8 sm:p-9 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800 hover:border-white/80 dark:hover:border-white/80 hover:shadow-2xl transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden text-left"
+            >
+              <div className="space-y-6">
+                {/* Header row */}
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 group-hover:scale-105 group-hover:bg-white group-hover:text-black group-hover:border-white transition-all">
+                    <GraduationCap className="w-7 h-7" />
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 group-hover:border-white/40 group-hover:text-black dark:group-hover:text-white transition-colors">
+                    ACADEMIC &amp; EXAM PREP
+                  </span>
+                </div>
+
+                {/* Title & Description */}
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors">
+                    Student Hub
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-2 leading-relaxed">
+                    Designed for CLAT &amp; KLEE aspirants, LL.B undergraduates, and IGNOU/State open university distance law scholars.
+                  </p>
+                </div>
+
+                {/* Features checklist */}
+                <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800">
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>CLAT 2027 &amp; KLEE CBT Simulators</strong> with negative marking</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Open University Syllabi &amp; Bare Acts</strong> (BNS, CPC, Constitution)</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Gemini AI Legal Reasoning Tutor</strong> with judicial rationale</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Advocate Chamber Internships</strong> with Bar Council mentors</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="pt-8">
+                <button
+                  type="button"
+                  className="w-full py-3.5 px-5 rounded-2xl bg-amber-500 group-hover:bg-white group-hover:text-black text-black text-xs font-extrabold uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 border border-transparent group-hover:border-zinc-300 dark:group-hover:border-zinc-700"
+                >
+                  <span>Launch Student Hub</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </div>
             </div>
 
-            {aiGeneratedQuestion && (
-              <div className="p-6 sm:p-8 rounded-3xl border border-purple-500/30 bg-purple-50/20 dark:bg-purple-950/20 space-y-5">
+            {/* CARD 2: TEACHER */}
+            <div
+              onClick={() => handleSelectRole("teacher")}
+              className="p-8 sm:p-9 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/90 dark:border-zinc-800 hover:border-white/80 dark:hover:border-white/80 hover:shadow-2xl transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden text-left"
+            >
+              <div className="space-y-6">
+                {/* Header row */}
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-900 dark:text-purple-200 font-mono">
-                    SUBJECT: {aiSubject.toUpperCase()}
-                  </span>
-                  <span className="text-[11px] font-mono text-zinc-400">
-                    CLAT / KLEE Legal Aptitude Format
-                  </span>
-                </div>
-
-                {/* Principle Box */}
-                <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400 font-mono">
-                    LEGAL PRINCIPLE
-                  </span>
-                  <p className="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed font-serif">
-                    &ldquo;{aiGeneratedQuestion.principle}&rdquo;
-                  </p>
-                </div>
-
-                {/* Fact Situation */}
-                <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 font-mono">
-                    FACTUAL SITUATION
-                  </span>
-                  <p className="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed">
-                    {aiGeneratedQuestion.facts}
-                  </p>
-                </div>
-
-                {/* Question */}
-                <h4 className="text-sm font-bold text-black dark:text-white pt-2">
-                  {aiGeneratedQuestion.question}
-                </h4>
-
-                {/* Options */}
-                <div className="space-y-2">
-                  {aiGeneratedQuestion.options.map((opt: string, i: number) => {
-                    const isSelected = aiAnswerSelected === i;
-                    const isCorrect = i === aiGeneratedQuestion.correctIndex;
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setAiAnswerSelected(i)}
-                        className={`w-full text-left p-3.5 rounded-xl border text-xs transition cursor-pointer flex items-center justify-between ${
-                          isSelected
-                            ? isCorrect
-                              ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100 font-bold ring-1 ring-emerald-500"
-                              : "border-red-500 bg-red-50 dark:bg-red-950/40 text-red-900 dark:text-red-100 font-bold ring-1 ring-red-500"
-                            : "border-zinc-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 bg-white/60 dark:bg-zinc-900/60"
-                        }`}
-                      >
-                        <span>
-                          <span className="font-mono mr-2 font-bold">{String.fromCharCode(65 + i)}.</span>
-                          {opt}
-                        </span>
-                        {isSelected && (
-                          <span className="font-mono font-bold text-[11px] ml-2 shrink-0">
-                            {isCorrect ? "✓ Correct Answer" : "✗ Incorrect"}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* AI Rationale Reveal */}
-                {aiAnswerSelected !== null && (
-                  <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1 animate-in fade-in duration-200">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase font-mono block">
-                      LEGAL PRECEDENT &amp; RATIONALE
-                    </span>
-                    <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                      {aiGeneratedQuestion.rationale}
-                    </p>
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 group-hover:scale-105 group-hover:bg-amber-500 group-hover:text-black group-hover:border-amber-500 transition-all">
+                    <BookOpen className="w-7 h-7" />
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                  <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    FACULTY &amp; PEDAGOGY
+                  </span>
+                </div>
 
-        {/* TAB 4: ADVOCATE CHAMBER INTERNSHIPS & MENTORSHIP */}
-        {activeTab === "internships" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-black dark:text-white">
-                  Direct Advocate Chamber Internships &amp; Mentorship
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Bridging law entrance scholars and open university distance students directly with verified High Court advocates on Wakheel.
+                {/* Title & Description */}
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">
+                    Faculty Studio
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-2 leading-relaxed">
+                    Specialized pedagogical workspace for law professors, entrance exam mentors, and moot court adjudicators.
+                  </p>
+                </div>
+
+                {/* Features checklist */}
+                <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800">
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>14-Week Law Semester Curriculum</strong> &amp; weekly lesson planner</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Moot Court Problem Creator</strong> &amp; BCI memorial scoring rubrics</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Exam Authoring Studio</strong> with AI legal problem synthesizer</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span><strong>Student Cohort Analytics</strong>, scoreboards &amp; velocity tracking</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="pt-8">
+                <button
+                  type="button"
+                  className="w-full py-3.5 px-5 rounded-2xl bg-black group-hover:bg-amber-500 group-hover:text-black text-white dark:bg-zinc-800 dark:group-hover:bg-amber-500 dark:group-hover:text-black text-xs font-extrabold uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+                >
+                  <span>Launch Faculty Studio</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Trust Ribbon */}
+          <div className="w-full max-w-4xl mt-14 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+            <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800">
+              <span className="text-xl font-black text-amber-500 font-mono block">3 Full CBTs</span>
+              <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">CLAT, KLEE &amp; AILET</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800">
+              <span className="text-xl font-black text-blue-500 font-mono block">100% Free</span>
+              <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">Updated Bare Acts &amp; Notes</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800">
+              <span className="text-xl font-black text-emerald-500 font-mono block">Gemini AI</span>
+              <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">Principle-Fact Simulator</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800">
+              <span className="text-xl font-black text-purple-500 font-mono block">Bar Council</span>
+              <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">Chamber Clerkship Direct</span>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* ============================================================== */}
+      {/* SCREEN 2: ACTIVE WORKSPACE (STUDENT OR TEACHER)                */}
+      {/* ============================================================== */}
+      {viewMode === "active_workspace" && (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in duration-150">
+          {/* Top Banner with Role Pill */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-zinc-900 to-black text-white border border-zinc-800 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Active View: {selectedRole.toUpperCase()}</span>
+                  </span>
+                  <span className="text-xs text-zinc-400 font-mono">
+                    {selectedRole === "student"
+                      ? `Enrolled: ${profile.targetExam || "CLAT 2027 & Open University Law"}`
+                      : "Faculty Lead • Law Curriculum & Moot Pedagogy"}
+                  </span>
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  {selectedRole === "student"
+                    ? "Law Student & Entrance Aspirant Workspace"
+                    : "Law Faculty & Educator Studio"}
+                </h1>
+
+                <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl leading-relaxed">
+                  {selectedRole === "student"
+                    ? "Take full-length AI mock tests for CLAT, KLEE, and AILET, study Open University distance modules with updated bare acts, and secure direct internships with verified Bar Council advocates."
+                    : "Plan law syllabi, author timed entrance mock questions with AI assistance, coordinate moot court competitions, and monitor student cohort performances."}
                 </p>
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
-                Advocates Act Compliant Clerkships
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {MENTOR_ADVOCATES.map((adv, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 flex flex-col justify-between gap-5 hover:shadow-lg transition-all"
+              {/* Quick Actions & Role Switcher */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole(selectedRole === "student" ? "teacher" : "student")}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-black text-white dark:bg-white dark:text-black font-bold text-xs flex items-center justify-center shrink-0">
-                        {adv.name.replace("Adv.", "").trim().slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-black dark:text-white">
-                          {adv.name}
-                        </h4>
-                        <span className="text-[10px] font-mono text-zinc-500">
-                          Bar Roll: {adv.barCouncil}
-                        </span>
-                      </div>
-                    </div>
+                  {selectedRole === "student" ? <BookOpen className="w-3.5 h-3.5" /> : <GraduationCap className="w-3.5 h-3.5" />}
+                  <span>Switch to {selectedRole === "student" ? "Teacher View" : "Student View"}</span>
+                </button>
 
-                    <div className="space-y-1 text-xs text-zinc-500">
-                      <p className="font-medium text-black dark:text-white">{adv.court}</p>
-                      <p className="text-[11px]">{adv.chambers}</p>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("journey_selection")}
+                  className="px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-xs font-bold text-white transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>All Roles</span>
+                </button>
+              </div>
+            </div>
+          </div>
 
-                    <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
-                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase font-mono block">
-                        CLERKSHIP OFFERING
-                      </span>
-                      <p className="text-xs font-semibold text-black dark:text-white">
-                        {adv.internshipSlot}
+          {/* ============================================================== */}
+          {/* ROLE WORKSPACE A: STUDENT WORKSPACE                            */}
+          {/* ============================================================== */}
+          {selectedRole === "student" && (
+            <div className="space-y-6">
+              {/* Navigation Tabs for Student */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setStudentTab("entrance")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    studentTab === "entrance"
+                      ? "bg-amber-500 text-black shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Award className="w-4 h-4" />
+                  <span>Law Entrance Exam Series (CLAT &amp; KLEE)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStudentTab("open_university")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    studentTab === "open_university"
+                      ? "bg-amber-500 text-black shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Open University Distance Syllabi &amp; Bare Acts</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStudentTab("ai_tutor")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    studentTab === "ai_tutor"
+                      ? "bg-amber-500 text-black shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Gemini AI Legal Reasoning Tutor</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStudentTab("internships")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    studentTab === "internships"
+                      ? "bg-amber-500 text-black shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span>Advocate Chamber Internships</span>
+                </button>
+              </div>
+
+              {/* TAB 1: LAW ENTRANCE TEST SERIES */}
+              {studentTab === "entrance" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        All-India Law Entrance Mock Examinations
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Timed computer-based test series modeled on official Consortium of NLUs and CEE Kerala patterns.
                       </p>
-                      <span className="text-[10px] text-zinc-400 block pt-1">
-                        {adv.stipend}
-                      </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-1">
-                      {adv.practiceAreas.map((pa) => (
-                        <span
-                          key={pa}
-                          className="px-2 py-0.5 rounded-md text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                        >
-                          {pa}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-mono">
+                        3 Full Mocks Ready
+                      </span>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      alert(
-                        `Your student application for ${adv.internshipSlot} has been submitted to ${adv.name}'s chamber registry!`
-                      )
-                    }
-                    className="w-full py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <span>Apply for Clerkship / Mentorship</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {ENTRANCE_EXAMS.map((exam) => (
+                      <div
+                        key={exam.id}
+                        className="rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 flex flex-col justify-between gap-5 hover:shadow-lg transition-all"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                              {exam.code}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{exam.durationMinutes} Mins</span>
+                            </span>
+                          </div>
+
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                            {exam.name}
+                          </h4>
+
+                          <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2">
+                            {exam.conductingBody}
+                          </p>
+
+                          <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-1.5 text-xs text-slate-600 dark:text-zinc-400">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span>Questions:</span>
+                              <span className="font-bold text-slate-900 dark:text-white font-mono">{exam.questionsCount}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span>Marking Scheme:</span>
+                              <span className="font-semibold text-slate-900 dark:text-white">{exam.markingScheme}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {exam.subjects.map((sub) => (
+                              <span
+                                key={sub}
+                                className="px-2 py-0.5 rounded-md text-[10px] bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400"
+                              >
+                                {sub}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleStartMockTest(exam)}
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Launch Interactive Test Simulator</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ACTIVE MOCK TEST MODAL / INTERFACE */}
+                  {activeMockTest && (
+                    <div className="p-6 sm:p-8 rounded-3xl border-2 border-amber-500/50 bg-white dark:bg-zinc-900 shadow-2xl space-y-6 animate-in fade-in duration-200">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-zinc-800 gap-3">
+                        <div>
+                          <span className="text-[10px] font-bold font-mono text-amber-600 uppercase">
+                            Active CBT Examination Environment
+                          </span>
+                          <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                            {activeMockTest.name}
+                          </h4>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-800 font-mono text-xs font-bold flex items-center gap-1.5 text-slate-700 dark:text-zinc-300">
+                            <Clock className="w-3.5 h-3.5 text-amber-500" />
+                            <span>118:42 REMAINING</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveMockTest(null)}
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-zinc-800"
+                          >
+                            Exit Test
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Sample Questions */}
+                      <div className="space-y-6">
+                        {activeMockTest.sampleQuestions.map((qItem: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/60 space-y-4"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold text-xs flex items-center justify-center shrink-0">
+                                Q{idx + 1}
+                              </span>
+                              <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-zinc-100 leading-relaxed flex-1">
+                                {qItem.q}
+                              </p>
+                            </div>
+
+                            <div className="space-y-2 pl-0 sm:pl-10">
+                              {qItem.options.map((optionText: string, optIdx: number) => {
+                                const isSelected = selectedAnswers[idx] === optIdx;
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    type="button"
+                                    onClick={() => handleSelectMockAnswer(idx, optIdx)}
+                                    className={`w-full p-3 rounded-xl border text-left text-xs font-medium transition cursor-pointer flex items-center gap-3 ${
+                                      isSelected
+                                        ? "border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 font-bold"
+                                        : "border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                                    }`}
+                                  >
+                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                      isSelected
+                                        ? "bg-amber-500 text-black font-bold"
+                                        : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400"
+                                    }`}>
+                                      {String.fromCharCode(65 + optIdx)}
+                                    </span>
+                                    <span>{optionText}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Submission and Result */}
+                      <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-200 dark:border-zinc-800">
+                        <button
+                          type="button"
+                          onClick={handleSubmitMockTest}
+                          className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md"
+                        >
+                          Submit Mock Exam &amp; Calculate Final Score
+                        </button>
+
+                        {mockScore !== null && (
+                          <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex items-center gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                            <div>
+                              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block">
+                                Calculated Raw Score: {mockScore > 0 ? `+${mockScore}` : mockScore} Marks
+                              </span>
+                              <span className="text-[10px] text-emerald-700 dark:text-emerald-400">
+                                Evaluated using official {activeMockTest.markingScheme}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
+
+              {/* TAB 2: OPEN UNIVERSITY SYLLABI & BARE ACTS */}
+              {studentTab === "open_university" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        Open University Distance Law Curriculum &amp; Bare Acts
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Standardized curriculum tracks for IGNOU School of Law, State Open Universities, and Distance LLB candidates.
+                      </p>
+                    </div>
+
+                    <div className="px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold font-mono">
+                      100% Free Open Legal Education
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {OPEN_UNIV_MODULES.map((mod) => (
+                      <div
+                        key={mod.code}
+                        className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-4 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                            {mod.code}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">{mod.semester}</span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">{mod.title}</h4>
+                          <span className="text-xs text-slate-500 dark:text-zinc-400 block mt-0.5">{mod.university}</span>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/60 space-y-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono block">
+                            Core Syllabus Units &amp; Case Laws
+                          </span>
+                          <ul className="text-xs space-y-1 text-slate-700 dark:text-zinc-300 list-disc pl-4">
+                            {mod.topics.map((t, i) => (
+                              <li key={i}>{t}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Bare Act: {mod.bareAct}</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: GEMINI AI LEGAL REASONING TUTOR */}
+              {studentTab === "ai_tutor" && (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-500" />
+                      <span>Gemini Legal Reasoning Simulator</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      Dynamic Legal Principle &amp; Fact-Pattern problem generator for entrance examinations and courtroom reasoning.
+                    </p>
+                  </div>
+
+                  <div className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Target Area:</span>
+                        <select
+                          value={aiSubject}
+                          onChange={(e) => setAiSubject(e.target.value)}
+                          className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold cursor-pointer outline-none"
+                        >
+                          <option value="Constitutional Law">Constitutional Law (Fundamental Rights &amp; Writs)</option>
+                          <option value="Criminal Law (BNS/IPC)">Criminal Law (BNS General Exceptions &amp; Offenses)</option>
+                          <option value="Law of Torts">Law of Torts (Negligence &amp; Defamation)</option>
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={aiGenerating}
+                        onClick={handleGenerateAiQuestion}
+                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{aiGenerating ? "Synthesizing Legal Scenario..." : "Generate New AI Problem"}</span>
+                      </button>
+                    </div>
+
+                    {aiGeneratedQuestion && (
+                      <div className="space-y-5 p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-700/60">
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 font-mono">
+                            Legal Principle
+                          </span>
+                          <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+                            {aiGeneratedQuestion.principle}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500 font-mono">
+                            Factual Matrix
+                          </span>
+                          <p className="text-xs sm:text-sm text-slate-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+                            {aiGeneratedQuestion.facts}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                            Question: {aiGeneratedQuestion.question}
+                          </span>
+
+                          <div className="space-y-2">
+                            {aiGeneratedQuestion.options.map((opt: string, i: number) => {
+                              const isSelected = aiAnswerSelected === i;
+                              const isCorrect = i === aiGeneratedQuestion.correctIndex;
+                              const showFeedback = aiAnswerSelected !== null;
+
+                              let btnStyle = "border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-200";
+                              if (showFeedback) {
+                                if (isCorrect) {
+                                  btnStyle = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold";
+                                } else if (isSelected) {
+                                  btnStyle = "border-red-500 bg-red-50 dark:bg-red-950/60 text-red-900 dark:text-red-200 font-bold";
+                                }
+                              }
+
+                              return (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() => setAiAnswerSelected(i)}
+                                  className={`w-full p-3 rounded-xl border text-left text-xs transition cursor-pointer flex items-center justify-between ${btnStyle}`}
+                                >
+                                  <span>{opt}</span>
+                                  {showFeedback && isCorrect && <Check className="w-4 h-4 text-emerald-600" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {aiAnswerSelected !== null && (
+                            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs space-y-1 mt-3">
+                              <span className="font-bold text-amber-900 dark:text-amber-200 block">
+                                Judicial Rationale &amp; Precedent:
+                              </span>
+                              <p className="text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                {aiGeneratedQuestion.rationale}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: ADVOCATE CHAMBER INTERNSHIPS */}
+              {studentTab === "internships" && (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Advocate Chamber Clerkship &amp; Summer Internships
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      Direct verified internship openings with Bar Council enrolled advocates across High Courts and Supreme Court of India.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {CHAMBER_INTERNSHIPS.map((intern) => (
+                      <div
+                        key={intern.id}
+                        className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                              {intern.duration}
+                            </span>
+                            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                              {intern.stipend}
+                            </span>
+                          </div>
+
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">{intern.advocateName}</h4>
+                          <p className="text-xs text-slate-500 dark:text-zinc-400">{intern.chamber} • {intern.location}</p>
+
+                          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/60 text-xs space-y-1">
+                            <span className="font-bold text-slate-700 dark:text-zinc-300 block">Eligibility:</span>
+                            <p className="text-slate-600 dark:text-zinc-400">{intern.criteria}</p>
+                            <span className="font-bold text-slate-700 dark:text-zinc-300 block pt-1">Practice Areas:</span>
+                            <p className="text-slate-600 dark:text-zinc-400">{intern.focusArea}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => alert(`Your student dossier and CLAT/Open University credentials have been forwarded to ${intern.advocateName}'s chamber!`)}
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <span>Apply for Chamber Internship</span>
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
-      </main>
+          )}
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 py-6 bg-white dark:bg-zinc-950 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-          <div className="flex items-center gap-2">
-            <span>© 2026 Wakheel Academy • A Division of Inworth Legal Technologies</span>
-          </div>
+          {/* ============================================================== */}
+          {/* ROLE WORKSPACE B: TEACHER WORKSPACE                            */}
+          {/* ============================================================== */}
+          {selectedRole === "teacher" && (
+            <div className="space-y-6">
+              {/* Navigation Tabs for Teacher */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setTeacherTab("curriculum")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    teacherTab === "curriculum"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Syllabus &amp; Bare Act Builder</span>
+                </button>
 
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="hover:text-black dark:hover:text-white">
-              Back to Wakheel Portal
+                <button
+                  type="button"
+                  onClick={() => setTeacherTab("moot_court")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    teacherTab === "moot_court"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>Moot Court &amp; Trial Studio</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTeacherTab("test_creator")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    teacherTab === "test_creator"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <PenTool className="w-4 h-4" />
+                  <span>Exam Authoring &amp; AI Question Bank</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTeacherTab("cohorts")}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    teacherTab === "cohorts"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Student Cohorts &amp; Mock Analytics</span>
+                </button>
+              </div>
+
+              {/* TEACHER TAB 1: CURRICULUM */}
+              {teacherTab === "curriculum" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        Law Curriculum &amp; Bare Act Lesson Planner
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Create standardized course plans and syllabus tracks for open university and law college students.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => alert("New curriculum track created!")}
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create New Syllabus Track</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {OPEN_UNIV_MODULES.map((mod) => (
+                      <div
+                        key={mod.code}
+                        className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-4 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                            {mod.code}
+                          </span>
+                          <span className="text-xs font-mono text-slate-400">{mod.unitsCount} Teaching Units</span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">{mod.title}</h4>
+                          <span className="text-xs text-slate-500 dark:text-zinc-400 block mt-0.5">Faculty Lead • {mod.university}</span>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/60 space-y-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono block">
+                            Lesson Breakdown &amp; Lecture Notes
+                          </span>
+                          <ul className="text-xs space-y-1 text-slate-700 dark:text-zinc-300 list-disc pl-4">
+                            {mod.topics.map((t, i) => (
+                              <li key={i}>{t}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-between text-xs">
+                          <span className="font-semibold text-slate-600 dark:text-zinc-400">
+                            Bare Act: {mod.bareAct}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => alert(`Opening curriculum editor for ${mod.code}`)}
+                            className="text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                          >
+                            Edit Curriculum →
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TEACHER TAB 2: MOOT COURT STUDIO */}
+              {teacherTab === "moot_court" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        Moot Court Problem Creator &amp; Evaluation Bench
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Design appellate propositions, scoring rubrics, and judge student team memorials.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => alert("New moot court proposition created!")}
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Draft New Proposition</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {MOOT_COURT_PROBLEMS.map((moot) => (
+                      <div
+                        key={moot.id}
+                        className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                              {moot.caseBench}
+                            </span>
+                            <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
+                              {moot.activeTeams} Participating Teams
+                            </span>
+                          </div>
+
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">{moot.title}</h4>
+                          <p className="text-xs text-slate-600 dark:text-zinc-300">{moot.theme}</p>
+
+                          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/60 text-xs space-y-1">
+                            <span className="font-bold text-slate-700 dark:text-zinc-300 block">Assessment Framework:</span>
+                            <p className="text-slate-600 dark:text-zinc-400">{moot.rules}</p>
+                            <span className="font-bold text-slate-700 dark:text-zinc-300 block pt-1">Resources:</span>
+                            <p className="text-slate-600 dark:text-zinc-400">{moot.downloads}</p>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => alert(`Viewing memorials for ${moot.title}`)}
+                            className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 text-xs font-bold transition"
+                          >
+                            Grade Memorials
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => alert(`Opening live courtroom timer for ${moot.title}`)}
+                            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-bold"
+                          >
+                            Court Timer
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TEACHER TAB 3: TEST CREATOR & QUESTION BANK */}
+              {teacherTab === "test_creator" && (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Exam Authoring &amp; AI Legal Question Studio
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      Draft CLAT / KLEE standard principle-fact questions or generate them with Gemini AI to publish to student mock series.
+                    </p>
+                  </div>
+
+                  <div className="p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-5">
+                    {facultySavedSuccess && (
+                      <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                        <Check className="w-4 h-4" />
+                        <span>Question published successfully to the Student Mock Examination pool!</span>
+                      </div>
+                    )}
+
+                    <form onSubmit={handleFacultySaveQuestion} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                            Subject / Exam Target
+                          </label>
+                          <select
+                            value={facultyQuestionSubject}
+                            onChange={(e) => setFacultyQuestionSubject(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs font-medium outline-none focus:border-blue-500"
+                          >
+                            <option value="Criminal Law (BNS)">Criminal Law: Bharatiya Nyaya Sanhita (BNS)</option>
+                            <option value="Constitutional Law">Constitutional Law &amp; Fundamental Writs</option>
+                            <option value="Law of Contracts">Contract Law &amp; Specific Relief Act</option>
+                            <option value="Civil Procedure Code">Civil Procedure Code (Order VI, VII, VIII)</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                            Question Weightage
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue="+1 correct / -0.25 negative (Standard CLAT)"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs font-medium outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                          Legal Principle / Bare Act Section
+                        </label>
+                        <textarea
+                          rows={2}
+                          required
+                          value={facultyPrinciple}
+                          onChange={(e) => setFacultyPrinciple(e.target.value)}
+                          placeholder="e.g. Under Section 10 of Indian Contract Act, all agreements are contracts if made by free consent of parties competent to contract..."
+                          className="w-full p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                          Factual Matrix / Case Scenario
+                        </label>
+                        <textarea
+                          rows={3}
+                          required
+                          value={facultyFact}
+                          onChange={(e) => setFacultyFact(e.target.value)}
+                          placeholder="Describe the factual dispute between parties..."
+                          className="w-full p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                          Question Prompt &amp; Options
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={facultyQuestionText}
+                          onChange={(e) => setFacultyQuestionText(e.target.value)}
+                          placeholder="Is the agreement enforceable in the Court of Law?"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-black text-xs outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFacultyPrinciple("Section 73 Indian Contract Act: Compensation for breach is confined to natural consequences.");
+                            setFacultyFact("A supplier fails to deliver court robes on time, leading to advocate missing an un-adjournable hearing.");
+                            setFacultyQuestionText("Can the advocate recover punitive damages without prior notification?");
+                          }}
+                          className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-zinc-800"
+                        >
+                          Auto-Fill Sample
+                        </button>
+
+                        <button
+                          type="submit"
+                          className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider transition shadow-md"
+                        >
+                          Publish to Student Mock Pool
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* TEACHER TAB 4: COHORTS & ANALYTICS */}
+              {teacherTab === "cohorts" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        Student Cohorts &amp; Mock Test Performance
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Monitor active student batches, average scores, and syllabus completion velocity.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => alert("New student cohort invite link generated!")}
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Invite Students to Cohort</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {TEACHER_COHORTS.map((c) => (
+                      <div
+                        key={c.id}
+                        className="p-6 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-4 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                            {c.enrolledCount} Active Scholars
+                          </span>
+                          <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            Avg: {c.avgScore}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">{c.name}</h4>
+                          <span className="text-xs text-slate-500 dark:text-zinc-400 block mt-0.5">Top Area: {c.topSubject}</span>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/60 text-xs">
+                          <span className="font-bold text-slate-700 dark:text-zinc-300 block">Upcoming Milestone:</span>
+                          <p className="text-slate-600 dark:text-zinc-400 mt-0.5">{c.nextMock}</p>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => alert(`Exporting analytics for ${c.name}`)}
+                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            View Full Scoreboard →
+                          </button>
+                          <span className="text-[10px] text-slate-400 font-mono">Live Sync Active</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      )}
+
+      {/* ============================================================== */}
+      {/* FOOTER                                                         */}
+      {/* ============================================================== */}
+      <footer className="w-full bg-white dark:bg-zinc-950 border-t border-slate-200/80 dark:border-zinc-800 py-6 px-6 text-center text-xs text-slate-500 dark:text-zinc-500 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span>© 2026 Wakheel Academy. All rights reserved.</span>
+          <div className="flex items-center gap-4 text-xs font-medium">
+            <Link href="/" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+              Wakheel Main Platform
             </Link>
-            <span>•</span>
-            <span className="font-mono text-zinc-400">EduPye Academic Core Integration</span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <Link href="/login" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+              Litigation Login
+            </Link>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <button
+              onClick={() => setViewMode("journey_selection")}
+              className="text-amber-500 font-bold hover:underline cursor-pointer"
+            >
+              Select Role
+            </button>
           </div>
         </div>
       </footer>

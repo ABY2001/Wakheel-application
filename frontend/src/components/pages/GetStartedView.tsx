@@ -36,8 +36,8 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
   const router = useRouter();
   const [authMode, setAuthMode] = useState<"signup" | "signin">(initialAuthMode);
 
-  // Top-Level User Tier: Citizen vs Professional vs Academy
-  const [tier, setTier] = useState<"citizen" | "professional" | "academy">("citizen");
+  // Top-Level User Tier: Citizen vs Professional
+  const [tier, setTier] = useState<"citizen" | "professional">("citizen");
 
   // Professional Sub-Category matching user spec document bubbles:
   // 1. Independent Advocate
@@ -47,17 +47,6 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
   const [selectedBubble, setSelectedBubble] = useState<
     "independent_advocate" | "law_firm" | "cs" | "ca"
   >("independent_advocate");
-
-  // Academy Goal & Curriculum Track:
-  // 1. Law Entrance Coaching (CLAT / KLEE / AILET)
-  // 2. Open University & Distance Law (IGNOU / State Open Univ)
-  // 3. LLB / LLM Undergraduate Scholar
-  // 4. Legal Faculty & Educator
-  const [academyGoal, setAcademyGoal] = useState<
-    "entrance_coaching" | "open_university" | "llb_student" | "faculty"
-  >("entrance_coaching");
-  const [targetExam, setTargetExam] = useState("CLAT 2027 (Common Law Admission Test)");
-  const [universityName, setUniversityName] = useState("IGNOU (Indira Gandhi National Open University)");
 
   // Multi-step for Professional Signup:
   // Step 1: Base Credentials -> Step 2: Bubble Selection -> Step 3: Verification & Setup (Dynamic UX)
@@ -107,34 +96,10 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
       let loginRole: UserRole = "client";
       if (tier === "citizen") {
         loginRole = "client";
-      } else if (tier === "professional") {
+      } else {
         if (selectedBubble === "independent_advocate") loginRole = "advocate";
         else if (selectedBubble === "ca") loginRole = "ca";
         else loginRole = "cs";
-      } else {
-        loginRole = "client";
-      }
-
-      if (tier === "academy") {
-        const studentUser = {
-          id: "google_student_" + Date.now(),
-          fullName: "Law Scholar (Google)",
-          email: "student.google." + Math.floor(1000 + Math.random() * 9000) + "@gmail.com",
-          role: "student",
-          tier: "academy",
-          academyGoal,
-          targetExam,
-          universityName,
-          enrolledAt: new Date().toISOString(),
-        };
-        localStorage.setItem("wakheel_token", "academy_google_token_" + Date.now());
-        localStorage.setItem("wakheel_user", JSON.stringify(studentUser));
-        localStorage.setItem("wakheel_academy_student", JSON.stringify(studentUser));
-        setTimeout(() => {
-          setIsGoogleLoading(false);
-          router.push("/academy");
-        }, 500);
-        return;
       }
 
       const emailPrefix =
@@ -483,57 +448,7 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
   };
 
   // ==============================================================
-  // 4B. ACADEMY SIGNUP (Law Entrance Aspirants & Open University Students)
-  // ==============================================================
-  const handleAcademySignUpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMessage("Please enter a valid email address.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      return;
-    }
-    if (password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const studentName = fullName.trim() || email.split("@")[0];
-      const studentUser = {
-        id: "student_" + Date.now(),
-        fullName: studentName,
-        email: email.trim(),
-        username: username.trim() || email.split("@")[0].toLowerCase(),
-        role: "student",
-        tier: "academy",
-        academyGoal,
-        targetExam: academyGoal === "entrance_coaching" ? targetExam : undefined,
-        universityName: academyGoal === "open_university" ? universityName : undefined,
-        enrolledAt: new Date().toISOString(),
-      };
-
-      localStorage.setItem("wakheel_token", "academy_token_" + Date.now());
-      localStorage.setItem("wakheel_user", JSON.stringify(studentUser));
-      localStorage.setItem("wakheel_academy_student", JSON.stringify(studentUser));
-
-      setTimeout(() => {
-        setIsSubmitting(false);
-        router.push("/academy");
-      }, 600);
-    } catch (err: any) {
-      setIsSubmitting(false);
-      setErrorMessage(err?.message || "Failed to create Academy profile. Please try again.");
-    }
-  };
-
-  // ==============================================================
-  // 5. SIGN IN (Citizen, Professional, or Academy)
+  // 5. SIGN IN (Citizen or Professional)
   // ==============================================================
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -551,28 +466,6 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
     setIsSubmitting(true);
 
     try {
-      if (tier === "academy") {
-        const studentUser = {
-          id: "student_" + Date.now(),
-          fullName: email.split("@")[0],
-          email: email.trim(),
-          role: "student",
-          tier: "academy",
-          academyGoal,
-          targetExam,
-          universityName,
-          lastLogin: new Date().toISOString(),
-        };
-        localStorage.setItem("wakheel_token", "academy_token_" + Date.now());
-        localStorage.setItem("wakheel_user", JSON.stringify(studentUser));
-        localStorage.setItem("wakheel_academy_student", JSON.stringify(studentUser));
-        setTimeout(() => {
-          setIsSubmitting(false);
-          router.push("/academy");
-        }, 500);
-        return;
-      }
-
       let loginRole: UserRole = "client";
 
       if (tier === "citizen") {
@@ -665,10 +558,10 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-white dark:bg-black text-black dark:text-white transition-colors duration-200">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white dark:bg-black text-black dark:text-white transition-colors duration-200">
       
-      {/* Left Column — Form Content */}
-      <div className="lg:col-span-7 flex flex-col justify-between p-6 sm:p-12 lg:p-16 max-w-2xl mx-auto w-full">
+      {/* Left Column — Form Content (50%) */}
+      <div className="flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 max-w-xl mx-auto w-full">
         
         {/* Top Header */}
         <div className="flex items-center justify-between w-full mb-8">
@@ -742,22 +635,22 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
               {authMode === "signup" ? "ACCOUNT TIER" : "LOGGING IN AS"}
             </label>
 
-            {/* Three Primary Options: Citizen vs Professional vs Academy */}
-            <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            {/* Two Primary Options: Citizen vs Professional */}
+            <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => {
                   setTier("citizen");
                   setErrorMessage("");
                 }}
-                className={`py-3 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                className={`py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
                   tier === "citizen"
                     ? "bg-black text-white dark:bg-white dark:text-black shadow-md font-extrabold"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
                 }`}
               >
-                <User className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Citizen</span>
+                <User className="w-4 h-4 shrink-0" />
+                <span>Citizen</span>
               </button>
 
               <button
@@ -766,71 +659,17 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
                   setTier("professional");
                   setErrorMessage("");
                 }}
-                className={`py-3 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
+                className={`py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
                   tier === "professional"
                     ? "bg-black text-white dark:bg-white dark:text-black shadow-md font-extrabold"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
                 }`}
               >
-                <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Professional</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#800020] ml-0.5 shrink-0" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setTier("academy");
-                  setErrorMessage("");
-                }}
-                className={`py-3 px-2 sm:px-3 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
-                  tier === "academy"
-                    ? "bg-black text-white dark:bg-white dark:text-black shadow-md font-extrabold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                }`}
-              >
-                <GraduationCap className="w-4 h-4 shrink-0 text-amber-500" />
-                <span className="truncate">Academy</span>
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
-                  NEW
-                </span>
+                <Briefcase className="w-4 h-4 shrink-0" />
+                <span>Professional</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#800020] ml-0.5" />
               </button>
             </div>
-
-            {/* In SIGN IN or SIGN UP mode: When Academy is selected, show goal stream pills */}
-            {tier === "academy" && (
-              <div className="pt-2 space-y-1.5 animate-in fade-in duration-200">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">
-                  ACADEMIC STREAM / CURRICULUM TRACK
-                </span>
-                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                  {[
-                    { id: "entrance_coaching", label: "Law Entrance (CLAT/KLEE)", icon: Award },
-                    { id: "open_university", label: "Open Univ (IGNOU/State)", icon: BookOpen },
-                    { id: "llb_student", label: "LLB / LLM Scholar", icon: Scale },
-                    { id: "faculty", label: "Legal Educator", icon: ShieldCheck },
-                  ].map((goal) => {
-                    const isSelected = academyGoal === goal.id;
-                    const Icon = goal.icon;
-                    return (
-                      <button
-                        key={goal.id}
-                        type="button"
-                        onClick={() => setAcademyGoal(goal.id as any)}
-                        className={`py-2 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                          isSelected
-                            ? "bg-black text-white dark:bg-white dark:text-black shadow-xs font-bold"
-                            : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                        <span className="truncate">{goal.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* In SIGN IN mode: When Professional is selected, show category pills */}
             {authMode === "signin" && tier === "professional" && (
@@ -1770,277 +1609,6 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
               )}
             </div>
           )}
-
-          {/* ============================================================== */}
-          {/* CASE 3: ACADEMY FLOW (LAW ENTRANCE & OPEN UNIVERSITY STUDENTS)  */}
-          {/* ============================================================== */}
-          {tier === "academy" && (
-            <div>
-              {authMode === "signup" ? (
-                /* ACADEMY SIGNUP FORM */
-                <form onSubmit={handleAcademySignUpSubmit} className="space-y-4">
-                  {/* Full Name */}
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Full Legal / Student Name
-                    </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Advithya Sharma"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Student Email */}
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Student / Scholar Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. student@law.university.edu"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Goal-Specific Target Selectors */}
-                  {academyGoal === "entrance_coaching" && (
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
-                        <span>Target Law Entrance Examination</span>
-                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold font-mono">
-                          MOCK TEST SERIES ACTIVE
-                        </span>
-                      </label>
-                      <select
-                        value={targetExam}
-                        onChange={(e) => setTargetExam(e.target.value)}
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-3 text-xs text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
-                      >
-                        <option value="CLAT 2027 (Common Law Admission Test)">CLAT 2027 (Consortium of 24 NLUs)</option>
-                        <option value="KLEE 2027 (Kerala Law Entrance Examination)">KLEE 2027 (CEE Kerala 3-Yr &amp; 5-Yr LLB)</option>
-                        <option value="AILET 2027 (All India Law Entrance Test)">AILET 2027 (NLU Delhi)</option>
-                        <option value="CUET-PG Law (Central Universities Entrance)">CUET-PG Law (DU, BHU &amp; Central Univs)</option>
-                        <option value="MH-CET Law (Maharashtra Law Entrance)">MH-CET Law (GLC Mumbai, ILS Pune)</option>
-                      </select>
-                    </div>
-                  )}
-
-                  {academyGoal === "open_university" && (
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
-                        <span>Open University / Distance Legal Program</span>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-mono">
-                          SYLLABUS &amp; BARE ACTS READY
-                        </span>
-                      </label>
-                      <select
-                        value={universityName}
-                        onChange={(e) => setUniversityName(e.target.value)}
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-3 text-xs text-black dark:text-white focus:outline-none focus:border-black dark:focus:border-white"
-                      >
-                        <option value="IGNOU (Indira Gandhi National Open University)">IGNOU — School of Law (Diploma in Paralegal / Cyber)</option>
-                        <option value="State Open University Distance LLB">State Open University — Bachelor of Laws (Distance/Open LLB)</option>
-                        <option value="NLSIU Bengaluru Distance Master of Business Laws (MBL)">NLSIU Bengaluru — Distance Master of Business Laws (MBL)</option>
-                        <option value="NALSAR Hyderabad Distance Law Programs">NALSAR Hyderabad — Distance PG Diplomas (Aviation, Cyber)</option>
-                        <option value="Other Distance University / College">Other Distance / Continuing Legal Education</option>
-                      </select>
-                    </div>
-                  )}
-
-                  {academyGoal === "llb_student" && (
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        Law College / Current Year
-                      </label>
-                      <input
-                        type="text"
-                        value={universityName}
-                        onChange={(e) => setUniversityName(e.target.value)}
-                        placeholder="e.g. Government Law College, Ernakulam • 3rd Year"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
-                    </div>
-                  )}
-
-                  {academyGoal === "faculty" && (
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        Institution / Teaching Area
-                      </label>
-                      <input
-                        type="text"
-                        value={universityName}
-                        onChange={(e) => setUniversityName(e.target.value)}
-                        placeholder="e.g. Faculty of Law, Constitutional &amp; Criminal Law"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
-                    </div>
-                  )}
-
-                  {/* Password & Confirm Password */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        Password
-                      </label>
-                      <div className="relative">
-                        <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="password"
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Min. 6 chars"
-                          className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        Confirm Password
-                      </label>
-                      <div className="relative">
-                        <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="password"
-                          required
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Re-enter password"
-                          className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
-                  >
-                    <span>
-                      {isSubmitting
-                        ? "Launching Academy..."
-                        : "Create Academy Account & Launch Portal →"}
-                    </span>
-                  </button>
-
-                  {/* Alternative Separator */}
-                  <div className="relative flex items-center justify-center my-3">
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
-                    <span className="bg-white dark:bg-black px-2 text-[10px] uppercase font-mono tracking-wider text-zinc-400">
-                      OR
-                    </span>
-                  </div>
-
-                  {/* Google Sign-In */}
-                  <button
-                    type="button"
-                    disabled={isGoogleLoading}
-                    onClick={handleGoogleSignIn}
-                    className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
-                  >
-                    <GoogleIcon className="w-4 h-4 shrink-0" />
-                    <span>{isGoogleLoading ? "Connecting with Google..." : "Continue with Google"}</span>
-                  </button>
-                </form>
-              ) : (
-                /* ACADEMY SIGN IN FORM */
-                <form onSubmit={handleSignInSubmit} className="space-y-4">
-                  {/* Email */}
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Student / Scholar Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="student@law.university.edu"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 bg-black hover:bg-zinc-800 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
-                  >
-                    <span>
-                      {isSubmitting ? "Signing In..." : "Sign In to Wakheel Academy →"}
-                    </span>
-                  </button>
-
-                  {/* WhatsApp Quick OTP Alternative */}
-                  <div className="relative flex items-center justify-center my-3">
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 w-full" />
-                    <span className="bg-white dark:bg-black px-2 text-[10px] uppercase font-mono tracking-wider text-zinc-400">
-                      OR
-                    </span>
-                  </div>
-
-                  <Link
-                    href="/otp-login"
-                    className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs group"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#800020]" />
-                    <Phone className="w-3.5 h-3.5 text-black dark:text-white group-hover:scale-110 transition-transform" />
-                    <span>Log in with WhatsApp OTP</span>
-                    <span className="text-zinc-400">→</span>
-                  </Link>
-
-                  {/* Google Sign-In Alternative */}
-                  <button
-                    type="button"
-                    disabled={isGoogleLoading}
-                    onClick={handleGoogleSignIn}
-                    className="w-full py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-black dark:text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-60"
-                  >
-                    <GoogleIcon className="w-4 h-4 shrink-0" />
-                    <span>{isGoogleLoading ? "Connecting with Google..." : "Continue with Google"}</span>
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Footer info */}
@@ -2049,96 +1617,102 @@ export function GetStartedView({ initialAuthMode = "signup" }: GetStartedViewPro
         </div>
       </div>
 
-      {/* Right Column — Showcase Hero */}
-      <div className="hidden lg:flex lg:col-span-5 bg-black text-white p-12 flex-col justify-between relative overflow-hidden border-l border-zinc-800">
+      {/* Right Column — Showcase Hero (50%) */}
+      <div className="hidden lg:flex bg-black text-white p-10 sm:p-12 lg:p-14 xl:p-16 flex-col justify-between relative overflow-hidden border-l border-zinc-800 w-full">
         
         {/* Subtle decorative glow */}
-        <div className={`absolute top-0 right-0 w-96 h-96 ${tier === "academy" ? "bg-amber-500/10" : "bg-zinc-800/20"} rounded-full blur-3xl pointer-events-none`} />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Tag */}
         <div className="relative z-10">
-          {tier === "academy" ? (
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-amber-500/30 text-xs font-semibold text-amber-400 uppercase tracking-wider font-mono">
-              <GraduationCap className="w-4 h-4 text-amber-400" />
-              Wakheel Academy • Legal EdTech
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#800020]" />
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-              Legal Operating System
-            </span>
-          )}
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-amber-500/30 text-xs font-semibold text-amber-400 uppercase tracking-wider font-mono">
+            <GraduationCap className="w-4 h-4 text-amber-400" />
+            Wakheel Academy • EdTech Platform
+          </span>
         </div>
 
-        {/* Middle Showcase Content */}
-        <div className="relative z-10 space-y-6 max-w-md">
-          {tier === "academy" ? (
-            <>
-              <h2 className="text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-white">
-                Master the law. From entrance exams to courtroom practice.
-              </h2>
+        {/* Middle Showcase Content — Clean, uncluttered, dedicated to Academy */}
+        <div className="relative z-10 space-y-8 max-w-xl w-full my-auto py-8">
+          <div className="space-y-4">
+            <h2 className="text-3xl lg:text-4xl xl:text-[44px] font-extrabold leading-tight tracking-tight text-white">
+              Master the law. From entrance exams to courtroom practice.
+            </h2>
 
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                India&apos;s premier hybrid legal education portal designed specifically for Law Entrance Aspirants (CLAT, KLEE, AILET) and Open University distance law students.
-              </p>
+            <p className="text-sm lg:text-base text-zinc-400 leading-relaxed">
+              India&apos;s dedicated academic portal for law entrance aspirants, distance LLB scholars, and faculty educators.
+            </p>
+          </div>
 
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span>All-India Law Entrance Mock Tests &amp; Sectional Timed Quizzes</span>
+          {/* Clickable Student & Teacher Authentication Entry Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Clickable Student Card */}
+            <Link
+              href="/academy/auth?role=student"
+              className="group p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 hover:border-white/80 hover:ring-2 hover:ring-white/20 transition-all flex flex-col justify-between cursor-pointer shadow-lg hover:shadow-white/5"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-white group-hover:text-black group-hover:border-white transition-all">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 group-hover:bg-white/10 group-hover:text-white group-hover:border-white/30 uppercase tracking-wider transition-colors">
+                    Student Portal
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span>Open University Distance Syllabi, Bare Act Trackers &amp; Case Law Notes</span>
-                </div>
-
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span>Gemini AI Legal Reasoning Assistant &amp; Automated Question Generator</span>
-                </div>
-
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span>Direct Chamber Pipeline: Summer Internships with Enrolled Advocates</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-white">
-                Precision legal clarity in black &amp; white.
-              </h2>
-
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Instant simple access for Citizens, with specialized verified workspaces for Independent Advocates, Law Firms, Company Secretaries, and Chartered Accountants.
-              </p>
-
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
-                  <span>Frictionless Citizen Signup (Email &amp; Password)</span>
-                </div>
-
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
-                  <span>4 Professional Categories (Advocate, Law Firm, CS, CA)</span>
-                </div>
-
-                <div className="flex items-center gap-3 text-xs font-semibold text-zinc-300">
-                  <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
-                  <span>Dynamic UX Verification &amp; Setup per Category</span>
+                <div>
+                  <h3 className="text-base font-bold text-white group-hover:text-white transition-colors">
+                    For Students
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed mt-1">
+                    CLAT 2027 &amp; KLEE timed CBT mock exams, open university distance law syllabi, and Gemini AI legal tutor.
+                  </p>
                 </div>
               </div>
-            </>
-          )}
+
+              <div className="pt-4 mt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs font-bold text-amber-400 group-hover:text-white transition-colors">
+                <span>Sign In or Register</span>
+                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </div>
+            </Link>
+
+            {/* Clickable Teacher Card */}
+            <Link
+              href="/academy/auth?role=teacher"
+              className="group p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 hover:border-amber-500/80 hover:ring-2 hover:ring-amber-500/20 transition-all flex flex-col justify-between cursor-pointer shadow-lg hover:shadow-amber-500/10"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-black transition-all">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 uppercase tracking-wider">
+                    Faculty Studio
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">
+                    For Teachers
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed mt-1">
+                    Manage student batches, host live classes, create CBT mocks with AI, and mentor students 1-on-1.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs font-bold text-amber-400">
+                <span>Sign In or Register</span>
+                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </div>
+            </Link>
+          </div>
         </div>
 
         {/* Bottom Card Footer */}
         <div className="relative z-10 p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 flex items-center justify-between">
-          <span>{tier === "academy" ? "Wakheel Academy v1.0 • Powered by Gemini AI" : "Wakheel Legal AI v2.4"}</span>
-          <span className="text-white font-bold font-mono">{tier === "academy" ? "Open Access Tier" : "100% Encrypted"}</span>
+          <span>Wakheel Academy v1.0</span>
+          <span className="text-amber-400 font-bold font-mono">Student &amp; Teacher Portal</span>
         </div>
 
       </div>

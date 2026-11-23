@@ -67,6 +67,11 @@ import {
   Box,
   Award,
   ClipboardList,
+  Pause,
+  Square,
+  Volume2,
+  VolumeX,
+  Headphones,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -76,6 +81,26 @@ import {
   deleteBook,
   downloadBookFile,
 } from "./booksData";
+import {
+  HomeworkAssignment,
+  HomeworkSubmission,
+  getStoredAssignments,
+  saveAssignment,
+  deleteAssignment,
+  getStoredSubmissions,
+  gradeSubmission,
+  downloadSubmissionFile,
+} from "./homeworkData";
+import {
+  LectureAudio,
+  RecordingTemplate,
+  RECORDING_TEMPLATES,
+  getStoredLectures,
+  saveLecture,
+  deleteLecture,
+  downloadLectureAudio,
+  generateSyntheticWavDataUri,
+} from "./lectureAudioData";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -99,6 +124,7 @@ export type TeacherNavSection =
   | "collaboration"
   | "mentorship"
   | "recorded_classes"
+  | "audio"
   | "smart_board"
   | "projects"
   | "cohort_analytics"
@@ -237,39 +263,288 @@ export function TeacherDashboardView({
   const [uploadSubject, setUploadSubject] = useState("Bharatiya Nyaya Sanhita (BNS 2023)");
   const [uploadTitle, setUploadTitle] = useState("BNS 2023 vs IPC 1860 Full Comparative Table & Transition Guide");
 
-  // Assessment / Submissions State
-  const [studentSubmissions, setStudentSubmissions] = useState([
-    {
-      id: "sub_1",
-      studentName: "Advithya Sharma",
-      exam: "CLAT 2027 Super-30",
-      assignment: "Bail Petition Drafting under BNSS Section 480",
-      submittedDate: "Today, 11:20 AM",
-      status: "Pending Evaluation",
-      score: "—",
-      file: "Bail_Application_Sec480_Advithya.pdf",
-    },
-    {
-      id: "sub_2",
-      studentName: "Priya Nair",
-      exam: "KLEE 2027 Batch",
-      assignment: "Case Brief: Kesavananda Bharati v. State of Kerala",
-      submittedDate: "Yesterday",
-      status: "Graded",
-      score: "48 / 50",
-      file: "Kesavananda_CaseBrief_Priya.pdf",
-    },
-    {
-      id: "sub_3",
-      studentName: "Rahul George",
-      exam: "Distance LL.B (IGNOU)",
-      assignment: "Indemnity vs Guarantee Comparative Problem",
-      submittedDate: "2 Days ago",
-      status: "Graded",
-      score: "44 / 50",
-      file: "Contract_Indemnity_Rahul.pdf",
-    },
-  ]);
+  // ==============================================================
+  // OPTION 4: HOMEWORK & CASE BRIEF SUBMISSION STATE
+  // ==============================================================
+  const [assignmentsList, setAssignmentsList] = useState<HomeworkAssignment[]>([]);
+  const [submissionsList, setSubmissionsList] = useState<HomeworkSubmission[]>([]);
+  const [assessmentTab, setAssessmentTab] = useState<"submissions" | "assignments">("submissions");
+  const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "graded">("all");
+
+  // Create Assignment Modal State
+  const [showCreateAssignmentModal, setShowCreateAssignmentModal] = useState(false);
+  const [assignmentTitle, setAssignmentTitle] = useState("");
+  const [assignmentSubject, setAssignmentSubject] = useState("Criminal Procedure & Constitutional Bail");
+  const [assignmentBatch, setAssignmentBatch] = useState("CLAT 2027 Super-30 & Distance LL.B");
+  const [assignmentDueDate, setAssignmentDueDate] = useState("Nov 28, 2026, 8:00 PM");
+  const [assignmentMaxScore, setAssignmentMaxScore] = useState(50);
+  const [assignmentBadge, setAssignmentBadge] = useState("DRAFTING MEMORIAL");
+  const [assignmentInstructions, setAssignmentInstructions] = useState("");
+  const [assignmentRatio, setAssignmentRatio] = useState("");
+  const [assignmentCreatedSuccess, setAssignmentCreatedSuccess] = useState(false);
+
+  // Grading Studio Modal State
+  const [selectedSubmissionForGrading, setSelectedSubmissionForGrading] = useState<HomeworkSubmission | null>(null);
+  const [gradingStatutory, setGradingStatutory] = useState<number>(14);
+  const [gradingPrecedents, setGradingPrecedents] = useState<number>(13);
+  const [gradingDrafting, setGradingDrafting] = useState<number>(9);
+  const [gradingReasoning, setGradingReasoning] = useState<number>(9);
+  const [gradingFeedback, setGradingFeedback] = useState<string>("");
+  const [gradingStatus, setGradingStatus] = useState<"Graded" | "Needs Revision">("Graded");
+  const [gradeSuccess, setGradeSuccess] = useState(false);
+
+  // ==============================================================
+  // OPTION 6: FACULTY LECTURE RECORDING & AUDIO STUDIO STATE
+  // ==============================================================
+  const [lecturesList, setLecturesList] = useState<LectureAudio[]>([]);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [isRecordingPaused, setIsRecordingPaused] = useState<boolean>(false);
+  const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
+  const [audioWaveformLevels, setAudioWaveformLevels] = useState<number[]>([15, 28, 45, 60, 35, 20, 55, 75, 65, 42, 28, 50, 68, 85, 52, 32, 70, 88, 42, 22]);
+  const [activeAudioPlayingId, setActiveAudioPlayingId] = useState<string | null>(null);
+  const [audioPlayInstance, setAudioPlayInstance] = useState<HTMLAudioElement | null>(null);
+  const [lectureFilterSubject, setLectureFilterSubject] = useState<string>("All");
+  const [lectureSearchQuery, setLectureSearchQuery] = useState<string>("");
+
+  // Publish Recorded Lecture Modal State
+  const [showPublishLectureModal, setShowPublishLectureModal] = useState<boolean>(false);
+  const [newLectureTitle, setNewLectureTitle] = useState<string>("");
+  const [newLectureSubject, setNewLectureSubject] = useState<string>("Criminal Procedure (BNSS 2023)");
+  const [newLectureBatch, setNewLectureBatch] = useState<string>("CLAT 2027 Super-30 & Distance LL.B");
+  const [newLectureCategory, setNewLectureCategory] = useState<"Faculty Masterclass" | "Oral Argument Drill" | "Rapid Doctrine Revision">("Faculty Masterclass");
+  const [newLectureNotes, setNewLectureNotes] = useState<string>("");
+  const [newLectureCitations, setNewLectureCitations] = useState<string>("");
+  const [recordedAudioUri, setRecordedAudioUri] = useState<string>("");
+  const [recordedDurationStr, setRecordedDurationStr] = useState<string>("00:00");
+  const [recordedDurationSec, setRecordedDurationSec] = useState<number>(0);
+  const [lecturePublishSuccess, setLecturePublishSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    setAssignmentsList(getStoredAssignments());
+    setSubmissionsList(getStoredSubmissions());
+    setLecturesList(getStoredLectures());
+
+    const handleSync = () => {
+      setAssignmentsList(getStoredAssignments());
+      setSubmissionsList(getStoredSubmissions());
+      setLecturesList(getStoredLectures());
+    };
+    window.addEventListener("storage", handleSync);
+    return () => window.removeEventListener("storage", handleSync);
+  }, []);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (isRecording && !isRecordingPaused) {
+      interval = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1);
+        setAudioWaveformLevels((prev) =>
+          prev.map(() => Math.floor(Math.random() * 75) + 15)
+        );
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording, isRecordingPaused]);
+
+  const formatSecondsToMMSS = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    setIsRecordingPaused(false);
+    setRecordingSeconds(0);
+  };
+
+  const handlePauseResumeRecording = () => {
+    setIsRecordingPaused(!isRecordingPaused);
+  };
+
+  const handleStopAndPrepareLecture = () => {
+    setIsRecording(false);
+    setIsRecordingPaused(false);
+    const durationSec = Math.max(5, recordingSeconds);
+    const durationFormatted = formatSecondsToMMSS(durationSec);
+    setRecordedDurationSec(durationSec);
+    setRecordedDurationStr(durationFormatted);
+    const generatedAudio = generateSyntheticWavDataUri(Math.min(15, durationSec), 460);
+    setRecordedAudioUri(generatedAudio);
+
+    if (!newLectureTitle) {
+      const defaultTpl = RECORDING_TEMPLATES[0];
+      setNewLectureTitle(defaultTpl.title);
+      setNewLectureSubject(defaultTpl.subject);
+      setNewLectureBatch(defaultTpl.targetBatch);
+      setNewLectureCategory(defaultTpl.category);
+      setNewLectureNotes(defaultTpl.statutoryNotes);
+      setNewLectureCitations(defaultTpl.keyCitations.join(", "));
+    }
+    setShowPublishLectureModal(true);
+  };
+
+  const handleApplyLectureTemplate = (tpl: RecordingTemplate) => {
+    setNewLectureTitle(tpl.title);
+    setNewLectureSubject(tpl.subject);
+    setNewLectureBatch(tpl.targetBatch);
+    setNewLectureCategory(tpl.category);
+    setNewLectureNotes(tpl.statutoryNotes);
+    setNewLectureCitations(tpl.keyCitations.join(", "));
+  };
+
+  const handlePublishLecture = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLectureTitle.trim()) return;
+
+    const newLec: LectureAudio = {
+      id: `lec_${Date.now()}`,
+      title: newLectureTitle.trim(),
+      subject: newLectureSubject,
+      targetBatch: newLectureBatch,
+      facultyName: teacherProfile.fullName,
+      duration: recordedDurationStr || "05:00",
+      durationSeconds: recordedDurationSec || 300,
+      date: "Today, " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      audioUrl: recordedAudioUri || generateSyntheticWavDataUri(8, 440),
+      statutoryNotes: newLectureNotes.trim() || "Statutory analysis and judicial ratio overview.",
+      keyCitations: newLectureCitations.split(",").map((c) => c.trim()).filter(Boolean),
+      listensCount: 0,
+      category: newLectureCategory,
+      isFeatured: true,
+    };
+
+    const updated = saveLecture(newLec);
+    setLecturesList(updated);
+    setLecturePublishSuccess(true);
+    setTimeout(() => {
+      setLecturePublishSuccess(false);
+      setShowPublishLectureModal(false);
+      setNewLectureTitle("");
+      setNewLectureNotes("");
+      setNewLectureCitations("");
+      setRecordingSeconds(0);
+    }, 1200);
+  };
+
+  const handlePlayLecture = (lecture: LectureAudio) => {
+    if (activeAudioPlayingId === lecture.id) {
+      if (audioPlayInstance) {
+        audioPlayInstance.pause();
+        setActiveAudioPlayingId(null);
+        setAudioPlayInstance(null);
+      }
+      return;
+    }
+
+    if (audioPlayInstance) {
+      audioPlayInstance.pause();
+    }
+
+    const audio = new Audio(lecture.audioUrl || generateSyntheticWavDataUri(8, 440));
+    audio.play();
+    setActiveAudioPlayingId(lecture.id);
+    setAudioPlayInstance(audio);
+    audio.onended = () => {
+      setActiveAudioPlayingId(null);
+      setAudioPlayInstance(null);
+    };
+  };
+
+  const handleDeleteLecture = (id: string) => {
+    if (activeAudioPlayingId === id && audioPlayInstance) {
+      audioPlayInstance.pause();
+      setActiveAudioPlayingId(null);
+      setAudioPlayInstance(null);
+    }
+    const updated = deleteLecture(id);
+    setLecturesList(updated);
+  };
+
+  // Option 4 Handlers:
+  const handlePublishAssignment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignmentTitle.trim() || !assignmentInstructions.trim()) return;
+
+    const newAssignment: HomeworkAssignment = {
+      id: `hw_${Date.now()}`,
+      title: assignmentTitle.trim(),
+      subject: assignmentSubject,
+      targetBatch: assignmentBatch,
+      instructions: assignmentInstructions.trim(),
+      faculty: teacherProfile.fullName,
+      dueDate: assignmentDueDate.trim() || "Nov 30, 2026, 6:00 PM",
+      maxScore: assignmentMaxScore,
+      badge: assignmentBadge,
+      referenceRatio: assignmentRatio.trim() || undefined,
+      createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    };
+
+    const updated = saveAssignment(newAssignment);
+    setAssignmentsList(updated);
+    setAssignmentCreatedSuccess(true);
+    setTimeout(() => {
+      setAssignmentCreatedSuccess(false);
+      setShowCreateAssignmentModal(false);
+      setAssignmentTitle("");
+      setAssignmentInstructions("");
+      setAssignmentRatio("");
+    }, 1200);
+  };
+
+  const handleDeleteAssignment = (id: string) => {
+    const updated = deleteAssignment(id);
+    setAssignmentsList(updated);
+  };
+
+  const handleOpenGradingModal = (sub: HomeworkSubmission) => {
+    setSelectedSubmissionForGrading(sub);
+    if (sub.rubricBreakdown) {
+      setGradingStatutory(sub.rubricBreakdown.statutoryAccuracy);
+      setGradingPrecedents(sub.rubricBreakdown.casePrecedents);
+      setGradingDrafting(sub.rubricBreakdown.draftingAndPrayer);
+      setGradingReasoning(sub.rubricBreakdown.legalReasoning);
+    } else {
+      setGradingStatutory(14);
+      setGradingPrecedents(13);
+      setGradingDrafting(9);
+      setGradingReasoning(9);
+    }
+    setGradingFeedback(sub.feedback || "");
+    setGradingStatus((sub.status === "Needs Revision" ? "Needs Revision" : "Graded") as any);
+  };
+
+  const handleSaveGrade = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSubmissionForGrading) return;
+    const matchedAssignment = assignmentsList.find(
+      (a) => a.id === selectedSubmissionForGrading.assignmentId
+    );
+    const maxScore = matchedAssignment?.maxScore || 50;
+    const totalScore = gradingStatutory + gradingPrecedents + gradingDrafting + gradingReasoning;
+    const updated = gradeSubmission(
+      selectedSubmissionForGrading.id,
+      totalScore,
+      maxScore,
+      gradingFeedback,
+      teacherProfile.fullName,
+      {
+        statutoryAccuracy: gradingStatutory,
+        casePrecedents: gradingPrecedents,
+        draftingAndPrayer: gradingDrafting,
+        legalReasoning: gradingReasoning,
+      },
+      gradingStatus
+    );
+    setSubmissionsList(updated);
+    setGradeSuccess(true);
+    setTimeout(() => {
+      setGradeSuccess(false);
+      setSelectedSubmissionForGrading(null);
+    }, 1200);
+  };
 
   // Doubts Hub State
   const [doubtsList, setDoubtsList] = useState([
@@ -1450,21 +1725,260 @@ export function TeacherDashboardView({
               </div>
             )}
 
-            {/* SECTION: ASSESSMENTS */}
-            {activeSection === "assessment" && (
-              <div className="space-y-4">
-                <h3 className="text-base font-bold text-zinc-900 dark:text-white">Student Case Briefs &amp; Submissions</h3>
-                <div className="space-y-2">
-                  {studentSubmissions.map((sub) => (
-                    <div key={sub.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between shadow-xs">
-                      <div>
-                        <h4 className="text-xs font-bold text-zinc-900 dark:text-white">{sub.assignment}</h4>
-                        <p className="text-[11px] text-zinc-500">Student: {sub.studentName} • Status: {sub.status}</p>
-                      </div>
-                      <button className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold transition-all cursor-pointer">Grade</button>
+            {/* SECTION: ASSESSMENTS & HOMEWORK EVALUATION (OPTION 4) */}
+            {(activeSection === "assessment" || activeSection === "test") && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                        Faculty Adjudication
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">•</span>
+                      <span className="text-xs text-zinc-500 font-mono">Real-Time Student Roster Sync</span>
                     </div>
-                  ))}
+                    <h2 className="text-xl font-black text-zinc-900 dark:text-white mt-1">
+                      Case Briefs, Pleadings &amp; Homework Evaluation Studio
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Author curriculum assignments, review student pleadings, and grade using interactive 50-mark rubrics with direct feedback.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <button
+                      onClick={() => setShowCreateAssignmentModal(true)}
+                      className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Author New Assignment</span>
+                    </button>
+                  </div>
                 </div>
+
+                {/* 4 Metrics Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Total Submissions</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {submissionsList.length} <span className="text-xs font-normal text-zinc-500">Briefs</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Submitted by active scholars</p>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Pending Evaluation</span>
+                    <div className="text-2xl font-black text-amber-500 font-mono">
+                      {submissionsList.filter((s) => s.status === "Pending Evaluation").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Awaiting faculty marks</p>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Graded &amp; Certified</span>
+                    <div className="text-2xl font-black text-emerald-500 font-mono">
+                      {submissionsList.filter((s) => s.status === "Graded").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Chambers feedback issued</p>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Class Average</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {submissionsList.filter((s) => s.score !== undefined).length > 0
+                        ? `${Math.round(
+                            submissionsList
+                              .filter((s) => s.score !== undefined)
+                              .reduce((acc, curr) => acc + (curr.score || 0), 0) /
+                              submissionsList.filter((s) => s.score !== undefined).length
+                          )} / 50`
+                        : "46 / 50"}
+                    </div>
+                    <p className="text-[11px] text-emerald-500 font-semibold">Consortium Standard</p>
+                  </div>
+                </div>
+
+                {/* Submissions vs Published Tabs & Filter Pills */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setAssessmentTab("submissions")}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        assessmentTab === "submissions"
+                          ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black"
+                      }`}
+                    >
+                      Student Submissions ({submissionsList.length})
+                    </button>
+                    <button
+                      onClick={() => setAssessmentTab("assignments")}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        assessmentTab === "assignments"
+                          ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black"
+                      }`}
+                    >
+                      Published Assignments ({assignmentsList.length})
+                    </button>
+                  </div>
+
+                  {assessmentTab === "submissions" && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-mono text-zinc-400">Filter:</span>
+                      <button
+                        onClick={() => setSubmissionFilter("all")}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                          submissionFilter === "all"
+                            ? "bg-amber-500 text-black"
+                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={() => setSubmissionFilter("pending")}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                          submissionFilter === "pending"
+                            ? "bg-amber-500 text-black"
+                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                        }`}
+                      >
+                        Pending Review
+                      </button>
+                      <button
+                        onClick={() => setSubmissionFilter("graded")}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                          submissionFilter === "graded"
+                            ? "bg-amber-500 text-black"
+                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                        }`}
+                      >
+                        Graded
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Submissions List View */}
+                {assessmentTab === "submissions" && (
+                  <div className="space-y-3">
+                    {submissionsList
+                      .filter((s) => {
+                        if (submissionFilter === "pending") return s.status === "Pending Evaluation";
+                        if (submissionFilter === "graded") return s.status === "Graded";
+                        return true;
+                      })
+                      .map((sub) => (
+                        <div
+                          key={sub.id}
+                          className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-xs space-y-3"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full ${
+                                    sub.status === "Graded"
+                                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse"
+                                  }`}
+                                >
+                                  {sub.status}
+                                </span>
+                                <span className="text-xs text-zinc-400 font-mono">•</span>
+                                <span className="text-xs text-zinc-500 font-mono">Submitted {sub.submittedDate}</span>
+                              </div>
+                              <h4 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white">
+                                {sub.assignmentTitle}
+                              </h4>
+                              <div className="text-xs text-zinc-500">
+                                Student: <strong className="text-zinc-800 dark:text-zinc-200">{sub.studentName}</strong> ({sub.studentEmail})
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              {sub.score !== undefined && (
+                                <div className="text-right">
+                                  <div className="text-xl font-black text-amber-500 font-mono">
+                                    {sub.score} / 50
+                                  </div>
+                                  <span className="text-[10px] font-mono text-zinc-400 uppercase">Grade Awarded</span>
+                                </div>
+                              )}
+                              <button
+                                onClick={() => handleOpenGradingModal(sub)}
+                                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                              >
+                                <Sliders className="w-3.5 h-3.5" />
+                                <span>{sub.status === "Graded" ? "Review & Re-grade" : "Evaluate & Grade"}</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Pleadings Snippet */}
+                          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 font-serif leading-relaxed line-clamp-2">
+                            {sub.submissionText}
+                          </div>
+
+                          {sub.feedback && (
+                            <div className="text-xs text-zinc-600 dark:text-zinc-400 italic bg-amber-500/5 p-2.5 rounded-xl border border-amber-500/10">
+                              <span className="font-bold text-amber-600 dark:text-amber-400 not-italic font-mono text-[10px] mr-1.5 uppercase">
+                                Faculty Remark:
+                              </span>
+                              &ldquo;{sub.feedback}&rdquo;
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                {/* Published Assignments List View */}
+                {assessmentTab === "assignments" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {assignmentsList.map((assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3 flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 uppercase">
+                              {assignment.badge}
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400">Due: {assignment.dueDate}</span>
+                          </div>
+                          <h4 className="text-sm font-black text-zinc-900 dark:text-white leading-snug">
+                            {assignment.title}
+                          </h4>
+                          <div className="text-xs text-zinc-500 font-mono">
+                            {assignment.subject} • {assignment.targetBatch}
+                          </div>
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-3 leading-relaxed font-serif">
+                            {assignment.instructions}
+                          </p>
+                          {assignment.referenceRatio && (
+                            <div className="text-[11px] text-amber-600 dark:text-amber-400 font-mono bg-amber-500/5 p-2 rounded-xl border border-amber-500/10">
+                              Ratio: {assignment.referenceRatio}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                          <span className="font-mono text-zinc-400">Max Score: {assignment.maxScore} Marks</span>
+                          <button
+                            onClick={() => handleDeleteAssignment(assignment.id)}
+                            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-400 transition-colors cursor-pointer"
+                            title="Delete Assignment"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1659,6 +2173,344 @@ export function TeacherDashboardView({
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* SECTION: FACULTY LECTURE RECORDING & AUDIO STUDIO (OPTION 6)  */}
+            {/* ============================================================== */}
+            {(activeSection === "recorded_classes" || activeSection === "audio") && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                        Faculty Voice Chambers
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">•</span>
+                      <span className="text-xs text-zinc-500 font-mono">Real-Time Student Broadcast</span>
+                    </div>
+                    <h2 className="text-xl font-black text-zinc-900 dark:text-white mt-1">
+                      Faculty Lecture Recording &amp; Audio Masterclass Studio
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Record oral case briefs, statutory breakdowns, and landmark ratio analyses. Published lectures immediately stream to students&apos; audio players.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const tpl = RECORDING_TEMPLATES[0];
+                      handleApplyLectureTemplate(tpl);
+                      setRecordedDurationStr("12:30");
+                      setRecordedDurationSec(750);
+                      setRecordedAudioUri(generateSyntheticWavDataUri(12, 440));
+                      setShowPublishLectureModal(true);
+                    }}
+                    className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Quick-Publish Audio Lecture</span>
+                  </button>
+                </div>
+
+                {/* 4 Metrics Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Published Audio Lectures</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {lecturesList.length} <span className="text-xs font-normal text-zinc-500">Masterclasses</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Available to all student cohorts</p>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Total Student Streams</span>
+                    <div className="text-2xl font-black text-emerald-500 font-mono flex items-center gap-1.5">
+                      <Headphones className="w-5 h-5 text-emerald-500" />
+                      <span>{lecturesList.reduce((acc, l) => acc + l.listensCount, 0)}</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Cumulative student listens</p>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Active Legal Disciplines</span>
+                    <div className="text-2xl font-black text-amber-500 font-mono">
+                      {Array.from(new Set(lecturesList.map((l) => l.subject))).length} Subjects
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Constitutional, BNSS, Contracts, BNS</p>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Broadcasting Quality</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      PCM WAV
+                    </div>
+                    <p className="text-[11px] text-emerald-500 font-semibold">Lossless Master Standard</p>
+                  </div>
+                </div>
+
+                {/* Faculty Microphone Live Recording Deck */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 shadow-xl space-y-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500 text-black flex items-center justify-center font-bold shadow-md">
+                        <Mic className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full ${
+                              isRecording
+                                ? isRecordingPaused
+                                  ? "bg-amber-400"
+                                  : "bg-rose-500 animate-ping"
+                                : "bg-emerald-500"
+                            }`}
+                          />
+                          <span className="text-xs font-mono font-bold tracking-wider uppercase text-zinc-300">
+                            {isRecording
+                              ? isRecordingPaused
+                                ? "STUDIO PAUSED • STANDBY"
+                                : "ON AIR • BROADCASTING LIVE"
+                              : "STUDIO READY • MICROPHONE ARMED"}
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-white mt-0.5">
+                          Faculty High-Yield Audio Recorder
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-3xl font-black font-mono tracking-wider text-amber-400">
+                        {formatSecondsToMMSS(recordingSeconds)}
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase">Elapsed Session Time</span>
+                    </div>
+                  </div>
+
+                  {/* Animated Waveform Visualizer */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                      <span>Audio Input Waveform Monitor</span>
+                      <span>48 kHz Mono • Level: {isRecording && !isRecordingPaused ? "Active Modulation" : "Silent"}</span>
+                    </div>
+
+                    <div className="h-20 bg-zinc-900 rounded-2xl border border-zinc-800 flex items-center justify-center gap-1.5 px-4 overflow-hidden">
+                      {audioWaveformLevels.map((level, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            height: isRecording && !isRecordingPaused ? `${level}%` : "12%",
+                            transition: "height 0.2s ease-in-out",
+                          }}
+                          className={`w-2.5 rounded-full ${
+                            isRecording && !isRecordingPaused
+                              ? level > 65
+                                ? "bg-amber-400"
+                                : "bg-amber-500/80"
+                              : "bg-zinc-700"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recorder Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                    <div className="flex items-center gap-3">
+                      {!isRecording ? (
+                        <button
+                          onClick={handleStartRecording}
+                          className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-white text-black font-extrabold text-xs transition-all shadow-lg cursor-pointer flex items-center gap-2"
+                        >
+                          <Radio className="w-4 h-4 text-black animate-pulse" />
+                          <span>Start Voice Lecture</span>
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={handlePauseResumeRecording}
+                            className="px-4 py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-2"
+                          >
+                            {isRecordingPaused ? (
+                              <>
+                                <Play className="w-4 h-4 text-emerald-400" />
+                                <span>Resume</span>
+                              </>
+                            ) : (
+                              <>
+                                <Pause className="w-4 h-4 text-amber-400" />
+                                <span>Pause</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={handleStopAndPrepareLecture}
+                            className="px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs transition-all shadow-lg cursor-pointer flex items-center gap-2"
+                          >
+                            <Square className="w-4 h-4 fill-white" />
+                            <span>Stop &amp; Review Lecture</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Quick Template Hints */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-400 font-mono">Load Topic Scaffold:</span>
+                      {RECORDING_TEMPLATES.slice(0, 3).map((tpl) => (
+                        <button
+                          key={tpl.id}
+                          onClick={() => {
+                            handleApplyLectureTemplate(tpl);
+                            setRecordedDurationStr("14:00");
+                            setRecordedDurationSec(840);
+                            setRecordedAudioUri(generateSyntheticWavDataUri(10, 480));
+                            setShowPublishLectureModal(true);
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-amber-500 hover:text-black text-[11px] font-semibold text-zinc-300 transition-colors cursor-pointer"
+                        >
+                          {tpl.subject.split(" ")[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Published Audio Lectures Filter & Archive */}
+                <div className="space-y-4 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                        Published Audio Masterclasses &amp; Case Briefs ({lecturesList.length})
+                      </h3>
+                      <p className="text-xs text-zinc-500">Live synchronized with the Student Portal Audio Player</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <select
+                        value={lectureFilterSubject}
+                        onChange={(e) => setLectureFilterSubject(e.target.value)}
+                        className="px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="All">All Disciplines</option>
+                        <option value="Constitutional Law">Constitutional Law</option>
+                        <option value="Criminal Procedure (BNSS 2023)">Criminal Procedure (BNSS 2023)</option>
+                        <option value="Law of Contracts">Law of Contracts</option>
+                        <option value="Bharatiya Nyaya Sanhita (BNS 2023)">Bharatiya Nyaya Sanhita (BNS 2023)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Lectures Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {lecturesList
+                      .filter(
+                        (l) =>
+                          lectureFilterSubject === "All" ||
+                          l.subject.toLowerCase() === lectureFilterSubject.toLowerCase()
+                      )
+                      .map((lecture) => {
+                        const isThisPlaying = activeAudioPlayingId === lecture.id;
+                        return (
+                          <div
+                            key={lecture.id}
+                            className={`p-5 rounded-3xl bg-white dark:bg-zinc-900 border transition-all shadow-xs space-y-4 ${
+                              isThisPlaying
+                                ? "border-amber-500 ring-2 ring-amber-500/20"
+                                : "border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                                    {lecture.category}
+                                  </span>
+                                  <span className="text-xs text-zinc-400 font-mono">•</span>
+                                  <span className="text-xs text-zinc-500 font-mono">{lecture.duration}</span>
+                                </div>
+                                <h4 className="text-base font-black text-zinc-900 dark:text-white leading-snug">
+                                  {lecture.title}
+                                </h4>
+                                <div className="text-xs text-zinc-500">
+                                  {lecture.subject} • <span className="font-semibold text-zinc-700 dark:text-zinc-300">{lecture.targetBatch}</span>
+                                </div>
+                              </div>
+
+                              {/* Play / Pause Round Button */}
+                              <button
+                                onClick={() => handlePlayLecture(lecture)}
+                                className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer shrink-0 ${
+                                  isThisPlaying
+                                    ? "bg-black text-amber-400 dark:bg-white dark:text-black animate-pulse"
+                                    : "bg-amber-500 hover:bg-black hover:text-white text-black"
+                                }`}
+                                title={isThisPlaying ? "Pause Audio" : "Play Audio Lecture"}
+                              >
+                                {isThisPlaying ? (
+                                  <Pause className="w-5 h-5 fill-current" />
+                                ) : (
+                                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                                )}
+                              </button>
+                            </div>
+
+                            {/* Statutory Notes */}
+                            <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed font-serif">
+                              {lecture.statutoryNotes}
+                            </p>
+
+                            {/* Citations Tag Badges */}
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {lecture.keyCitations.map((c, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                                >
+                                  ⚖ {c}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Footer info & Actions */}
+                            <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800 text-[11px] font-mono text-zinc-400">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                                  <Headphones className="w-3.5 h-3.5" />
+                                  <span>{lecture.listensCount} listens</span>
+                                </span>
+                                <span>•</span>
+                                <span>{lecture.date}</span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => downloadLectureAudio(lecture)}
+                                  className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer"
+                                  title="Download WAV File"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLecture(lecture.id)}
+                                  className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-400 transition-colors cursor-pointer"
+                                  title="Unpublish Lecture"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
                 </div>
               </div>
             )}
@@ -2030,6 +2882,471 @@ export function TeacherDashboardView({
           </div>
         </div>
       )}
+
+      {/* 1. CREATE ASSIGNMENT MODAL (OPTION 4) */}
+      {showCreateAssignmentModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-4 max-h-[92vh] overflow-y-auto">
+            <button
+              onClick={() => setShowCreateAssignmentModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                Curriculum Assignment Authoring
+              </span>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
+                Author New Legal Drafting Assignment / Case Brief
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Published assignments immediately sync to student homework trackers with legal scaffolding.
+              </p>
+            </div>
+
+            <form onSubmit={handlePublishAssignment} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Assignment Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={assignmentTitle}
+                  onChange={(e) => setAssignmentTitle(e.target.value)}
+                  placeholder="e.g. Regular Bail Petition Drafting under BNSS 2023 Section 480"
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Curriculum Discipline</label>
+                  <select
+                    value={assignmentSubject}
+                    onChange={(e) => setAssignmentSubject(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-semibold"
+                  >
+                    <option value="Criminal Procedure & Constitutional Bail">Criminal Procedure & Constitutional Bail</option>
+                    <option value="Constitutional Law & Basic Structure">Constitutional Law & Basic Structure</option>
+                    <option value="Commercial & Contract Law">Commercial & Contract Law</option>
+                    <option value="Bharatiya Nyaya Sanhita (BNS 2023)">Bharatiya Nyaya Sanhita (BNS 2023)</option>
+                    <option value="Civil Procedure & Injunctions">Civil Procedure & Injunctions</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Target Cohort</label>
+                  <input
+                    type="text"
+                    value={assignmentBatch}
+                    onChange={(e) => setAssignmentBatch(e.target.value)}
+                    placeholder="e.g. CLAT 2027 Super-30 & Distance LL.B"
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Submission Deadline</label>
+                  <input
+                    type="text"
+                    value={assignmentDueDate}
+                    onChange={(e) => setAssignmentDueDate(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Max Score</label>
+                  <input
+                    type="number"
+                    value={assignmentMaxScore}
+                    onChange={(e) => setAssignmentMaxScore(Number(e.target.value))}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Badge Tag</label>
+                  <input
+                    type="text"
+                    value={assignmentBadge}
+                    onChange={(e) => setAssignmentBadge(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono uppercase"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Problem Scenario &amp; Instructions *</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={assignmentInstructions}
+                  onChange={(e) => setAssignmentInstructions(e.target.value)}
+                  placeholder="Draft the facts, statutory issues to address, and specific legal grounds required..."
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-serif leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Mandatory Precedents / Ratio Guidance</label>
+                <input
+                  type="text"
+                  value={assignmentRatio}
+                  onChange={(e) => setAssignmentRatio(e.target.value)}
+                  placeholder="e.g. Arnesh Kumar v. Bihar (2014); Satender Kumar Antil (2022)"
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateAssignmentModal(false)}
+                  className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={assignmentCreatedSuccess}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{assignmentCreatedSuccess ? "✓ Published!" : "Publish Assignment"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. FACULTY GRADING STUDIO MODAL (OPTION 4) */}
+      {selectedSubmissionForGrading && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-5 max-h-[92vh] overflow-y-auto">
+            <button
+              onClick={() => setSelectedSubmissionForGrading(null)}
+              className="absolute top-5 right-5 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 gap-2">
+              <div>
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                  Faculty Grading Studio
+                </span>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white mt-1">
+                  Evaluating: {selectedSubmissionForGrading.assignmentTitle}
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Student: <strong>{selectedSubmissionForGrading.studentName}</strong> • Submitted {selectedSubmissionForGrading.submittedDate}
+                </p>
+              </div>
+
+              <div className="text-right">
+                <div className="text-3xl font-black font-mono text-amber-500">
+                  {gradingStatutory + gradingPrecedents + gradingDrafting + gradingReasoning} <span className="text-sm font-normal text-zinc-400">/ 50</span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500 uppercase">Composite Rubric Score</span>
+              </div>
+            </div>
+
+            {/* Split Screen: Student Submission Preview vs Rubric Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Student Pleadings Parchment View (7 cols) */}
+              <div className="lg:col-span-7 space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 space-y-2">
+                  <span className="text-[11px] font-mono font-extrabold uppercase text-zinc-500 block">
+                    Formulated Questions of Law &amp; Issues
+                  </span>
+                  <p className="text-xs text-zinc-800 dark:text-zinc-200 font-serif leading-relaxed">
+                    {selectedSubmissionForGrading.issuesRaised}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 space-y-2">
+                  <span className="text-[11px] font-mono font-extrabold uppercase text-zinc-500 block">
+                    Student Memorial Pleadings &amp; Legal Grounds
+                  </span>
+                  <div className="text-xs text-zinc-800 dark:text-zinc-200 font-serif leading-relaxed whitespace-pre-line">
+                    {selectedSubmissionForGrading.submissionText}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                  <span className="text-[11px] font-mono font-extrabold uppercase text-amber-700 dark:text-amber-400 block">
+                    Prayer / Concluding Relief
+                  </span>
+                  <p className="text-xs text-zinc-800 dark:text-zinc-200 italic font-serif leading-relaxed">
+                    &ldquo;{selectedSubmissionForGrading.prayerOrConclusion}&rdquo;
+                  </p>
+                </div>
+
+                {selectedSubmissionForGrading.attachmentName && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs">
+                    <span className="font-mono text-zinc-600 dark:text-zinc-400">Attached: {selectedSubmissionForGrading.attachmentName}</span>
+                    <button
+                      type="button"
+                      onClick={() => downloadSubmissionFile(selectedSubmissionForGrading)}
+                      className="text-amber-600 dark:text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download Submission</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Interactive Rubric Sliders (5 cols) */}
+              <form onSubmit={handleSaveGrade} className="lg:col-span-5 space-y-4">
+                <div className="space-y-3.5 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 text-xs">
+                  <span className="text-[11px] font-mono font-black uppercase tracking-wider text-black dark:text-white block">
+                    Faculty 4-Part Rubric (Max 50)
+                  </span>
+
+                  {/* Slider 1: Statutory Accuracy (15) */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-zinc-700 dark:text-zinc-300">Statutory Accuracy</span>
+                      <span className="font-mono text-amber-500">{gradingStatutory} / 15</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="15"
+                      value={gradingStatutory}
+                      onChange={(e) => setGradingStatutory(Number(e.target.value))}
+                      className="w-full accent-amber-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Slider 2: Case Precedents (15) */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-zinc-700 dark:text-zinc-300">Case Precedents &amp; Citations</span>
+                      <span className="font-mono text-amber-500">{gradingPrecedents} / 15</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="15"
+                      value={gradingPrecedents}
+                      onChange={(e) => setGradingPrecedents(Number(e.target.value))}
+                      className="w-full accent-amber-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Slider 3: Drafting & Prayer (10) */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-zinc-700 dark:text-zinc-300">Drafting Form &amp; Prayer</span>
+                      <span className="font-mono text-amber-500">{gradingDrafting} / 10</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={gradingDrafting}
+                      onChange={(e) => setGradingDrafting(Number(e.target.value))}
+                      className="w-full accent-amber-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Slider 4: Legal Reasoning (10) */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-zinc-700 dark:text-zinc-300">Legal Reasoning &amp; Logic</span>
+                      <span className="font-mono text-amber-500">{gradingReasoning} / 10</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={gradingReasoning}
+                      onChange={(e) => setGradingReasoning(Number(e.target.value))}
+                      className="w-full accent-amber-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Faculty Commentary */}
+                <div>
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Faculty Remarks &amp; Chambers Critique
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={gradingFeedback}
+                    onChange={(e) => setGradingFeedback(e.target.value)}
+                    placeholder="Provide specific feedback on student grounds, ratio interpretation, and drafting quality..."
+                    className="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-serif leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <select
+                    value={gradingStatus}
+                    onChange={(e) => setGradingStatus(e.target.value as any)}
+                    className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold"
+                  >
+                    <option value="Graded">Mark as Graded</option>
+                    <option value="Needs Revision">Request Revision</option>
+                  </select>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSubmissionForGrading(null)}
+                      className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={gradeSuccess}
+                      className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs shadow-sm transition-all cursor-pointer"
+                    >
+                      {gradeSuccess ? "✓ Grade Published!" : "Publish Grade & Feedback"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. PUBLISH RECORDED LECTURE MODAL (OPTION 6) */}
+      {showPublishLectureModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-4 max-h-[92vh] overflow-y-auto">
+            <button
+              onClick={() => setShowPublishLectureModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                Broadcasting Masterclass
+              </span>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
+                Publish Lecture to Student Roster
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Duration: <strong className="text-amber-500 font-mono">{recordedDurationStr}</strong> • Students will receive live streaming access immediately.
+              </p>
+            </div>
+
+            {/* Quick Templates */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase">
+                Model Legal Templates
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {RECORDING_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => handleApplyLectureTemplate(tpl)}
+                    className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 text-left transition-colors cursor-pointer bg-zinc-50 dark:bg-zinc-950"
+                  >
+                    <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400">{tpl.subject}</div>
+                    <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">{tpl.title}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handlePublishLecture} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Lecture Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={newLectureTitle}
+                  onChange={(e) => setNewLectureTitle(e.target.value)}
+                  placeholder="e.g. BNSS Section 480 Regular Bail & S.35 Safeguards"
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Curriculum Discipline</label>
+                  <select
+                    value={newLectureSubject}
+                    onChange={(e) => setNewLectureSubject(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-semibold"
+                  >
+                    <option value="Constitutional Law">Constitutional Law</option>
+                    <option value="Criminal Procedure (BNSS 2023)">Criminal Procedure (BNSS 2023)</option>
+                    <option value="Law of Contracts">Law of Contracts</option>
+                    <option value="Bharatiya Nyaya Sanhita (BNS 2023)">Bharatiya Nyaya Sanhita (BNS 2023)</option>
+                    <option value="Civil Procedure & Pleadings">Civil Procedure & Pleadings</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Target Cohort</label>
+                  <input
+                    type="text"
+                    value={newLectureBatch}
+                    onChange={(e) => setNewLectureBatch(e.target.value)}
+                    placeholder="e.g. CLAT 2027 Super-30"
+                    className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Statutory Notes &amp; Teaching Ratio</label>
+                <textarea
+                  rows={3}
+                  value={newLectureNotes}
+                  onChange={(e) => setNewLectureNotes(e.target.value)}
+                  placeholder="Summarize key statutory sections, procedural tests, and takeaways..."
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-serif leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Key Citations (comma-separated)</label>
+                <input
+                  type="text"
+                  value={newLectureCitations}
+                  onChange={(e) => setNewLectureCitations(e.target.value)}
+                  placeholder="e.g. Arnesh Kumar v. Bihar (2014), Satender Antil (2022)"
+                  className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-[11px]"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowPublishLectureModal(false)}
+                  className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={lecturePublishSuccess}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Headphones className="w-4 h-4" />
+                  <span>{lecturePublishSuccess ? "✓ Published!" : "Publish to Student Roster"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* FACULTY PROFILE DRAWER */}
       {showProfileDrawer && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">

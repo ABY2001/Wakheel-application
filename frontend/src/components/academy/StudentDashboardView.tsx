@@ -82,6 +82,17 @@ import {
   AlertTriangle,
   Eye,
   BarChart3,
+  Edit3,
+  Save,
+  Printer,
+  ExternalLink,
+  Feather,
+  SearchX,
+  ListFilter,
+  Headphones,
+  VolumeX,
+  Gavel,
+  ShieldAlert,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -90,6 +101,47 @@ import {
   incrementDownloadCount,
   downloadBookFile,
 } from "./booksData";
+import {
+  HomeworkAssignment,
+  HomeworkSubmission,
+  getStoredAssignments,
+  getStoredSubmissions,
+  submitHomework,
+  downloadSubmissionFile,
+} from "./homeworkData";
+import {
+  CornellNote,
+  CornellTemplate,
+  CORNELL_TEMPLATES,
+  getStoredCornellNotes,
+  saveCornellNote,
+  deleteCornellNote,
+  toggleBookmarkCornellNote,
+  exportCornellNoteAsTxt,
+  exportCornellNoteAsHtml,
+} from "./cornellNotesData";
+import {
+  LectureAudio,
+  getStoredLectures,
+  incrementListenCount,
+  downloadLectureAudio,
+  generateSyntheticWavDataUri,
+} from "./lectureAudioData";
+import {
+  CourtroomZoneInfo,
+  COURTROOM_ZONES,
+  ObjectionDrillItem,
+  OBJECTION_DRILLS,
+  MootCourtCase,
+  MOOT_CASES,
+  playGavelSound,
+  getMootHistory,
+  saveMootRecord,
+  getDrillStats,
+  updateDrillStats,
+  MootHistoryRecord,
+  DrillScoreStats,
+} from "./courtroomLabData";
 
 interface StudentDashboardProps {
   initialSection?: StudentNavSection;
@@ -168,55 +220,75 @@ export function StudentDashboardView({
   // ==============================================================
   // Wakheel NEW STUDENT FEATURES STATE (RECORD, NOTEBOOK, UPLOADS, ETC)
   // ==============================================================
-  // 1. Audio / Video Recording Studio
+  // 1. Audio / Video Recording Studio & Faculty Audio Player (Option 6)
   const [recordMode, setRecordMode] = useState<"audio" | "video">("audio");
-  const [recordStatus, setRecordStatus] = useState<"idle" | "recording" | "paused">("idle");
-  const [recordTimer, setRecordTimer] = useState<number>(0);
-  const [liveTranscript, setLiveTranscript] = useState<string>("");
-  const [savedRecordings, setSavedRecordings] = useState([
+  const [audioStudioTab, setAudioStudioTab] = useState<"lectures" | "moot_practice">("lectures");
+  const [facultyLectures, setFacultyLectures] = useState<LectureAudio[]>([]);
+  const [activePlayingLecture, setActivePlayingLecture] = useState<LectureAudio | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
+  const [audioPlaybackSpeed, setAudioPlaybackSpeed] = useState<number>(1);
+  const [audioCurrentTime, setAudioCurrentTime] = useState<number>(0);
+  const [audioTotalDuration, setAudioTotalDuration] = useState<number>(0);
+  const [audioSearchFilter, setAudioSearchFilter] = useState<string>("");
+  const [audioSubjectFilter, setAudioSubjectFilter] = useState<string>("All");
+  const [studentAudioInstance, setStudentAudioInstance] = useState<HTMLAudioElement | null>(null);
+
+  // Student Moot Court Oral Argument Recording State
+  const [studentIsRecording, setStudentIsRecording] = useState<boolean>(false);
+  const [studentIsPaused, setStudentIsPaused] = useState<boolean>(false);
+  const [studentRecordSeconds, setStudentRecordSeconds] = useState<number>(0);
+  const [studentWaveformLevels, setStudentWaveformLevels] = useState<number[]>([15, 28, 45, 60, 35, 20, 55, 75, 65, 42, 28, 50, 68, 85, 52, 32, 70, 88, 42, 22]);
+  const [studentMootTopic, setStudentMootTopic] = useState<string>("Oral Submission: Article 19(1)(a) Free Expression in Cyber Space");
+  const [studentMootDept, setStudentMootDept] = useState<string>("Constitutional Law");
+  const [studentSavedRecordings, setStudentSavedRecordings] = useState([
     {
       id: "rec_1",
       title: "Moot Oral Submission: Article 19(1)(a) Free Expression in Cyber Space",
+      subject: "Constitutional Law",
       duration: "04:32",
       date: "Today, 10:15 AM",
-      score: "9.2/10 AI Clarity",
-      audioUrl: "#",
+      score: "9.2/10 AI Oral Articulation",
+      audioUrl: generateSyntheticWavDataUri(8, 440),
     },
     {
       id: "rec_2",
       title: "Statutory Analysis: Hadley v Baxendale Remoteness Rule under S.73",
+      subject: "Law of Contracts",
       duration: "03:15",
       date: "Yesterday",
-      score: "8.8/10 AI Clarity",
-      audioUrl: "#",
+      score: "8.8/10 AI Statutory Precision",
+      audioUrl: generateSyntheticWavDataUri(6, 480),
     },
   ]);
+  const [recordingSavedNotice, setRecordingSavedNotice] = useState<boolean>(false);
 
-  // 2. Cornell Revision Notebook
-  const [studentNotes, setStudentNotes] = useState([
-    {
-      id: "note_1",
-      title: "Doctrine of Severability & Basic Structure",
-      subject: "Constitutional Law",
-      cues: ["AK Gopalan v State of Madras", "Kesavananda Bharati (1973)", "Article 13(2) Void Clause"],
-      content: "If an unconstitutional provision can be severed without altering the legislature's intent, only that provision is void. Basic structure cannot be destroyed even by constitutional amendment.",
-      summary: "Doctrine preserves statutory intent while excising unconstitutional provisions under Article 13.",
-      lastEdited: "Today, 11:40 AM",
-    },
-    {
-      id: "note_2",
-      title: "Mens Rea & Section 103 BNS 2023 vs Section 300 IPC",
-      subject: "Criminal Jurisprudence (BNS)",
-      cues: ["BNS 103 Murder", "BNS 105 Culpable Homicide", "5 Exception Clauses"],
-      content: "BNS 2023 consolidates homicide provisions while modernizing fine structures and community service options.",
-      summary: "Mens rea remains foundational for murder conviction under newly enacted penal codes.",
-      lastEdited: "Nov 18, 2026",
-    },
-  ]);
-  const [selectedNoteId, setSelectedNoteId] = useState<string>("note_1");
+  // 2. Cornell Revision Notebook & Case Brief Studio (Option 5)
+  const [studentNotes, setStudentNotes] = useState<CornellNote[]>([]);
+  const [selectedNoteId, setSelectedNoteId] = useState<string>("");
+  const [notesSearchQuery, setNotesSearchQuery] = useState<string>("");
+  const [notesSubjectFilter, setNotesSubjectFilter] = useState<string>("All");
+  const [notesFilterTab, setNotesFilterTab] = useState<"all" | "bookmarked" | "faculty">("all");
+  const [isEditingNote, setIsEditingNote] = useState<boolean>(false);
+  const [activeEditNote, setActiveEditNote] = useState<CornellNote | null>(null);
+  const [saveStatusNotice, setSaveStatusNotice] = useState<string>("");
+  const [newCueTag, setNewCueTag] = useState<string>("");
+  const [newStatuteTag, setNewStatuteTag] = useState<string>("");
+  const [newCaseTag, setNewCaseTag] = useState<string>("");
+
+  // New Cornell Note Modal state
   const [showAddNoteModal, setShowAddNoteModal] = useState<boolean>(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("tpl_case_brief");
   const [newNoteTitle, setNewNoteTitle] = useState<string>("");
   const [newNoteSubject, setNewNoteSubject] = useState<string>("Constitutional Law");
+  const [newNoteTopic, setNewNoteTopic] = useState<string>("");
+  const [newNoteCues, setNewNoteCues] = useState<string[]>([]);
+  const [newNoteContent, setNewNoteContent] = useState<string>("");
+  const [newNoteSummary, setNewNoteSummary] = useState<string>("");
+  const [newNoteStatutes, setNewNoteStatutes] = useState<string[]>([]);
+  const [newNoteCases, setNewNoteCases] = useState<string[]>([]);
+  const [modalCueInput, setModalCueInput] = useState<string>("");
+  const [modalStatuteInput, setModalStatuteInput] = useState<string>("");
+  const [modalCaseInput, setModalCaseInput] = useState<string>("");
 
   // 3. Document Upload Portal
   const [uploadedDocuments, setUploadedDocuments] = useState([
@@ -244,41 +316,312 @@ export function StudentDashboardView({
   const [uploadCategory, setUploadCategory] = useState("Case Brief Submission");
   const [uploadSuccessAlert, setUploadSuccessAlert] = useState(false);
 
-  // 4. Homework & Tasks Tracker
+  // ==============================================================
+  // 4. HOMEWORK & CASE BRIEF SUBMISSION TRACKER (OPTION 4)
+  // ==============================================================
   const [homeworkTab, setHomeworkTab] = useState<"pending" | "completed">("pending");
-  const [studentHomework, setStudentHomework] = useState([
-    {
-      id: "hw_1",
-      title: "Draft Anticipatory Bail under BNSS Section 482",
-      subject: "Criminal Law Practice",
-      faculty: "Adv. Sunita Deshmukh",
-      dueDate: "Tomorrow, 5:00 PM",
-      status: "pending",
-      instructions: "Draft a formal 3-page anticipatory bail petition for a client falsely implicated in a commercial dispute.",
-    },
-    {
-      id: "hw_2",
-      title: "Comparative Table: Article 32 vs Article 226 Writs",
-      subject: "Constitutional Law",
-      faculty: "Prof. Dr. Rajesh Varma",
-      dueDate: "Nov 24, 2026",
-      status: "pending",
-      instructions: "Analyze the territorial and subject-matter scope of Supreme Court vs High Court writ jurisdictions.",
-    },
-    {
-      id: "hw_3",
-      title: "Solve 20 Principle-Fact MCQs on Contract Breach Damages",
-      subject: "Law of Contracts",
-      faculty: "Adv. K. R. Nambiar",
-      dueDate: "Completed Yesterday",
-      status: "completed",
-      instructions: "Section 73 Indian Contract Act drills.",
-      grade: "19 / 20",
-      feedback: "Great grasp on remote loss distinction in Hadley v Baxendale.",
-    },
-  ]);
-  const [submittingHwId, setSubmittingHwId] = useState<string | null>(null);
-  const [hwSubmissionText, setHwSubmissionText] = useState("");
+  const [assignmentsList, setAssignmentsList] = useState<HomeworkAssignment[]>([]);
+  const [submissionsList, setSubmissionsList] = useState<HomeworkSubmission[]>([]);
+  const [activeAssignmentForSubmission, setActiveAssignmentForSubmission] = useState<HomeworkAssignment | null>(null);
+  const [selectedSubmissionForViewing, setSelectedSubmissionForViewing] = useState<HomeworkSubmission | null>(null);
+  const [subIssues, setSubIssues] = useState("");
+  const [subPleadings, setSubPleadings] = useState("");
+  const [subPrayer, setSubPrayer] = useState("");
+  const [subAttachmentName, setSubAttachmentName] = useState("");
+  const [subSuccess, setSubSuccess] = useState(false);
+
+  useEffect(() => {
+    setAssignmentsList(getStoredAssignments());
+    setSubmissionsList(getStoredSubmissions());
+    const initialNotes = getStoredCornellNotes();
+    setStudentNotes(initialNotes);
+    if (initialNotes.length > 0) {
+      setSelectedNoteId(initialNotes[0].id);
+      setActiveEditNote({ ...initialNotes[0] });
+    }
+    const initialLecs = getStoredLectures();
+    setFacultyLectures(initialLecs);
+    if (initialLecs.length > 0) {
+      setActivePlayingLecture(initialLecs[0]);
+    }
+
+    const handleSync = () => {
+      setAssignmentsList(getStoredAssignments());
+      setSubmissionsList(getStoredSubmissions());
+      const refreshedNotes = getStoredCornellNotes();
+      setStudentNotes(refreshedNotes);
+      setFacultyLectures(getStoredLectures());
+    };
+    window.addEventListener("storage", handleSync);
+    return () => window.removeEventListener("storage", handleSync);
+  }, []);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (studentIsRecording && !studentIsPaused) {
+      interval = setInterval(() => {
+        setStudentRecordSeconds((prev) => prev + 1);
+        setStudentWaveformLevels((prev) =>
+          prev.map(() => Math.floor(Math.random() * 75) + 15)
+        );
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [studentIsRecording, studentIsPaused]);
+
+  // Audio Player Handlers (Option 6)
+  const handleTogglePlayStudentLecture = (lecture: LectureAudio) => {
+    if (activePlayingLecture?.id === lecture.id && isPlayingAudio) {
+      if (studentAudioInstance) {
+        studentAudioInstance.pause();
+      }
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    if (studentAudioInstance) {
+      studentAudioInstance.pause();
+    }
+
+    const audio = new Audio(lecture.audioUrl || generateSyntheticWavDataUri(10, 440));
+    audio.playbackRate = audioPlaybackSpeed;
+    audio.play();
+    setActivePlayingLecture(lecture);
+    setIsPlayingAudio(true);
+    setStudentAudioInstance(audio);
+
+    // Increment listen count
+    const updated = incrementListenCount(lecture.id);
+    setFacultyLectures(updated);
+
+    audio.ontimeupdate = () => {
+      setAudioCurrentTime(audio.currentTime);
+      setAudioTotalDuration(audio.duration || lecture.durationSeconds);
+    };
+
+    audio.onended = () => {
+      setIsPlayingAudio(false);
+      setAudioCurrentTime(0);
+    };
+  };
+
+  const handleSeekAudio = (newTime: number) => {
+    if (studentAudioInstance) {
+      studentAudioInstance.currentTime = newTime;
+      setAudioCurrentTime(newTime);
+    }
+  };
+
+  const handleChangePlaybackSpeed = (speed: number) => {
+    setAudioPlaybackSpeed(speed);
+    if (studentAudioInstance) {
+      studentAudioInstance.playbackRate = speed;
+    }
+  };
+
+  const handleSaveStudentOralRecording = () => {
+    setStudentIsRecording(false);
+    setStudentIsPaused(false);
+    const durationMins = Math.floor(studentRecordSeconds / 60);
+    const durationSecs = studentRecordSeconds % 60;
+    const durStr = `${durationMins.toString().padStart(2, "0")}:${durationSecs.toString().padStart(2, "0")}`;
+    const newMoot = {
+      id: `moot_${Date.now()}`,
+      title: studentMootTopic.trim() || "Oral Defense Practice Argument",
+      subject: studentMootDept,
+      duration: durStr || "02:15",
+      date: "Just now",
+      score: "9.4/10 AI Oral Articulation",
+      audioUrl: generateSyntheticWavDataUri(Math.min(10, Math.max(4, studentRecordSeconds)), 460),
+    };
+    setStudentSavedRecordings([newMoot, ...studentSavedRecordings]);
+    setRecordingSavedNotice(true);
+    setTimeout(() => {
+      setRecordingSavedNotice(false);
+      setStudentRecordSeconds(0);
+    }, 2000);
+  };
+
+  // Cornell Notebook Handlers (Option 5)
+  const handleSelectNote = (note: CornellNote) => {
+    setSelectedNoteId(note.id);
+    setActiveEditNote({ ...note });
+    setIsEditingNote(false);
+    setNewCueTag("");
+    setNewStatuteTag("");
+    setNewCaseTag("");
+    setSaveStatusNotice("");
+  };
+
+  const handleSaveActiveNote = () => {
+    if (!activeEditNote) return;
+    const updated = saveCornellNote(activeEditNote);
+    setStudentNotes(updated);
+    setSaveStatusNotice("✓ Saved to Chambers Archive");
+    setTimeout(() => setSaveStatusNotice(""), 3000);
+  };
+
+  const handleDeleteActiveNote = (id: string) => {
+    if (typeof window !== "undefined" && !window.confirm("Are you sure you want to permanently delete this Cornell Note from your research archives?")) {
+      return;
+    }
+    const updated = deleteCornellNote(id);
+    setStudentNotes(updated);
+    if (updated.length > 0) {
+      setSelectedNoteId(updated[0].id);
+      setActiveEditNote({ ...updated[0] });
+    } else {
+      setSelectedNoteId("");
+      setActiveEditNote(null);
+    }
+    setIsEditingNote(false);
+  };
+
+  const handleToggleCornellBookmark = (id: string) => {
+    const updated = toggleBookmarkCornellNote(id);
+    setStudentNotes(updated);
+    if (activeEditNote && activeEditNote.id === id) {
+      setActiveEditNote({ ...activeEditNote, isBookmarked: !activeEditNote.isBookmarked });
+    }
+  };
+
+  const handleAddCueTagToActive = () => {
+    if (!activeEditNote || !newCueTag.trim()) return;
+    const updatedCues = [...activeEditNote.cues, newCueTag.trim()];
+    const updatedNote = { ...activeEditNote, cues: updatedCues };
+    setActiveEditNote(updatedNote);
+    saveCornellNote(updatedNote);
+    setStudentNotes(getStoredCornellNotes());
+    setNewCueTag("");
+  };
+
+  const handleRemoveCueTagFromActive = (index: number) => {
+    if (!activeEditNote) return;
+    const updatedCues = activeEditNote.cues.filter((_, i) => i !== index);
+    const updatedNote = { ...activeEditNote, cues: updatedCues };
+    setActiveEditNote(updatedNote);
+    saveCornellNote(updatedNote);
+    setStudentNotes(getStoredCornellNotes());
+  };
+
+  const handleAddStatuteToActive = () => {
+    if (!activeEditNote || !newStatuteTag.trim()) return;
+    const updatedStatutes = [...activeEditNote.statutoryReferences, newStatuteTag.trim()];
+    const updatedNote = { ...activeEditNote, statutoryReferences: updatedStatutes };
+    setActiveEditNote(updatedNote);
+    saveCornellNote(updatedNote);
+    setStudentNotes(getStoredCornellNotes());
+    setNewStatuteTag("");
+  };
+
+  const handleRemoveStatuteFromActive = (index: number) => {
+    if (!activeEditNote) return;
+    const updatedStatutes = activeEditNote.statutoryReferences.filter((_, i) => i !== index);
+    const updatedNote = { ...activeEditNote, statutoryReferences: updatedStatutes };
+    setActiveEditNote(updatedNote);
+    saveCornellNote(updatedNote);
+    setStudentNotes(getStoredCornellNotes());
+  };
+
+  const handleAddCaseToActive = () => {
+    if (!activeEditNote || !newCaseTag.trim()) return;
+    const updatedCases = [...activeEditNote.landmarkCases, newCaseTag.trim()];
+    const updatedNote = { ...activeEditNote, landmarkCases: updatedCases };
+    setActiveEditNote(updatedNote);
+    saveCornellNote(updatedNote);
+    setStudentNotes(getStoredCornellNotes());
+    setNewCaseTag("");
+  };
+
+  const handleRemoveCaseFromActive = (index: number) => {
+    if (!activeEditNote) return;
+    const updatedCases = activeEditNote.landmarkCases.filter((_, i) => i !== index);
+    const updatedNote = { ...activeEditNote, landmarkCases: updatedCases };
+    setActiveEditNote(updatedNote);
+    saveCornellNote(updatedNote);
+    setStudentNotes(getStoredCornellNotes());
+  };
+
+  const handleApplyTemplateToNewModal = (template: CornellTemplate) => {
+    setSelectedTemplateId(template.id);
+    setNewNoteTitle(template.sampleTitle);
+    setNewNoteSubject(template.subject);
+    setNewNoteTopic(template.name);
+    setNewNoteCues([...template.initialCues]);
+    setNewNoteContent(template.initialContent);
+    setNewNoteSummary(template.initialSummary);
+    setNewNoteStatutes([...template.initialStatutes]);
+    setNewNoteCases([...template.initialCases]);
+  };
+
+  const handleOpenAddNoteModal = () => {
+    const firstTpl = CORNELL_TEMPLATES[0];
+    handleApplyTemplateToNewModal(firstTpl);
+    setShowAddNoteModal(true);
+  };
+
+  const handleCreateCornellNoteFromModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNoteTitle.trim()) return;
+
+    const newNote: CornellNote = {
+      id: `note_${Date.now()}`,
+      title: newNoteTitle.trim(),
+      subject: newNoteSubject,
+      topic: newNoteTopic.trim() || "Core Appellate Jurisprudence",
+      cues: newNoteCues.length > 0 ? newNoteCues : ["Statutory Anchor", "Ratio Decidendi", "Exceptions"],
+      content: newNoteContent.trim() || "Author legal analysis, statutory formulation, and appellate facts here...",
+      summary: newNoteSummary.trim() || "Executive ratio decidendi synthesizing statutory interpretation.",
+      statutoryReferences: newNoteStatutes,
+      landmarkCases: newNoteCases,
+      isBookmarked: false,
+      isFacultyShared: false,
+      author: `${studentProfile.fullName} (Student)`,
+      lastEdited: "Just now",
+      tags: ["Student Research"],
+    };
+
+    const updated = saveCornellNote(newNote);
+    setStudentNotes(updated);
+    setSelectedNoteId(newNote.id);
+    setActiveEditNote({ ...newNote });
+    setIsEditingNote(false);
+    setShowAddNoteModal(false);
+  };
+
+  const handleStudentSubmitHomework = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeAssignmentForSubmission || !subPleadings.trim()) return;
+
+    const newSubmission: HomeworkSubmission = {
+      id: `sub_${Date.now()}`,
+      assignmentId: activeAssignmentForSubmission.id,
+      assignmentTitle: activeAssignmentForSubmission.title,
+      studentName: studentProfile.fullName,
+      studentEmail: studentProfile.email,
+      submittedDate: "Today, " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      issuesRaised: subIssues.trim() || "1. Procedural due process and statutory compliance under relevant legal provisions.",
+      submissionText: subPleadings.trim(),
+      prayerOrConclusion: subPrayer.trim() || "Wherefore, in the interest of justice, it is most respectfully prayed that appropriate relief be granted.",
+      attachmentName: subAttachmentName || undefined,
+      status: "Pending Evaluation",
+    };
+
+    const updated = submitHomework(newSubmission);
+    setSubmissionsList(updated);
+    setSubSuccess(true);
+    setTimeout(() => {
+      setSubSuccess(false);
+      setActiveAssignmentForSubmission(null);
+      setSubIssues("");
+      setSubPleadings("");
+      setSubPrayer("");
+      setSubAttachmentName("");
+      setHomeworkTab("completed");
+    }, 1200);
+  };
 
   // 5. Exam Cracker High-Yield Drills
   const [crackerIndex, setCrackerIndex] = useState(0);
@@ -352,8 +695,149 @@ export function StudentDashboardView({
     },
   ];
 
-  // 7. 3D Courtroom Lab
-  const [active3dZone, setActive3dZone] = useState<"bench" | "bar" | "podium" | "witness">("bench");
+  // 7. Option 7: 3D Courtroom Simulation Lab & Moot Studio State
+  const [courtroomSubTab, setCourtroomSubTab] = useState<"spatial_3d" | "moot_sim" | "objection_drill" | "protocol">("spatial_3d");
+  const [active3dZone, setActive3dZone] = useState<"bench" | "petitioner" | "respondent" | "witness" | "steno" | "gallery">("bench");
+  const [selectedHotspot, setSelectedHotspot] = useState<{ title: string; description: string; citation: string } | null>(null);
+  const [cameraPerspectiveMode, setCameraPerspectiveMode] = useState<"isometric" | "fpv">("isometric");
+
+  // Moot Simulation State
+  const [activeMootCase, setActiveMootCase] = useState<MootCourtCase>(MOOT_CASES[0]);
+  const [isMootSessionActive, setIsMootSessionActive] = useState<boolean>(false);
+  const [mootCurrentStepIdx, setMootCurrentStepIdx] = useState<number>(0);
+  const [mootScore, setMootScore] = useState<number>(0);
+  const [mootElapsedSeconds, setMootElapsedSeconds] = useState<number>(0);
+  const [selectedChoiceIdx, setSelectedChoiceIdx] = useState<number | null>(null);
+  const [mootStepFeedback, setMootStepFeedback] = useState<{
+    quality: string;
+    scoreDelta: number;
+    judgeResponse: string;
+    feedback: string;
+  } | null>(null);
+  const [mootCompleted, setMootCompleted] = useState<boolean>(false);
+  const [mootHistoryList, setMootHistoryList] = useState<MootHistoryRecord[]>([]);
+
+  // Objection Reflex Drill State
+  const [drillIndex, setDrillIndex] = useState<number>(0);
+  const [drillSelectedOptionIdx, setDrillSelectedOptionIdx] = useState<number | null>(null);
+  const [drillAnswered, setDrillAnswered] = useState<boolean>(false);
+  const [drillStreak, setDrillStreak] = useState<number>(0);
+  const [drillStats, setDrillStats] = useState<DrillScoreStats>({ totalAttempts: 12, correctAnswers: 10, accuracyRate: 83, lastUpdated: "Nov 23, 2026" });
+  const [drillCountdown, setDrillCountdown] = useState<number>(10);
+
+  // Moot & Drill storage load
+  useEffect(() => {
+    setMootHistoryList(getMootHistory());
+    setDrillStats(getDrillStats());
+  }, []);
+
+  // Moot session elapsed timer
+  useEffect(() => {
+    let timer: any = null;
+    if (isMootSessionActive && !mootCompleted) {
+      timer = setInterval(() => {
+        setMootElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isMootSessionActive, mootCompleted]);
+
+  // Drill countdown timer
+  useEffect(() => {
+    let timer: any = null;
+    if (courtroomSubTab === "objection_drill" && !drillAnswered && drillCountdown > 0) {
+      timer = setInterval(() => {
+        setDrillCountdown((prev) => {
+          if (prev <= 1) {
+            setDrillAnswered(true);
+            setDrillStreak(0);
+            updateDrillStats(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [courtroomSubTab, drillAnswered, drillCountdown]);
+
+  const handleStartMootSession = (mootCase: MootCourtCase) => {
+    setActiveMootCase(mootCase);
+    setIsMootSessionActive(true);
+    setMootCurrentStepIdx(0);
+    setMootScore(0);
+    setMootElapsedSeconds(0);
+    setSelectedChoiceIdx(null);
+    setMootStepFeedback(null);
+    setMootCompleted(false);
+    playGavelSound();
+  };
+
+  const handleSelectMootChoice = (choiceIdx: number) => {
+    if (selectedChoiceIdx !== null) return;
+    const choice = activeMootCase.steps[mootCurrentStepIdx].choices[choiceIdx];
+    setSelectedChoiceIdx(choiceIdx);
+    setMootScore((prev) => prev + choice.scoreDelta);
+    setMootStepFeedback(choice);
+    if (choice.quality === "Flawed") {
+      playGavelSound();
+    }
+  };
+
+  const handleNextMootStep = () => {
+    if (mootCurrentStepIdx + 1 < activeMootCase.steps.length) {
+      setMootCurrentStepIdx((prev) => prev + 1);
+      setSelectedChoiceIdx(null);
+      setMootStepFeedback(null);
+    } else {
+      setMootCompleted(true);
+      const totalPossible = activeMootCase.steps.length * 25;
+      const pct = Math.round((mootScore / Math.max(1, totalPossible)) * 100);
+      let verdict: "Bench Unanimously Concurs" | "Split 2:1 In Favor" | "Dismissed with Reprimand" =
+        pct >= 70 ? "Bench Unanimously Concurs" : pct >= 45 ? "Split 2:1 In Favor" : "Dismissed with Reprimand";
+      
+      const record: MootHistoryRecord = {
+        id: "moot_rec_" + Date.now(),
+        caseId: activeMootCase.id,
+        caseTitle: activeMootCase.shortTitle,
+        totalScore: mootScore,
+        maxScore: totalPossible,
+        percentage: pct,
+        verdict,
+        completedDate: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+      };
+      const updated = saveMootRecord(record);
+      setMootHistoryList(updated);
+      playGavelSound();
+    }
+  };
+
+  const handleAnswerDrill = (optionIdx: number) => {
+    if (drillAnswered) return;
+    setDrillSelectedOptionIdx(optionIdx);
+    setDrillAnswered(true);
+    const currentDrill = OBJECTION_DRILLS[drillIndex % OBJECTION_DRILLS.length];
+    const isCorrect = currentDrill.options[optionIdx].isCorrect;
+    playGavelSound();
+    if (isCorrect) {
+      setDrillStreak((prev) => prev + 1);
+    } else {
+      setDrillStreak(0);
+    }
+    const updatedStats = updateDrillStats(isCorrect);
+    setDrillStats(updatedStats);
+  };
+
+  const handleNextDrill = () => {
+    setDrillIndex((prev) => (prev + 1) % OBJECTION_DRILLS.length);
+    setDrillSelectedOptionIdx(null);
+    setDrillAnswered(false);
+    setDrillCountdown(10);
+  };
 
   // 8. Book shelf & Digital Law Reader (Option 3: Faculty Uploads & Student Reading Hub)
   const [booksList, setBooksList] = useState<LawBook[]>([]);
@@ -5665,114 +6149,687 @@ export function StudentDashboardView({
         {/* ============================================================== */}
         {activeSection === "notebook" && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-bold text-black dark:text-white">Cornell Law Revision System</h3>
-                <p className="text-xs text-zinc-500">Structured legal syntheses: Recall Cues, Legal Formulation, &amp; Ratio Summaries.</p>
-              </div>
-              <button
-                onClick={() => setShowAddNoteModal(true)}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Cornell Note</span>
-              </button>
-            </div>
-
-            {/* Split Screen Cornell Sheet */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Note Selector Sidebar */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
-                  Saved Cornell Notebooks ({studentNotes.length})
-                </span>
-                <div className="space-y-2">
-                  {studentNotes.map((note) => {
-                    const isSelected = selectedNoteId === note.id;
-                    return (
-                      <div
-                        key={note.id}
-                        onClick={() => setSelectedNoteId(note.id)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-amber-500/10 border-amber-500 text-black dark:text-white shadow-xs"
-                            : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mb-1">
-                          <span className="font-bold text-amber-600 dark:text-amber-400">{note.subject}</span>
-                          <span>{note.lastEdited}</span>
-                        </div>
-                        <h4 className="text-sm font-bold text-black dark:text-white leading-snug">{note.title}</h4>
-                        <p className="text-xs text-zinc-500 line-clamp-1 mt-1">{note.summary}</p>
-                      </div>
-                    );
-                  })}
+            {/* Top Metrics Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Total Cornell Sheets</span>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-2xl font-black text-black dark:text-white">{studentNotes.length}</span>
+                  <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Archived</span>
                 </div>
               </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Bookmarked Precedents</span>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-2xl font-black text-amber-500">{studentNotes.filter((n) => n.isBookmarked).length}</span>
+                  <span className="text-[11px] font-bold text-zinc-400">Starred</span>
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Faculty Master Syntheses</span>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-2xl font-black text-black dark:text-white">{studentNotes.filter((n) => n.isFacultyShared).length}</span>
+                  <span className="text-[11px] font-bold text-zinc-400">Certified</span>
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Curriculum Coverage</span>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-2xl font-black text-black dark:text-white">
+                    {Array.from(new Set(studentNotes.map((n) => n.subject))).length}
+                  </span>
+                  <span className="text-[11px] font-bold text-zinc-400">Subjects</span>
+                </div>
+              </div>
+            </div>
 
-              {/* Active Note Canvas (2-Column Cornell Structure) */}
-              {(() => {
-                const currentNote = studentNotes.find((n) => n.id === selectedNoteId) || studentNotes[0];
-                return (
-                  <div className="lg:col-span-2 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-6 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 gap-2">
-                      <div>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 uppercase">
-                          {currentNote.subject}
-                        </span>
-                        <h3 className="text-xl font-black text-black dark:text-white mt-1">{currentNote.title}</h3>
-                      </div>
-                      <button
-                        onClick={() => alert(`Exporting Cornell sheet for: ${currentNote.title}`)}
-                        className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                      >
-                        <FileDown className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Export PDF</span>
-                      </button>
+            {/* Header & Controls Bar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    Harvard-Cornell Appellate Standard
+                  </span>
+                  <span className="text-xs text-zinc-400">• Cross-Session Synced</span>
+                </div>
+                <h3 className="text-xl font-black text-black dark:text-white mt-1">Interactive Cornell Law Notebook &amp; Case Brief Studio</h3>
+                <p className="text-xs text-zinc-500">Cues, statutory mechanics, doctrine synthesis, and instant export.</p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  onClick={handleOpenAddNoteModal}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white dark:hover:bg-amber-400 dark:hover:text-black text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>New Cornell Note</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={notesSearchQuery}
+                  onChange={(e) => setNotesSearchQuery(e.target.value)}
+                  placeholder="Search by topic, statutory section, landmark case, or cue keyword..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-amber-500 transition-colors"
+                />
+                {notesSearchQuery && (
+                  <button
+                    onClick={() => setNotesSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Subject Filter */}
+              <select
+                value={notesSubjectFilter}
+                onChange={(e) => setNotesSubjectFilter(e.target.value)}
+                className="px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none focus:border-amber-500 cursor-pointer"
+              >
+                <option value="All">All Curriculum Subjects</option>
+                <option value="Constitutional Law">Constitutional Law</option>
+                <option value="Criminal Jurisprudence (BNS & BNSS)">Criminal Jurisprudence (BNS & BNSS)</option>
+                <option value="Law of Contracts">Law of Contracts</option>
+                <option value="Law of Torts & Environment">Law of Torts & Environment</option>
+              </select>
+
+              {/* View Tabs */}
+              <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <button
+                  onClick={() => setNotesFilterTab("all")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    notesFilterTab === "all"
+                      ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                      : "text-zinc-500 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  All ({studentNotes.length})
+                </button>
+                <button
+                  onClick={() => setNotesFilterTab("bookmarked")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    notesFilterTab === "bookmarked"
+                      ? "bg-amber-500 text-black font-extrabold shadow-xs"
+                      : "text-zinc-500 hover:text-amber-500"
+                  }`}
+                >
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  <span>Starred ({studentNotes.filter((n) => n.isBookmarked).length})</span>
+                </button>
+                <button
+                  onClick={() => setNotesFilterTab("faculty")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    notesFilterTab === "faculty"
+                      ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                      : "text-zinc-500 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  Faculty Master ({studentNotes.filter((n) => n.isFacultyShared).length})
+                </button>
+              </div>
+            </div>
+
+            {/* Split Screen Cornell Workspace */}
+            {(() => {
+              const filteredNotes = studentNotes.filter((note) => {
+                const q = notesSearchQuery.toLowerCase();
+                const matchesSearch =
+                  !q ||
+                  note.title.toLowerCase().includes(q) ||
+                  note.subject.toLowerCase().includes(q) ||
+                  (note.topic && note.topic.toLowerCase().includes(q)) ||
+                  note.cues.some((c) => c.toLowerCase().includes(q)) ||
+                  note.content.toLowerCase().includes(q) ||
+                  note.summary.toLowerCase().includes(q);
+
+                const matchesSubject = notesSubjectFilter === "All" || note.subject === notesSubjectFilter;
+
+                const matchesTab =
+                  notesFilterTab === "all" ||
+                  (notesFilterTab === "bookmarked" && note.isBookmarked) ||
+                  (notesFilterTab === "faculty" && note.isFacultyShared);
+
+                return matchesSearch && matchesSubject && matchesTab;
+              });
+
+              const activeNote =
+                studentNotes.find((n) => n.id === selectedNoteId) || filteredNotes[0] || studentNotes[0];
+
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Left Column: Note Index Selector (4 cols) */}
+                  <div className="lg:col-span-4 space-y-3">
+                    <div className="flex items-center justify-between text-[11px] font-mono font-bold text-zinc-500 uppercase tracking-wider px-1">
+                      <span>Index ({filteredNotes.length})</span>
+                      <span>Chronological</span>
                     </div>
 
-                    {/* Cornell 2-Column Split */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Column 1: Recall Cues & Precedents */}
-                      <div className="space-y-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-                        <span className="text-[11px] font-mono font-extrabold uppercase text-amber-700 dark:text-amber-400 block">
-                          Recall Cues &amp; Precedents
-                        </span>
-                        <ul className="space-y-2">
-                          {currentNote.cues.map((cue, idx) => (
-                            <li key={idx} className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-start gap-1.5">
-                              <span className="text-amber-500">•</span>
-                              <span>{cue}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                    <div className="space-y-2.5 max-h-[820px] overflow-y-auto pr-1">
+                      {filteredNotes.length === 0 ? (
+                        <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-2">
+                          <SearchX className="w-8 h-8 text-zinc-400 mx-auto" />
+                          <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400">No matching Cornell notes found</p>
+                          <button
+                            onClick={() => {
+                              setNotesSearchQuery("");
+                              setNotesSubjectFilter("All");
+                              setNotesFilterTab("all");
+                            }}
+                            className="text-xs text-amber-600 dark:text-amber-400 font-bold underline cursor-pointer"
+                          >
+                            Reset filters
+                          </button>
+                        </div>
+                      ) : (
+                        filteredNotes.map((note) => {
+                          const isSelected = activeNote && activeNote.id === note.id;
+                          return (
+                            <div
+                              key={note.id}
+                              onClick={() => handleSelectNote(note)}
+                              className={`p-4 rounded-2xl border transition-all cursor-pointer relative group ${
+                                isSelected
+                                  ? "bg-amber-500/10 border-amber-500 text-black dark:text-white shadow-xs"
+                                  : "bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between text-[10px] font-mono mb-1.5">
+                                <span className="font-bold text-amber-600 dark:text-amber-400 uppercase tracking-tight">
+                                  {note.subject}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleToggleCornellBookmark(note.id);
+                                    }}
+                                    className="p-1 text-zinc-400 hover:text-amber-500 cursor-pointer"
+                                    title={note.isBookmarked ? "Remove Bookmark" : "Bookmark Note"}
+                                  >
+                                    <Star
+                                      className={`w-3.5 h-3.5 ${
+                                        note.isBookmarked ? "fill-amber-500 text-amber-500" : ""
+                                      }`}
+                                    />
+                                  </button>
+                                  <span className="text-zinc-400">{note.lastEdited}</span>
+                                </div>
+                              </div>
 
-                      {/* Column 2: Legal Formulation & Content */}
-                      <div className="md:col-span-2 space-y-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-                        <span className="text-[11px] font-mono font-extrabold uppercase text-zinc-600 dark:text-zinc-400 block">
-                          Core Legal Formulation &amp; Statutory Analysis
-                        </span>
-                        <p className="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed whitespace-pre-line font-serif">
-                          {currentNote.content}
-                        </p>
-                      </div>
-                    </div>
+                              <h4 className="text-sm font-bold text-black dark:text-white leading-snug line-clamp-2">
+                                {note.title}
+                              </h4>
 
-                    {/* Bottom Row: Summary Box */}
-                    <div className="p-4 rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/80 space-y-1.5">
-                      <span className="text-[11px] font-mono font-black uppercase tracking-wider text-slate-700 dark:text-zinc-300 block">
-                        Executive Summary &amp; Key Takeaways
-                      </span>
-                      <p className="text-xs text-zinc-700 dark:text-zinc-300 italic font-medium">
-                        &quot;{currentNote.summary}&quot;
-                      </p>
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mt-1.5 font-serif italic">
+                                &ldquo;{note.summary}&rdquo;
+                              </p>
+
+                              {/* Cues Pill Preview */}
+                              <div className="flex flex-wrap gap-1 mt-2.5">
+                                {note.cues.slice(0, 2).map((cue, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                                  >
+                                    {cue}
+                                  </span>
+                                ))}
+                                {note.cues.length > 2 && (
+                                  <span className="text-[9.5px] font-mono px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-400">
+                                    +{note.cues.length - 2}
+                                  </span>
+                                )}
+                                {note.isFacultyShared && (
+                                  <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-amber-500 text-black ml-auto">
+                                    FACULTY CERTIFIED
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
-                );
-              })()}
-            </div>
+
+                  {/* Right Column: Active Cornell Law Revision Sheet (8 cols) */}
+                  <div className="lg:col-span-8 space-y-6">
+                    {activeNote ? (
+                      <div className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 p-6 sm:p-7 space-y-6 shadow-sm">
+                        {/* Note Canvas Header Bar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 gap-3">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                                {activeNote.subject}
+                              </span>
+                              {activeNote.topic && (
+                                <span className="text-[10px] font-mono text-zinc-500">
+                                  • {activeNote.topic}
+                                </span>
+                              )}
+                              {activeNote.isFacultyShared && (
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-amber-600 dark:text-amber-400">
+                                  Faculty Model Brief
+                                </span>
+                              )}
+                              {saveStatusNotice && (
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 animate-pulse">
+                                  {saveStatusNotice}
+                                </span>
+                              )}
+                            </div>
+
+                            {isEditingNote && activeEditNote ? (
+                              <input
+                                type="text"
+                                value={activeEditNote.title}
+                                onChange={(e) =>
+                                  setActiveEditNote({ ...activeEditNote, title: e.target.value })
+                                }
+                                className="w-full text-xl font-black text-black dark:text-white bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-amber-500 mt-1"
+                              />
+                            ) : (
+                              <h3 className="text-xl sm:text-2xl font-black text-black dark:text-white leading-tight">
+                                {activeNote.title}
+                              </h3>
+                            )}
+
+                            <div className="text-[11px] font-mono text-zinc-500 flex items-center gap-3 pt-0.5">
+                              <span>Author: {activeNote.author}</span>
+                              <span>•</span>
+                              <span>Revised: {activeNote.lastEdited}</span>
+                            </div>
+                          </div>
+
+                          {/* Action Toolbar */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {/* Star Bookmark */}
+                            <button
+                              onClick={() => handleToggleCornellBookmark(activeNote.id)}
+                              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                                activeNote.isBookmarked
+                                  ? "bg-amber-500/10 border-amber-500 text-amber-500"
+                                  : "border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-black dark:hover:text-white"
+                              }`}
+                              title={activeNote.isBookmarked ? "Starred" : "Bookmark this Note"}
+                            >
+                              <Star className={`w-4 h-4 ${activeNote.isBookmarked ? "fill-amber-500" : ""}`} />
+                            </button>
+
+                            {/* Edit / Preview Toggle */}
+                            <button
+                              onClick={() => {
+                                if (isEditingNote) {
+                                  handleSaveActiveNote();
+                                  setIsEditingNote(false);
+                                } else {
+                                  setActiveEditNote({ ...activeNote });
+                                  setIsEditingNote(true);
+                                }
+                              }}
+                              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                isEditingNote
+                                  ? "bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold shadow-sm"
+                                  : "border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                              }`}
+                            >
+                              {isEditingNote ? (
+                                <>
+                                  <Save className="w-3.5 h-3.5" />
+                                  <span>Save Changes</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+                                  <span>Edit Note</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* Export HTML / Print */}
+                            <button
+                              onClick={() => exportCornellNoteAsHtml(isEditingNote && activeEditNote ? activeEditNote : activeNote)}
+                              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                              title="Print / Export Harvard-Cornell Sheet (PDF)"
+                            >
+                              <Printer className="w-4 h-4 text-amber-500" />
+                            </button>
+
+                            {/* Download TXT */}
+                            <button
+                              onClick={() => exportCornellNoteAsTxt(isEditingNote && activeEditNote ? activeEditNote : activeNote)}
+                              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                              title="Download Text File (.txt)"
+                            >
+                              <FileDown className="w-4 h-4 text-zinc-500" />
+                            </button>
+
+                            {/* Delete Note */}
+                            <button
+                              onClick={() => handleDeleteActiveNote(activeNote.id)}
+                              className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-rose-500 hover:border-rose-300 transition-colors cursor-pointer"
+                              title="Delete Note"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Cornell Split-Screen 2-Column Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                          {/* Left Column: Recall Cues, Statutes, Precedents (5 cols) */}
+                          <div className="md:col-span-5 space-y-5 p-4 sm:p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                            {/* Recall Cues */}
+                            <div className="space-y-2.5">
+                              <span className="text-[11px] font-mono font-extrabold uppercase text-amber-700 dark:text-amber-400 flex items-center justify-between">
+                                <span>Recall Cues &amp; Questions</span>
+                                <span className="text-[10px] font-normal text-zinc-400">({(isEditingNote && activeEditNote ? activeEditNote.cues : activeNote.cues).length})</span>
+                              </span>
+
+                              <ul className="space-y-1.5">
+                                {(isEditingNote && activeEditNote ? activeEditNote.cues : activeNote.cues).map((cue, idx) => (
+                                  <li
+                                    key={idx}
+                                    className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center justify-between gap-1.5 p-1.5 rounded-lg bg-white/70 dark:bg-zinc-900/70 border border-amber-500/10"
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-amber-500">•</span>
+                                      <span>{cue}</span>
+                                    </div>
+                                    {isEditingNote && (
+                                      <button
+                                        onClick={() => handleRemoveCueTagFromActive(idx)}
+                                        className="text-zinc-400 hover:text-rose-500 text-xs px-1 cursor-pointer"
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+
+                              {isEditingNote && (
+                                <div className="flex items-center gap-1.5 pt-1">
+                                  <input
+                                    type="text"
+                                    value={newCueTag}
+                                    onChange={(e) => setNewCueTag(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddCueTagToActive();
+                                      }
+                                    }}
+                                    placeholder="Add recall cue + Enter..."
+                                    className="flex-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none focus:border-amber-500"
+                                  />
+                                  <button
+                                    onClick={handleAddCueTagToActive}
+                                    className="px-2 py-1.5 rounded-lg bg-amber-500 text-black font-extrabold text-xs cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Statutes & Enactments */}
+                            <div className="space-y-2 pt-2 border-t border-amber-500/15">
+                              <span className="text-[11px] font-mono font-extrabold uppercase text-zinc-700 dark:text-zinc-300 block">
+                                Statutory Anchors &amp; Sections
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {(isEditingNote && activeEditNote
+                                  ? activeEditNote.statutoryReferences
+                                  : activeNote.statutoryReferences
+                                ).map((statute, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-[10px] font-mono font-bold px-2 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1"
+                                  >
+                                    <span>{statute}</span>
+                                    {isEditingNote && (
+                                      <button
+                                        onClick={() => handleRemoveStatuteFromActive(idx)}
+                                        className="text-zinc-400 hover:text-rose-500 cursor-pointer"
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+
+                              {isEditingNote && (
+                                <div className="flex items-center gap-1.5 pt-1">
+                                  <input
+                                    type="text"
+                                    value={newStatuteTag}
+                                    onChange={(e) => setNewStatuteTag(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddStatuteToActive();
+                                      }
+                                    }}
+                                    placeholder="Add section (e.g. S.480 BNSS)..."
+                                    className="flex-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none focus:border-amber-500"
+                                  />
+                                  <button
+                                    onClick={handleAddStatuteToActive}
+                                    className="px-2 py-1.5 rounded-lg bg-amber-500 text-black font-extrabold text-xs cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Landmark Precedents */}
+                            <div className="space-y-2 pt-2 border-t border-amber-500/15">
+                              <span className="text-[11px] font-mono font-extrabold uppercase text-zinc-700 dark:text-zinc-300 block">
+                                Landmark Precedents &amp; Citations
+                              </span>
+                              <div className="space-y-1.5">
+                                {(isEditingNote && activeEditNote
+                                  ? activeEditNote.landmarkCases
+                                  : activeNote.landmarkCases
+                                ).map((c, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-1 p-1 rounded bg-white/50 dark:bg-zinc-900/50"
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      <Scale className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                      <span>{c}</span>
+                                    </div>
+                                    {isEditingNote && (
+                                      <button
+                                        onClick={() => handleRemoveCaseFromActive(idx)}
+                                        className="text-zinc-400 hover:text-rose-500 text-xs px-1 cursor-pointer"
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              {isEditingNote && (
+                                <div className="flex items-center gap-1.5 pt-1">
+                                  <input
+                                    type="text"
+                                    value={newCaseTag}
+                                    onChange={(e) => setNewCaseTag(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddCaseToActive();
+                                      }
+                                    }}
+                                    placeholder="Add case citation + Enter..."
+                                    className="flex-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none focus:border-amber-500"
+                                  />
+                                  <button
+                                    onClick={handleAddCaseToActive}
+                                    className="px-2 py-1.5 rounded-lg bg-amber-500 text-black font-extrabold text-xs cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right Column: Core Legal Formulation & Content (7 cols) */}
+                          <div className="md:col-span-7 space-y-3 p-4 sm:p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center justify-between mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                <span className="text-[11px] font-mono font-extrabold uppercase text-zinc-600 dark:text-zinc-400">
+                                  Core Legal Formulation &amp; Statutory Analysis
+                                </span>
+                                {isEditingNote && (
+                                  <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                                    LIVE EDIT MODE
+                                  </span>
+                                )}
+                              </div>
+
+                              {isEditingNote && activeEditNote ? (
+                                <div className="space-y-2">
+                                  {/* Quick Insertion Toolbar */}
+                                  <div className="flex flex-wrap gap-1.5 pb-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const snippet = "\n\n### ⚖ RATIO DECIDENDI:\n";
+                                        setActiveEditNote({
+                                          ...activeEditNote,
+                                          content: activeEditNote.content + snippet,
+                                        });
+                                      }}
+                                      className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-black cursor-pointer"
+                                    >
+                                      + Ratio Decidendi
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const snippet = "\n\n📌 QUESTION OF LAW:\n- ";
+                                        setActiveEditNote({
+                                          ...activeEditNote,
+                                          content: activeEditNote.content + snippet,
+                                        });
+                                      }}
+                                      className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-black cursor-pointer"
+                                    >
+                                      + Question of Law
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const snippet = "\n\n📜 STATUTORY PROVISION & TESTS:\n";
+                                        setActiveEditNote({
+                                          ...activeEditNote,
+                                          content: activeEditNote.content + snippet,
+                                        });
+                                      }}
+                                      className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-black cursor-pointer"
+                                    >
+                                      + Statutory Tests
+                                    </button>
+                                  </div>
+
+                                  <textarea
+                                    rows={16}
+                                    value={activeEditNote.content}
+                                    onChange={(e) =>
+                                      setActiveEditNote({ ...activeEditNote, content: e.target.value })
+                                    }
+                                    className="w-full p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-serif leading-relaxed text-black dark:text-white focus:outline-none focus:border-amber-500"
+                                    placeholder="Write legal analysis, doctrinal breakdown, and tests..."
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed whitespace-pre-line font-serif py-1">
+                                  {activeNote.content}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Word count & Save footer */}
+                            {isEditingNote && activeEditNote && (
+                              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                                <span>
+                                  {activeEditNote.content.split(/\s+/).filter(Boolean).length} words • {activeEditNote.content.length} characters
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={handleSaveActiveNote}
+                                  className="px-3.5 py-1.5 rounded-lg bg-amber-500 text-black font-extrabold hover:bg-black hover:text-white dark:hover:bg-amber-400 dark:hover:text-black transition-colors cursor-pointer"
+                                >
+                                  Save Progress
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Bottom Row: Cornell 3rd Zone (Executive Summary & Ratio) */}
+                        <div className="p-5 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 border border-amber-500/30 space-y-2 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500" />
+                          <div className="flex items-center justify-between pl-2">
+                            <span className="text-[11px] font-mono font-black uppercase tracking-wider text-black dark:text-white flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Executive Summary &amp; Ratio Decidendi (Cornell Bottom Quadrant)</span>
+                            </span>
+                            {isEditingNote && (
+                              <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                                Editable
+                              </span>
+                            )}
+                          </div>
+
+                          {isEditingNote && activeEditNote ? (
+                            <textarea
+                              rows={3}
+                              value={activeEditNote.summary}
+                              onChange={(e) =>
+                                setActiveEditNote({ ...activeEditNote, summary: e.target.value })
+                              }
+                              className="w-full p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-serif italic text-black dark:text-white focus:outline-none focus:border-amber-500 ml-2"
+                              placeholder="Write a concise executive takeaway summarizing the core ratio decidendi..."
+                            />
+                          ) : (
+                            <p className="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 italic font-medium pl-2 leading-relaxed font-serif">
+                              &ldquo;{activeNote.summary}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
+                        <BookText className="w-12 h-12 text-zinc-400 mx-auto" />
+                        <h4 className="text-base font-bold text-black dark:text-white">Select a Cornell Note to view</h4>
+                        <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                          Choose an existing note from the left index or click &apos;New Cornell Note&apos; to author a new legal synthesis.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -5890,152 +6947,531 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: RECORDING STUDIO (Wakheel SCREENSHOT FEATURE)          */}
+        {/* SECTION: RECORDING & AUDIO MASTERCLASS STUDIO (OPTION 6)       */}
         {/* ============================================================== */}
         {activeSection === "record" && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            {/* Record Studio Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Studio Header & Tab Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
               <div>
-                <h3 className="text-lg font-bold text-black dark:text-white">Moot Court Oral Argument Studio</h3>
-                <p className="text-xs text-zinc-500">Record your appellate arguments, cross-examinations, and receive instant AI clarity scoring.</p>
-              </div>
-              <div className="flex items-center gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
-                <button
-                  onClick={() => setRecordMode("audio")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    recordMode === "audio" ? "bg-amber-500 text-black shadow-xs font-extrabold" : "text-zinc-600 dark:text-zinc-400"
-                  }`}
-                >
-                  Audio Waveform
-                </button>
-                <button
-                  onClick={() => setRecordMode("video")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    recordMode === "video" ? "bg-amber-500 text-black shadow-xs font-extrabold" : "text-zinc-600 dark:text-zinc-400"
-                  }`}
-                >
-                  Video Camera
-                </button>
-              </div>
-            </div>
-
-            {/* Recording Console */}
-            <div className="p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 text-center space-y-6 relative overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-xs font-mono">
-                  <span className={`w-2.5 h-2.5 rounded-full ${recordStatus === "recording" ? "bg-rose-500 animate-ping" : "bg-emerald-500"}`} />
-                  <span className="text-zinc-300 uppercase font-bold tracking-wider">
-                    {recordStatus === "recording" ? `LIVE RECORDING (${recordTimer}s)` : recordStatus === "paused" ? "PAUSED" : "STUDIO READY"}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    Faculty Audio Chambers
                   </span>
-                </span>
-                <span className="text-xs font-mono text-zinc-400">Gemini 2.5 Speech Engine</span>
-              </div>
-
-              {/* Animated Waveform Bars */}
-              <div className="h-28 flex items-center justify-center gap-1.5 px-4">
-                {Array.from({ length: 32 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-1.5 rounded-full transition-all duration-150 ${
-                      recordStatus === "recording"
-                        ? "bg-amber-400 animate-pulse"
-                        : "bg-zinc-800"
-                    }`}
-                    style={{
-                      height: recordStatus === "recording" ? `${Math.max(16, (Math.sin(i * 0.8 + recordTimer) + 1.2) * 35)}px` : "16px",
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Real-time AI Transcript preview */}
-              <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left space-y-1">
-                <span className="text-[10px] font-mono text-amber-400 uppercase tracking-wider font-bold">
-                  Simulated Real-Time AI Speech-to-Text Transcript:
-                </span>
-                <p className="text-xs text-zinc-300 font-serif leading-relaxed italic">
-                  {recordStatus === "recording"
-                    ? liveTranscript || "“May it please the Court, I appear on behalf of the appellant. Under Article 19(1)(a) of the Constitution...”"
-                    : "Press 'Start Recording' to begin your oral argument session with real-time transcription."}
+                  <span className="text-xs text-zinc-400">• Cross-Platform Synchronized</span>
+                </div>
+                <h3 className="text-xl font-black text-black dark:text-white mt-1">
+                  Faculty Audio Masterclasses &amp; Moot Court Recording Studio
+                </h3>
+                <p className="text-xs text-zinc-500">
+                  Listen to live-synced faculty legal podcasts with ratio analysis, or practice your moot oral submissions.
                 </p>
               </div>
 
-              {/* Control Buttons */}
-              <div className="flex items-center justify-center gap-4 pt-2">
-                {recordStatus === "idle" ? (
-                  <button
-                    onClick={() => {
-                      setRecordStatus("recording");
-                      setRecordTimer(1);
-                      setLiveTranscript("“May it please Your Lordship, our core submission under Section 103 BNS 2023 hinges on the total absence of mens rea...”");
-                    }}
-                    className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 shadow-lg hover:scale-105"
-                  >
-                    <Mic className="w-4 h-4" />
-                    <span>Start Recording</span>
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setRecordStatus(recordStatus === "recording" ? "paused" : "recording")}
-                      className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
-                    >
-                      {recordStatus === "recording" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      <span>{recordStatus === "recording" ? "Pause" : "Resume"}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSavedRecordings((prev) => [
-                          {
-                            id: `rec_${Date.now()}`,
-                            title: `Oral Argument: BNS Mens Rea Submission (${recordTimer}s)`,
-                            duration: `00:${recordTimer < 10 ? "0" + recordTimer : recordTimer}`,
-                            date: "Just now",
-                            score: "9.4/10 AI Clarity",
-                            audioUrl: "#",
-                          },
-                          ...prev,
-                        ]);
-                        setRecordStatus("idle");
-                        setRecordTimer(0);
-                      }}
-                      className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-md"
-                    >
-                      <Square className="w-4 h-4" />
-                      <span>Stop &amp; Save Recording</span>
-                    </button>
-                  </>
-                )}
+              {/* Tab Selector */}
+              <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800/80 shrink-0">
+                <button
+                  onClick={() => setAudioStudioTab("lectures")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    audioStudioTab === "lectures"
+                      ? "bg-amber-500 text-black font-extrabold shadow-sm"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Headphones className="w-3.5 h-3.5" />
+                  <span>Faculty Masterclasses ({facultyLectures.length})</span>
+                </button>
+                <button
+                  onClick={() => setAudioStudioTab("moot_practice")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    audioStudioTab === "moot_practice"
+                      ? "bg-amber-500 text-black font-extrabold shadow-sm"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  <span>Student Oral Moot Recorder</span>
+                </button>
               </div>
             </div>
 
-            {/* Saved Recordings Table */}
-            <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4">
-              <h4 className="text-base font-bold text-black dark:text-white">Saved Moot Recordings &amp; AI Analysis</h4>
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {savedRecordings.map((rec) => (
-                  <div key={rec.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div className="space-y-0.5">
-                      <div className="font-bold text-black dark:text-white text-sm">{rec.title}</div>
-                      <div className="text-[11px] text-zinc-500 font-mono">Duration: {rec.duration} • {rec.date}</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        {rec.score}
-                      </span>
-                      <button
-                        onClick={() => alert(`Playing audio preview for ${rec.title}`)}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1"
-                      >
-                        <Play className="w-3.5 h-3.5" />
-                        <span>Play</span>
-                      </button>
+            {/* TAB 1: FACULTY AUDIO MASTERCLASSES & PODCASTS */}
+            {audioStudioTab === "lectures" && (
+              <div className="space-y-6">
+                {/* 4 Stats Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Available Lectures</span>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-black text-black dark:text-white">{facultyLectures.length}</span>
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Published</span>
                     </div>
                   </div>
-                ))}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Active Cohort Streams</span>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-black text-emerald-500">
+                        {facultyLectures.reduce((acc, l) => acc + l.listensCount, 0)}
+                      </span>
+                      <span className="text-[11px] font-bold text-zinc-400">Listens</span>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Legal Curricula</span>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-black text-black dark:text-white">
+                        {Array.from(new Set(facultyLectures.map((l) => l.subject))).length}
+                      </span>
+                      <span className="text-[11px] font-bold text-zinc-400">Disciplines</span>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">Playback Standard</span>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-2xl font-black text-amber-500">Lossless</span>
+                      <span className="text-[11px] font-bold text-zinc-400">48kHz PCM</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interactive Master Audio Player Console */}
+                {activePlayingLecture ? (
+                  <div className="p-6 sm:p-7 rounded-3xl bg-zinc-950 text-white border border-zinc-800 shadow-xl space-y-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                            {activePlayingLecture.category}
+                          </span>
+                          <span className="text-xs text-zinc-400 font-mono">•</span>
+                          <span className="text-xs text-zinc-400 font-mono">{activePlayingLecture.subject}</span>
+                          {isPlayingAudio && (
+                            <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1 animate-pulse">
+                              <Radio className="w-3 h-3 text-emerald-400" />
+                              <span>STREAMING LIVE</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-lg sm:text-xl font-black text-white leading-snug">
+                          {activePlayingLecture.title}
+                        </h3>
+
+                        <div className="text-xs text-zinc-400 font-mono flex items-center gap-3">
+                          <span>Faculty: <strong className="text-amber-400">{activePlayingLecture.facultyName}</strong></span>
+                          <span>•</span>
+                          <span>Target: {activePlayingLecture.targetBatch}</span>
+                        </div>
+                      </div>
+
+                      {/* Download Audio */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => downloadLectureAudio(activePlayingLecture)}
+                          className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                          title="Download Audio File"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download WAV</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Equalizer Visualizer & Player Controls */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                      {/* Left: Play/Pause & Equalizer (7 cols) */}
+                      <div className="lg:col-span-7 space-y-4">
+                        <div className="flex items-center gap-4">
+                          {/* Big Play / Pause Button */}
+                          <button
+                            onClick={() => handleTogglePlayStudentLecture(activePlayingLecture)}
+                            className="w-14 h-14 rounded-2xl bg-amber-500 hover:bg-white text-black flex items-center justify-center font-bold shadow-lg transition-transform hover:scale-105 cursor-pointer shrink-0"
+                          >
+                            {isPlayingAudio ? (
+                              <Pause className="w-6 h-6 fill-current" />
+                            ) : (
+                              <Play className="w-6 h-6 fill-current ml-0.5" />
+                            )}
+                          </button>
+
+                          {/* Dynamic Equalizer Bars */}
+                          <div className="flex-1 h-12 bg-zinc-900/80 rounded-xl border border-zinc-800/80 flex items-center justify-center gap-1 px-3 overflow-hidden">
+                            {Array.from({ length: 24 }).map((_, i) => (
+                              <div
+                                key={i}
+                                style={{
+                                  height: isPlayingAudio
+                                    ? `${Math.max(15, Math.floor(Math.sin(i * 0.7 + audioCurrentTime * 3) * 35 + 45))}%`
+                                    : "15%",
+                                  transition: "height 0.15s ease-in-out",
+                                }}
+                                className={`w-1.5 rounded-full ${
+                                  isPlayingAudio ? "bg-amber-400" : "bg-zinc-700"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Seek Slider & Timestamps */}
+                        <div className="space-y-1">
+                          <input
+                            type="range"
+                            min="0"
+                            max={audioTotalDuration || activePlayingLecture.durationSeconds || 100}
+                            value={audioCurrentTime}
+                            onChange={(e) => handleSeekAudio(Number(e.target.value))}
+                            className="w-full accent-amber-500 cursor-pointer"
+                          />
+                          <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                            <span>
+                              {Math.floor(audioCurrentTime / 60)
+                                .toString()
+                                .padStart(2, "0")}
+                              :
+                              {Math.floor(audioCurrentTime % 60)
+                                .toString()
+                                .padStart(2, "0")}
+                            </span>
+                            <span>{activePlayingLecture.duration}</span>
+                          </div>
+                        </div>
+
+                        {/* Speed Controls */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-[11px] font-mono text-zinc-400">Playback Speed:</span>
+                          {[1, 1.25, 1.5, 2].map((spd) => (
+                            <button
+                              key={spd}
+                              onClick={() => handleChangePlaybackSpeed(spd)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-colors cursor-pointer ${
+                                audioPlaybackSpeed === spd
+                                  ? "bg-amber-500 text-black font-extrabold"
+                                  : "bg-zinc-900 text-zinc-400 hover:text-white"
+                              }`}
+                            >
+                              {spd}x
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Right: Synchronized Statutory Notes & Ratios (5 cols) */}
+                      <div className="lg:col-span-5 p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+                        <span className="text-[10px] font-mono font-extrabold uppercase text-amber-400 block tracking-wider">
+                          ⚖ Synchronized Judicial Ratio &amp; Notes
+                        </span>
+                        <p className="text-xs text-zinc-300 font-serif leading-relaxed line-clamp-4">
+                          {activePlayingLecture.statutoryNotes}
+                        </p>
+                        <div className="space-y-1 pt-1 border-t border-zinc-800">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase">Key Precedent Citations:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {activePlayingLecture.keyCitations.map((c, idx) => (
+                              <span
+                                key={idx}
+                                className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-800 text-amber-300 border border-amber-500/20"
+                              >
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-2">
+                    <Headphones className="w-10 h-10 text-zinc-400 mx-auto" />
+                    <h4 className="text-sm font-bold text-black dark:text-white">Select a Lecture to Begin Listening</h4>
+                    <p className="text-xs text-zinc-500">Pick any masterclass from the repository below.</p>
+                  </div>
+                )}
+
+                {/* Filter & Search Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={audioSearchFilter}
+                      onChange={(e) => setAudioSearchFilter(e.target.value)}
+                      placeholder="Search audio lectures by topic, faculty, or citation..."
+                      className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-black dark:text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <select
+                    value={audioSubjectFilter}
+                    onChange={(e) => setAudioSubjectFilter(e.target.value)}
+                    className="px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-black dark:text-white focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
+                    <option value="All">All Disciplines</option>
+                    <option value="Constitutional Law">Constitutional Law</option>
+                    <option value="Criminal Procedure (BNSS 2023)">Criminal Procedure (BNSS 2023)</option>
+                    <option value="Law of Contracts">Law of Contracts</option>
+                    <option value="Bharatiya Nyaya Sanhita (BNS 2023)">Bharatiya Nyaya Sanhita (BNS 2023)</option>
+                  </select>
+                </div>
+
+                {/* Lectures Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {facultyLectures
+                    .filter((l) => {
+                      const q = audioSearchFilter.toLowerCase();
+                      const matchesSearch =
+                        !q ||
+                        l.title.toLowerCase().includes(q) ||
+                        l.facultyName.toLowerCase().includes(q) ||
+                        l.statutoryNotes.toLowerCase().includes(q) ||
+                        l.keyCitations.some((c) => c.toLowerCase().includes(q));
+                      const matchesSub =
+                        audioSubjectFilter === "All" ||
+                        l.subject.toLowerCase() === audioSubjectFilter.toLowerCase();
+                      return matchesSearch && matchesSub;
+                    })
+                    .map((lecture) => {
+                      const isCurrentlyPlaying = activePlayingLecture?.id === lecture.id && isPlayingAudio;
+                      return (
+                        <div
+                          key={lecture.id}
+                          className={`p-5 rounded-3xl bg-white dark:bg-zinc-900 border transition-all shadow-xs space-y-3.5 ${
+                            activePlayingLecture?.id === lecture.id
+                              ? "border-amber-500 ring-2 ring-amber-500/20"
+                              : "border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                                  {lecture.category}
+                                </span>
+                                <span className="text-xs text-zinc-400 font-mono">•</span>
+                                <span className="text-xs text-zinc-500 font-mono">{lecture.duration}</span>
+                              </div>
+                              <h4 className="text-base font-black text-black dark:text-white leading-snug">
+                                {lecture.title}
+                              </h4>
+                              <div className="text-xs text-zinc-500">
+                                By <strong className="text-zinc-800 dark:text-zinc-200">{lecture.facultyName}</strong> • {lecture.targetBatch}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleTogglePlayStudentLecture(lecture)}
+                              className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer shrink-0 ${
+                                isCurrentlyPlaying
+                                  ? "bg-black text-amber-400 dark:bg-white dark:text-black animate-pulse"
+                                  : "bg-amber-500 hover:bg-black hover:text-white text-black"
+                              }`}
+                            >
+                              {isCurrentlyPlaying ? (
+                                <Pause className="w-5 h-5 fill-current" />
+                              ) : (
+                                <Play className="w-5 h-5 fill-current ml-0.5" />
+                              )}
+                            </button>
+                          </div>
+
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed font-serif">
+                            {lecture.statutoryNotes}
+                          </p>
+
+                          <div className="flex flex-wrap gap-1">
+                            {lecture.keyCitations.map((c, idx) => (
+                              <span
+                                key={idx}
+                                className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                              >
+                                ⚖ {c}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-[11px] font-mono text-zinc-400">
+                            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                              <Headphones className="w-3.5 h-3.5" />
+                              <span>{lecture.listensCount} listens</span>
+                            </span>
+                            <button
+                              onClick={() => downloadLectureAudio(lecture)}
+                              className="text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                            >
+                              <Download className="w-3 h-3" />
+                              <span>Save Offline</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* TAB 2: STUDENT ORAL MOOT ARGUMENT RECORDER */}
+            {audioStudioTab === "moot_practice" && (
+              <div className="space-y-6">
+                {/* Recording Console */}
+                <div className="p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 text-center space-y-6 relative overflow-hidden shadow-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-xs font-mono">
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          studentIsRecording
+                            ? studentIsPaused
+                              ? "bg-amber-400"
+                              : "bg-rose-500 animate-ping"
+                            : "bg-emerald-500"
+                        }`}
+                      />
+                      <span className="text-zinc-300 uppercase font-bold tracking-wider">
+                        {studentIsRecording
+                          ? studentIsPaused
+                            ? "PAUSED"
+                            : `LIVE RECORDING (${studentRecordSeconds}s)`
+                          : "STUDIO READY • MIC ARMED"}
+                      </span>
+                    </span>
+                    <span className="text-xs font-mono text-zinc-400">Gemini 2.5 Speech Engine</span>
+                  </div>
+
+                  {/* Animated Waveform Bars */}
+                  <div className="h-28 flex items-center justify-center gap-1.5 px-4">
+                    {studentWaveformLevels.map((lvl, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 rounded-full transition-all duration-150 ${
+                          studentIsRecording && !studentIsPaused
+                            ? "bg-amber-400 animate-pulse"
+                            : "bg-zinc-800"
+                        }`}
+                        style={{
+                          height: studentIsRecording && !studentIsPaused ? `${lvl}%` : "15%",
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Topic and Dept Input */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto text-left">
+                    <div>
+                      <label className="text-[11px] font-mono font-bold text-zinc-400 block mb-1">Argument Topic</label>
+                      <input
+                        type="text"
+                        value={studentMootTopic}
+                        onChange={(e) => setStudentMootTopic(e.target.value)}
+                        placeholder="e.g. Oral Submission: Article 19(1)(a)"
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-mono font-bold text-zinc-400 block mb-1">Discipline</label>
+                      <select
+                        value={studentMootDept}
+                        onChange={(e) => setStudentMootDept(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="Constitutional Law">Constitutional Law</option>
+                        <option value="Criminal Jurisprudence (BNS)">Criminal Jurisprudence (BNS)</option>
+                        <option value="Law of Contracts">Law of Contracts</option>
+                        <option value="Law of Torts">Law of Torts</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Real-time AI Transcript preview */}
+                  <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-left space-y-1 max-w-xl mx-auto">
+                    <span className="text-[10px] font-mono text-amber-400 uppercase tracking-wider font-bold">
+                      Simulated Real-Time AI Speech-to-Text Transcript:
+                    </span>
+                    <p className="text-xs text-zinc-300 font-serif leading-relaxed italic">
+                      {studentIsRecording
+                        ? "“May it please Your Lordship, I appear on behalf of the appellant. Under Article 19(1)(a) of the Constitution, reasonable restrictions under Article 19(2) must satisfy the strict proportionality test...”"
+                        : "Press 'Start Recording' to begin your oral argument session with real-time transcription."}
+                    </p>
+                  </div>
+
+                  {/* Control Buttons */}
+                  <div className="flex items-center justify-center gap-4 pt-2">
+                    {!studentIsRecording ? (
+                      <button
+                        onClick={() => {
+                          setStudentIsRecording(true);
+                          setStudentIsPaused(false);
+                          setStudentRecordSeconds(1);
+                        }}
+                        className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 shadow-lg hover:scale-105"
+                      >
+                        <Mic className="w-4 h-4" />
+                        <span>Start Oral Argument</span>
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => setStudentIsPaused(!studentIsPaused)}
+                          className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                        >
+                          {studentIsPaused ? <Play className="w-4 h-4 text-emerald-400" /> : <Pause className="w-4 h-4 text-amber-400" />}
+                          <span>{studentIsPaused ? "Resume" : "Pause"}</span>
+                        </button>
+                        <button
+                          onClick={handleSaveStudentOralRecording}
+                          className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-md"
+                        >
+                          <Square className="w-4 h-4" />
+                          <span>Stop &amp; Save Oral Brief</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Saved Recordings Table */}
+                <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-base font-bold text-black dark:text-white">
+                      Saved Moot Recordings &amp; AI Analysis ({studentSavedRecordings.length})
+                    </h4>
+                    {recordingSavedNotice && (
+                      <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 animate-pulse">
+                        ✓ Saved to Archives!
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {studentSavedRecordings.map((rec) => (
+                      <div key={rec.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-black dark:text-white text-sm">{rec.title}</div>
+                          <div className="text-[11px] text-zinc-500 font-mono">
+                            {rec.subject} • Duration: {rec.duration} • {rec.date}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            {rec.score}
+                          </span>
+                          <button
+                            onClick={() => {
+                              const audio = new Audio(rec.audioUrl);
+                              audio.play();
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1"
+                          >
+                            <Play className="w-3.5 h-3.5" />
+                            <span>Play</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -6233,78 +7669,220 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: HOMEWORK TRACKER (Wakheel SCREENSHOT FEATURE)           */}
+        {/* SECTION: HOMEWORK TRACKER (OPTION 4 DYNAMIC WORKFLOW)          */}
         {/* ============================================================== */}
         {activeSection === "homework" && (
           <div className="space-y-6 animate-in fade-in duration-150">
+            {/* Top Stats Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase block">Pending Tasks</span>
+                <span className="text-xl font-black text-amber-500 font-mono">
+                  {assignmentsList.filter((a) => !submissionsList.some((s) => s.assignmentId === a.id)).length}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase block">Submitted &amp; In Review</span>
+                <span className="text-xl font-black text-black dark:text-white font-mono">
+                  {submissionsList.filter((s) => s.status === "Pending Evaluation").length}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 shadow-2xs">
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase font-bold block">
+                  Graded Briefs
+                </span>
+                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                  {submissionsList.filter((s) => s.status === "Graded").length}
+                </span>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-2xs">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase block">Total Coursework Tasks</span>
+                <span className="text-xl font-black text-black dark:text-white font-mono">
+                  {assignmentsList.length}
+                </span>
+              </div>
+            </div>
+
             {/* Homework Tabs */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setHomeworkTab("pending")}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   homeworkTab === "pending"
                     ? "bg-amber-500 text-black font-extrabold shadow-xs"
                     : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
                 }`}
               >
-                Pending Tasks ({studentHomework.filter((h) => h.status === "pending").length})
+                <ClipboardList className="w-3.5 h-3.5" />
+                <span>Pending Tasks</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/15 text-black font-mono">
+                  {assignmentsList.filter((a) => !submissionsList.some((s) => s.assignmentId === a.id)).length}
+                </span>
               </button>
               <button
                 onClick={() => setHomeworkTab("completed")}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   homeworkTab === "completed"
                     ? "bg-amber-500 text-black font-extrabold shadow-xs"
                     : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300"
                 }`}
               >
-                Completed &amp; Graded ({studentHomework.filter((h) => h.status === "completed").length})
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Submitted &amp; Graded</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/15 text-black font-mono">
+                  {submissionsList.length}
+                </span>
               </button>
             </div>
 
-            {/* Homework Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {studentHomework
-                .filter((h) => h.status === homeworkTab)
-                .map((hw) => (
-                  <div
-                    key={hw.id}
-                    className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm flex flex-col justify-between"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 uppercase">
-                          {hw.subject}
-                        </span>
-                        <span className="text-[11px] font-mono text-zinc-500">{hw.dueDate}</span>
+            {/* TAB 1: PENDING ASSIGNMENTS */}
+            {homeworkTab === "pending" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {assignmentsList
+                  .filter((a) => !submissionsList.some((s) => s.assignmentId === a.id))
+                  .map((hw) => (
+                    <div
+                      key={hw.id}
+                      className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 uppercase">
+                            {hw.badge || hw.subject}
+                          </span>
+                          <span className="text-[11px] font-mono text-zinc-500">Due: {hw.dueDate}</span>
+                        </div>
+                        <h4 className="text-base font-bold text-black dark:text-white leading-snug">
+                          {hw.title}
+                        </h4>
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400 font-serif leading-relaxed">
+                          {hw.instructions}
+                        </p>
+                        {hw.referenceRatio && (
+                          <div className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800 text-[11px] text-zinc-500 font-mono">
+                            <strong className="text-zinc-700 dark:text-zinc-300">Reference: </strong>
+                            {hw.referenceRatio}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono pt-1">
+                          <span>Faculty: {hw.faculty}</span>
+                          <span>Max Marks: {hw.maxScore}</span>
+                        </div>
                       </div>
-                      <h4 className="text-base font-bold text-black dark:text-white">{hw.title}</h4>
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400 font-serif leading-relaxed">
-                        {hw.instructions}
-                      </p>
-                      <div className="text-[11px] text-zinc-500">Assignee: {hw.faculty}</div>
-                    </div>
 
-                    <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                      {hw.status === "pending" ? (
+                      <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
                         <button
                           onClick={() => {
-                            setSubmittingHwId(hw.id);
-                            setHwSubmissionText("");
+                            setActiveAssignmentForSubmission(hw);
+                            setSubIssues("");
+                            setSubPleadings("");
+                            setSubPrayer("");
+                            setSubAttachmentName("");
                           }}
-                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold transition-all cursor-pointer text-center"
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-xs"
                         >
-                          Submit Assignment Answer
+                          <PenTool className="w-3.5 h-3.5" />
+                          <span>Draft &amp; Submit Brief</span>
                         </button>
-                      ) : (
-                        <div className="w-full flex items-center justify-between p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                          <span className="font-bold">Grade: {hw.grade}</span>
-                          <span className="text-[11px] italic">{hw.feedback}</span>
+                      </div>
+                    </div>
+                  ))}
+
+                {assignmentsList.filter((a) => !submissionsList.some((s) => s.assignmentId === a.id)).length === 0 && (
+                  <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
+                    <h3 className="text-lg font-bold text-black dark:text-white">All Caught Up!</h3>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                      You have submitted all active coursework assignments. Check the "Submitted &amp; Graded" tab to review faculty evaluations and scores.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 2: COMPLETED & GRADED SUBMISSIONS */}
+            {homeworkTab === "completed" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {submissionsList.map((sub) => (
+                  <div
+                    key={sub.id}
+                    className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        {sub.status === "Pending Evaluation" ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-mono font-bold border border-amber-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                            Pending Faculty Evaluation
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold border border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Score: {sub.grade || `${sub.score}/50`}
+                          </span>
+                        )}
+                        <span className="text-[11px] font-mono text-zinc-400">{sub.submittedDate}</span>
+                      </div>
+
+                      <h4 className="text-base font-bold text-black dark:text-white leading-snug">
+                        {sub.assignmentTitle}
+                      </h4>
+
+                      {sub.issuesRaised && (
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400 font-serif line-clamp-2">
+                          <strong className="text-black dark:text-white font-sans text-[11px]">Issue: </strong>
+                          {sub.issuesRaised}
+                        </p>
+                      )}
+
+                      {sub.feedback && (
+                        <div className="p-3 rounded-2xl bg-amber-500/5 dark:bg-zinc-950 border border-amber-500/20 text-xs">
+                          <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400 uppercase block mb-1">
+                            Faculty Appraisal Remarks:
+                          </span>
+                          <p className="text-zinc-700 dark:text-zinc-300 italic font-serif leading-relaxed line-clamp-2">
+                            "{sub.feedback}"
+                          </p>
+                          {sub.evaluatedBy && (
+                            <span className="text-[10px] text-zinc-400 font-mono mt-1 block">
+                              Evaluator: {sub.evaluatedBy}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
+
+                    <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs gap-2">
+                      <button
+                        onClick={() => downloadSubmissionFile(sub)}
+                        className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:border-amber-500 text-zinc-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                        title="Download Submission File (.txt)"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedSubmissionForViewing(sub)}
+                        className="flex-1 py-2 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black text-black dark:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Submission &amp; Faculty Feedback</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
-            </div>
+
+                {submissionsList.length === 0 && (
+                  <div className="col-span-full p-12 text-center rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <ClipboardList className="w-12 h-12 text-zinc-400 mx-auto" />
+                    <h3 className="text-lg font-bold text-black dark:text-white">No Submissions Recorded</h3>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                      You haven't submitted any briefs yet. Head to "Pending Tasks" to draft and submit your first legal problem!
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -6856,67 +8434,916 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: 3D LAB (Wakheel SCREENSHOT FEATURE)                    */}
+        {/* SECTION: 3D COURTROOM LAB & MOOT SIMULATION (OPTION 7)          */}
         {/* ============================================================== */}
         {activeSection === "three_d_lab" && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-6 shadow-2xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Header Deck */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 shadow-2xl relative overflow-hidden">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
                 <div>
-                  <span className="text-[10px] font-mono text-amber-400 uppercase font-black tracking-wider">
-                    Virtual Supreme Court &amp; High Court Moot Environment
-                  </span>
-                  <h3 className="text-xl font-black">Interactive 3D Courtroom Simulation Lab</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  {(["bench", "bar", "podium", "witness"] as const).map((zone) => (
-                    <button
-                      key={zone}
-                      onClick={() => setActive3dZone(zone)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer uppercase font-mono ${
-                        active3dZone === zone
-                          ? "bg-amber-500 text-black font-extrabold"
-                          : "bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800"
-                      }`}
-                    >
-                      {zone}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3D Courtroom Perspective Canvas */}
-              <div className="h-64 rounded-2xl bg-gradient-to-b from-zinc-900 to-black border border-zinc-800 p-6 flex flex-col justify-between relative overflow-hidden">
-                <div className="flex justify-between items-center text-xs font-mono text-zinc-400">
-                  <span>CAMERA ANGLE: {active3dZone.toUpperCase()} VIEW</span>
-                  <span className="text-emerald-400 font-bold">● 60 FPS RENDER</span>
-                </div>
-                
-                <div className="text-center space-y-2">
-                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-2xl">
-                    ⚖️
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
+                      Virtual Supreme Court &amp; High Court Chambers
+                    </span>
+                    <span className="text-zinc-600 font-mono">•</span>
+                    <span className="text-xs text-zinc-400 font-mono">Advocacy &amp; Moot Lab</span>
                   </div>
-                  <h4 className="text-lg font-black text-white">
-                    {active3dZone === "bench" && "Hon'ble Supreme Court Division Bench View"}
-                    {active3dZone === "bar" && "Senior Counsel & Junior Advocate Bar Table"}
-                    {active3dZone === "podium" && "Appellate Argument Central Lectern"}
-                    {active3dZone === "witness" && "Witness Deposition Box & Cross-Examination Angle"}
-                  </h4>
-                  <p className="text-xs text-zinc-400 max-w-md mx-auto">
-                    Courtroom Etiquette: Stand upon presiding judge&apos;s entrance, address bench as &apos;Your Lordship / Your Ladyship&apos;, keep submissions within allocated 15-minute moot window.
+                  <h2 className="text-2xl font-black text-white mt-1.5 flex items-center gap-2">
+                    <Scale className="w-6 h-6 text-amber-400" />
+                    Interactive 3D Courtroom Simulation Lab
+                  </h2>
+                  <p className="text-xs text-zinc-400 max-w-2xl mt-1">
+                    Master courtroom decorum under the Advocates Act 1961, explore 3D spatial perspectives of the Supreme Court bench, practice rapid procedural objections (BSA 2023 &amp; CPC), and argue landmark constitutional moot cases.
                   </p>
                 </div>
 
-                <div className="flex justify-center gap-3">
+                {/* Right controls: Gavel Strike Button */}
+                <div className="flex items-center gap-3">
                   <button
-                    onClick={() => alert(`Launching full 3D interactive simulation for ${active3dZone}!`)}
-                    className="px-5 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-xs hover:bg-white transition-all cursor-pointer shadow-md"
+                    onClick={() => playGavelSound()}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer shadow-lg active:scale-95"
+                    title="Synthesize authentic double-tap wooden gavel sound effect"
                   >
-                    Launch Fullscreen 3D Lab
+                    <Gavel className="w-4 h-4" />
+                    <span>Strike Gavel</span>
                   </button>
                 </div>
               </div>
+
+              {/* Sub-tab Navigation */}
+              <div className="flex items-center gap-2 pt-6 mt-6 border-t border-zinc-800/80 overflow-x-auto no-scrollbar">
+                {[
+                  { id: "spatial_3d", label: "3D Spatial Courtroom", icon: Eye, badge: "Interactive 3D" },
+                  { id: "moot_sim", label: "Moot Bench Trial Simulator", icon: Scale, badge: "Moot Exam" },
+                  { id: "objection_drill", label: "BSA & CPC Objection Reflex Drill", icon: ShieldAlert, badge: `${drillStreak} Streak` },
+                  { id: "protocol", label: "Advocacy Decorum & Bar Codex", icon: Award, badge: "BCI Rules" },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = courtroomSubTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setCourtroomSubTab(tab.id as any)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                        isActive
+                          ? "bg-amber-500 text-black font-extrabold shadow-md"
+                          : "bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800"
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono ${
+                          isActive
+                            ? "bg-black text-amber-400 font-bold"
+                            : "bg-zinc-800 text-zinc-400"
+                        }`}
+                      >
+                        {tab.badge}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* ============================================================== */}
+            {/* SUB-TAB 1: 3D SPATIAL COURTROOM & PERSPECTIVE STUDIO           */}
+            {/* ============================================================== */}
+            {courtroomSubTab === "spatial_3d" && (
+              <div className="space-y-6">
+                {/* Zone Switcher Controls */}
+                <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-zinc-500 font-mono uppercase mr-1">Zone:</span>
+                    {[
+                      { id: "bench", label: "Division Bench", icon: "🏛️" },
+                      { id: "petitioner", label: "Petitioner Lectern", icon: "🎙️" },
+                      { id: "respondent", label: "Respondent Bar", icon: "⚖️" },
+                      { id: "witness", label: "Witness Katghara", icon: "🪵" },
+                      { id: "steno", label: "Court Master / Steno", icon: "📜" },
+                      { id: "gallery", label: "Public Gallery", icon: "👥" },
+                    ].map((z) => (
+                      <button
+                        key={z.id}
+                        onClick={() => {
+                          setActive3dZone(z.id as any);
+                          setSelectedHotspot(null);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          active3dZone === z.id
+                            ? "bg-amber-500 text-black font-extrabold shadow-sm"
+                            : "bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white border border-zinc-200 dark:border-zinc-800"
+                        }`}
+                      >
+                        <span>{z.icon}</span>
+                        <span>{z.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCameraPerspectiveMode(cameraPerspectiveMode === "isometric" ? "fpv" : "isometric")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-zinc-900 text-amber-400 border border-zinc-800 hover:bg-zinc-800 transition-all cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{cameraPerspectiveMode === "isometric" ? "Switch to 1st Person POV" : "Switch to 3D Isometric"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3D Visual Courtroom Canvas */}
+                <div className="relative rounded-3xl bg-gradient-to-b from-zinc-950 via-zinc-900 to-black border border-zinc-800 p-6 md:p-8 min-h-[420px] flex flex-col justify-between overflow-hidden shadow-2xl">
+                  {/* Top Canvas Bar */}
+                  <div className="flex items-center justify-between text-xs font-mono z-10">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-zinc-400 uppercase">
+                        PERSPECTIVE: <strong className="text-white">{COURTROOM_ZONES[active3dZone]?.name}</strong>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-amber-400 text-[10px] font-mono font-bold">
+                        {cameraPerspectiveMode === "isometric" ? "3D ISOMETRIC ARENA" : "FIRST-PERSON FIELD OF VIEW"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Visual 3D Spatial Representation */}
+                  <div className="my-auto py-8 flex flex-col items-center justify-center relative z-10">
+                    {cameraPerspectiveMode === "isometric" ? (
+                      /* ISOMETRIC SVG COURTROOM MAP */
+                      <div className="w-full max-w-2xl relative">
+                        <svg viewBox="0 0 800 420" className="w-full h-auto drop-shadow-2xl">
+                          <defs>
+                            <linearGradient id="carpetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#18181b" />
+                              <stop offset="100%" stopColor="#09090b" />
+                            </linearGradient>
+                            <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#78350f" />
+                              <stop offset="50%" stopColor="#92400e" />
+                              <stop offset="100%" stopColor="#451a03" />
+                            </linearGradient>
+                            <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#f59e0b" />
+                              <stop offset="100%" stopColor="#d97706" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Courtroom Isometric Floor Slab */}
+                          <polygon points="400,30 760,190 400,390 40,190" fill="url(#carpetGrad)" stroke="#27272a" strokeWidth="2" />
+                          <line x1="400" y1="30" x2="400" y2="390" stroke="#3f3f46" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
+
+                          {/* 1. Elevated Judicial Bench (Dais) at Top */}
+                          <g
+                            onClick={() => { setActive3dZone("bench"); setSelectedHotspot(null); }}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            <polygon points="280,75 520,75 560,120 240,120" fill="url(#woodGrad)" stroke="#f59e0b" strokeWidth={active3dZone === "bench" ? "3" : "1"} />
+                            <polygon points="280,75 520,75 520,60 280,60" fill="#451a03" />
+                            {/* Three Judicial Highback Chairs */}
+                            <rect x="330" y="40" width="30" height="25" rx="3" fill="#18181b" stroke="#f59e0b" strokeWidth="1" />
+                            <rect x="385" y="35" width="30" height="30" rx="3" fill="#18181b" stroke="#f59e0b" strokeWidth="1.5" />
+                            <rect x="440" y="40" width="30" height="25" rx="3" fill="#18181b" stroke="#f59e0b" strokeWidth="1" />
+                            {/* Gavel & Ashoka Pillar Icon */}
+                            <circle cx="400" cy="95" r="8" fill="#f59e0b" />
+                            <text x="400" y="99" textAnchor="middle" fill="#000" fontSize="9" fontWeight="bold">⚖</text>
+                            <text x="400" y="113" textAnchor="middle" fill="#fef08a" fontSize="8" fontWeight="bold" fontFamily="monospace">HON'BLE BENCH</text>
+                          </g>
+
+                          {/* 2. Court Master & Steno Desk */}
+                          <g
+                            onClick={() => { setActive3dZone("steno"); setSelectedHotspot(null); }}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            <polygon points="340,140 460,140 480,165 320,165" fill="#27272a" stroke={active3dZone === "steno" ? "#f59e0b" : "#52525b"} strokeWidth="1.5" />
+                            <text x="400" y="156" textAnchor="middle" fill="#a1a1aa" fontSize="7" fontFamily="monospace">COURT MASTER / STENO</text>
+                          </g>
+
+                          {/* 3. Witness Katghara (Left) */}
+                          <g
+                            onClick={() => { setActive3dZone("witness"); setSelectedHotspot(null); }}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            <polygon points="120,170 200,170 220,210 140,210" fill="#3f3f46" stroke={active3dZone === "witness" ? "#f59e0b" : "#71717a"} strokeWidth="1.5" />
+                            {/* Railing balusters */}
+                            <line x1="145" y1="170" x2="145" y2="155" stroke="#f59e0b" strokeWidth="2" />
+                            <line x1="170" y1="170" x2="170" y2="155" stroke="#f59e0b" strokeWidth="2" />
+                            <line x1="195" y1="170" x2="195" y2="155" stroke="#f59e0b" strokeWidth="2" />
+                            <line x1="135" y1="155" x2="205" y2="155" stroke="#f59e0b" strokeWidth="2" />
+                            <text x="170" y="195" textAnchor="middle" fill="#fef08a" fontSize="7" fontWeight="bold" fontFamily="monospace">KATGHARA (WITNESS)</text>
+                          </g>
+
+                          {/* 4. Petitioner / Appellant Lectern (Center Left) */}
+                          <g
+                            onClick={() => { setActive3dZone("petitioner"); setSelectedHotspot(null); }}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            {/* Bar Table */}
+                            <polygon points="210,210 320,210 340,245 230,245" fill="url(#woodGrad)" stroke={active3dZone === "petitioner" ? "#f59e0b" : "#52525b"} strokeWidth="1.5" />
+                            {/* Center Lectern */}
+                            <rect x="255" y="195" width="22" height="20" rx="2" fill="#18181b" stroke="#f59e0b" strokeWidth="1.5" />
+                            <circle cx="266" cy="190" r="3" fill="#f59e0b" />
+                            <text x="275" y="235" textAnchor="middle" fill="#fef08a" fontSize="7" fontWeight="bold" fontFamily="monospace">PETITIONER PODIUM</text>
+                          </g>
+
+                          {/* 5. Respondent Defense Bar (Center Right) */}
+                          <g
+                            onClick={() => { setActive3dZone("respondent"); setSelectedHotspot(null); }}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            {/* Bar Table */}
+                            <polygon points="480,210 590,210 600,245 490,245" fill="url(#woodGrad)" stroke={active3dZone === "respondent" ? "#f59e0b" : "#52525b"} strokeWidth="1.5" />
+                            <rect x="525" y="195" width="22" height="20" rx="2" fill="#18181b" stroke="#f59e0b" strokeWidth="1.5" />
+                            <circle cx="536" cy="190" r="3" fill="#f59e0b" />
+                            <text x="545" y="235" textAnchor="middle" fill="#fef08a" fontSize="7" fontWeight="bold" fontFamily="monospace">RESPONDENT BAR</text>
+                          </g>
+
+                          {/* 6. Public & Student Gallery at Bottom */}
+                          <g
+                            onClick={() => { setActive3dZone("gallery"); setSelectedHotspot(null); }}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            <polygon points="260,310 540,310 560,350 240,350" fill="#27272a" stroke={active3dZone === "gallery" ? "#f59e0b" : "#3f3f46"} strokeWidth="1.5" />
+                            <text x="400" y="335" textAnchor="middle" fill="#a1a1aa" fontSize="8" fontFamily="monospace">PUBLIC &amp; BAR GALLERY</text>
+                          </g>
+                        </svg>
+                      </div>
+                    ) : (
+                      /* FIRST PERSON POV PERSPECTIVE VIEW */
+                      <div className="w-full max-w-xl text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto text-4xl shadow-2xl">
+                          {active3dZone === "bench" && "🏛️"}
+                          {active3dZone === "petitioner" && "🎙️"}
+                          {active3dZone === "respondent" && "⚖️"}
+                          {active3dZone === "witness" && "🪵"}
+                          {active3dZone === "steno" && "📜"}
+                          {active3dZone === "gallery" && "👥"}
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-mono text-amber-400 uppercase font-black tracking-widest">
+                            FIRST-PERSON CAMERA PERSPECTIVE
+                          </span>
+                          <h3 className="text-xl font-black text-white mt-1">
+                            {COURTROOM_ZONES[active3dZone]?.name}
+                          </h3>
+                          <p className="text-xs text-zinc-400 max-w-md mx-auto mt-1">
+                            {COURTROOM_ZONES[active3dZone]?.cameraPerspective}
+                          </p>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-left space-y-2 max-w-md mx-auto">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Constitutional Statutory Mandate:</span>
+                          <p className="text-xs text-amber-300 font-mono font-semibold">
+                            {COURTROOM_ZONES[active3dZone]?.statutoryBasis}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom Perspective Status Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-zinc-400 pt-4 border-t border-zinc-800/80 z-10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">ACTIVE SECTOR:</span>
+                      <span className="text-white font-bold">{COURTROOM_ZONES[active3dZone]?.hindiName}</span>
+                    </div>
+                    <div className="text-zinc-500 text-[11px]">
+                      Click any zone button or isometric map element to inspect procedural decorum rules.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Deep Zone Procedural Codex Card */}
+                {COURTROOM_ZONES[active3dZone] && (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+                    {/* Left 2 Cols: Decorum Rules & Authority */}
+                    <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                      <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div>
+                          <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 uppercase font-bold">
+                            {COURTROOM_ZONES[active3dZone].courtType}
+                          </span>
+                          <h3 className="text-lg font-black text-black dark:text-white">
+                            Courtroom Decorum &amp; Conduct Rules
+                          </h3>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 text-xs font-mono font-bold">
+                          {COURTROOM_ZONES[active3dZone].hindiName}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {COURTROOM_ZONES[active3dZone].decorumRules.map((rule, idx) => (
+                          <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80">
+                            <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                            <p className="text-xs text-zinc-800 dark:text-zinc-200 font-medium leading-relaxed">
+                              {rule}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300">
+                        <strong className="font-mono">Governing Statutory Authority: </strong>
+                        <span>{COURTROOM_ZONES[active3dZone].statutoryBasis}</span>
+                      </div>
+                    </div>
+
+                    {/* Right Col: Hotspots with Judicial Citations */}
+                    <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                      <div>
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">
+                          Interactive Spatial Hotspots
+                        </span>
+                        <h4 className="text-sm font-black text-black dark:text-white">
+                          Focal Points &amp; Citations
+                        </h4>
+                      </div>
+
+                      <div className="space-y-3">
+                        {COURTROOM_ZONES[active3dZone].hotspots.map((hs, hIdx) => (
+                          <div
+                            key={hIdx}
+                            onClick={() => setSelectedHotspot(hs)}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                              selectedHotspot?.title === hs.title
+                                ? "bg-amber-500/15 border-amber-500 shadow-sm"
+                                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-amber-500/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-black dark:text-white">{hs.title}</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-amber-500" />
+                            </div>
+                            <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2">
+                              {hs.description}
+                            </p>
+                            <div className="mt-2 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/80 flex items-center gap-1.5 text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                              <span>📜</span>
+                              <span className="truncate">{hs.citation}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* SUB-TAB 2: MOOT BENCH TRIAL SIMULATOR                          */}
+            {/* ============================================================== */}
+            {courtroomSubTab === "moot_sim" && (
+              <div className="space-y-6">
+                {!isMootSessionActive ? (
+                  /* CASE SELECTION VIEW */
+                  <div className="space-y-6">
+                    <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                      <div>
+                        <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 uppercase font-black tracking-wider">
+                          All-India National Moot Court Simulation
+                        </span>
+                        <h3 className="text-lg font-black text-black dark:text-white">
+                          Select a Moot Court Case Proposition
+                        </h3>
+                        <p className="text-xs text-zinc-500">
+                          Step up to the central argument lectern, manage the 15-minute bench timer, tackle tough judicial questions, and reserve rebuttal time.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        {MOOT_CASES.map((c) => (
+                          <div
+                            key={c.id}
+                            className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between space-y-4 hover:border-amber-500 transition-all shadow-sm"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold">
+                                  {c.benchStrength}
+                                </span>
+                                <span className="text-[10px] font-mono text-zinc-500">{c.timeLimitMin} Mins Allocated</span>
+                              </div>
+                              <h4 className="text-base font-black text-black dark:text-white">
+                                {c.title}
+                              </h4>
+                              <p className="text-xs text-zinc-500 font-mono">
+                                {c.forum}
+                              </p>
+                              <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                {c.factsSummary}
+                              </p>
+
+                              <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-1">
+                                <span className="text-[10px] font-mono text-zinc-500 font-bold uppercase">Constitutional Issues:</span>
+                                {c.memorialPointers.map((p, pIdx) => (
+                                  <div key={pIdx} className="flex items-start gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-400">
+                                    <span className="text-amber-500">•</span>
+                                    <span>{p}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleStartMootSession(c)}
+                              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
+                            >
+                              <Scale className="w-4 h-4" />
+                              <span>Enter Courtroom &amp; Launch Simulation</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Moot Simulation History */}
+                    {mootHistoryList.length > 0 && (
+                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-black text-black dark:text-white flex items-center gap-2">
+                            <Trophy className="w-4 h-4 text-amber-500" />
+                            Past Moot Trial Scorecards ({mootHistoryList.length})
+                          </h4>
+                        </div>
+
+                        <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                          {mootHistoryList.map((rec) => (
+                            <div key={rec.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                              <div>
+                                <span className="font-bold text-black dark:text-white">{rec.caseTitle}</span>
+                                <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                                  {rec.verdict} • {rec.completedDate}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono font-black text-amber-500 text-sm">
+                                  {rec.totalScore} / {rec.maxScore} ({rec.percentage}%)
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : !mootCompleted ? (
+                  /* LIVE MOOT SESSION ARENA */
+                  <div className="space-y-6 animate-in fade-in duration-200">
+                    {/* Top Status & Moot Timer Bar */}
+                    <div className="p-4 rounded-2xl bg-zinc-950 text-white border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-amber-500 text-black text-[10px] font-mono font-black uppercase">
+                            Round {mootCurrentStepIdx + 1} of {activeMootCase.steps.length}
+                          </span>
+                          <span className="text-xs text-zinc-400 font-mono">{activeMootCase.shortTitle}</span>
+                        </div>
+                        <h3 className="text-sm font-bold text-white mt-1">
+                          {activeMootCase.steps[mootCurrentStepIdx]?.phaseTitle}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        {/* Moot Countdown Digital Clock */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                          <span className={`w-2.5 h-2.5 rounded-full ${mootElapsedSeconds < 600 ? "bg-emerald-400" : mootElapsedSeconds < 840 ? "bg-amber-400 animate-pulse" : "bg-red-500 animate-ping"}`} />
+                          <span className="text-xs font-mono font-bold text-zinc-300">
+                            Time: {Math.floor(mootElapsedSeconds / 60).toString().padStart(2, "0")}:{(mootElapsedSeconds % 60).toString().padStart(2, "0")} / 15:00
+                          </span>
+                        </div>
+
+                        {/* Current Score */}
+                        <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold">
+                          Bench Score: {mootScore}
+                        </div>
+
+                        <button
+                          onClick={() => setIsMootSessionActive(false)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 transition-all cursor-pointer"
+                        >
+                          Exit Chamber
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Presiding Judicial Query Box */}
+                    <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-b from-zinc-950 to-zinc-900 text-white border border-zinc-800 space-y-4 shadow-2xl relative overflow-hidden">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold text-lg">
+                            ⚖️
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-mono text-amber-400 uppercase font-black">
+                              Presiding Division Bench
+                            </span>
+                            <h4 className="text-sm font-black text-white">
+                              {activeMootCase.steps[mootCurrentStepIdx]?.judgeName}
+                            </h4>
+                          </div>
+                        </div>
+
+                        <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-mono uppercase font-bold">
+                          Demeanor: {activeMootCase.steps[mootCurrentStepIdx]?.judgeDemeanor}
+                        </span>
+                      </div>
+
+                      {/* The Bench Query */}
+                      <div className="p-4 rounded-2xl bg-black/40 border border-zinc-800">
+                        <p className="text-sm md:text-base font-serif italic text-amber-100 leading-relaxed">
+                          &ldquo;{activeMootCase.steps[mootCurrentStepIdx]?.benchQuery}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* Oral Argument Submission Options */}
+                      <div className="space-y-3 pt-2">
+                        <span className="text-[11px] font-mono text-zinc-400 uppercase font-bold">
+                          Deliver Counsel&apos;s Oral Response:
+                        </span>
+
+                        {activeMootCase.steps[mootCurrentStepIdx]?.choices.map((choice, cIdx) => (
+                          <button
+                            key={cIdx}
+                            disabled={selectedChoiceIdx !== null}
+                            onClick={() => handleSelectMootChoice(cIdx)}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${
+                              selectedChoiceIdx === cIdx
+                                ? choice.quality === "Distinguished"
+                                  ? "bg-amber-500/15 border-amber-500 text-white shadow-md"
+                                  : choice.quality === "Acceptable"
+                                  ? "bg-zinc-800 border-zinc-600 text-white"
+                                  : "bg-red-950/40 border-red-500 text-red-200"
+                                : selectedChoiceIdx !== null
+                                ? "opacity-50 bg-zinc-900 border-zinc-800 text-zinc-500"
+                                : "bg-zinc-900/80 hover:bg-zinc-850 border-zinc-800 text-zinc-200 hover:border-amber-500/50"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="w-5 h-5 rounded-full bg-zinc-800 text-amber-400 text-xs font-mono font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                {String.fromCharCode(65 + cIdx)}
+                              </span>
+                              <p className="text-xs leading-relaxed font-medium">
+                                {choice.text}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Post-Choice Bench Response & Feedback */}
+                      {mootStepFeedback && (
+                        <div className="p-5 rounded-2xl bg-zinc-900 border border-amber-500/30 space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                          <div className="flex items-center justify-between">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase ${
+                              mootStepFeedback.quality === "Distinguished"
+                                ? "bg-amber-500 text-black"
+                                : mootStepFeedback.quality === "Acceptable"
+                                ? "bg-zinc-700 text-white"
+                                : "bg-red-500 text-white"
+                            }`}>
+                              {mootStepFeedback.quality} Argument (+{mootStepFeedback.scoreDelta} Pts)
+                            </span>
+                            <span className="text-xs font-mono text-zinc-400">Oral Advocacy Evaluation</span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-black/60 border border-zinc-800">
+                            <span className="text-[10px] font-mono text-amber-400 uppercase font-bold block mb-1">Judge&apos;s Immediate Observation:</span>
+                            <p className="text-xs font-serif italic text-zinc-200">
+                              &ldquo;{mootStepFeedback.judgeResponse}&rdquo;
+                            </p>
+                          </div>
+
+                          <p className="text-xs text-zinc-400">
+                            <strong className="text-white">Pedagogical Rationale: </strong>
+                            {mootStepFeedback.feedback}
+                          </p>
+
+                          <div className="flex justify-end pt-2">
+                            <button
+                              onClick={handleNextMootStep}
+                              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center gap-2"
+                            >
+                              <span>Proceed to {mootCurrentStepIdx + 1 < activeMootCase.steps.length ? "Next Judicial Interrogation" : "Final Bench Verdict"}</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* FINAL MOOT VERDICT CERTIFICATE */
+                  <div className="p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-6 text-center max-w-2xl mx-auto shadow-2xl animate-in zoom-in-95 duration-200">
+                    <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto text-4xl shadow-xl">
+                      🏆
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-mono text-amber-400 uppercase font-black tracking-widest">
+                        Official Moot Adjudication Scorecard
+                      </span>
+                      <h3 className="text-2xl font-black text-white mt-1">
+                        {activeMootCase.shortTitle}
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Adjudicated before the {activeMootCase.forum}
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-3">
+                      <div className="text-4xl font-mono font-black text-amber-400">
+                        {mootScore} / {activeMootCase.steps.length * 25}
+                      </div>
+                      <div className="text-sm font-bold text-white">
+                        {mootScore >= 70
+                          ? "Bench Unanimously Concurs - Relief Granted!"
+                          : mootScore >= 45
+                          ? "Split 2:1 Decision in Favor of Counsel"
+                          : "Petition Dismissed with Procedural Reprimand"}
+                      </div>
+                      <p className="text-xs text-zinc-400">
+                        Total Argument Elapsed: {Math.floor(mootElapsedSeconds / 60)}m {mootElapsedSeconds % 60}s
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => handleStartMootSession(activeMootCase)}
+                        className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer shadow-md"
+                      >
+                        Retake Simulation
+                      </button>
+                      <button
+                        onClick={() => setIsMootSessionActive(false)}
+                        className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 font-bold text-xs transition-all cursor-pointer"
+                      >
+                        Back to Case Propositions
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* SUB-TAB 3: BSA & CPC OBJECTION REFLEX DRILL                     */}
+            {/* ============================================================== */}
+            {courtroomSubTab === "objection_drill" && (
+              <div className="space-y-6">
+                {/* Metrics Deck */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between shadow-sm">
+                    <div>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Current Streak</span>
+                      <div className="text-xl font-black text-black dark:text-white mt-0.5">
+                        🔥 {drillStreak} Correct
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono text-amber-500 font-bold">Reflex Speed</span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between shadow-sm">
+                    <div>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Countdown Clock</span>
+                      <div className="text-xl font-black text-amber-500 font-mono mt-0.5">
+                        ⏱️ {drillCountdown}s Left
+                      </div>
+                    </div>
+                    <div className="w-16 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 transition-all duration-1000"
+                        style={{ width: `${(drillCountdown / 10) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between shadow-sm">
+                    <div>
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Overall Accuracy</span>
+                      <div className="text-xl font-black text-black dark:text-white mt-0.5">
+                        {drillStats.accuracyRate}% ({drillStats.correctAnswers}/{drillStats.totalAttempts})
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono text-zinc-500">BSA + CPC</span>
+                  </div>
+                </div>
+
+                {/* Drill Scenario Question Card */}
+                {(() => {
+                  const currentDrill = OBJECTION_DRILLS[drillIndex % OBJECTION_DRILLS.length];
+                  return (
+                    <div className="p-6 md:p-8 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-6 shadow-2xl">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
+                            Scenario {drillIndex + 1} of {OBJECTION_DRILLS.length}
+                          </span>
+                          <span className="text-xs text-zinc-500 font-mono">•</span>
+                          <span className="text-xs text-zinc-400 font-mono">{currentDrill.context}</span>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-zinc-400">
+                          Speaker: <strong className="text-white">{currentDrill.speakingParty}</strong>
+                        </span>
+                      </div>
+
+                      {/* Courtroom Statement */}
+                      <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold block mb-1">
+                          Statement Made on Court Record:
+                        </span>
+                        <p className="text-base md:text-lg font-serif italic text-amber-100 leading-relaxed">
+                          &ldquo;{currentDrill.scenario}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* 4 Procedural Objection Options */}
+                      <div className="space-y-3">
+                        <span className="text-[11px] font-mono text-zinc-400 uppercase font-bold">
+                          Choose Proper Procedural Objection:
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {currentDrill.options.map((opt, oIdx) => {
+                            const isSelected = drillSelectedOptionIdx === oIdx;
+                            return (
+                              <button
+                                key={oIdx}
+                                disabled={drillAnswered}
+                                onClick={() => handleAnswerDrill(oIdx)}
+                                className={`text-left p-4 rounded-2xl border transition-all cursor-pointer ${
+                                  drillAnswered
+                                    ? opt.isCorrect
+                                      ? "bg-amber-500/20 border-amber-500 text-white font-bold"
+                                      : isSelected
+                                      ? "bg-red-950/40 border-red-500 text-red-200"
+                                      : "bg-zinc-900 border-zinc-800 text-zinc-600"
+                                    : "bg-zinc-900 hover:bg-zinc-850 border-zinc-800 text-zinc-200 hover:border-amber-500/50"
+                                }`}
+                              >
+                                <div className="flex items-start gap-2.5">
+                                  <span className="w-5 h-5 rounded-full bg-zinc-800 text-amber-400 text-xs font-mono font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                    {String.fromCharCode(65 + oIdx)}
+                                  </span>
+                                  <div>
+                                    <p className="text-xs font-medium leading-relaxed">
+                                      {opt.label}
+                                    </p>
+                                    <span className="text-[10px] font-mono text-zinc-500 block mt-1">
+                                      {opt.statutoryBasis}
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Post Answer Feedback & Judge Ruling */}
+                      {drillAnswered && (
+                        <div className="p-5 rounded-2xl bg-zinc-900 border border-amber-500/30 space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                          <div className="flex items-center justify-between">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black uppercase ${
+                              currentDrill.verdict === "SUSTAINED"
+                                ? "bg-amber-500 text-black"
+                                : "bg-zinc-800 text-amber-400 border border-amber-400/40"
+                            }`}>
+                              OBJECTION {currentDrill.verdict}!
+                            </span>
+                            <span className="text-xs font-mono text-zinc-400">Judicial Ruling</span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-black/60 border border-zinc-800">
+                            <p className="text-xs font-serif italic text-zinc-200">
+                              &ldquo;{currentDrill.judgeRuling}&rdquo;
+                            </p>
+                          </div>
+
+                          <p className="text-xs text-zinc-400">
+                            <strong className="text-white">Statutory Standard: </strong>
+                            {currentDrill.pedagogicalNote}
+                          </p>
+
+                          <div className="flex justify-end pt-2">
+                            <button
+                              onClick={handleNextDrill}
+                              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center gap-2"
+                            >
+                              <span>Next Procedural Scenario</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* SUB-TAB 4: ADVOCACY DECORUM & BAR CODEX                        */}
+            {/* ============================================================== */}
+            {courtroomSubTab === "protocol" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 1. Dress Code under Advocates Act 1961 */}
+                <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">👔</span>
+                    <h3 className="text-base font-black text-black dark:text-white">
+                      Advocates Act 1961: Dress Code Standard
+                    </h3>
+                  </div>
+                  <div className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    <p>
+                      <strong>Male Advocates:</strong> Black open-collar buttoned-up coat, chapkan, achkan, or black sherwani with white bands and Advocate&apos;s Gown. Alternatively, black coat with white collar shirt and white bands.
+                    </p>
+                    <p>
+                      <strong>Female Advocates:</strong> Black full-sleeve jacket, blouse with high neck collar and white bands, or white saree with black coat.
+                    </p>
+                    <p className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 font-mono text-[11px]">
+                      BCI Rule 30 Summer Exemption: Wearing of black gown is optional in High Courts and Subordinate Courts between April 15 and September 15.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Modes of Judicial Address */}
+                <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🗣️</span>
+                    <h3 className="text-base font-black text-black dark:text-white">
+                      Modes of Address in Indian Courts
+                    </h3>
+                  </div>
+                  <div className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    <p>
+                      <strong>Supreme Court &amp; High Courts:</strong> Addressed as &apos;Your Lordship&apos;, &apos;Your Ladyship&apos;, or &apos;This Hon&apos;ble Court&apos;. (BCI Resolution 2006 permits &apos;Sir&apos; or &apos;Hon&apos;ble Court&apos;).
+                    </p>
+                    <p>
+                      <strong>Subordinate Judiciary (Sessions &amp; Magistrate Courts):</strong> Addressed as &apos;Learned Judge&apos;, &apos;Sir&apos;, or equivalent respectful term in vernacular.
+                    </p>
+                    <p className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px]">
+                      Always rise from your seat when speaking to the Bench; never address judges while seated.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. 15-Minute Moot Time Allocation */}
+                <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">⏱️</span>
+                    <h3 className="text-base font-black text-black dark:text-white">
+                      15-Minute Moot Time Breakdown Formula
+                    </h3>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <span className="font-bold text-black dark:text-white">Minutes 00:00 - 02:00:</span>
+                      <span className="font-mono text-amber-500">Opening &amp; Statement of Jurisdiction</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <span className="font-bold text-black dark:text-white">Minutes 02:00 - 10:00:</span>
+                      <span className="font-mono text-amber-500">Core Substantive Arguments on Merits</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <span className="font-bold text-black dark:text-white">Minutes 10:00 - 13:00:</span>
+                      <span className="font-mono text-amber-500">Addressing Bench Queries &amp; Distinguishing Precedents</span>
+                    </div>
+                    <div className="flex justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <span className="font-bold text-black dark:text-white">Minutes 13:00 - 15:00:</span>
+                      <span className="font-mono text-amber-500">Formulating Prayer &amp; Reserving Rebuttal</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Compendium & Precedent Citation Standard */}
+                <div className="p-6 rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📚</span>
+                    <h3 className="text-base font-black text-black dark:text-white">
+                      Compendium of Authorities Standard
+                    </h3>
+                  </div>
+                  <div className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    <p>
+                      <strong>Index Volume:</strong> Every compendium must contain an alphabetical index of authorities citing the exact page and paragraph relied upon.
+                    </p>
+                    <p>
+                      <strong>Oral Citation Format:</strong> When citing in court, announce: &ldquo;Counsel refers to paragraph 24 in Volume 2 at page 45 of the Compendium, reported in <em>(2023) 4 SCC 1</em>.&rdquo;
+                    </p>
+                    <p className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 font-mono text-[11px]">
+                      Wait for Their Lordships to open the relevant page before reading any statutory extract or ratio.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -8613,151 +11040,612 @@ export function StudentDashboardView({
         </div>
       )}
 
-      {/* 9. CORNELL NOTE CREATION MODAL */}
+      {/* 9. CORNELL NOTE CREATION MODAL (OPTION 5) */}
       {showAddNoteModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="w-full max-w-3xl bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-6 max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setShowAddNoteModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold">
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-black flex items-center justify-center font-bold shadow-sm">
                 <BookText className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-black dark:text-white">Create New Cornell Law Note</h3>
-                <p className="text-xs text-zinc-500">Structured template with recall cues &amp; executive summary</p>
+                <h3 className="text-lg font-black text-black dark:text-white">Author New Cornell Law Note</h3>
+                <p className="text-xs text-zinc-500">
+                  Select a high-yield legal scaffold or author your custom appellate brief.
+                </p>
               </div>
             </div>
 
-            <div className="space-y-3 text-xs">
+            {/* Template Selector Cards */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-mono font-bold text-zinc-500 uppercase tracking-wider block">
+                Quick Model Legal Templates
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {CORNELL_TEMPLATES.map((tpl) => {
+                  const isSelected = selectedTemplateId === tpl.id;
+                  return (
+                    <div
+                      key={tpl.id}
+                      onClick={() => handleApplyTemplateToNewModal(tpl)}
+                      className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-amber-500/10 border-amber-500 text-black dark:text-white shadow-2xs"
+                          : "bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                        <span className="font-bold text-amber-600 dark:text-amber-400">{tpl.subject}</span>
+                        {isSelected && <span className="font-bold text-amber-500">✓ Selected</span>}
+                      </div>
+                      <h4 className="text-xs font-bold text-black dark:text-white">{tpl.name}</h4>
+                      <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5">{tpl.description}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateCornellNoteFromModal} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Note Title / Benchmark Topic *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newNoteTitle}
+                    onChange={(e) => setNewNoteTitle(e.target.value)}
+                    placeholder="e.g. Section 480 BNSS Bail Mechanics & Triple Test"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-amber-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Curriculum Subject *
+                  </label>
+                  <select
+                    value={newNoteSubject}
+                    onChange={(e) => setNewNoteSubject(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-amber-500 font-semibold cursor-pointer"
+                  >
+                    <option value="Constitutional Law">Constitutional Law</option>
+                    <option value="Criminal Jurisprudence (BNS & BNSS)">Criminal Jurisprudence (BNS & BNSS)</option>
+                    <option value="Law of Contracts">Law of Contracts</option>
+                    <option value="Law of Torts & Environment">Law of Torts & Environment</option>
+                    <option value="Civil Procedure & Evidence">Civil Procedure & Evidence</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Note Title / Topic</label>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Topic Code / Sub-Module
+                </label>
                 <input
                   type="text"
-                  value={newNoteTitle}
-                  onChange={(e) => setNewNoteTitle(e.target.value)}
-                  placeholder="e.g. Doctrine of Pith and Substance under Article 246"
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-black dark:text-white text-xs focus:outline-none"
+                  value={newNoteTopic}
+                  onChange={(e) => setNewNoteTopic(e.target.value)}
+                  placeholder="e.g. Fundamental Rights & Article 13(2)"
+                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
+              {/* Recall Cues Tag Manager */}
               <div>
-                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Curriculum Subject</label>
-                <select
-                  value={newNoteSubject}
-                  onChange={(e) => setNewNoteSubject(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-black dark:text-white text-xs focus:outline-none"
-                >
-                  <option value="Constitutional Law">Constitutional Law</option>
-                  <option value="Criminal Jurisprudence (BNS)">Criminal Jurisprudence (BNS)</option>
-                  <option value="Law of Contracts">Law of Contracts</option>
-                  <option value="Civil Procedure & Evidence">Civil Procedure &amp; Evidence</option>
-                  <option value="Legal Reasoning (CLAT)">Legal Reasoning (CLAT)</option>
-                </select>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Recall Cues &amp; Questions of Law
+                </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {newNoteCues.map((cue, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1"
+                    >
+                      <span>{cue}</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewNoteCues(newNoteCues.filter((_, i) => i !== idx))}
+                        className="text-zinc-400 hover:text-rose-500 cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={modalCueInput}
+                    onChange={(e) => setModalCueInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (modalCueInput.trim()) {
+                          setNewNoteCues([...newNoteCues, modalCueInput.trim()]);
+                          setModalCueInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Type cue keyword and press Enter..."
+                    className="flex-1 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white focus:outline-none focus:border-amber-500 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (modalCueInput.trim()) {
+                        setNewNoteCues([...newNoteCues, modalCueInput.trim()]);
+                        setModalCueInput("");
+                      }
+                    }}
+                    className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black font-bold text-xs cursor-pointer"
+                  >
+                    + Add Cue
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <button
-                onClick={() => setShowAddNoteModal(false)}
-                className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (!newNoteTitle.trim()) return;
-                  const newNote = {
-                    id: `note_${Date.now()}`,
-                    title: newNoteTitle.trim(),
-                    subject: newNoteSubject,
-                    cues: ["Core Statutory Provision", "Leading Case Precedent", "Testday Exception"],
-                    content: "Preliminary research notes on statutory interpretation and standard tests applied by appellate courts.",
-                    summary: "Key takeaway synthesis summarizing legislative objective and judicial application.",
-                    lastEdited: "Just now",
-                  };
-                  setStudentNotes([newNote, ...studentNotes]);
-                  setSelectedNoteId(newNote.id);
-                  setNewNoteTitle("");
-                  setShowAddNoteModal(false);
-                }}
-                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-sm"
-              >
-                Create Cornell Note
-              </button>
-            </div>
+              {/* Core Content */}
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Core Legal Formulation &amp; Statutory Analysis *
+                </label>
+                <textarea
+                  rows={8}
+                  required
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Detail the case facts, legal issues, reasoning of judges, statutory construction..."
+                  className="w-full p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-serif leading-relaxed focus:outline-none focus:border-amber-500 text-xs"
+                />
+              </div>
+
+              {/* Summary */}
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Executive Summary &amp; Ratio Decidendi (Bottom Cornell Quadrant) *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={newNoteSummary}
+                  onChange={(e) => setNewNoteSummary(e.target.value)}
+                  placeholder="In 1-2 sentences, synthesize the core ruling or rule of law..."
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-black dark:text-white font-serif italic focus:outline-none focus:border-amber-500 text-xs"
+                />
+              </div>
+
+              {/* Statutes & Precedents */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Statutory Sections (e.g. Art. 368, S.73 ICA)
+                  </label>
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {newNoteStatutes.map((s, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1"
+                      >
+                        <span>{s}</span>
+                        <button
+                          type="button"
+                          onClick={() => setNewNoteStatutes(newNoteStatutes.filter((_, i) => i !== idx))}
+                          className="text-zinc-400 hover:text-rose-500"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={modalStatuteInput}
+                      onChange={(e) => setModalStatuteInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (modalStatuteInput.trim()) {
+                            setNewNoteStatutes([...newNoteStatutes, modalStatuteInput.trim()]);
+                            setModalStatuteInput("");
+                          }
+                        }
+                      }}
+                      placeholder="Add section..."
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (modalStatuteInput.trim()) {
+                          setNewNoteStatutes([...newNoteStatutes, modalStatuteInput.trim()]);
+                          setModalStatuteInput("");
+                        }
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 font-bold text-xs"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Landmark Precedents / Citations
+                  </label>
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {newNoteCases.map((cs, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1"
+                      >
+                        <span>{cs}</span>
+                        <button
+                          type="button"
+                          onClick={() => setNewNoteCases(newNoteCases.filter((_, i) => i !== idx))}
+                          className="text-zinc-400 hover:text-rose-500"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={modalCaseInput}
+                      onChange={(e) => setModalCaseInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (modalCaseInput.trim()) {
+                            setNewNoteCases([...newNoteCases, modalCaseInput.trim()]);
+                            setModalCaseInput("");
+                          }
+                        }
+                      }}
+                      placeholder="Add case citation..."
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (modalCaseInput.trim()) {
+                          setNewNoteCases([...newNoteCases, modalCaseInput.trim()]);
+                          setModalCaseInput("");
+                        }
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 font-bold text-xs"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAddNoteModal(false)}
+                  className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white dark:hover:bg-amber-400 dark:hover:text-black text-black font-extrabold text-xs transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                >
+                  <BookText className="w-4 h-4" />
+                  <span>Save &amp; Open in Cornell Studio</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* 10. HOMEWORK SUBMISSION MODAL */}
-      {submittingHwId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4">
+      {/* ============================================================== */}
+      {/* 10. CASE BRIEF SUBMISSION MODAL (OPTION 4)                     */}
+      {/* ============================================================== */}
+      {activeAssignmentForSubmission && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="w-full max-w-3xl bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-5 max-h-[92vh] overflow-y-auto">
             <button
-              onClick={() => setSubmittingHwId(null)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+              onClick={() => setActiveAssignmentForSubmission(null)}
+              className="absolute top-5 right-5 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500 text-black flex items-center justify-center font-bold">
-                <ClipboardList className="w-5 h-5" />
+
+            {/* Header */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                  {activeAssignmentForSubmission.badge || "STUDENT MEMORIAL"}
+                </span>
+                <span className="text-xs text-zinc-400 font-mono">Faculty: {activeAssignmentForSubmission.faculty}</span>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-black dark:text-white">Submit Assignment Answer</h3>
-                <p className="text-xs text-zinc-500">Direct evaluation by Faculty Panel</p>
-              </div>
+              <h3 className="text-xl font-black text-black dark:text-white">
+                {activeAssignmentForSubmission.title}
+              </h3>
+              <p className="text-xs text-zinc-500">
+                Subject: {activeAssignmentForSubmission.subject} • Max Marks: {activeAssignmentForSubmission.maxScore} • Due: {activeAssignmentForSubmission.dueDate}
+              </p>
             </div>
 
-            <div className="space-y-3 text-xs">
+            {/* Problem Instructions Banner */}
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase text-amber-600 dark:text-amber-400 block">
+                Factual Scenario &amp; Drafting Instructions:
+              </span>
+              <p className="text-xs text-zinc-700 dark:text-zinc-300 font-serif leading-relaxed">
+                {activeAssignmentForSubmission.instructions}
+              </p>
+              {activeAssignmentForSubmission.referenceRatio && (
+                <div className="text-[11px] font-mono text-zinc-500 pt-1 border-t border-zinc-200/50 dark:border-zinc-800/60">
+                  <strong className="text-zinc-700 dark:text-zinc-300">Guiding Judicial Precedents: </strong>
+                  {activeAssignmentForSubmission.referenceRatio}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Scaffold Pre-fill Template Buttons */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+              <span className="font-mono text-zinc-400 shrink-0 font-bold">Model Templates:</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubIssues("1. Whether arrest without Section 35 BNSS compliance and without independent panchas infringes Article 21?\n2. Whether applicant satisfies triple test for regular bail?");
+                  setSubPleadings(
+                    "IN THE COURT OF THE SESSIONS JUDGE AT NEW DELHI\nBAIL PETITION NO. ___ OF 2026\nIN THE MATTER OF: STATE v. ARJUN MEHTA\n\nMOST RESPECTFULLY SHEWETH:\n1. That the Applicant is a bona fide law student with clean criminal antecedents.\n2. That Section 303(2) BNS provides punishment up to 3 years. Under Section 35(3) BNSS and Arnesh Kumar v. State of Bihar (2014), notice of appearance was mandatory.\n3. That the seizure memo fails to satisfy Section 105 BNSS due to complete absence of independent public witnesses.\n4. That the Applicant satisfies the triple test in Satender Kumar Antil (2022) with permanent residence and surrendered travel documents."
+                  );
+                  setSubPrayer("WHEREFORE, it is respectfully prayed that this Hon'ble Court may be pleased to enlarge the Applicant on regular bail under Section 480 BNSS upon reasonable surety.");
+                  setSubAttachmentName("Bail_Petition_Draft_Applicant.pdf");
+                }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black text-zinc-700 dark:text-zinc-300 transition-colors font-medium cursor-pointer shrink-0"
+              >
+                Pre-fill BNSS Bail Draft
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubIssues("1. Scope of constituent power under Article 368.\n2. Invalidation of Article 31C conclusive declaration clause.");
+                  setSubPleadings(
+                    "CASE BRIEF: KESAVANANDA BHARATI v. STATE OF KERALA (1973) 4 SCC 225\n\n1. FACTS & ISSUES: Challenge to 24th, 25th, and 29th Amendments.\n2. RATIO DECIDENDI: The power to amend does not encompass power to destroy the essential framework or basic features of the Constitution.\n3. BASIC FEATURES: Rule of law, democracy, judicial review, secularism, and separation of powers."
+                  );
+                  setSubPrayer("CONCLUSION: Parliament's amending authority cannot override constitutional supremacy.");
+                  setSubAttachmentName("Kesavananda_Analysis_Memo.pdf");
+                }}
+                className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black text-zinc-700 dark:text-zinc-300 transition-colors font-medium cursor-pointer shrink-0"
+              >
+                Pre-fill Case Brief
+              </button>
+            </div>
+
+            {/* Submission Form */}
+            <form onSubmit={handleStudentSubmitHomework} className="space-y-3.5 text-xs">
               <div>
-                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">Your Legal Analysis / Draft Text</label>
-                <textarea
-                  rows={4}
-                  value={hwSubmissionText}
-                  onChange={(e) => setHwSubmissionText(e.target.value)}
-                  placeholder="Draft your submission or paste legal ratios and statutory arguments here..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-black dark:text-white text-xs focus:outline-none resize-none font-serif"
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Issues Raised &amp; Legal Grounds
+                </label>
+                <input
+                  type="text"
+                  value={subIssues}
+                  onChange={(e) => setSubIssues(e.target.value)}
+                  placeholder="e.g. 1. Arbitrary arrest under S.35 BNSS; 2. Satisfaction of triple test under Article 21"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-black dark:text-white text-xs font-serif focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-zinc-500 cursor-pointer hover:border-amber-500">
-                📎 Attach Additional Supporting Brief or PDF (Optional)
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Pleadings, Written Arguments &amp; Statutory Reasoning
+                </label>
+                <textarea
+                  rows={8}
+                  value={subPleadings}
+                  onChange={(e) => setSubPleadings(e.target.value)}
+                  placeholder="Draft your detailed legal argument, cite relevant sections (BNS/BNSS/BSA), and synthesize ratio decidendi from landmark Supreme Court rulings..."
+                  className="w-full p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-black dark:text-white text-xs font-serif leading-relaxed focus:outline-none focus:border-amber-500 resize-none"
+                  required
+                />
               </div>
+
+              <div>
+                <label className="font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Concluding Prayer / Relief Sought
+                </label>
+                <input
+                  type="text"
+                  value={subPrayer}
+                  onChange={(e) => setSubPrayer(e.target.value)}
+                  placeholder="e.g. Wherefore, in the interest of justice, it is most respectfully prayed that this Hon'ble Court..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-black dark:text-white text-xs font-serif focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Simulated File Attachment */}
+              <div
+                onClick={() => setSubAttachmentName(`${activeAssignmentForSubmission.title.slice(0, 20).replace(/\s+/g, "_")}_Draft.pdf`)}
+                className="p-3 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-amber-500 text-center text-zinc-500 cursor-pointer transition-colors"
+              >
+                {subAttachmentName ? (
+                  <span className="text-amber-600 dark:text-amber-400 font-bold font-mono">
+                    📎 Attached: {subAttachmentName} (Click to re-select)
+                  </span>
+                ) : (
+                  <span>📎 Click to attach supporting brief or memorial file (.PDF, .DOCX)</span>
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveAssignmentForSubmission(null)}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  {subSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Submitted for Chamber Review!</span>
+                    </>
+                  ) : (
+                    <span>Submit Brief to Faculty</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 11. STUDENT APPRAISAL & FACULTY FEEDBACK MODAL (OPTION 4)      */}
+      {/* ============================================================== */}
+      {selectedSubmissionForViewing && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="w-full max-w-3xl bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-5 max-h-[92vh] overflow-y-auto">
+            <button
+              onClick={() => setSelectedSubmissionForViewing(null)}
+              className="absolute top-5 right-5 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                    Chamber Appraisal
+                  </span>
+                  <span className="text-xs text-zinc-400 font-mono">Submitted: {selectedSubmissionForViewing.submittedDate}</span>
+                </div>
+                <h3 className="text-lg font-black text-black dark:text-white mt-1">
+                  {selectedSubmissionForViewing.assignmentTitle}
+                </h3>
+              </div>
+
+              {selectedSubmissionForViewing.status === "Graded" ? (
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                  <Award className="w-6 h-6" />
+                  <div>
+                    <span className="text-[10px] font-mono uppercase block font-bold">Chamber Score</span>
+                    <span className="text-xl font-black font-mono">
+                      {selectedSubmissionForViewing.grade || `${selectedSubmissionForViewing.score}/50`}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                  <span className="text-xs font-bold">Under Faculty Review</span>
+                </div>
+              )}
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
+            {/* Faculty Feedback Commentary Banner (if graded) */}
+            {selectedSubmissionForViewing.feedback && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono font-bold text-amber-600 dark:text-amber-400 uppercase text-[10px] flex items-center gap-1.5">
+                    <GraduationCap className="w-4 h-4" />
+                    Faculty Evaluator Commentary
+                  </span>
+                  {selectedSubmissionForViewing.evaluatedBy && (
+                    <span className="font-mono text-zinc-500 text-[11px]">
+                      By: {selectedSubmissionForViewing.evaluatedBy} • {selectedSubmissionForViewing.evaluatedDate}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-800 dark:text-zinc-200 font-serif leading-relaxed italic">
+                  "{selectedSubmissionForViewing.feedback}"
+                </p>
+              </div>
+            )}
+
+            {/* Rubric Breakdown (if available) */}
+            {selectedSubmissionForViewing.rubricBreakdown && (
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
+                <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">
+                  Evaluation Rubric Breakdown
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 text-[10px] block">Statutory Accuracy</span>
+                    <span className="font-mono font-bold text-black dark:text-white">
+                      {selectedSubmissionForViewing.rubricBreakdown.statutoryAccuracy} / 15
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 text-[10px] block">Case Precedents</span>
+                    <span className="font-mono font-bold text-black dark:text-white">
+                      {selectedSubmissionForViewing.rubricBreakdown.casePrecedents} / 15
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 text-[10px] block">Drafting &amp; Prayer</span>
+                    <span className="font-mono font-bold text-black dark:text-white">
+                      {selectedSubmissionForViewing.rubricBreakdown.draftingAndPrayer} / 10
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-zinc-500 text-[10px] block">Legal Reasoning</span>
+                    <span className="font-mono font-bold text-black dark:text-white">
+                      {selectedSubmissionForViewing.rubricBreakdown.legalReasoning} / 10
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Submitted Work Transcript */}
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 space-y-2">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase block">
+                Your Submitted Brief &amp; Arguments:
+              </span>
+              <div className="font-serif text-xs text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed max-h-64 overflow-y-auto pr-1">
+                {selectedSubmissionForViewing.submissionText}
+              </div>
+              {selectedSubmissionForViewing.prayerOrConclusion && (
+                <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 text-xs font-serif">
+                  <strong className="text-black dark:text-white block font-sans text-[10px] uppercase font-bold mb-0.5">
+                    Prayer:
+                  </strong>
+                  {selectedSubmissionForViewing.prayerOrConclusion}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-zinc-200 dark:border-zinc-800">
               <button
-                onClick={() => setSubmittingHwId(null)}
-                className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs"
+                onClick={() => downloadSubmissionFile(selectedSubmissionForViewing)}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5"
               >
-                Cancel
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Appraisal File (.txt)</span>
               </button>
               <button
-                onClick={() => {
-                  setStudentHomework((prev) =>
-                    prev.map((h) =>
-                      h.id === submittingHwId
-                        ? {
-                            ...h,
-                            status: "completed" as const,
-                            grade: "Under Faculty Evaluation",
-                            feedback: "Submission received. Prof. Dr. Rajesh Varma will provide feedback within 24h.",
-                          }
-                        : h
-                    )
-                  );
-                  setSubmittingHwId(null);
-                  setHomeworkTab("completed");
-                }}
-                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-sm"
+                onClick={() => setSelectedSubmissionForViewing(null)}
+                className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-300 cursor-pointer"
               >
-                Submit to Faculty
+                Close
               </button>
             </div>
           </div>

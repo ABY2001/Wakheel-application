@@ -33,7 +33,7 @@ export const INITIAL_BOOKS: LawBook[] = [
     fileSize: "14.2 MB",
     totalPages: 248,
     format: "PDF",
-    coverGradient: "from-blue-700 via-indigo-800 to-slate-900",
+    coverGradient: "from-amber-600 via-amber-700 to-zinc-950",
     description:
       "A comprehensive textbook analyzing the Bharatiya Nyaya Sanhita (BNS) 2023, comparing reformed sections with erstwhile IPC 1860, with detailed chapters on Section 69 deceitful promises, gender-neutral offences, and community service sentencing.",
     uploadedBy: "Prof. Rajesh Varma (Faculty of Criminal Law)",

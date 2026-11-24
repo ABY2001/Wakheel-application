@@ -17,18 +17,37 @@ export const protect = async (req, res, next) => {
         token === "dev_token" ||
         token === "dev_citizen" ||
         token === "dev_advocate" ||
+        token === "dev_student" ||
+        token === "dev_teacher" ||
         token === "guest_token"
       ) {
         const { devStore } = await import("../utils/devStore.js");
         const devUsers = devStore.getUsers();
-        const role = token === "dev_advocate" ? "advocate" : "citizen";
+        let role = "citizen";
+        let defaultName = "Citizen User";
+        let defaultEmail = "citizen@wakheel.com";
+
+        if (token === "dev_advocate") {
+          role = "advocate";
+          defaultName = "Adv. Sarah Jenkins";
+          defaultEmail = "advocate@wakheel.com";
+        } else if (token === "dev_student") {
+          role = "student";
+          defaultName = "Rahul George (Law Scholar)";
+          defaultEmail = "scholar@law.edu";
+        } else if (token === "dev_teacher") {
+          role = "teacher";
+          defaultName = "Prof. Dr. Rajesh Varma";
+          defaultEmail = "rajesh.varma@law.edu";
+        }
+
         const matched = devUsers.find((u) => u.role === role || (role === "citizen" && u.role === "client"));
         req.user = matched
           ? { ...matched, _id: matched._id || matched.id }
           : {
-              _id: token === "dev_advocate" ? "dev_1791778298749" : "default_citizen",
-              fullName: token === "dev_advocate" ? "Adv. Sarah Jenkins" : "Citizen User",
-              email: token === "dev_advocate" ? "advocate@wakheel.com" : "citizen@wakheel.com",
+              _id: token === "dev_advocate" ? "dev_1791778298749" : "dev_" + role,
+              fullName: defaultName,
+              email: defaultEmail,
               role,
             };
         return next();

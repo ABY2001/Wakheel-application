@@ -81,6 +81,10 @@ export const initWebSocketServer = (httpServer) => {
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
   wssInstance = wss;
 
+  wss.on("error", (err) => {
+    console.warn("WebSocketServer warning/error:", err.message);
+  });
+
   wss.on("connection", (ws, req) => {
     let authenticatedUserId = null;
     let authenticatedRole = null;
@@ -493,6 +497,30 @@ export const broadcastMatterEvent = (eventType, matterData, meta = {}) => {
   }
 
   // Broadcast to all active clients (Firm dashboards, Citizen portals, Multi-party rooms)
+  broadcastToAll(payload);
+  return payload;
+};
+
+/**
+ * Broadcast real-time Academy events across Student & Faculty Chambers
+ * @param {"ACADEMY_NEW_ASSIGNMENT" | "ACADEMY_HOMEWORK_SUBMITTED" | "ACADEMY_SUBMISSION_GRADED" | "ACADEMY_NEW_LECTURE" | "ACADEMY_NEW_BOOK"} eventType
+ * @param {object} data
+ * @param {object} [meta]
+ */
+export const broadcastAcademyEvent = (eventType, data, meta = {}) => {
+  const payload = {
+    type: eventType,
+    data,
+    meta: {
+      ...meta,
+      timestamp: new Date().toISOString(),
+    },
+  };
+
+  if (meta?.recipientId) {
+    broadcastMessageToUser(meta.recipientId, payload);
+  }
+
   broadcastToAll(payload);
   return payload;
 };

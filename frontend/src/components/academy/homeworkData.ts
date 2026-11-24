@@ -1,3 +1,5 @@
+import { academyApi } from "@/lib/academyApi";
+
 export interface RubricBreakdown {
   statutoryAccuracy: number; // max 15
   casePrecedents: number; // max 15
@@ -244,12 +246,43 @@ export function getStoredAssignments(): HomeworkAssignment[] {
   }
 }
 
+export async function syncAssignmentsWithServer(): Promise<HomeworkAssignment[]> {
+  if (typeof window === "undefined") return INITIAL_ASSIGNMENTS;
+  try {
+    const res = await academyApi.getAssignments();
+    if (res.success && Array.isArray(res.assignments) && res.assignments.length > 0) {
+      localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(res.assignments));
+      window.dispatchEvent(new Event("storage"));
+      return res.assignments;
+    }
+  } catch (err) {
+    console.warn("syncAssignmentsWithServer offline fallback:", err);
+  }
+  return getStoredAssignments();
+}
+
+export async function syncSubmissionsWithServer(): Promise<HomeworkSubmission[]> {
+  if (typeof window === "undefined") return INITIAL_SUBMISSIONS;
+  try {
+    const res = await academyApi.getSubmissions();
+    if (res.success && Array.isArray(res.submissions)) {
+      localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(res.submissions));
+      window.dispatchEvent(new Event("storage"));
+      return res.submissions;
+    }
+  } catch (err) {
+    console.warn("syncSubmissionsWithServer offline fallback:", err);
+  }
+  return getStoredSubmissions();
+}
+
 export function saveAssignment(assignment: HomeworkAssignment): HomeworkAssignment[] {
   if (typeof window === "undefined") return [assignment, ...INITIAL_ASSIGNMENTS];
   try {
     const current = getStoredAssignments();
     const updated = [assignment, ...current.filter((a) => a.id !== assignment.id)];
     localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(updated));
+    academyApi.createAssignment(assignment).catch((err) => console.warn("saveAssignment remote sync:", err));
     return updated;
   } catch {
     return [assignment, ...INITIAL_ASSIGNMENTS];
@@ -262,6 +295,7 @@ export function deleteAssignment(assignmentId: string): HomeworkAssignment[] {
     const current = getStoredAssignments();
     const updated = current.filter((a) => a.id !== assignmentId);
     localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(updated));
+    academyApi.deleteAssignment(assignmentId).catch((err) => console.warn("deleteAssignment remote sync:", err));
     return updated;
   } catch {
     return INITIAL_ASSIGNMENTS.filter((a) => a.id !== assignmentId);
@@ -298,6 +332,7 @@ export function submitHomework(submission: HomeworkSubmission): HomeworkSubmissi
       updated = [submission, ...current];
     }
     localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(updated));
+    academyApi.submitHomework(submission).catch((err) => console.warn("submitHomework remote sync:", err));
     return updated;
   } catch {
     return [submission, ...INITIAL_SUBMISSIONS];
@@ -337,6 +372,16 @@ export function gradeSubmission(
       return sub;
     });
     localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(updated));
+    academyApi
+      .gradeSubmission(submissionId, {
+        score,
+        maxScore,
+        feedback,
+        rubricBreakdown: rubric,
+        evaluator,
+        status,
+      })
+      .catch((err) => console.warn("gradeSubmission remote sync:", err));
     return updated;
   } catch {
     return INITIAL_SUBMISSIONS;

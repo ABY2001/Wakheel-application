@@ -1,3 +1,5 @@
+import { academyApi } from "@/lib/academyApi";
+
 export interface LectureAudio {
   id: string;
   title: string;
@@ -250,6 +252,21 @@ export function getStoredLectures(): LectureAudio[] {
   }
 }
 
+export async function syncLecturesWithServer(): Promise<LectureAudio[]> {
+  if (typeof window === "undefined") return INITIAL_LECTURES;
+  try {
+    const res = await academyApi.getLectures();
+    if (res.success && Array.isArray(res.lectures) && res.lectures.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.lectures));
+      window.dispatchEvent(new Event("storage"));
+      return res.lectures;
+    }
+  } catch (err) {
+    console.warn("syncLecturesWithServer offline fallback:", err);
+  }
+  return getStoredLectures();
+}
+
 export function saveLecture(lecture: LectureAudio): LectureAudio[] {
   if (typeof window === "undefined") return [lecture];
   try {
@@ -264,6 +281,7 @@ export function saveLecture(lecture: LectureAudio): LectureAudio[] {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event("storage"));
+    academyApi.createLecture(lecture).catch((err) => console.warn("saveLecture remote sync:", err));
     return updated;
   } catch (err) {
     console.error("Failed to save lecture audio:", err);
@@ -278,6 +296,7 @@ export function deleteLecture(id: string): LectureAudio[] {
     const updated = lectures.filter((l) => l.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event("storage"));
+    academyApi.deleteLecture(id).catch((err) => console.warn("deleteLecture remote sync:", err));
     return updated;
   } catch (err) {
     console.error("Failed to delete lecture audio:", err);
@@ -294,6 +313,7 @@ export function incrementListenCount(id: string): LectureAudio[] {
     );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event("storage"));
+    academyApi.incrementLectureListens(id).catch((err) => console.warn("incrementListenCount remote sync:", err));
     return updated;
   } catch (err) {
     console.error("Failed to increment listen count:", err);

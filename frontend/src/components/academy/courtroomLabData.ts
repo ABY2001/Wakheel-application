@@ -1,3 +1,5 @@
+import { academyApi } from "@/lib/academyApi";
+
 /**
  * WAKHEEL ACADEMY - 3D COURTROOM LAB & MOOT SIMULATION DATA LAYER
  * 
@@ -667,12 +669,28 @@ export function getMootHistory(): MootHistoryRecord[] {
   }
 }
 
+export async function syncMootHistoryWithServer(): Promise<MootHistoryRecord[]> {
+  if (typeof window === "undefined") return [];
+  try {
+    const res = await academyApi.getMootRecords();
+    if (res.success && Array.isArray(res.records) && res.records.length > 0) {
+      localStorage.setItem(MOOT_HISTORY_KEY, JSON.stringify(res.records));
+      window.dispatchEvent(new Event("storage"));
+      return res.records;
+    }
+  } catch (err) {
+    console.warn("syncMootHistoryWithServer offline fallback:", err);
+  }
+  return getMootHistory();
+}
+
 export function saveMootRecord(record: MootHistoryRecord): MootHistoryRecord[] {
   if (typeof window === "undefined") return [record];
   try {
     const existing = getMootHistory();
     const updated = [record, ...existing];
     localStorage.setItem(MOOT_HISTORY_KEY, JSON.stringify(updated));
+    academyApi.saveMootRecord(record).catch((err) => console.warn("saveMootRecord remote sync:", err));
     return updated;
   } catch {
     return [record];

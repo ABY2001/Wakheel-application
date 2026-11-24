@@ -1,3 +1,5 @@
+import { academyApi } from "@/lib/academyApi";
+
 export interface CornellNote {
   id: string;
   title: string;
@@ -342,6 +344,21 @@ export function getStoredCornellNotes(): CornellNote[] {
   }
 }
 
+export async function syncNotesWithServer(): Promise<CornellNote[]> {
+  if (typeof window === "undefined") return INITIAL_CORNELL_NOTES;
+  try {
+    const res = await academyApi.getNotes();
+    if (res.success && Array.isArray(res.notes) && res.notes.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.notes));
+      window.dispatchEvent(new Event("storage"));
+      return res.notes;
+    }
+  } catch (err) {
+    console.warn("syncNotesWithServer offline fallback:", err);
+  }
+  return getStoredCornellNotes();
+}
+
 export function saveCornellNote(note: CornellNote): CornellNote[] {
   if (typeof window === "undefined") return [note];
   try {
@@ -356,6 +373,7 @@ export function saveCornellNote(note: CornellNote): CornellNote[] {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event("storage"));
+    academyApi.saveNote(note).catch((err) => console.warn("saveCornellNote remote sync:", err));
     return updated;
   } catch (err) {
     console.error("Failed to save Cornell note:", err);
@@ -370,6 +388,7 @@ export function deleteCornellNote(id: string): CornellNote[] {
     const updated = notes.filter((n) => n.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event("storage"));
+    academyApi.deleteNote(id).catch((err) => console.warn("deleteCornellNote remote sync:", err));
     return updated;
   } catch (err) {
     console.error("Failed to delete Cornell note:", err);
@@ -384,6 +403,7 @@ export function toggleBookmarkCornellNote(id: string): CornellNote[] {
     const updated = notes.map((n) => (n.id === id ? { ...n, isBookmarked: !n.isBookmarked } : n));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event("storage"));
+    academyApi.toggleBookmarkNote(id).catch((err) => console.warn("toggleBookmarkNote remote sync:", err));
     return updated;
   } catch (err) {
     console.error("Failed to toggle bookmark:", err);

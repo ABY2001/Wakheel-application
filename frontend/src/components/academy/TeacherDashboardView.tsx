@@ -77,6 +77,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   LawBook,
   getStoredBooks,
+  syncBooksWithServer,
   saveBook,
   deleteBook,
   downloadBookFile,
@@ -85,6 +86,8 @@ import {
   HomeworkAssignment,
   HomeworkSubmission,
   getStoredAssignments,
+  syncAssignmentsWithServer,
+  syncSubmissionsWithServer,
   saveAssignment,
   deleteAssignment,
   getStoredSubmissions,
@@ -96,11 +99,14 @@ import {
   RecordingTemplate,
   RECORDING_TEMPLATES,
   getStoredLectures,
+  syncLecturesWithServer,
   saveLecture,
   deleteLecture,
   downloadLectureAudio,
   generateSyntheticWavDataUri,
 } from "./lectureAudioData";
+import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
+import { AcademyLiveToast } from "./AcademyLiveToast";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -323,6 +329,16 @@ export function TeacherDashboardView({
     setAssignmentsList(getStoredAssignments());
     setSubmissionsList(getStoredSubmissions());
     setLecturesList(getStoredLectures());
+
+    syncAssignmentsWithServer().then((data) => {
+      if (data && data.length > 0) setAssignmentsList(data);
+    });
+    syncSubmissionsWithServer().then((data) => {
+      if (data && data.length > 0) setSubmissionsList(data);
+    });
+    syncLecturesWithServer().then((data) => {
+      if (data && data.length > 0) setLecturesList(data);
+    });
 
     const handleSync = () => {
       setAssignmentsList(getStoredAssignments());
@@ -785,7 +801,33 @@ export function TeacherDashboardView({
 
   useEffect(() => {
     setBooksList(getStoredBooks());
+    syncBooksWithServer().then((books) => {
+      if (books && books.length > 0) setBooksList(books);
+    });
   }, []);
+
+  // Real-Time Academy WebSocket Gateway & Live Push Notifications
+  const {
+    isConnected: isAcademyWsConnected,
+    liveToast,
+    dismissToast,
+  } = useAcademyWebSocket({
+    role: "faculty",
+    userId: teacherProfile.email || "faculty_varma",
+    autoSync: true,
+    onHomeworkSubmitted: () => {
+      setSubmissionsList(getStoredSubmissions());
+    },
+    onNewAssignment: () => {
+      setAssignmentsList(getStoredAssignments());
+    },
+    onNewLecture: () => {
+      setLecturesList(getStoredLectures());
+    },
+    onNewBook: () => {
+      setBooksList(getStoredBooks());
+    },
+  });
 
   const handlePublishBook = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1260,6 +1302,17 @@ export function TeacherDashboardView({
             <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Rankings">
               <Trophy className="w-4 h-4 text-amber-500" />
             </button>
+
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-[11px] font-mono text-zinc-700 dark:text-zinc-300">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isAcademyWsConnected ? "bg-amber-400 animate-pulse" : "bg-zinc-500"
+                }`}
+              />
+              <span className="hidden md:inline">
+                {isAcademyWsConnected ? "Live Sync" : "Offline"}
+              </span>
+            </div>
 
             <button
               onClick={() => {
@@ -3399,6 +3452,13 @@ export function TeacherDashboardView({
           </div>
         </div>
       )}
+
+      {/* Real-time Academy WebSocket Live Push Notifications */}
+      <AcademyLiveToast
+        toast={liveToast}
+        onDismiss={dismissToast}
+        isConnected={isAcademyWsConnected}
+      />
     </div>
   );
 }

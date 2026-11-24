@@ -1,3 +1,5 @@
+import { academyApi } from "@/lib/academyApi";
+
 export interface BookChapter {
   id: string;
   chapterNumber: number;
@@ -311,12 +313,28 @@ export function getStoredBooks(): LawBook[] {
   }
 }
 
+export async function syncBooksWithServer(): Promise<LawBook[]> {
+  if (typeof window === "undefined") return INITIAL_BOOKS;
+  try {
+    const res = await academyApi.getBooks();
+    if (res.success && Array.isArray(res.books) && res.books.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(res.books));
+      window.dispatchEvent(new Event("storage"));
+      return res.books;
+    }
+  } catch (err) {
+    console.warn("Failed to sync books with server:", err);
+  }
+  return getStoredBooks();
+}
+
 export function saveBook(newBook: LawBook): LawBook[] {
   if (typeof window === "undefined") return [newBook, ...INITIAL_BOOKS];
   try {
     const current = getStoredBooks();
     const updated = [newBook, ...current.filter((b) => b.id !== newBook.id)];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    academyApi.createBook(newBook).catch((err) => console.warn("saveBook remote sync:", err));
     return updated;
   } catch {
     return [newBook, ...INITIAL_BOOKS];
@@ -329,6 +347,7 @@ export function deleteBook(bookId: string): LawBook[] {
     const current = getStoredBooks();
     const updated = current.filter((b) => b.id !== bookId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    academyApi.deleteBook(bookId).catch((err) => console.warn("deleteBook remote sync:", err));
     return updated;
   } catch {
     return INITIAL_BOOKS;
@@ -343,6 +362,7 @@ export function incrementDownloadCount(bookId: string): LawBook[] {
       b.id === bookId ? { ...b, downloadCount: b.downloadCount + 1 } : b
     );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    academyApi.incrementBookDownload(bookId).catch((err) => console.warn("incrementDownloadCount remote sync:", err));
     return updated;
   } catch {
     return INITIAL_BOOKS;

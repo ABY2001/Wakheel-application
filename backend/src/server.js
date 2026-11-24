@@ -24,6 +24,7 @@ import boardDossierRoutes from "./routes/boardDossierRoutes.js";
 import dueDiligenceRoutes from "./routes/dueDiligenceRoutes.js";
 import statutoryNoticeRoutes from "./routes/statutoryNoticeRoutes.js";
 import mdpGovernanceRoutes from "./routes/mdpGovernanceRoutes.js";
+import academyRoutes from "./routes/academyRoutes.js";
 import { initWebSocketServer } from "./socket.js";
 
 // Connect to MongoDB
@@ -74,6 +75,7 @@ app.use("/api/board-dossier", boardDossierRoutes);
 app.use("/api/due-diligence", dueDiligenceRoutes);
 app.use("/api/statutory-notices", statutoryNoticeRoutes);
 app.use("/api/mdp-governance", mdpGovernanceRoutes);
+app.use("/api/academy", academyRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -84,11 +86,25 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+let PORT = Number(process.env.PORT) || 5000;
 
 const server = http.createServer(app);
 initWebSocketServer(server);
 
-server.listen(PORT, () => {
-  console.log(`🚀 Wakheel Server running on http://localhost:${PORT}`);
+const startServer = (portToTry) => {
+  server.listen(portToTry, () => {
+    console.log(`🚀 Wakheel Server running on http://localhost:${portToTry}`);
+  });
+};
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.warn(`⚠️ Port ${PORT} is already in use or reserved by Windows. Trying port ${PORT + 1}...`);
+    PORT = PORT + 1;
+    startServer(PORT);
+  } else {
+    console.error("Server listen error:", err);
+  }
 });
+
+startServer(PORT);

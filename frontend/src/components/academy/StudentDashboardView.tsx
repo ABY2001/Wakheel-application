@@ -98,6 +98,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   LawBook,
   getStoredBooks,
+  syncBooksWithServer,
   incrementDownloadCount,
   downloadBookFile,
 } from "./booksData";
@@ -106,6 +107,8 @@ import {
   HomeworkSubmission,
   getStoredAssignments,
   getStoredSubmissions,
+  syncAssignmentsWithServer,
+  syncSubmissionsWithServer,
   submitHomework,
   downloadSubmissionFile,
 } from "./homeworkData";
@@ -114,6 +117,7 @@ import {
   CornellTemplate,
   CORNELL_TEMPLATES,
   getStoredCornellNotes,
+  syncNotesWithServer,
   saveCornellNote,
   deleteCornellNote,
   toggleBookmarkCornellNote,
@@ -123,6 +127,7 @@ import {
 import {
   LectureAudio,
   getStoredLectures,
+  syncLecturesWithServer,
   incrementListenCount,
   downloadLectureAudio,
   generateSyntheticWavDataUri,
@@ -136,12 +141,15 @@ import {
   MOOT_CASES,
   playGavelSound,
   getMootHistory,
+  syncMootHistoryWithServer,
   saveMootRecord,
   getDrillStats,
   updateDrillStats,
   MootHistoryRecord,
   DrillScoreStats,
 } from "./courtroomLabData";
+import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
+import { AcademyLiveToast } from "./AcademyLiveToast";
 
 interface StudentDashboardProps {
   initialSection?: StudentNavSection;
@@ -344,6 +352,20 @@ export function StudentDashboardView({
     if (initialLecs.length > 0) {
       setActivePlayingLecture(initialLecs[0]);
     }
+
+    // Background server synchronization
+    syncAssignmentsWithServer().then((data) => {
+      if (data && data.length > 0) setAssignmentsList(data);
+    });
+    syncSubmissionsWithServer().then((data) => {
+      if (data && data.length > 0) setSubmissionsList(data);
+    });
+    syncNotesWithServer().then((data) => {
+      if (data && data.length > 0) setStudentNotes(data);
+    });
+    syncLecturesWithServer().then((data) => {
+      if (data && data.length > 0) setFacultyLectures(data);
+    });
 
     const handleSync = () => {
       setAssignmentsList(getStoredAssignments());
@@ -729,6 +751,9 @@ export function StudentDashboardView({
   useEffect(() => {
     setMootHistoryList(getMootHistory());
     setDrillStats(getDrillStats());
+    syncMootHistoryWithServer().then((records) => {
+      if (records && records.length > 0) setMootHistoryList(records);
+    });
   }, []);
 
   // Moot session elapsed timer
@@ -853,6 +878,9 @@ export function StudentDashboardView({
 
   useEffect(() => {
     setBooksList(getStoredBooks());
+    syncBooksWithServer().then((books) => {
+      if (books && books.length > 0) setBooksList(books);
+    });
   }, []);
 
   const handleStudentDownloadBook = (book: LawBook) => {
@@ -917,6 +945,29 @@ export function StudentDashboardView({
     universityName: "National Law University Aspirant / IGNOU Distance LL.B",
   });
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
+
+  // Real-Time Academy WebSocket Gateway & Live Push Notifications
+  const {
+    isConnected: isAcademyWsConnected,
+    liveToast,
+    dismissToast,
+  } = useAcademyWebSocket({
+    role: "student",
+    userId: studentProfile.email || "scholar_ashok",
+    autoSync: true,
+    onNewAssignment: () => {
+      setAssignmentsList(getStoredAssignments());
+    },
+    onSubmissionGraded: () => {
+      setSubmissionsList(getStoredSubmissions());
+    },
+    onNewLecture: () => {
+      setFacultyLectures(getStoredLectures());
+    },
+    onNewBook: () => {
+      setBooksList(getStoredBooks());
+    },
+  });
 
   // Purchase / Enrollment Modal State
   const [purchaseItem, setPurchaseItem] = useState<{
@@ -4150,6 +4201,16 @@ export function StudentDashboardView({
                 <span>Change to Tuition Mode</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-300">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isAcademyWsConnected ? "bg-amber-400 animate-pulse" : "bg-zinc-600"
+                  }`}
+                />
+                <span className="hidden md:inline">
+                  {isAcademyWsConnected ? "Live Sync" : "Offline"}
+                </span>
+              </div>
               {onSwitchToTeacher && (
                 <button
                   onClick={onSwitchToTeacher}
@@ -11651,6 +11712,13 @@ export function StudentDashboardView({
           </div>
         </div>
       )}
+
+      {/* Real-time Academy WebSocket Live Push Notifications */}
+      <AcademyLiveToast
+        toast={liveToast}
+        onDismiss={dismissToast}
+        isConnected={isAcademyWsConnected}
+      />
 
     </div>
   );

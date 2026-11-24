@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["client", "citizen", "advocate", "cs", "ca"],
+      enum: ["client", "citizen", "advocate", "cs", "ca", "student", "teacher", "faculty"],
       default: "citizen",
       required: true,
     },
@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
     },
     accountType: {
       type: String,
-      enum: ["independent_advocate", "advocate", "law_firm", "cs", "ca", "client", "citizen"],
+      enum: ["independent_advocate", "advocate", "law_firm", "cs", "ca", "client", "citizen", "student", "teacher", "faculty"],
       default: "independent_advocate",
     },
     barCouncilId: {

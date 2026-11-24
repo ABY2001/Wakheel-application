@@ -107,6 +107,7 @@ import {
 } from "./lectureAudioData";
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
+import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -241,6 +242,7 @@ export function TeacherDashboardView({
   const [selectedBatchForClass, setSelectedBatchForClass] = useState("CLAT 2027 Super-30 Rankers");
   const [liveClassTopic, setLiveClassTopic] = useState("Legal Reasoning: S.73 Contract Breach & Remote Damages");
   const [liveClassStarted, setLiveClassStarted] = useState(false);
+  const [showTeacherLiveChamber, setShowTeacherLiveChamber] = useState(false);
 
   // 1-on-1 Mentorship Video Room Modal State
   const [activeSessionRoom, setActiveSessionRoom] = useState<any | null>(null);
@@ -2924,7 +2926,8 @@ export function TeacherDashboardView({
                 <button
                   onClick={() => {
                     setLiveClassStarted(true);
-                    setTimeout(() => setShowLiveClassModal(false), 800);
+                    setShowLiveClassModal(false);
+                    setShowTeacherLiveChamber(true);
                   }}
                   className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs cursor-pointer shadow-xs transition-all"
                 >
@@ -3458,6 +3461,22 @@ export function TeacherDashboardView({
         toast={liveToast}
         onDismiss={dismissToast}
         isConnected={isAcademyWsConnected}
+      />
+
+      {/* Real-time WebRTC Live Class Broadcast Chamber */}
+      <AcademyLiveChamberModal
+        isOpen={showTeacherLiveChamber}
+        onClose={() => {
+          setShowTeacherLiveChamber(false);
+          setLiveClassStarted(false);
+        }}
+        roomId={`batch_${selectedBatchForClass.toLowerCase().replace(/[^a-z0-9]/g, "_")}`}
+        roomTitle={selectedBatchForClass}
+        topic={liveClassTopic}
+        mentorName={teacherProfile.fullName || "Prof. Rajesh Varma (Lead Faculty)"}
+        userName={teacherProfile.fullName || "Prof. Rajesh Varma"}
+        userRole="faculty"
+        isBroadcaster={true}
       />
     </div>
   );

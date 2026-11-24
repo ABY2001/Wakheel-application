@@ -150,6 +150,7 @@ import {
 } from "./courtroomLabData";
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
+import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
 
 interface StudentDashboardProps {
   initialSection?: StudentNavSection;
@@ -1097,6 +1098,21 @@ export function StudentDashboardView({
 
   // 6. Bookmarks & Revision Notebook State
   const [showBookmarksDrawer, setShowBookmarksDrawer] = useState(false);
+
+  // 7. Real-Time WebRTC Live Tuition Chamber Modal State
+  const [liveChamberModal, setLiveChamberModal] = useState<{
+    isOpen: boolean;
+    roomId: string;
+    roomTitle: string;
+    topic: string;
+    mentorName: string;
+  }>({
+    isOpen: false,
+    roomId: "tuition_chamber_alpha",
+    roomTitle: "Constitutional Bench Chamber",
+    topic: "Basic Structure & Article 368 Judicial Limits",
+    mentorName: "Prof. Dr. Rajesh Varma",
+  });
 
   const handleSendFloatingAI = async (e?: React.FormEvent, customQuery?: string) => {
     if (e) e.preventDefault();
@@ -7607,7 +7623,15 @@ export function StudentDashboardView({
                   </div>
 
                   <button
-                    onClick={() => alert(`Entering chamber: ${room.title}`)}
+                    onClick={() =>
+                      setLiveChamberModal({
+                        isOpen: true,
+                        roomId: `chamber_${idx + 1}`,
+                        roomTitle: room.title,
+                        topic: room.topic,
+                        mentorName: room.mentor,
+                      })
+                    }
                     className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                   >
                     <Video className="w-3.5 h-3.5" />
@@ -11718,6 +11742,21 @@ export function StudentDashboardView({
         toast={liveToast}
         onDismiss={dismissToast}
         isConnected={isAcademyWsConnected}
+      />
+
+      {/* Real-time WebRTC Live Tuition Chamber */}
+      <AcademyLiveChamberModal
+        isOpen={liveChamberModal.isOpen}
+        onClose={() =>
+          setLiveChamberModal((prev) => ({ ...prev, isOpen: false }))
+        }
+        roomId={liveChamberModal.roomId}
+        roomTitle={liveChamberModal.roomTitle}
+        topic={liveChamberModal.topic}
+        mentorName={liveChamberModal.mentorName}
+        userName={studentProfile.fullName || "Adv. Scholar"}
+        userRole="student"
+        isBroadcaster={false}
       />
 
     </div>

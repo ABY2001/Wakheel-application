@@ -388,8 +388,33 @@ export function gradeSubmission(
   }
 }
 
-export function downloadSubmissionFile(sub: HomeworkSubmission) {
+export async function downloadSubmissionFile(sub: HomeworkSubmission) {
   if (typeof window === "undefined") return;
+
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+  try {
+    const res = await fetch(`${apiBase}/pdf/appraisal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sub),
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Appraisal_${sub.studentName.replace(/\s+/g, "_")}_${sub.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+  } catch (err) {
+    console.warn("downloadSubmissionFile backend PDF fallback:", err);
+  }
+
   const content = `================================================================================
 WAKHEEL ACADEMY LEGAL SUBMISSION & FACULTY APPRAISAL
 ================================================================================

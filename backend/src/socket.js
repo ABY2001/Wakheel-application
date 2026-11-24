@@ -6,6 +6,38 @@ const connectedClients = new Map();
 // In-memory map: roomId -> RoomState (Milestone 2: Real-time Multi-Party Case Collaboration Room)
 const collabRooms = new Map();
 
+// In-memory map for WebRTC peer-to-peer media sessions: roomId -> Map<ws, peerInfo>
+const mediaRooms = new Map();
+
+const getOrCreateMediaRoom = (roomId) => {
+  if (!mediaRooms.has(roomId)) {
+    mediaRooms.set(roomId, new Map());
+  }
+  return mediaRooms.get(roomId);
+};
+
+const broadcastToMediaRoom = (roomId, payload, excludeWs = null) => {
+  const room = mediaRooms.get(roomId);
+  if (!room) return;
+  const rawData = JSON.stringify(payload);
+  room.forEach((peerInfo, peerWs) => {
+    if (peerWs !== excludeWs && peerWs.readyState === WebSocket.OPEN) {
+      peerWs.send(rawData);
+    }
+  });
+};
+
+const sendToPeerInMediaRoom = (roomId, targetPeerId, payload) => {
+  const room = mediaRooms.get(roomId);
+  if (!room) return;
+  const rawData = JSON.stringify(payload);
+  room.forEach((peerInfo, peerWs) => {
+    if (peerInfo.peerId === targetPeerId && peerWs.readyState === WebSocket.OPEN) {
+      peerWs.send(rawData);
+    }
+  });
+};
+
 const getOrCreateCollabRoom = (roomId) => {
   if (!collabRooms.has(roomId)) {
     collabRooms.set(roomId, {
@@ -355,6 +387,126 @@ export const initWebSocketServer = (httpServer) => {
             break;
           }
 
+          // --- WebRTC Peer-to-Peer Media Signaling (Tuition, Moot Court, Collaboration) ---
+          case "webrtc:join": {
+            const { roomId = "tuition_main", peerId, user = {} } = payload;
+            const targetPeerId = peerId || authenticatedUserId || `peer_${Date.now()}`;
+            const room = getOrCreateMediaRoom(roomId);
+
+            // Clean any stale peer socket
+            room.forEach((existingPeer, existingWs) => {
+              if (existingPeer.peerId === targetPeerId && existingWs !== ws) {
+                room.delete(existingWs);
+              }
+            });
+
+            const peerInfo = {
+              peerId: targetPeerId,
+              name: user.name || "Chambers Scholar",
+              role: user.role || authenticatedRole || "student",
+              isBroadcaster: Boolean(user.isBroadcaster),
+              isMuted: Boolean(user.isMuted),
+              isVideoOff: Boolean(user.isVideoOff),
+              isScreenSharing: Boolean(user.isScreenSharing),
+              joinedAt: new Date().toISOString(),
+            };
+            room.set(ws, peerInfo);
+
+            const existingPeers = Array.from(room.values()).filter((p) => p.peerId !== targetPeerId);
+
+            // Send room joined confirmation to newly joined peer
+            ws.send(
+              JSON.stringify({
+                type: "webrtc:room_joined",
+                roomId,
+                peerId: targetPeerId,
+                existingPeers,
+                timestamp: new Date().toISOString(),
+              })
+            );
+
+            // Notify all other peers in the room
+            broadcastToMediaRoom(
+              roomId,
+              {
+                type: "webrtc:peer_joined",
+                roomId,
+                peer: peerInfo,
+              },
+              ws
+            );
+            break;
+          }
+
+          case "webrtc:offer": {
+            const { roomId, targetPeerId, senderPeerId, sdp } = payload;
+            sendToPeerInMediaRoom(roomId, targetPeerId, {
+              type: "webrtc:offer",
+              roomId,
+              senderPeerId,
+              sdp,
+            });
+            break;
+          }
+
+          case "webrtc:answer": {
+            const { roomId, targetPeerId, senderPeerId, sdp } = payload;
+            sendToPeerInMediaRoom(roomId, targetPeerId, {
+              type: "webrtc:answer",
+              roomId,
+              senderPeerId,
+              sdp,
+            });
+            break;
+          }
+
+          case "webrtc:ice_candidate": {
+            const { roomId, targetPeerId, senderPeerId, candidate } = payload;
+            sendToPeerInMediaRoom(roomId, targetPeerId, {
+              type: "webrtc:ice_candidate",
+              roomId,
+              senderPeerId,
+              candidate,
+            });
+            break;
+          }
+
+          case "webrtc:media_state": {
+            const { roomId, peerId, media } = payload;
+            const room = mediaRooms.get(roomId);
+            if (room && room.has(ws)) {
+              const current = room.get(ws);
+              const updated = { ...current, ...media };
+              room.set(ws, updated);
+              broadcastToMediaRoom(
+                roomId,
+                {
+                  type: "webrtc:peer_media_updated",
+                  roomId,
+                  peerId,
+                  media: updated,
+                },
+                ws
+              );
+            }
+            break;
+          }
+
+          case "webrtc:leave": {
+            const { roomId, peerId } = payload;
+            const room = mediaRooms.get(roomId);
+            if (room && room.has(ws)) {
+              const departing = room.get(ws);
+              room.delete(ws);
+              broadcastToMediaRoom(roomId, {
+                type: "webrtc:peer_left",
+                roomId,
+                peerId: departing.peerId || peerId,
+              });
+            }
+            break;
+          }
+
           case "subscribe_matters": {
             ws.send(
               JSON.stringify({
@@ -393,6 +545,19 @@ export const initWebSocketServer = (httpServer) => {
             roomId: rId,
             participant: departing,
             participants: Array.from(room.participants.values()),
+          });
+        }
+      });
+
+      // Clean up mediaRooms
+      mediaRooms.forEach((room, rId) => {
+        if (room.has(ws)) {
+          const departing = room.get(ws);
+          room.delete(ws);
+          broadcastToMediaRoom(rId, {
+            type: "webrtc:peer_left",
+            roomId: rId,
+            peerId: departing.peerId,
           });
         }
       });

@@ -432,6 +432,79 @@ export const academyApi = {
       return { success: false };
     }
   },
+
+  // ==========================================================================
+  // 8. FILE & MEDIA UPLOAD SERVICE
+  // ==========================================================================
+  async uploadFile(
+    file: File | Blob,
+    filename: string,
+    category: "documents" | "audio" | "exhibits" | "books" | "general" = "general"
+  ): Promise<{
+    success: boolean;
+    file?: {
+      originalName: string;
+      storedName: string;
+      category: string;
+      mimetype: string;
+      sizeFormatted: string;
+      fileUrl: string;
+      relativeUrl: string;
+    };
+    message?: string;
+  }> {
+    try {
+      const formData = new FormData();
+      formData.append("file", file, filename);
+      formData.append("category", category);
+
+      const res = await fetch(`${API_BASE_URL}/upload/single`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: formData,
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e: any) {
+      console.warn("academyApi.uploadFile error:", e);
+      return { success: false, message: e.message };
+    }
+  },
+
+  async uploadBase64(
+    base64Data: string,
+    filename: string,
+    category: "documents" | "audio" | "exhibits" | "books" | "general" = "general"
+  ): Promise<{
+    success: boolean;
+    file?: {
+      originalName: string;
+      storedName: string;
+      category: string;
+      fileUrl: string;
+      relativeUrl: string;
+      sizeFormatted: string;
+    };
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/upload/base64`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ base64Data, filename, category }),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e: any) {
+      console.warn("academyApi.uploadBase64 error:", e);
+      return { success: false, message: e.message };
+    }
+  },
 };
 
 export default academyApi;

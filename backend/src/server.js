@@ -25,6 +25,9 @@ import dueDiligenceRoutes from "./routes/dueDiligenceRoutes.js";
 import statutoryNoticeRoutes from "./routes/statutoryNoticeRoutes.js";
 import mdpGovernanceRoutes from "./routes/mdpGovernanceRoutes.js";
 import academyRoutes from "./routes/academyRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import pdfRoutes from "./routes/pdfRoutes.js";
+import { ROOT_UPLOAD_DIR } from "./middleware/upload.js";
 import { initWebSocketServer } from "./socket.js";
 
 // Connect to MongoDB
@@ -54,6 +57,9 @@ app.use(
 );
 app.use(express.json());
 
+// Serve uploaded legal briefs, audio files, and exhibits statically
+app.use("/uploads", express.static(ROOT_UPLOAD_DIR));
+
 // API Health Check
 app.get("/api/health", (req, res) => {
   res.json({
@@ -76,6 +82,8 @@ app.use("/api/due-diligence", dueDiligenceRoutes);
 app.use("/api/statutory-notices", statutoryNoticeRoutes);
 app.use("/api/mdp-governance", mdpGovernanceRoutes);
 app.use("/api/academy", academyRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/pdf", pdfRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

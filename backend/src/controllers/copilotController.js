@@ -5,6 +5,13 @@
 // ============================================================================
 
 import { resolveCopilotQuery } from "../utils/copilotEngine.js";
+import {
+  isGeminiAvailable,
+  queryGeminiLegalCopilot,
+  summarizeJudgmentWithGemini,
+  draftPleadingWithGemini,
+  auditContractWithGemini,
+} from "../services/geminiService.js";
 
 // ----------------------------------------------------------------------------
 // 1. KERALA LEGAL GLOSSARY & REVENUE TRANSLATION DICTIONARY
@@ -456,8 +463,17 @@ export const summarizeJudgment = async (req, res) => {
         success: true,
         isPrecedentFound: true,
         judgment: matched,
-        mode: "dummy_data",
+        mode: "landmark_archive",
       });
+    }
+
+    if (isGeminiAvailable() && ((rawText && rawText.trim().length > 50) || caseTitle || citation)) {
+      try {
+        const geminiSummary = await summarizeJudgmentWithGemini({ citation, caseTitle, rawText });
+        return res.json(geminiSummary);
+      } catch (geminiError) {
+        console.warn("[Copilot] Gemini judgment summary fallback:", geminiError.message);
+      }
     }
 
     // Dynamic AI Summarizer for custom judgment text
@@ -505,6 +521,19 @@ export const draftPleading = async (req, res) => {
       type = "ni_138_demand_notice",
       parameters = {},
     } = req.body;
+
+    if (isGeminiAvailable() && req.body.useAI !== false) {
+      try {
+        const geminiDraft = await draftPleadingWithGemini({
+          type,
+          parameters,
+          customInstructions: req.body.customInstructions || req.body.prompt || "",
+        });
+        return res.json(geminiDraft);
+      } catch (geminiError) {
+        console.warn("[Copilot] Gemini draft fallback to local template:", geminiError.message);
+      }
+    }
 
     const {
       clientName = "[CLIENT / PETITIONER NAME]",
@@ -969,6 +998,22 @@ export const copilotQuery = async (req, res) => {
       return res.status(400).json({ success: false, message: "Prompt is required" });
     }
 
+    if (isGeminiAvailable()) {
+      try {
+        const geminiResult = await queryGeminiLegalCopilot({
+          prompt,
+          mode,
+          language,
+          isDeepResearch,
+          isAgentMode,
+          specialization,
+        });
+        return res.json(geminiResult);
+      } catch (geminiError) {
+        console.warn("[Copilot] Gemini API fallback to statutory engine:", geminiError.message);
+      }
+    }
+
     const result = resolveCopilotQuery({
       prompt,
       mode,
@@ -1280,6 +1325,20 @@ export const auditContract = async (req, res) => {
 
     const chosenSample = STANDARD_SAMPLE_AGREEMENTS[contractType] || STANDARD_SAMPLE_AGREEMENTS.commercial_msa;
     const textToAudit = hasCustomText ? contractText.trim() : chosenSample.text;
+
+    if (hasCustomText && isGeminiAvailable() && req.body.useAI !== false) {
+      try {
+        const geminiAudit = await auditContractWithGemini({
+          contractText: textToAudit,
+          partyRole: req.body.partyRole || "Service Provider / Vendor",
+          jurisdiction: req.body.jurisdiction || "India",
+        });
+        return res.json(geminiAudit);
+      } catch (geminiError) {
+        console.warn("[Copilot] Gemini contract audit fallback to rule engine:", geminiError.message);
+      }
+    }
+
     const lower = textToAudit.toLowerCase();
 
     const clauses = [];

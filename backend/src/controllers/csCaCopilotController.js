@@ -4,6 +4,8 @@
 // Dual-Mode: Gemini 1.5/2.0 API + Zero-Quota Local Statutory Engine
 // ============================================================================
 
+import { isGeminiAvailable, queryGeminiCsCa } from "../services/geminiService.js";
+
 const RBI_BANK_RATE = 6.75; // Benchmark RBI Bank Rate (%)
 const MSMED_PENAL_RATE = 3 * RBI_BANK_RATE; // 20.25% p.a.
 
@@ -560,47 +562,17 @@ export const interactiveCsCaQuery = async (req, res) => {
       return res.status(400).json({ success: false, message: "Prompt query is required." });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
     let answerText = "";
     let usedEngine = "local-statutory-engine";
 
-    if (apiKey && apiKey.trim()) {
+    if (isGeminiAvailable()) {
       try {
-        const systemPrompt = `You are Wakheel AI, the supreme statutory intelligence engine for Indian Company Secretaries (ICSI) and Chartered Accountants (ICAI). 
-You possess profound mastery of:
-1. Companies Act, 2013, ICSI Secretarial Standards (SS-1, SS-2), MCA21 e-filings, NCLT corporate restructuring, and SEBI LODR Regulations.
-2. Income-tax Act, 1961, Section 44AB Tax Audit Form 3CD clauses, Transfer Pricing, Section 43B(h) MSMED rules, and CBDT circulars.
-3. Central Goods & Services Tax (CGST) Act, 2017, IGST, ITC Rule 36(4), DRC-01 notices, and GST Council notifications.
-4. Schedule III Balance Sheet disclosures, Ind AS 12 Deferred Tax, and ICAI Auditing Standards.
-
-Provide an authoritative, exhaustive, and professionally formatted answer with exact statutory sections, rules, penalty implications, and official circular references.`;
-
-        const userMsg = `Category: ${category}\nPractice Mode: ${practiceMode}\nAssessee/Company Context: ${JSON.stringify(
-          matterContext
-        )}\n\nQuery:\n${prompt}`;
-
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\n${userMsg}` }] }],
-              generationConfig: { temperature: 0.25, maxOutputTokens: 2500 },
-            }),
-          }
-        );
-
-        if (geminiRes.ok) {
-          const geminiData = await geminiRes.json();
-          const candidate = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (candidate && candidate.trim()) {
-            answerText = candidate.trim();
-            usedEngine = "gemini-1.5-flash";
-          }
+        answerText = await queryGeminiCsCa({ prompt, category, practiceMode, matterContext });
+        if (answerText && answerText.trim()) {
+          usedEngine = "gemini-4-hydrogen";
         }
       } catch (geminiErr) {
-        console.warn("Gemini call failed for CS/CA query, falling back to local statutory engine:", geminiErr.message);
+        console.warn("[CS/CA Copilot] Gemini API fallback to local statutory engine:", geminiErr.message);
       }
     }
 

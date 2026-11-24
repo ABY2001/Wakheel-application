@@ -15,13 +15,46 @@ import {
 } from "../utils/seedAcademyData.js";
 import { broadcastAcademyEvent } from "../socket.js";
 
-// In-memory fallback caches for development resilience
-let inMemoryBooks = [...INITIAL_ACADEMY_BOOKS];
-let inMemoryAssignments = [...INITIAL_ACADEMY_ASSIGNMENTS];
-let inMemorySubmissions = [];
-let inMemoryLectures = [...INITIAL_ACADEMY_LECTURES];
-let inMemoryNotes = [];
-let inMemoryMootRecords = [];
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, "../../data");
+
+const readDiskJson = (filename, defaultVal) => {
+  try {
+    const fullPath = path.join(DATA_DIR, filename);
+    if (fs.existsSync(fullPath)) {
+      const data = fs.readFileSync(fullPath, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.warn(`[Academy] Failed to read ${filename}:`, e.message);
+  }
+  return defaultVal;
+};
+
+const writeDiskJson = (filename, data) => {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    const fullPath = path.join(DATA_DIR, filename);
+    fs.writeFileSync(fullPath, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.warn(`[Academy] Failed to write ${filename}:`, e.message);
+  }
+};
+
+// Persistent fallback caches for development resilience
+let inMemoryBooks = readDiskJson("dev_academy_books.json", [...INITIAL_ACADEMY_BOOKS]);
+let inMemoryAssignments = readDiskJson("dev_academy_assignments.json", [...INITIAL_ACADEMY_ASSIGNMENTS]);
+let inMemorySubmissions = readDiskJson("dev_academy_submissions.json", []);
+let inMemoryLectures = readDiskJson("dev_academy_lectures.json", [...INITIAL_ACADEMY_LECTURES]);
+let inMemoryNotes = readDiskJson("dev_academy_notes.json", []);
+let inMemoryMootRecords = readDiskJson("dev_academy_moot_records.json", []);
 
 const getUserId = (req) => {
   return String(req.user?._id || req.user?.id || "");
@@ -174,6 +207,7 @@ export const createBook = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryBooks.unshift(newBookData);
+      writeDiskJson("dev_academy_books.json", inMemoryBooks);
       return res.status(201).json({
         success: true,
         book: { ...newBookData, id: customId },
@@ -201,6 +235,7 @@ export const incrementBookDownload = async (req, res) => {
     if (!getIsMongoConnected()) {
       const idx = inMemoryBooks.findIndex((b) => b.customId === id || b.id === id);
       if (idx >= 0) inMemoryBooks[idx].downloadCount = (inMemoryBooks[idx].downloadCount || 0) + 1;
+      writeDiskJson("dev_academy_books.json", inMemoryBooks);
       return res.json({ success: true, count: idx >= 0 ? inMemoryBooks[idx].downloadCount : 1 });
     }
 
@@ -223,6 +258,7 @@ export const deleteBook = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryBooks = inMemoryBooks.filter((b) => b.customId !== id && b.id !== id);
+      writeDiskJson("dev_academy_books.json", inMemoryBooks);
       return res.json({ success: true, message: "Book deleted" });
     }
 
@@ -328,6 +364,7 @@ export const createAssignment = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryAssignments.unshift(newAssignmentData);
+      writeDiskJson("dev_academy_assignments.json", inMemoryAssignments);
       return res.status(201).json({
         success: true,
         assignment: { ...newAssignmentData, id: customId },
@@ -354,6 +391,7 @@ export const deleteAssignment = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryAssignments = inMemoryAssignments.filter((a) => a.customId !== id && a.id !== id);
+      writeDiskJson("dev_academy_assignments.json", inMemoryAssignments);
       return res.json({ success: true, message: "Assignment deleted" });
     }
 
@@ -462,6 +500,7 @@ export const submitHomework = async (req, res) => {
       } else {
         inMemorySubmissions.unshift({ ...submissionPayload, customId, id: customId });
       }
+      writeDiskJson("dev_academy_submissions.json", inMemorySubmissions);
       return res.status(201).json({
         success: true,
         submission: { ...submissionPayload, id: customId },
@@ -527,6 +566,7 @@ export const gradeSubmission = async (req, res) => {
           evaluatedBy,
           studentEmail: inMemorySubmissions[idx]?.studentEmail,
         });
+        writeDiskJson("dev_academy_submissions.json", inMemorySubmissions);
       }
       return res.json({
         success: true,
@@ -671,6 +711,7 @@ export const createLecture = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryLectures.unshift(newLectureData);
+      writeDiskJson("dev_academy_lectures.json", inMemoryLectures);
       return res.status(201).json({
         success: true,
         lecture: { ...newLectureData, id: customId },
@@ -698,6 +739,7 @@ export const incrementLectureListens = async (req, res) => {
     if (!getIsMongoConnected()) {
       const idx = inMemoryLectures.findIndex((l) => l.customId === id || l.id === id);
       if (idx >= 0) inMemoryLectures[idx].listensCount = (inMemoryLectures[idx].listensCount || 0) + 1;
+      writeDiskJson("dev_academy_lectures.json", inMemoryLectures);
       return res.json({ success: true, count: idx >= 0 ? inMemoryLectures[idx].listensCount : 1 });
     }
 
@@ -720,6 +762,7 @@ export const deleteLecture = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryLectures = inMemoryLectures.filter((l) => l.customId !== id && l.id !== id);
+      writeDiskJson("dev_academy_lectures.json", inMemoryLectures);
       return res.json({ success: true, message: "Lecture deleted" });
     }
 
@@ -832,6 +875,7 @@ export const saveNote = async (req, res) => {
       } else {
         inMemoryNotes.unshift({ ...noteData, id: customId });
       }
+      writeDiskJson("dev_academy_notes.json", inMemoryNotes);
       return res.status(201).json({
         success: true,
         note: { ...noteData, id: customId },
@@ -863,6 +907,7 @@ export const deleteNote = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryNotes = inMemoryNotes.filter((n) => n.customId !== id && n.id !== id);
+      writeDiskJson("dev_academy_notes.json", inMemoryNotes);
       return res.json({ success: true, message: "Note deleted" });
     }
 
@@ -884,6 +929,7 @@ export const toggleBookmarkNote = async (req, res) => {
     if (!getIsMongoConnected()) {
       const idx = inMemoryNotes.findIndex((n) => n.customId === id || n.id === id);
       if (idx >= 0) inMemoryNotes[idx].isBookmarked = !inMemoryNotes[idx].isBookmarked;
+      writeDiskJson("dev_academy_notes.json", inMemoryNotes);
       return res.json({ success: true, isBookmarked: idx >= 0 ? inMemoryNotes[idx].isBookmarked : false });
     }
 
@@ -968,6 +1014,7 @@ export const saveMootRecord = async (req, res) => {
 
     if (!getIsMongoConnected()) {
       inMemoryMootRecords.unshift(recordData);
+      writeDiskJson("dev_academy_moot_records.json", inMemoryMootRecords);
       return res.status(201).json({
         success: true,
         record: { ...recordData, id: customId },

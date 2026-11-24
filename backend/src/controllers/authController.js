@@ -41,10 +41,12 @@ export const registerUser = async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
     const cleanPassword = password.trim();
     // Normalize role based on accountType or role
-    let cleanRole = ["advocate", "client", "citizen", "cs", "ca"].includes(role) ? role : "citizen";
+    let cleanRole = ["advocate", "client", "citizen", "cs", "ca", "student", "teacher", "faculty"].includes(role) ? role : "citizen";
     if (accountType === "independent_advocate" || accountType === "advocate") cleanRole = "advocate";
     if (accountType === "law_firm" || accountType === "cs") cleanRole = "cs";
     if (accountType === "ca") cleanRole = "ca";
+    if (accountType === "student" || role === "student") cleanRole = "student";
+    if (accountType === "teacher" || accountType === "faculty" || role === "teacher" || role === "faculty") cleanRole = "teacher";
     if (accountType === "client" || accountType === "citizen") cleanRole = "citizen";
 
     const cleanName = (fullName || normalizedEmail.split("@")[0]).trim();
@@ -201,7 +203,7 @@ export const loginUser = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const cleanPassword = password.trim();
-    const requestedRole = ["advocate", "client", "citizen", "cs", "ca"].includes(role) ? role : undefined;
+    const requestedRole = ["advocate", "client", "citizen", "cs", "ca", "student", "teacher", "faculty"].includes(role) ? (role === "faculty" ? "teacher" : role) : undefined;
 
     console.log(`🔑 Login attempt for: "${normalizedEmail}" (role: ${requestedRole || "any"})`);
 

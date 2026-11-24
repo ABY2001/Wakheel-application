@@ -640,6 +640,7 @@ export function playGavelSound() {
  */
 export interface MootHistoryRecord {
   id: string;
+  studentName?: string;
   caseId: string;
   caseTitle: string;
   totalScore: number;
@@ -733,4 +734,32 @@ export function updateDrillStats(isCorrect: boolean): DrillScoreStats {
     }
   }
   return updated;
+}
+
+export async function downloadMootCertificatePdf(record: MootHistoryRecord): Promise<void> {
+  if (typeof window === "undefined") return;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+
+  try {
+    const res = await fetch(`${apiBase}/pdf/moot-certificate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(record),
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Moot_Certificate_${(record.studentName || "Scholar").replace(/[^a-zA-Z0-9]/g, "_")}_${record.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+  } catch (err) {
+    console.warn("downloadMootCertificatePdf error:", err);
+  }
 }

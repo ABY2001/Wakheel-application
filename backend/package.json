@@ -9,12 +9,15 @@
     "dev": "node --watch src/server.js"
   },
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.3",
+    "multer": "^2.5.0",
+    "pdfkit": "^0.21.0",
     "ws": "^8.22.0"
   }
 }

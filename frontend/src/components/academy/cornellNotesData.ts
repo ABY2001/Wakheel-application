@@ -682,3 +682,34 @@ export function exportCornellNoteAsHtml(note: CornellNote): void {
   printWindow.document.write(html);
   printWindow.document.close();
 }
+
+export async function exportCornellNoteAsPdf(note: CornellNote): Promise<void> {
+  if (typeof window === "undefined") return;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+
+  try {
+    const res = await fetch(`${apiBase}/pdf/cornell-brief`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(note),
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Cornell_Brief_${note.title.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+  } catch (err) {
+    console.warn("exportCornellNoteAsPdf fallback to HTML print:", err);
+  }
+
+  // Fallback to HTML print if backend is offline
+  exportCornellNoteAsHtml(note);
+}

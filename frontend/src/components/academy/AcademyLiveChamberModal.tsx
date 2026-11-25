@@ -196,7 +196,11 @@ export function AcademyLiveChamberModal({
     onClose();
   };
 
-  const remotePeerList = Array.from(remoteStreams.entries());
+  const remotePeerList = roomPeers.map((peer) => [
+    peer.peerId,
+    remoteStreams.get(peer.peerId),
+    peer,
+  ] as const);
   const totalInRoom = 1 + roomPeers.length;
 
   return (
@@ -324,16 +328,13 @@ export function AcademyLiveChamberModal({
           </div>
 
           {/* 2. Remote Peer Video Tiles */}
-          {remotePeerList.map(([peerId, stream]) => {
-            const peerInfo = roomPeers.find((p) => p.peerId === peerId);
-            return (
-              <RemotePeerTile
-                key={peerId}
-                peerInfo={peerInfo}
-                stream={stream}
-              />
-            );
-          })}
+          {remotePeerList.map(([peerId, stream, peerInfo]) => (
+            <RemotePeerTile
+              key={peerId}
+              peerInfo={peerInfo}
+              stream={stream}
+            />
+          ))}
 
           {/* 3. Waiting for Peers placeholder if solitary */}
           {remotePeerList.length === 0 && (

@@ -8,3 +8,4 @@ export { AcademyLectureAudio } from "./AcademyLectureAudio.js";
 export { AcademyCornellNote } from "./AcademyCornellNote.js";
 export { AcademyMootRecord } from "./AcademyMootRecord.js";
 export { AcademyMockExamResult } from "./AcademyMockExamResult.js";
+export { AcademyTuitionRequest } from "./AcademyTuitionRequest.js";

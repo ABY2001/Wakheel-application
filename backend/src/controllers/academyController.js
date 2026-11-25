@@ -6,6 +6,7 @@ import {
   AcademyCornellNote,
   AcademyMootRecord,
   AcademyMockExamResult,
+  AcademyTuitionRequest,
 } from "../models/academyModels.js";
 import { getIsMongoConnected } from "../config/db.js";
 import {
@@ -56,6 +57,99 @@ let inMemoryLectures = readDiskJson("dev_academy_lectures.json", [...INITIAL_ACA
 let inMemoryNotes = readDiskJson("dev_academy_notes.json", []);
 let inMemoryMootRecords = readDiskJson("dev_academy_moot_records.json", []);
 let inMemoryCourses = readDiskJson("dev_academy_courses.json", []);
+let inMemoryTuitionRequests = readDiskJson("dev_academy_tuition_requests.json", []);
+let inMemoryMockTests = readDiskJson("dev_academy_mock_tests.json", [
+  {
+    id: "clat_pro_pass",
+    title: "CLAT 2027 All-India Pass Pro Test Series",
+    conductingBody: "Consortium of 24 National Law Universities Pattern",
+    exam: "CLAT 2027 (NLUs)",
+    badge: "MOST POPULAR",
+    badgeColor: "amber",
+    testsCount: "35 Full Mocks + 120 Chapter Tests + 10 PYQs",
+    enrolledCount: "18.4k Students Enrolled",
+    rating: "4.9",
+    reviewsCount: "1,840",
+    price: 999,
+    originalPrice: 2999,
+    discount: "66% OFF",
+    features: [
+      "120-Question Full Length Timed CBT Mocks with Negative Marking (-0.25)",
+      "All-India Rank & Percentile Predictor based on 18,000+ candidates",
+      "Section-by-section judicial ratio & legal reasoning video solutions",
+      "Includes 10 Previous Years Solved Papers (2015-2026)",
+    ],
+    hasFreeTest: true,
+    freeTestName: "Free Diagnostic Full Mock 01",
+  },
+  {
+    id: "klee_toppers_pack",
+    title: "KLEE 2027 3-Yr & 5-Yr Comprehensive Test Pack",
+    conductingBody: "Commissioner for Entrance Examinations (CEE), Kerala",
+    exam: "KLEE 2027 (Kerala)",
+    badge: "STATE TOPPER'S CHOICE",
+    badgeColor: "black",
+    testsCount: "25 Full Length Mocks + 80 Sectional Tests",
+    enrolledCount: "9.2k Students Enrolled",
+    rating: "4.8",
+    reviewsCount: "920",
+    price: 699,
+    originalPrice: 1999,
+    discount: "65% OFF",
+    features: [
+      "CEE Kerala pattern (+3 for correct, -1 for negative marking)",
+      "Legal Aptitude, General English, GK, and Mental Ability test banks",
+      "Full syllabus coverage for Govt & Private Law Colleges in Kerala",
+      "Instant scorecards & performance analysis",
+    ],
+    hasFreeTest: true,
+    freeTestName: "Free KLEE State Mock 01",
+  },
+  {
+    id: "ailet_master_series",
+    title: "AILET 2027 Dedicated BA LL.B Mock Series",
+    conductingBody: "National Law University, Delhi Dedicated Pattern",
+    exam: "AILET (NLU Delhi)",
+    badge: "HIGH DIFFICULTY",
+    badgeColor: "amber",
+    testsCount: "15 High-Difficulty Mocks + Critical Reasoning Packs",
+    enrolledCount: "6.5k Students Enrolled",
+    rating: "4.9",
+    reviewsCount: "610",
+    price: 799,
+    originalPrice: 2200,
+    discount: "63% OFF",
+    features: [
+      "High-density analytical reading passages & legal reasoning",
+      "Advanced logical puzzles & syllogisms for NLU Delhi",
+      "Sectional speed booster tests with detailed analytics",
+    ],
+    hasFreeTest: false,
+  },
+  {
+    id: "distance_llb_pack",
+    title: "Distance LL.B & Open University Semester Test Bank",
+    conductingBody: "IGNOU & State Open Universities Curricula",
+    exam: "Distance LL.B (IGNOU)",
+    badge: "DISTANCE SCHOLARS",
+    badgeColor: "black",
+    testsCount: "40 Subject Question Banks + Model Answer Guides",
+    enrolledCount: "7.8k Students Enrolled",
+    rating: "4.8",
+    reviewsCount: "740",
+    price: 499,
+    originalPrice: 1499,
+    discount: "66% OFF",
+    features: [
+      "Bharatiya Nyaya Sanhita (BNS 2023) & IPC transition question banks",
+      "Constitution of India (Writs, Fundamental Rights, Golden Triangle)",
+      "Model 20-mark answer writing templates for term-end examinations",
+    ],
+    hasFreeTest: true,
+    freeTestName: "Free Constitutional Law Test",
+  },
+]);
+let inMemoryMockResults = readDiskJson("dev_academy_mock_results.json", []);
 
 const getUserId = (req) => {
   return String(req.user?._id || req.user?.id || "");
@@ -1170,6 +1264,479 @@ export const deleteCourse = async (req, res) => {
     res.json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
     console.error("deleteCourse error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 9. CENTRALIZED TUITION ACCESS & CHAMBER REQUESTS (/api/academy/tuition)
+// ============================================================================
+
+export const requestTuitionAccess = async (req, res) => {
+  try {
+    const { studentName, studentEmail, studentCode, targetExam, reason } = req.body;
+    const email = (studentEmail || getUserEmail(req) || "scholar@wakheel.law").toLowerCase();
+    const name = studentName || req.user?.name || "Wakheel Law Scholar";
+    const code = studentCode || "STU-4KMAC5";
+    const exam = targetExam || "CLAT 2027 (NLUs)";
+    const reqReason = reason || "Intensive Bar and Judicial Services chamber coaching";
+    const customId = `tuition_req_${Date.now()}`;
+
+    const requestData = {
+      customId,
+      studentName: name,
+      studentEmail: email,
+      studentCode: code,
+      targetExam: exam,
+      reason: reqReason,
+      status: "pending",
+      requestedAt: new Date().toISOString(),
+      reviewedBy: "Prof. Dr. Rajesh Varma",
+      facultyNotes: "",
+    };
+
+    broadcastAcademyEvent("ACADEMY_TUITION_REQUESTED", requestData, {
+      studentName: name,
+      studentCode: code,
+      targetExam: exam,
+    });
+
+    if (!getIsMongoConnected()) {
+      // Remove any existing pending request for same student to avoid duplicates
+      inMemoryTuitionRequests = inMemoryTuitionRequests.filter(
+        (r) => !(r.studentEmail === email && r.status === "pending")
+      );
+      inMemoryTuitionRequests.unshift(requestData);
+      writeDiskJson("dev_academy_tuition_requests.json", inMemoryTuitionRequests);
+      return res.status(201).json({
+        success: true,
+        request: { ...requestData, id: customId },
+        mode: "in_memory_fallback",
+      });
+    }
+
+    // In Mongo mode
+    await AcademyTuitionRequest.deleteMany({ studentEmail: email, status: "pending" });
+    const record = await AcademyTuitionRequest.create({
+      ...requestData,
+      userId: req.user?._id || undefined,
+    });
+    const obj = record.toObject();
+    res.status(201).json({
+      success: true,
+      request: { ...obj, id: obj.customId || obj._id.toString() },
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("requestTuitionAccess error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getTuitionRequests = async (req, res) => {
+  try {
+    const { status, search } = req.query;
+
+    if (!getIsMongoConnected()) {
+      let filtered = [...inMemoryTuitionRequests];
+      if (status && status !== "all") {
+        filtered = filtered.filter((r) => r.status === status);
+      }
+      if (search) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(
+          (r) =>
+            r.studentName?.toLowerCase().includes(q) ||
+            r.studentEmail?.toLowerCase().includes(q) ||
+            r.studentCode?.toLowerCase().includes(q) ||
+            r.targetExam?.toLowerCase().includes(q)
+        );
+      }
+      return res.json({
+        success: true,
+        requests: filtered.map((r) => ({ ...r, id: r.customId || r.id })),
+        count: filtered.length,
+        mode: "in_memory_fallback",
+      });
+    }
+
+    const query = {};
+    if (status && status !== "all") {
+      query.status = status;
+    }
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$or = [
+        { studentName: regex },
+        { studentEmail: regex },
+        { studentCode: regex },
+        { targetExam: regex },
+      ];
+    }
+
+    const records = await AcademyTuitionRequest.find(query).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      requests: records.map((r) => {
+        const obj = r.toObject();
+        return { ...obj, id: obj.customId || obj._id.toString() };
+      }),
+      count: records.length,
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getTuitionRequests error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getTuitionStatus = async (req, res) => {
+  try {
+    const email = (req.params.email || getUserEmail(req) || "").toLowerCase();
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email required" });
+    }
+
+    if (!getIsMongoConnected()) {
+      const match = inMemoryTuitionRequests.find((r) => r.studentEmail === email);
+      return res.json({
+        success: true,
+        isApproved: match?.status === "approved",
+        status: match?.status || "none",
+        request: match ? { ...match, id: match.customId || match.id } : null,
+        mode: "in_memory_fallback",
+      });
+    }
+
+    const record = await AcademyTuitionRequest.findOne({ studentEmail: email }).sort({ createdAt: -1 });
+    if (!record) {
+      return res.json({
+        success: true,
+        isApproved: false,
+        status: "none",
+        request: null,
+        mode: "mongo_db",
+      });
+    }
+
+    const obj = record.toObject();
+    res.json({
+      success: true,
+      isApproved: obj.status === "approved",
+      status: obj.status,
+      request: { ...obj, id: obj.customId || obj._id.toString() },
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getTuitionStatus error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const reviewTuitionRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reviewedBy, facultyNotes } = req.body; // status: "approved" | "rejected"
+    const reviewer = reviewedBy || req.user?.name || "Prof. Dr. Rajesh Varma";
+    const reviewedAt = new Date().toISOString();
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
+
+    if (!getIsMongoConnected()) {
+      const idx = inMemoryTuitionRequests.findIndex((r) => r.customId === id || r.id === id);
+      if (idx === -1) {
+        return res.status(404).json({ success: false, message: "Tuition request not found" });
+      }
+
+      inMemoryTuitionRequests[idx].status = status;
+      inMemoryTuitionRequests[idx].reviewedAt = reviewedAt;
+      inMemoryTuitionRequests[idx].reviewedBy = reviewer;
+      if (facultyNotes !== undefined) inMemoryTuitionRequests[idx].facultyNotes = facultyNotes;
+
+      const updated = inMemoryTuitionRequests[idx];
+      writeDiskJson("dev_academy_tuition_requests.json", inMemoryTuitionRequests);
+
+      broadcastAcademyEvent(
+        status === "approved" ? "ACADEMY_TUITION_APPROVED" : "ACADEMY_TUITION_REJECTED",
+        updated,
+        {
+          studentName: updated.studentName,
+          studentEmail: updated.studentEmail,
+          status,
+        }
+      );
+
+      return res.json({
+        success: true,
+        request: { ...updated, id: updated.customId || updated.id },
+        mode: "in_memory_fallback",
+      });
+    }
+
+    const record = await AcademyTuitionRequest.findOne({
+      $or: [{ customId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }],
+    });
+
+    if (!record) {
+      return res.status(404).json({ success: false, message: "Tuition request not found" });
+    }
+
+    record.status = status;
+    record.reviewedAt = reviewedAt;
+    record.reviewedBy = reviewer;
+    if (facultyNotes !== undefined) record.facultyNotes = facultyNotes;
+    await record.save();
+
+    const obj = record.toObject();
+    const updated = { ...obj, id: obj.customId || obj._id.toString() };
+
+    broadcastAcademyEvent(
+      status === "approved" ? "ACADEMY_TUITION_APPROVED" : "ACADEMY_TUITION_REJECTED",
+      updated,
+      {
+        studentName: updated.studentName,
+        studentEmail: updated.studentEmail,
+        status,
+      }
+    );
+
+    res.json({
+      success: true,
+      request: updated,
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("reviewTuitionRequest error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 10. CBT MOCK TEST PACKS, DIAGNOSTIC SCORECARDS & LEADERBOARD (/api/academy/mock-exams)
+// ============================================================================
+
+export const getMockTestPacks = async (req, res) => {
+  try {
+    const { exam, search } = req.query;
+    let filtered = [...inMemoryMockTests];
+    if (exam && exam !== "For You" && exam !== "All") {
+      filtered = filtered.filter((p) => p.exam === exam);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(q) ||
+          p.conductingBody?.toLowerCase().includes(q) ||
+          p.exam?.toLowerCase().includes(q)
+      );
+    }
+    res.json({
+      success: true,
+      packs: filtered,
+      count: filtered.length,
+    });
+  } catch (error) {
+    console.error("getMockTestPacks error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createMockTestPack = async (req, res) => {
+  try {
+    const data = req.body;
+    const id = data.id || `mock_pack_${Date.now()}`;
+    const newPack = {
+      id,
+      title: data.title || "Custom Law Entrance Mock Series",
+      conductingBody: data.conductingBody || "Wakheel Consortium Standard",
+      exam: data.exam || "CLAT 2027 (NLUs)",
+      badge: data.badge || "NEW SERIES",
+      badgeColor: data.badgeColor || "amber",
+      testsCount: data.testsCount || "10 Full Mocks",
+      enrolledCount: data.enrolledCount || "New Cohort",
+      rating: data.rating || "5.0",
+      reviewsCount: data.reviewsCount || "0",
+      price: Number(data.price) || 499,
+      originalPrice: Number(data.originalPrice) || 1499,
+      discount: data.discount || "66% OFF",
+      features: Array.isArray(data.features) ? data.features : ["Full Length Timed CBT Mock"],
+      hasFreeTest: data.hasFreeTest ?? true,
+      freeTestName: data.freeTestName || "Free Diagnostic Mock",
+    };
+    inMemoryMockTests.unshift(newPack);
+    writeDiskJson("dev_academy_mock_tests.json", inMemoryMockTests);
+    broadcastAcademyEvent("ACADEMY_MOCK_PACK_CREATED", newPack);
+    res.status(201).json({ success: true, pack: newPack });
+  } catch (error) {
+    console.error("createMockTestPack error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const submitMockExamResult = async (req, res) => {
+  try {
+    const {
+      studentName,
+      studentEmail,
+      examId,
+      examTitle,
+      totalScore,
+      maxScore,
+      percentage,
+      accuracy,
+      timeSpentSeconds,
+      allIndiaRank,
+      percentile,
+      subjectBreakdown,
+    } = req.body;
+
+    const email = (studentEmail || getUserEmail(req) || "scholar@wakheel.law").toLowerCase();
+    const name = studentName || req.user?.name || "Candidate";
+    const customId = `mock_res_${Date.now()}`;
+    const completedDate = new Date().toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    const resultData = {
+      customId,
+      studentName: name,
+      studentEmail: email,
+      examId: examId || "mock_clat_01",
+      examTitle: examTitle || "CLAT 2027 Full Length All-India Diagnostic Mock",
+      totalScore: Number(totalScore ?? 0),
+      maxScore: Number(maxScore ?? 14),
+      percentage: Number(percentage ?? 0),
+      accuracy: Number(accuracy ?? 0),
+      timeSpentSeconds: Number(timeSpentSeconds ?? 0),
+      allIndiaRank: allIndiaRank ?? null,
+      percentile: percentile !== undefined && percentile !== null ? Number(percentile) : null,
+      subjectBreakdown: subjectBreakdown || {},
+      completedDate,
+      submittedAt: new Date().toISOString(),
+    };
+
+    broadcastAcademyEvent("ACADEMY_MOCK_RESULT_SUBMITTED", resultData, {
+      studentName: name,
+      examTitle: resultData.examTitle,
+      score: `${resultData.totalScore}/${resultData.maxScore}`,
+      percentile: resultData.percentile,
+    });
+
+    if (!getIsMongoConnected()) {
+      inMemoryMockResults.unshift(resultData);
+      writeDiskJson("dev_academy_mock_results.json", inMemoryMockResults);
+      return res.status(201).json({
+        success: true,
+        result: { ...resultData, id: customId },
+        mode: "in_memory_fallback",
+      });
+    }
+
+    const record = await AcademyMockExamResult.create({
+      ...resultData,
+      userId: req.user?._id || undefined,
+    });
+    const obj = record.toObject();
+    res.status(201).json({
+      success: true,
+      result: { ...obj, id: customId || obj._id.toString() },
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("submitMockExamResult error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMockExamResults = async (req, res) => {
+  try {
+    const { studentEmail, examId } = req.query;
+    const email = studentEmail ? String(studentEmail).toLowerCase() : null;
+
+    if (!getIsMongoConnected()) {
+      let filtered = [...inMemoryMockResults];
+      if (email) filtered = filtered.filter((r) => r.studentEmail === email);
+      if (examId) filtered = filtered.filter((r) => r.examId === examId);
+      return res.json({
+        success: true,
+        results: filtered.map((r) => ({ ...r, id: r.customId || r.id })),
+        count: filtered.length,
+        mode: "in_memory_fallback",
+      });
+    }
+
+    const query = {};
+    if (email) query.studentEmail = email;
+    if (examId) query.examId = examId;
+    const records = await AcademyMockExamResult.find(query).sort({ createdAt: -1 }).limit(50);
+    res.json({
+      success: true,
+      results: records.map((r) => {
+        const obj = r.toObject();
+        return { ...obj, id: obj._id.toString() };
+      }),
+      count: records.length,
+      mode: "mongo_db",
+    });
+  } catch (error) {
+    console.error("getMockExamResults error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMockLeaderboard = async (req, res) => {
+  try {
+    let source = [];
+    if (!getIsMongoConnected()) {
+      source = [...inMemoryMockResults];
+    } else {
+      const records = await AcademyMockExamResult.find().sort({ totalScore: -1 }).limit(100);
+      source = records.map((r) => r.toObject());
+    }
+
+    const byEmail = new Map();
+    source.forEach((r) => {
+      const key = (r.studentEmail || r.studentName || "candidate").toLowerCase();
+      const existing = byEmail.get(key);
+      if (!existing) {
+        byEmail.set(key, {
+          name: r.studentName || "Candidate",
+          email: r.studentEmail || "",
+          target: "NLU Aspirant",
+          bestScore: Number(r.totalScore || 0),
+          percentile: r.percentile ? `${Number(r.percentile).toFixed(1)}%` : "95.0%",
+          tests: 1,
+          avatar: (r.studentName || "C").charAt(0).toUpperCase(),
+        });
+      } else {
+        existing.tests += 1;
+        if (Number(r.totalScore || 0) > existing.bestScore) {
+          existing.bestScore = Number(r.totalScore || 0);
+          if (r.percentile) existing.percentile = `${Number(r.percentile).toFixed(1)}%`;
+        }
+      }
+    });
+
+    const leaderboard = Array.from(byEmail.values())
+      .sort((a, b) => b.bestScore - a.bestScore)
+      .map((entry, idx) => ({
+        rank: idx + 1,
+        ...entry,
+        score: entry.bestScore,
+      }));
+
+    res.json({
+      success: true,
+      leaderboard,
+      count: leaderboard.length,
+    });
+  } catch (error) {
+    console.error("getMockLeaderboard error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

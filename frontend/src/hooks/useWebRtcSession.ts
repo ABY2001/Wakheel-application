@@ -54,6 +54,7 @@ export function useWebRtcSession({
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const myPeerIdRef = useRef<string>(peerId || `peer_${Date.now()}`);
+  const mediaStateRef = useRef({ isMicMuted: false, isCameraOff: false, isScreenSharing: false });
 
   const onRemoteStreamAddedRef = useRef(onRemoteStreamAdded);
   const onRemoteStreamRemovedRef = useRef(onRemoteStreamRemoved);
@@ -197,9 +198,9 @@ export function useWebRtcSession({
             name: userName,
             role: userRole,
             isBroadcaster,
-            isMuted: isMicMuted,
-            isVideoOff: isCameraOff,
-            isScreenSharing,
+            isMuted: mediaStateRef.current.isMicMuted,
+            isVideoOff: mediaStateRef.current.isCameraOff,
+            isScreenSharing: mediaStateRef.current.isScreenSharing,
           },
         });
       };
@@ -314,49 +315,65 @@ export function useWebRtcSession({
       setIsWsConnected(false);
       setConnectionState("disconnected");
     }
-  }, [roomId, userName, userRole, isBroadcaster, isMicMuted, isCameraOff, isScreenSharing, sendWs, createPeerConnection]);
+  }, [roomId, userName, userRole, isBroadcaster, sendWs, createPeerConnection]);
 
   // Toggle Microphone
   const toggleMic = useCallback(() => {
+    const nextMuted = !mediaStateRef.current.isMicMuted;
     if (localStreamRef.current) {
       const audioTracks = localStreamRef.current.getAudioTracks();
-      if (audioTracks.length > 0) {
-        const nextEnabled = !audioTracks[0].enabled;
-        audioTracks[0].enabled = nextEnabled;
-        setIsMicMuted(!nextEnabled);
-        sendWs("webrtc:media_state", {
-          roomId,
-          peerId: myPeerIdRef.current,
-          media: { isMuted: !nextEnabled },
-        });
-      }
+      audioTracks.forEach((t) => {
+        t.enabled = !nextMuted;
+      });
     }
+    mediaStateRef.current.isMicMuted = nextMuted;
+    setIsMicMuted(nextMuted);
+    sendWs("webrtc:media_state", {
+      roomId,
+      peerId: myPeerIdRef.current,
+      media: { isMuted: nextMuted },
+    });
   }, [roomId, sendWs]);
 
   // Toggle Camera
   const toggleCamera = useCallback(() => {
+    const nextCameraOff = !mediaStateRef.current.isCameraOff;
     if (localStreamRef.current) {
       const videoTracks = localStreamRef.current.getVideoTracks();
-      if (videoTracks.length > 0) {
-        const nextEnabled = !videoTracks[0].enabled;
-        videoTracks[0].enabled = nextEnabled;
-        setIsCameraOff(!nextEnabled);
-        sendWs("webrtc:media_state", {
-          roomId,
-          peerId: myPeerIdRef.current,
-          media: { isVideoOff: !nextEnabled },
-        });
-      }
+      videoTracks.forEach((t) => {
+        t.enabled = !nextCameraOff;
+      });
     }
+    mediaStateRef.current.isCameraOff = nextCameraOff;
+    setIsCameraOff(nextCameraOff);
+    sendWs("webrtc:media_state", {
+      roomId,
+      peerId: myPeerIdRef.current,
+      media: { isVideoOff: nextCameraOff },
+    });
   }, [roomId, sendWs]);
 
   // Toggle Screen Sharing
   const toggleScreenShare = useCallback(async () => {
     if (typeof window === "undefined" || !navigator.mediaDevices?.getDisplayMedia) return;
 
+    const restoreCameraTrack = () => {
+      const camTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (camTrack) {
+        peerConnectionsRef.current.forEach((pc) => {
+          const sender = pc.getSenders().find((s) => s.track && s.track.kind === "video");
+          if (sender) {
+            sender.replaceTrack(camTrack);
+          }
+        });
+      }
+    };
+
     if (isScreenSharing && screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((t) => t.stop());
       screenStreamRef.current = null;
+      restoreCameraTrack();
+      mediaStateRef.current.isScreenSharing = false;
       setIsScreenSharing(false);
       sendWs("webrtc:media_state", {
         roomId,
@@ -369,6 +386,7 @@ export function useWebRtcSession({
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       screenStreamRef.current = screenStream;
+      mediaStateRef.current.isScreenSharing = true;
       setIsScreenSharing(true);
 
       const videoTrack = screenStream.getVideoTracks()[0];
@@ -380,8 +398,10 @@ export function useWebRtcSession({
       });
 
       videoTrack.onended = () => {
+        mediaStateRef.current.isScreenSharing = false;
         setIsScreenSharing(false);
         screenStreamRef.current = null;
+        restoreCameraTrack();
         sendWs("webrtc:media_state", {
           roomId,
           peerId: myPeerIdRef.current,
@@ -406,6 +426,13 @@ export function useWebRtcSession({
       peerId: myPeerIdRef.current,
     });
 
+    if (socketRef.current) {
+      try {
+        socketRef.current.close();
+      } catch {}
+      socketRef.current = null;
+    }
+
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
@@ -414,6 +441,7 @@ export function useWebRtcSession({
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((t) => t.stop());
       screenStreamRef.current = null;
+      mediaStateRef.current.isScreenSharing = false;
       setIsScreenSharing(false);
     }
 
@@ -421,6 +449,7 @@ export function useWebRtcSession({
     peerConnectionsRef.current.clear();
     setRemoteStreams(new Map());
     setRoomPeers([]);
+    setIsWsConnected(false);
     setConnectionState("idle");
   }, [roomId, sendWs]);
 

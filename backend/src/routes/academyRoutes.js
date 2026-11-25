@@ -27,6 +27,15 @@ import {
   getCourseById,
   createCourse,
   deleteCourse,
+  requestTuitionAccess,
+  getTuitionRequests,
+  getTuitionStatus,
+  reviewTuitionRequest,
+  getMockTestPacks,
+  createMockTestPack,
+  submitMockExamResult,
+  getMockExamResults,
+  getMockLeaderboard,
 } from "../controllers/academyController.js";
 
 const router = express.Router();
@@ -63,5 +72,16 @@ router.route("/stats").get(protect, getAcademyStats);
 // 8. Masterclass Law Courses & Curricula (/api/academy/courses)
 router.route("/courses").get(protect, getCourses).post(protect, createCourse);
 router.route("/courses/:id").get(protect, getCourseById).delete(protect, deleteCourse);
+
+// 9. Centralized Tuition Access & Chamber Requests (/api/academy/tuition)
+router.route("/tuition/request").post(protect, requestTuitionAccess);
+router.route("/tuition/requests").get(protect, getTuitionRequests);
+router.route("/tuition/status/:email").get(protect, getTuitionStatus);
+router.route("/tuition/requests/:id/review").put(protect, reviewTuitionRequest);
+
+// 10. CBT Mock Test Packs, Scorecards & Leaderboard (/api/academy/mock-exams)
+router.route("/mock-exams").get(protect, getMockTestPacks).post(protect, createMockTestPack);
+router.route("/mock-exams/results").get(protect, getMockExamResults).post(protect, submitMockExamResult);
+router.route("/mock-exams/leaderboard").get(protect, getMockLeaderboard);
 
 export default router;

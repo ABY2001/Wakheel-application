@@ -151,7 +151,13 @@ import {
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
 import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
-import academyApi, { LawCourse } from "../../lib/academyApi";
+import academyApi, {
+  LawCourse,
+  TuitionAccessRequest,
+  MockTestPack,
+  MockExamResult,
+  MockLeaderboardEntry,
+} from "../../lib/academyApi";
 
 interface StudentDashboardProps {
   initialSection?: StudentNavSection;
@@ -938,6 +944,19 @@ export function StudentDashboardView({
     onNewBook: () => {
       setBooksList(getStoredBooks());
     },
+    onEvent: (event) => {
+      if (event.type === "ACADEMY_TUITION_APPROVED") {
+        setTuitionStatus("approved");
+        try {
+          localStorage.setItem("wakheel_tuition_status", "approved");
+        } catch {}
+      } else if (event.type === "ACADEMY_TUITION_REJECTED") {
+        setTuitionStatus("rejected");
+        try {
+          localStorage.setItem("wakheel_tuition_status", "rejected");
+        } catch {}
+      }
+    },
   });
 
   // Purchase / Enrollment Modal State
@@ -976,6 +995,19 @@ export function StudentDashboardView({
   const [cbtPassageFontSize, setCbtPassageFontSize] = useState<"sm" | "base" | "lg">("sm");
   const [cbtReviewFilter, setCbtReviewFilter] = useState<"all" | "correct" | "incorrect" | "unattempted" | "marked">("all");
   const [showCbtGuidelinesModal, setShowCbtGuidelinesModal] = useState(false);
+
+  // Dynamic CBT Mock Packs, Persisted Scorecards & Leaderboard State
+  const [dynamicMockPacks, setDynamicMockPacks] = useState<MockTestPack[]>([]);
+  const [mockExamHistory, setMockExamHistory] = useState<MockExamResult[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_mock_exam_results");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [dynamicLeaderboard, setDynamicLeaderboard] = useState<MockLeaderboardEntry[]>([]);
 
   // AI Doubt Solver State
   const [aiChatMessages, setAiChatMessages] = useState<
@@ -1039,7 +1071,34 @@ export function StudentDashboardView({
   ]);
   const [floatingLoading, setFloatingLoading] = useState(false);
 
-  // 2. Tuition Access Grant State
+  // 2. Centralized Tuition Access & Chamber State
+  const [tuitionStatus, setTuitionStatus] = useState<"none" | "pending" | "approved" | "rejected">(() => {
+    if (typeof window === "undefined") return "none";
+    try {
+      return (localStorage.getItem("wakheel_tuition_status") as any) || "none";
+    } catch {
+      return "none";
+    }
+  });
+  const [tuitionRequestData, setTuitionRequestData] = useState<TuitionAccessRequest | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const s = localStorage.getItem("wakheel_tuition_request");
+      return s ? JSON.parse(s) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showTuitionModal, setShowTuitionModal] = useState(false);
+  const [tuitionName, setTuitionName] = useState("Advithya Sharma");
+  const [tuitionEmail, setTuitionEmail] = useState("advithya.sharma@nls.ac.in");
+  const [tuitionTargetExam, setTuitionTargetExam] = useState("CLAT 2027 (NLUs)");
+  const [tuitionChamberDept, setTuitionChamberDept] = useState("Constitutional Law & Writs");
+  const [tuitionStatement, setTuitionStatement] = useState(
+    "Seeking structured chamber mentorship, daily judicial reasoning drills, and mock moot bench preparation."
+  );
+  const [isSubmittingTuition, setIsSubmittingTuition] = useState(false);
+  const [tuitionSubmitSuccess, setTuitionSubmitSuccess] = useState(false);
   const [showGrantModal, setShowGrantModal] = useState(false);
   const [grantIncomeBracket, setGrantIncomeBracket] = useState("< ₹3.5 Lakhs / year (Eligible for 100% Fee Waiver)");
   const [grantQualifyingScore, setGrantQualifyingScore] = useState("91.2% (Senior Secondary / Graduation)");
@@ -1300,6 +1359,50 @@ export function StudentDashboardView({
     setGrantCouponCode(code);
     setGrantSuccess(true);
     setCouponApplied(true);
+  };
+
+  // Sync Tuition Status from backend API
+  useEffect(() => {
+    let isMounted = true;
+    async function syncTuitionState() {
+      try {
+        const email = studentProfile.email || "scholar@wakheel.law";
+        const res = await academyApi.getTuitionStatus(email);
+        if (isMounted && res.success && res.status && res.status !== "none") {
+          setTuitionStatus(res.status as any);
+          if (res.request) setTuitionRequestData(res.request);
+        }
+      } catch (err) {
+        console.warn("syncTuitionState error:", err);
+      }
+    }
+    syncTuitionState();
+    return () => {
+      isMounted = false;
+    };
+  }, [studentProfile.email]);
+
+  const handleSubmitTuitionRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSubmittingTuition(true);
+      const res = await academyApi.requestTuitionAccess({
+        studentName: tuitionName.trim() || studentProfile.fullName,
+        studentEmail: tuitionEmail.trim() || studentProfile.email,
+        studentCode: "STU-008AC5",
+        targetExam: tuitionTargetExam,
+        reason: `${tuitionChamberDept} — ${tuitionStatement.trim()}`,
+      });
+      if (res.success && res.request) {
+        setTuitionStatus("pending");
+        setTuitionRequestData(res.request);
+        setTuitionSubmitSuccess(true);
+      }
+    } catch (err) {
+      console.error("Tuition request submit error:", err);
+    } finally {
+      setIsSubmittingTuition(false);
+    }
   };
 
   // Load profile from localStorage
@@ -2393,18 +2496,108 @@ export function StudentDashboardView({
     handleStartCbtExam();
   };
 
-  const handleSubmitCbtExam = () => {
+  // Sync dynamic CBT mock packs, past results & leaderboard from backend API
+  useEffect(() => {
+    let isMounted = true;
+    async function syncMockExamData() {
+      try {
+        const [packsRes, resultsRes, lbRes] = await Promise.all([
+          academyApi.getMockTestPacks(),
+          academyApi.getMockExamResults(studentProfile.email || undefined),
+          academyApi.getMockLeaderboard(),
+        ]);
+        if (!isMounted) return;
+        if (packsRes.success && Array.isArray(packsRes.packs) && packsRes.packs.length > 0) {
+          setDynamicMockPacks(packsRes.packs);
+        }
+        if (resultsRes.success && Array.isArray(resultsRes.results)) {
+          setMockExamHistory(resultsRes.results);
+        }
+        if (lbRes.success && Array.isArray(lbRes.leaderboard)) {
+          setDynamicLeaderboard(lbRes.leaderboard);
+        }
+      } catch (err) {
+        console.warn("Failed to sync CBT mock data:", err);
+      }
+    }
+    syncMockExamData();
+    return () => {
+      isMounted = false;
+    };
+  }, [studentProfile.email]);
+
+  const handleSubmitCbtExam = async () => {
     setCbtIsSubmitted(true);
     setCbtShowConfirmModal(false);
     let legacyScore = 0;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    const secMap: Record<string, { score: number; attempted: number; correct: number }> = {
+      legalReasoning: { score: 0, attempted: 0, correct: 0 },
+      logicalReasoning: { score: 0, attempted: 0, correct: 0 },
+      constitutionalLaw: { score: 0, attempted: 0, correct: 0 },
+      englishLanguage: { score: 0, attempted: 0, correct: 0 },
+      currentAffairs: { score: 0, attempted: 0, correct: 0 },
+    };
+    const sectionKeyMap: Record<string, string> = {
+      legal: "legalReasoning",
+      logical: "logicalReasoning",
+      gk: "currentAffairs",
+      english: "englishLanguage",
+      quant: "constitutionalLaw",
+    };
+
     cbtQuestions.forEach((q, idx) => {
       const selected = cbtSelectedAnswers[idx];
+      const mappedKey = sectionKeyMap[q.section] || "legalReasoning";
       if (selected !== undefined) {
-        if (selected === q.correct) legacyScore += 1;
-        else legacyScore -= 0.25;
+        secMap[mappedKey].attempted += 1;
+        if (selected === q.correct) {
+          legacyScore += 1;
+          correctCount += 1;
+          secMap[mappedKey].correct += 1;
+          secMap[mappedKey].score += 1;
+        } else {
+          legacyScore -= 0.25;
+          incorrectCount += 1;
+          secMap[mappedKey].score -= 0.25;
+        }
       }
     });
-    setMockScore(legacyScore);
+    const finalScore = Number(legacyScore.toFixed(2));
+    setMockScore(finalScore);
+
+    const attempted = correctCount + incorrectCount;
+    const accuracy = attempted > 0 ? Number(((correctCount / attempted) * 100).toFixed(1)) : 0;
+    const maxScore = cbtQuestions.length || 14;
+    const percentage = Number(Math.max(0, (finalScore / maxScore) * 100).toFixed(1));
+    const percentile = Number(Math.min(99.8, Math.max(35.0, ((Math.max(0, finalScore) + 3) / (maxScore + 3)) * 100)).toFixed(1));
+    const timeSpentSeconds = Math.max(0, 7200 - cbtTimeRemaining);
+
+    try {
+      const res = await academyApi.submitMockExamResult({
+        studentName: studentProfile.fullName || "Candidate",
+        studentEmail: studentProfile.email || "scholar@wakheel.law",
+        examId: activeMockTest?.id || "mock_clat_01",
+        examTitle: activeMockTest?.title || "CLAT 2027 Full Length All-India Diagnostic Mock",
+        totalScore: finalScore,
+        maxScore,
+        percentage,
+        accuracy,
+        timeSpentSeconds,
+        percentile,
+        subjectBreakdown: secMap,
+      });
+      if (res.success && res.result) {
+        setMockExamHistory((prev) => [res.result!, ...prev]);
+        const lbRes = await academyApi.getMockLeaderboard();
+        if (lbRes.success && Array.isArray(lbRes.leaderboard)) {
+          setDynamicLeaderboard(lbRes.leaderboard);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to persist CBT mock result:", err);
+    }
   };
 
   // Aliases for legacy callbacks
@@ -3971,14 +4164,37 @@ export function StudentDashboardView({
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/40 shrink-0">
                 Code: STU-008AC5
               </span>
-              <button
-                onClick={() => setShowGrantModal(true)}
-                className="hidden md:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-amber-500 hover:text-black text-zinc-200 border border-white/20 text-[10px] font-bold transition-all cursor-pointer shrink-0"
-                title="Request Tuition Grant & Scholarship Access"
-              >
-                <Award className="w-3 h-3 text-amber-400" />
-                <span>Request Tuition Access</span>
-              </button>
+              {tuitionStatus === "approved" ? (
+                <button
+                  onClick={() => setShowTuitionModal(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold transition-all cursor-pointer shrink-0 hover:bg-emerald-500/30"
+                  title="Chamber Tuition Access Approved"
+                >
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>Verified Scholar • Chamber Access Active</span>
+                </button>
+              ) : tuitionStatus === "pending" ? (
+                <button
+                  onClick={() => setShowTuitionModal(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold transition-all cursor-pointer shrink-0 hover:bg-amber-500/30"
+                  title="Tuition Access Under Faculty Review"
+                >
+                  <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+                  <span>Tuition Request Pending Review</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTuitionSubmitSuccess(false);
+                    setShowTuitionModal(true);
+                  }}
+                  className="hidden md:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-amber-500 hover:text-black text-zinc-200 border border-white/20 text-[10px] font-bold transition-all cursor-pointer shrink-0"
+                  title="Request Tuition Grant & Scholarship Access"
+                >
+                  <Award className="w-3 h-3 text-amber-400" />
+                  <span>Request Tuition Access</span>
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -7704,7 +7920,7 @@ export function StudentDashboardView({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {testSeriesPacks.map((pack) => (
+                {(dynamicMockPacks.length > 0 ? dynamicMockPacks : testSeriesPacks).map((pack) => (
                   <div key={pack.id} className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
                     <div className="space-y-2">
                       <span className="text-[10px] font-mono font-bold text-amber-500 uppercase">{pack.badge}</span>
@@ -7725,6 +7941,55 @@ export function StudentDashboardView({
                     </button>
                   </div>
                 ))}
+              </div>
+
+              {/* Persisted CBT Mock Scorecards & History */}
+              <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-base font-black text-black dark:text-white">
+                      Persisted CBT Diagnostic Scorecards ({mockExamHistory.length})
+                    </h4>
+                    <p className="text-xs text-zinc-500">
+                      Your completed mock examinations, accuracy metrics, and projected percentiles saved across sessions.
+                    </p>
+                  </div>
+                </div>
+
+                {mockExamHistory.length === 0 ? (
+                  <div className="py-10 text-center space-y-2 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                    <Trophy className="w-7 h-7 text-amber-500 mx-auto" />
+                    <p className="text-xs font-bold text-black dark:text-white">No Mock Scorecards Recorded Yet</p>
+                    <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+                      Launch the Consortium CBT Simulator above and submit an attempt to persist your scorecard and update the All-India Leaderboard.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {mockExamHistory.map((res, idx) => (
+                      <div
+                        key={res.id || idx}
+                        className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4"
+                      >
+                        <div className="space-y-1 min-w-0">
+                          <span className="text-[10px] font-mono font-bold text-amber-500 uppercase">
+                            {res.completedDate || "Completed"}
+                          </span>
+                          <h5 className="text-xs font-bold text-black dark:text-white truncate">{res.examTitle}</h5>
+                          <p className="text-[11px] text-zinc-500 font-mono">
+                            Accuracy: {res.accuracy}% • Percentile: {res.percentile ?? "95.0"}%
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-lg font-black text-amber-500 font-mono">
+                            {res.totalScore > 0 ? `+${res.totalScore}` : res.totalScore} / {res.maxScore}
+                          </div>
+                          <span className="text-[10px] font-mono text-zinc-400">Net Score</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -10142,111 +10407,219 @@ export function StudentDashboardView({
       )}
 
       {/* ============================================================== */}
-      {/* 8. TUITION ACCESS & CHAMBER GRANT APPLICATION MODAL            */}
+      {/* 8. CENTRALIZED TUITION ACCESS & CHAMBER ADMISSIONS MODAL        */}
       {/* ============================================================== */}
-      {showGrantModal && (
+      {showTuitionModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4 animate-in zoom-in-95 duration-150">
             <button
               onClick={() => {
-                setShowGrantModal(false);
-                setGrantSuccess(false);
+                setShowTuitionModal(false);
+                setTuitionSubmitSuccess(false);
               }}
               className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {grantSuccess ? (
-              <div className="text-center py-6 space-y-3 animate-in fade-in">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <BadgeCheck className="w-6 h-6 stroke-[2.5]" />
-                </div>
-                <h3 className="text-lg font-bold text-black dark:text-white">
-                  Tuition Grant Approved!
-                </h3>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Congratulations Advithya! Based on your academic aggregate and first-generation scholar status, you have been awarded a <strong>100% Full Fee Waiver</strong> on all Entrance Test Series &amp; Bare Act Modules.
-                </p>
-                <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 font-mono text-center space-y-1">
-                  <span className="text-[10px] text-zinc-500 block">Your Scholarship Promo Code:</span>
-                  <span className="text-base font-black text-amber-700 dark:text-amber-400 tracking-wider">
-                    {grantCouponCode}
+            {tuitionStatus === "approved" ? (
+              <div className="space-y-4 animate-in fade-in">
+                <div className="space-y-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase flex items-center gap-1.5 w-fit">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Chamber Pass Active • Verified Scholar</span>
                   </span>
+                  <h3 className="text-xl font-black text-black dark:text-white mt-1">
+                    Centralized Tuition Chamber
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Your chamber credentials have been verified and issued by the Faculty Dean.
+                  </p>
                 </div>
+
+                <div className="p-4 rounded-2xl bg-zinc-950 text-white border border-zinc-800 space-y-3 shadow-md">
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800 text-xs font-mono">
+                    <span className="text-amber-400 font-bold">WAKHEEL SCHOLAR PASS</span>
+                    <span className="text-zinc-400">STU-008AC5</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-zinc-400 uppercase font-mono block">Scholar Name</span>
+                    <h4 className="text-sm font-bold text-white">{studentProfile.fullName || "Advithya Sharma"}</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                    <div>
+                      <span className="text-[10px] text-zinc-400 uppercase font-mono block">Faculty Mentor</span>
+                      <span className="text-zinc-200 font-semibold">Prof. Dr. Rajesh Varma</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-400 uppercase font-mono block">Target Track</span>
+                      <span className="text-amber-400 font-semibold">{tuitionTargetExam}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-300">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>1-on-1 High Court Appellate Mentorship Unlocked</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>Real-time Live Audio/Video Chamber Access</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>Consortium CBT Mock Simulator Full Suite</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowTuitionModal(false);
+                      handleNavClick("tuition_mode");
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                  >
+                    <span>Enter Tuition Chamber</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ) : tuitionSubmitSuccess || tuitionStatus === "pending" ? (
+              <div className="text-center py-6 space-y-3 animate-in fade-in">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto">
+                  <Clock className="w-6 h-6 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
+                    Under Faculty Review
+                  </span>
+                  <h3 className="text-lg font-bold text-black dark:text-white mt-1">
+                    Tuition Request In Progress
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                    Your chamber admission request for <strong>{tuitionTargetExam}</strong> has been transmitted to Faculty Dean <strong>Prof. Dr. Rajesh Varma</strong>.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-left space-y-2 text-xs">
+                  <div className="flex justify-between font-mono text-[11px] text-zinc-500">
+                    <span>Scholar Code: STU-008AC5</span>
+                    <span className="text-amber-500 font-bold">Status: Pending Review</span>
+                  </div>
+                  <p className="text-zinc-600 dark:text-zinc-300 italic text-[11px]">
+                    &quot;{tuitionStatement}&quot;
+                  </p>
+                </div>
+
+                <p className="text-[11px] text-zinc-400">
+                  You will receive an instant notification in this dashboard once approved.
+                </p>
+
                 <button
                   onClick={() => {
-                    setShowGrantModal(false);
-                    setGrantSuccess(false);
+                    setShowTuitionModal(false);
+                    setTuitionSubmitSuccess(false);
                   }}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-xs uppercase cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white dark:bg-white dark:text-black font-extrabold text-xs uppercase cursor-pointer transition-colors"
                 >
-                  Apply &amp; Continue Studying
+                  Return to Dashboard
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleApplyGrant} className="space-y-4 pt-1">
+              <form onSubmit={handleSubmitTuitionRequest} className="space-y-4 pt-1">
                 <div>
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
-                    Wakheel Legal Scholars Initiative
+                    Centralized Admissions
                   </span>
                   <h3 className="text-base font-bold text-black dark:text-white mt-1">
-                    Request Merit-cum-Means Tuition Access
+                    Request Tuition Access &amp; Chamber Pass
                   </h3>
                   <p className="text-xs text-zinc-500">
-                    100% fee concession for first-generation law aspirants and underprivileged students.
+                    Apply for subsidized faculty mentorship, weekly pleadings critique, and live trial chambers.
                   </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                      Scholar Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={tuitionName}
+                      onChange={(e) => setTuitionName(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-black dark:text-white outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                      Scholar Code
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      value="STU-008AC5"
+                      className="w-full px-3 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 text-xs text-zinc-500 font-mono outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                    Annual Household Income Bracket
+                    Target Examination / Bar Standard
                   </label>
                   <select
-                    value={grantIncomeBracket}
-                    onChange={(e) => setGrantIncomeBracket(e.target.value)}
+                    value={tuitionTargetExam}
+                    onChange={(e) => setTuitionTargetExam(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-black dark:text-white outline-none cursor-pointer"
                   >
-                    <option value="< ₹3.5 Lakhs (100% Waiver)">&lt; ₹3.5 Lakhs / year (100% Full Fee Waiver)</option>
-                    <option value="₹3.5L - ₹6L (80% Concession)">₹3.5 Lakhs - ₹6 Lakhs (80% Concession)</option>
-                    <option value="Rural / First-Gen Candidate">First-Generation Advocate in Family</option>
+                    <option value="CLAT 2027 (NLUs)">CLAT 2027 (Consortium of NLUs)</option>
+                    <option value="Distance LL.B (IGNOU)">Distance LL.B &amp; State Bar Curricula</option>
+                    <option value="KLEE 2027 (Kerala)">KLEE 2027 (Kerala Law Entrance)</option>
+                    <option value="Judicial Services">Judicial Services &amp; Civil Judge Cadre</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
                   <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                    Qualifying Academic Aggregate
+                    Chamber Specialization
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={grantQualifyingScore}
-                    onChange={(e) => setGrantQualifyingScore(e.target.value)}
-                    placeholder="e.g. 91.2% in Class 12 or 78% in Graduation"
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-black dark:text-white outline-none"
-                  />
+                  <select
+                    value={tuitionChamberDept}
+                    onChange={(e) => setTuitionChamberDept(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-black dark:text-white outline-none cursor-pointer"
+                  >
+                    <option value="Constitutional Law & Writs">Constitutional Law &amp; Appellate Writs</option>
+                    <option value="Criminal Jurisprudence (BNS/BNSS)">Criminal Jurisprudence (BNS 2023 &amp; Bail)</option>
+                    <option value="Commercial Contracts & Arbitration">Commercial Contracts &amp; Specific Relief</option>
+                    <option value="High Court Moot & Advocacy">High Court Moot Bench &amp; Advocacy</option>
+                  </select>
                 </div>
 
                 <div className="space-y-1">
                   <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                    Statement of Purpose / Target Goal
+                    Academic Need &amp; Chamber Objectives
                   </label>
                   <textarea
                     rows={2}
                     required
-                    value={grantStatement}
-                    onChange={(e) => setGrantStatement(e.target.value)}
-                    placeholder="Briefly state your career aspiration in law..."
+                    value={tuitionStatement}
+                    onChange={(e) => setTuitionStatement(e.target.value)}
+                    placeholder="Briefly state your academic objectives for joining this chamber..."
                     className="w-full px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-black dark:text-white outline-none resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                  disabled={isSubmittingTuition}
+                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   <Award className="w-3.5 h-3.5" />
-                  <span>Submit Grant Application</span>
+                  <span>{isSubmittingTuition ? "Transmitting Request..." : "Submit Tuition Request"}</span>
                 </button>
               </form>
             )}
@@ -10310,23 +10683,25 @@ export function StudentDashboardView({
                 <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-amber-500 text-black font-black flex items-center justify-center">
-                      #142
+                      {mockExamHistory.length > 0 ? `#${Math.max(1, 142 - mockExamHistory.length * 10)}` : "#142"}
                     </div>
                     <div>
                       <strong className="text-black dark:text-white block">{studentProfile.fullName} (You)</strong>
-                      <span className="text-[10px] text-zinc-500 font-mono">Score: 89.5 • 12 Mocks</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        Score: {mockExamHistory[0]?.totalScore ?? 89.5} • {mockExamHistory.length} {mockExamHistory.length === 1 ? "Mock" : "Mocks"}
+                      </span>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-black text-amber-700 dark:text-amber-400 font-mono block">
-                      94.8%
+                      {mockExamHistory[0]?.percentile ? `${mockExamHistory[0].percentile}%` : "94.8%"}
                     </span>
                     <span className="text-[10px] text-zinc-500 font-mono">Percentile</span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  {leaderboardAspirants.map((asp) => (
+                  {(dynamicLeaderboard.length > 0 ? dynamicLeaderboard : leaderboardAspirants).map((asp) => (
                     <div
                       key={asp.rank}
                       className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs"

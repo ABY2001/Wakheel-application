@@ -37,6 +37,67 @@ export interface LawCourse {
   isEnrolled?: boolean;
 }
 
+export interface TuitionAccessRequest {
+  id: string;
+  studentName: string;
+  studentEmail: string;
+  studentCode: string;
+  targetExam: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  requestedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  facultyNotes?: string;
+}
+
+export interface MockTestPack {
+  id: string;
+  title: string;
+  conductingBody: string;
+  exam: string;
+  badge: string;
+  badgeColor?: string;
+  testsCount: string;
+  enrolledCount?: string;
+  rating?: string;
+  reviewsCount?: string;
+  price: number;
+  originalPrice: number;
+  discount?: string;
+  features: string[];
+  hasFreeTest?: boolean;
+  freeTestName?: string;
+}
+
+export interface MockExamResult {
+  id?: string;
+  studentName: string;
+  studentEmail?: string;
+  examId: string;
+  examTitle: string;
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  accuracy: number;
+  timeSpentSeconds: number;
+  allIndiaRank?: string | number | null;
+  percentile?: number | null;
+  subjectBreakdown?: Record<string, { score: number; attempted: number; correct: number }>;
+  completedDate?: string;
+}
+
+export interface MockLeaderboardEntry {
+  rank: number;
+  name: string;
+  email?: string;
+  target: string;
+  percentile: string;
+  score: number;
+  tests: number;
+  avatar: string;
+}
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
@@ -655,6 +716,325 @@ export const academyApi = {
         } catch {}
       }
       return { success: true };
+    }
+  },
+
+  // ==========================================================================
+  // 11. CENTRALIZED TUITION ACCESS REQUESTS
+  // ==========================================================================
+  async requestTuitionAccess(data: {
+    studentName?: string;
+    studentEmail?: string;
+    studentCode?: string;
+    targetExam?: string;
+    reason?: string;
+  }): Promise<{
+    success: boolean;
+    request?: TuitionAccessRequest;
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/tuition/request`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && json.request) {
+        try {
+          localStorage.setItem("wakheel_tuition_request", JSON.stringify(json.request));
+          localStorage.setItem("wakheel_tuition_status", json.request.status);
+        } catch {}
+      }
+      return json;
+    } catch (e: any) {
+      console.warn("academyApi.requestTuitionAccess offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        const fallbackReq: TuitionAccessRequest = {
+          id: `tuition_req_${Date.now()}`,
+          studentName: data.studentName || "Wakheel Law Scholar",
+          studentEmail: data.studentEmail || "scholar@wakheel.law",
+          studentCode: data.studentCode || "STU-4KMAC5",
+          targetExam: data.targetExam || "CLAT 2027 (NLUs)",
+          reason: data.reason || "Intensive chamber coaching and mock courtroom mentorship",
+          status: "pending",
+          requestedAt: new Date().toISOString(),
+        };
+        try {
+          localStorage.setItem("wakheel_tuition_request", JSON.stringify(fallbackReq));
+          localStorage.setItem("wakheel_tuition_status", "pending");
+          const s = localStorage.getItem("wakheel_faculty_tuition_requests");
+          const list = s ? JSON.parse(s) : [];
+          localStorage.setItem("wakheel_faculty_tuition_requests", JSON.stringify([fallbackReq, ...list]));
+        } catch {}
+        return { success: true, request: fallbackReq };
+      }
+      return { success: false, message: e.message };
+    }
+  },
+
+  async getTuitionRequests(params?: { status?: string; search?: string }): Promise<{
+    success: boolean;
+    requests: TuitionAccessRequest[];
+    count?: number;
+  }> {
+    try {
+      const query = params ? "?" + new URLSearchParams(params as any).toString() : "";
+      const res = await fetch(`${API_BASE_URL}/academy/tuition/requests${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.getTuitionRequests offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_faculty_tuition_requests");
+          if (s) {
+            let list = JSON.parse(s);
+            if (params?.status && params.status !== "all") {
+              list = list.filter((r: any) => r.status === params.status);
+            }
+            return { success: true, requests: list, count: list.length };
+          }
+        } catch {}
+      }
+      return { success: false, requests: [] };
+    }
+  },
+
+  async getTuitionStatus(email: string): Promise<{
+    success: boolean;
+    isApproved: boolean;
+    status: string;
+    request?: TuitionAccessRequest | null;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/tuition/status/${encodeURIComponent(email)}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.getTuitionStatus offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const savedStatus = localStorage.getItem("wakheel_tuition_status") || "none";
+          const savedReq = localStorage.getItem("wakheel_tuition_request");
+          return {
+            success: true,
+            isApproved: savedStatus === "approved",
+            status: savedStatus,
+            request: savedReq ? JSON.parse(savedReq) : null,
+          };
+        } catch {}
+      }
+      return { success: false, isApproved: false, status: "none", request: null };
+    }
+  },
+
+  async reviewTuitionRequest(
+    id: string,
+    data: { status: "approved" | "rejected"; reviewedBy?: string; facultyNotes?: string }
+  ): Promise<{
+    success: boolean;
+    request?: TuitionAccessRequest;
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/tuition/requests/${id}/review`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_faculty_tuition_requests");
+          if (s) {
+            const list = JSON.parse(s).map((r: any) =>
+              r.id === id ? { ...r, status: data.status, reviewedAt: new Date().toISOString() } : r
+            );
+            localStorage.setItem("wakheel_faculty_tuition_requests", JSON.stringify(list));
+          }
+          if (data.status === "approved") {
+            localStorage.setItem("wakheel_tuition_status", "approved");
+          }
+        } catch {}
+      }
+      return json;
+    } catch (e: any) {
+      console.warn("academyApi.reviewTuitionRequest offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_faculty_tuition_requests");
+          if (s) {
+            const list = JSON.parse(s).map((r: any) =>
+              r.id === id ? { ...r, status: data.status, reviewedAt: new Date().toISOString() } : r
+            );
+            localStorage.setItem("wakheel_faculty_tuition_requests", JSON.stringify(list));
+          }
+          if (data.status === "approved") {
+            localStorage.setItem("wakheel_tuition_status", "approved");
+          }
+          return { success: true };
+        } catch {}
+      }
+      return { success: false, message: e.message };
+    }
+  },
+
+  // ==========================================================================
+  // 12. CBT MOCK TEST PACKS, DIAGNOSTIC SCORECARDS & LEADERBOARD
+  // ==========================================================================
+  async getMockTestPacks(params?: { exam?: string; search?: string }): Promise<{
+    success: boolean;
+    packs: MockTestPack[];
+    count?: number;
+  }> {
+    try {
+      const query = params ? "?" + new URLSearchParams(params as any).toString() : "";
+      const res = await fetch(`${API_BASE_URL}/academy/mock-exams${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.packs)) {
+        try {
+          localStorage.setItem("wakheel_mock_test_packs", JSON.stringify(json.packs));
+        } catch {}
+      }
+      return json;
+    } catch (e) {
+      console.warn("academyApi.getMockTestPacks offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_mock_test_packs");
+          if (s) {
+            const packs = JSON.parse(s);
+            return { success: true, packs, count: packs.length };
+          }
+        } catch {}
+      }
+      return { success: false, packs: [] };
+    }
+  },
+
+  async createMockTestPack(data: Partial<MockTestPack>): Promise<{
+    success: boolean;
+    pack?: MockTestPack;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/mock-exams`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.createMockTestPack offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async submitMockExamResult(data: MockExamResult): Promise<{
+    success: boolean;
+    result?: MockExamResult;
+  }> {
+    const fallbackResult: MockExamResult = {
+      ...data,
+      id: data.id || `mock_res_${Date.now()}`,
+      completedDate:
+        data.completedDate ||
+        new Date().toLocaleDateString("en-IN", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+    };
+    if (typeof window !== "undefined") {
+      try {
+        const s = localStorage.getItem("wakheel_mock_exam_results");
+        const list = s ? JSON.parse(s) : [];
+        localStorage.setItem("wakheel_mock_exam_results", JSON.stringify([fallbackResult, ...list].slice(0, 50)));
+      } catch {}
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/mock-exams/results`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.submitMockExamResult offline/fallback:", e);
+      return { success: true, result: fallbackResult };
+    }
+  },
+
+  async getMockExamResults(studentEmail?: string): Promise<{
+    success: boolean;
+    results: MockExamResult[];
+    count?: number;
+  }> {
+    try {
+      const query = studentEmail ? `?studentEmail=${encodeURIComponent(studentEmail)}` : "";
+      const res = await fetch(`${API_BASE_URL}/academy/mock-exams/results${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.results)) {
+        try {
+          localStorage.setItem("wakheel_mock_exam_results", JSON.stringify(json.results));
+        } catch {}
+      }
+      return json;
+    } catch (e) {
+      console.warn("academyApi.getMockExamResults offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_mock_exam_results");
+          if (s) {
+            const results = JSON.parse(s);
+            return { success: true, results, count: results.length };
+          }
+        } catch {}
+      }
+      return { success: false, results: [] };
+    }
+  },
+
+  async getMockLeaderboard(): Promise<{
+    success: boolean;
+    leaderboard: MockLeaderboardEntry[];
+    count?: number;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/mock-exams/leaderboard`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.getMockLeaderboard offline/fallback:", e);
+      return { success: false, leaderboard: [] };
     }
   },
 };

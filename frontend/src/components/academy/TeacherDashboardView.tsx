@@ -108,7 +108,7 @@ import {
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
 import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
-import academyApi, { LawCourse } from "../../lib/academyApi";
+import academyApi, { LawCourse, TuitionAccessRequest } from "../../lib/academyApi";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -817,6 +817,89 @@ export function TeacherDashboardView({
     setCoursesList(coursesList.filter((c) => c.id !== id));
   };
 
+  // ==============================================================
+  // CENTRALIZED TUITION REQUESTS & ADMISSIONS STATE
+  // ==============================================================
+  const [tuitionRequestsList, setTuitionRequestsList] = useState<TuitionAccessRequest[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_faculty_tuition_requests");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showTuitionRequestsDrawer, setShowTuitionRequestsDrawer] = useState(false);
+  const [tuitionFilter, setTuitionFilter] = useState<"pending" | "approved" | "all">("pending");
+  const [isReviewingTuitionId, setIsReviewingTuitionId] = useState<string | null>(null);
+
+  // Sync tuition requests from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTuitionRequests() {
+      try {
+        const res = await academyApi.getTuitionRequests();
+        if (isMounted && res.success && Array.isArray(res.requests)) {
+          setTuitionRequestsList(res.requests);
+        }
+      } catch (err) {
+        console.warn("Failed to load tuition requests in faculty view:", err);
+      }
+    }
+    loadTuitionRequests();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleApproveTuition = async (id: string) => {
+    try {
+      setIsReviewingTuitionId(id);
+      const res = await academyApi.reviewTuitionRequest(id, {
+        status: "approved",
+        reviewedBy: teacherProfile.fullName,
+        facultyNotes: "Admitted into Specialized Centralized Law Chamber by Faculty Dean.",
+      });
+      if (res.success) {
+        setTuitionRequestsList((prev) =>
+          prev.map((r) =>
+            r.id === id
+              ? { ...r, status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: teacherProfile.fullName }
+              : r
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Tuition approve error:", err);
+    } finally {
+      setIsReviewingTuitionId(null);
+    }
+  };
+
+  const handleDeclineTuition = async (id: string) => {
+    try {
+      setIsReviewingTuitionId(id);
+      const res = await academyApi.reviewTuitionRequest(id, {
+        status: "rejected",
+        reviewedBy: teacherProfile.fullName,
+        facultyNotes: "Capacity reached for this cohort.",
+      });
+      if (res.success) {
+        setTuitionRequestsList((prev) =>
+          prev.map((r) =>
+            r.id === id
+              ? { ...r, status: "rejected", reviewedAt: new Date().toISOString(), reviewedBy: teacherProfile.fullName }
+              : r
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Tuition decline error:", err);
+    } finally {
+      setIsReviewingTuitionId(null);
+    }
+  };
+
   // Real-Time Academy WebSocket Gateway & Live Push Notifications
   const {
     isConnected: isAcademyWsConnected,
@@ -837,6 +920,15 @@ export function TeacherDashboardView({
     },
     onNewBook: () => {
       setBooksList(getStoredBooks());
+    },
+    onEvent: (event) => {
+      if (event.type === "ACADEMY_TUITION_REQUESTED") {
+        academyApi.getTuitionRequests().then((res) => {
+          if (res.success && Array.isArray(res.requests)) {
+            setTuitionRequestsList(res.requests);
+          }
+        });
+      }
     },
   });
 
@@ -1324,6 +1416,20 @@ export function TeacherDashboardView({
                 {isAcademyWsConnected ? "Live Sync" : "Offline"}
               </span>
             </div>
+
+            <button
+              onClick={() => setShowTuitionRequestsDrawer(true)}
+              className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-colors cursor-pointer"
+              title="Review Student Tuition Access Requests"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden md:inline">Tuition Requests</span>
+              {tuitionRequestsList.filter((r) => r.status === "pending").length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-extrabold animate-pulse">
+                  {tuitionRequestsList.filter((r) => r.status === "pending").length}
+                </span>
+              )}
+            </button>
 
             <button
               onClick={() => {
@@ -3708,6 +3814,174 @@ export function TeacherDashboardView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CENTRALIZED TUITION REQUESTS REVIEW DRAWER */}
+      {showTuitionRequestsDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-end">
+          <div className="w-full max-w-xl h-full bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-right duration-200 overflow-hidden">
+            <div className="space-y-5 flex-1 overflow-y-auto pr-1">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                      Dean Admissions Deck
+                    </span>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      {tuitionRequestsList.filter((r) => r.status === "pending").length} Pending
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-black dark:text-white">
+                    Tuition Admissions &amp; Chamber Passes
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Review and verify student requests for specialized chamber admission and mentoring.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowTuitionRequestsDrawer(false)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-2">
+                {[
+                  { id: "pending", label: `Pending Review (${tuitionRequestsList.filter((r) => r.status === "pending").length})` },
+                  { id: "approved", label: `Approved Scholars (${tuitionRequestsList.filter((r) => r.status === "approved").length})` },
+                  { id: "all", label: `All Requests (${tuitionRequestsList.length})` },
+                ].map((tab) => {
+                  const isActive = tuitionFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setTuitionFilter(tab.id as any)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-amber-500 text-black shadow-xs font-extrabold"
+                          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Requests List */}
+              {(() => {
+                const filtered = tuitionRequestsList.filter((r) => {
+                  if (tuitionFilter === "all") return true;
+                  return r.status === tuitionFilter;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-20 text-center space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto">
+                        <GraduationCap className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-black dark:text-white">
+                          No {tuitionFilter === "pending" ? "pending" : ""} tuition requests
+                        </h4>
+                        <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+                          {tuitionFilter === "pending"
+                            ? "All scholar admissions across your chambers have been reviewed."
+                            : "Tuition admission requests will populate here when scholars apply."}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-3.5">
+                    {filtered.map((req) => (
+                      <div
+                        key={req.id}
+                        className="p-5 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-black dark:text-white">
+                                {req.studentName}
+                              </h4>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                                {req.studentCode}
+                              </span>
+                            </div>
+                            <p className="text-xs text-zinc-500">{req.studentEmail}</p>
+                          </div>
+
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
+                              req.status === "approved"
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                                : req.status === "rejected"
+                                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+                                : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse"
+                            }`}
+                          >
+                            {req.status}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between font-mono text-[11px]">
+                            <span className="text-zinc-500">Target Curriculum:</span>
+                            <span className="text-amber-500 font-bold">{req.targetExam}</span>
+                          </div>
+                          <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
+                            &quot;{req.reason}&quot;
+                          </p>
+                        </div>
+
+                        {req.status === "pending" ? (
+                          <div className="flex items-center justify-end gap-2 pt-1">
+                            <button
+                              disabled={isReviewingTuitionId === req.id}
+                              onClick={() => handleDeclineTuition(req.id)}
+                              className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              Decline
+                            </button>
+                            <button
+                              disabled={isReviewingTuitionId === req.id}
+                              onClick={() => handleApproveTuition(req.id)}
+                              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>{isReviewingTuitionId === req.id ? "Issuing Pass..." : "Approve Admission"}</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between pt-1 text-[11px] font-mono text-zinc-400">
+                            <span>Reviewed by {req.reviewedBy || "Prof. Dr. Rajesh Varma"}</span>
+                            <span>{req.reviewedAt ? new Date(req.reviewedAt).toLocaleDateString() : "Reviewed"}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-right">
+              <button
+                onClick={() => setShowTuitionRequestsDrawer(false)}
+                className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white dark:bg-white dark:text-black font-bold text-xs cursor-pointer transition-colors"
+              >
+                Close Admissions Deck
+              </button>
+            </div>
           </div>
         </div>
       )}

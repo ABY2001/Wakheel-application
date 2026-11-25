@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { GoogleIcon } from "@/components/GoogleIcon";
+import academyApi from "@/lib/academyApi";
 
 function AcademyAuthForm() {
   const router = useRouter();
@@ -82,6 +83,25 @@ function AcademyAuthForm() {
     }
 
     setIsSubmitting(true);
+
+    // Smart role-based redirect if admin credentials are entered on Sign In
+    if (authMode === "signin" && email.toLowerCase().trim() === "admin@wakheel.law") {
+      academyApi.adminLogin(email, password).then((res) => {
+        setIsSubmitting(false);
+        if (res.success && res.user && res.token) {
+          localStorage.setItem("wakheel_academy_user", JSON.stringify(res.user));
+          localStorage.setItem("wakheel_academy_token", res.token);
+          localStorage.setItem("wakheel_academy_role", "admin");
+          setSuccessMessage("Admin credentials detected! Launching Dean Control Center...");
+          setTimeout(() => {
+            router.push("/academy/admin");
+          }, 500);
+        } else {
+          setErrorMessage(res.message || "Invalid admin credentials.");
+        }
+      });
+      return;
+    }
 
     setTimeout(() => {
       setIsSubmitting(false);
@@ -582,9 +602,17 @@ function AcademyAuthForm() {
         {/* Bottom Card Footer */}
         <div className="relative z-10 p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 flex items-center justify-between">
           <span>Wakheel Academy v1.0 • Separate DB</span>
-          <span className={`font-bold font-mono ${role === "teacher" ? "text-blue-400" : "text-amber-400"}`}>
-            {role === "teacher" ? "Faculty Workspace" : "Student Hub"}
-          </span>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/academy/admin/login"
+              className="text-[11px] font-mono text-zinc-400 hover:text-amber-400 underline underline-offset-4 transition-colors"
+            >
+              Admin Portal →
+            </Link>
+            <span className={`font-bold font-mono ${role === "teacher" ? "text-blue-400" : "text-amber-400"}`}>
+              {role === "teacher" ? "Faculty Workspace" : "Student Hub"}
+            </span>
+          </div>
         </div>
       </div>
     </div>

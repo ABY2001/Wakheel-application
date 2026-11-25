@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/auth.js";
+import { protect, requireAdmin } from "../middleware/auth.js";
 import {
   getBooks,
   getBookById,
@@ -36,6 +36,12 @@ import {
   submitMockExamResult,
   getMockExamResults,
   getMockLeaderboard,
+  getAdminOverview,
+  getAdminUsers,
+  createAdminUser,
+  updateAdminUserStatus,
+  deleteAdminUser,
+  deleteMockTestPack,
 } from "../controllers/academyController.js";
 
 const router = express.Router();
@@ -81,7 +87,14 @@ router.route("/tuition/requests/:id/review").put(protect, reviewTuitionRequest);
 
 // 10. CBT Mock Test Packs, Scorecards & Leaderboard (/api/academy/mock-exams)
 router.route("/mock-exams").get(protect, getMockTestPacks).post(protect, createMockTestPack);
+router.route("/mock-exams/:id").delete(protect, requireAdmin, deleteMockTestPack);
 router.route("/mock-exams/results").get(protect, getMockExamResults).post(protect, submitMockExamResult);
 router.route("/mock-exams/leaderboard").get(protect, getMockLeaderboard);
+
+// 11. Academy Admin Control Module (/api/academy/admin)
+router.route("/admin/overview").get(protect, requireAdmin, getAdminOverview);
+router.route("/admin/users").get(protect, requireAdmin, getAdminUsers).post(protect, requireAdmin, createAdminUser);
+router.route("/admin/users/:id/status").put(protect, requireAdmin, updateAdminUserStatus);
+router.route("/admin/users/:id").delete(protect, requireAdmin, deleteAdminUser);
 
 export default router;

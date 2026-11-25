@@ -98,18 +98,49 @@ export interface MockLeaderboardEntry {
   avatar: string;
 }
 
+export interface AcademyAdminUser {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "student" | "teacher" | "faculty";
+  department?: string;
+  targetProgram?: string;
+  institutionName?: string;
+  status: "active" | "suspended";
+  createdAt?: string;
+}
+
+export interface AcademyAdminOverview {
+  totalCourses: number;
+  totalBooks: number;
+  totalAssignments: number;
+  totalSubmissions: number;
+  totalLectures: number;
+  totalNotes: number;
+  totalMockPacks: number;
+  totalMockResults: number;
+  pendingTuition: number;
+  approvedTuition: number;
+  totalTeachers: number;
+  totalStudents: number;
+}
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
 const getAuthToken = (): string => {
   if (typeof window === "undefined") return "dev_student";
-  return (
+  const storedToken =
+    localStorage.getItem("wakheel_academy_token") ||
     localStorage.getItem("wakheel_token") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("wakheel_role") === "teacher"
-      ? "dev_teacher"
-      : "dev_student"
-  );
+    localStorage.getItem("token");
+  if (storedToken && storedToken.startsWith("eyJ")) {
+    return storedToken;
+  }
+  const academyRole = localStorage.getItem("wakheel_academy_role") || localStorage.getItem("wakheel_role");
+  if (academyRole === "admin") return "dev_admin";
+  if (academyRole === "teacher" || academyRole === "faculty") return "dev_teacher";
+  return "dev_student";
 };
 
 export const academyApi = {
@@ -1035,6 +1066,169 @@ export const academyApi = {
     } catch (e) {
       console.warn("academyApi.getMockLeaderboard offline/fallback:", e);
       return { success: false, leaderboard: [] };
+    }
+  },
+
+  // ==========================================================================
+  // 13. ACADEMY ADMIN AUTH & CONTROL MODULE
+  // ==========================================================================
+  async adminLogin(email: string, password: string): Promise<{
+    success: boolean;
+    token?: string;
+    user?: { id: string; fullName: string; email: string; role: string };
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.message || "Invalid admin credentials." };
+      }
+      return data;
+    } catch (e: any) {
+      // Offline fallback validation matching default admin credentials
+      const cleanEmail = email.toLowerCase().trim();
+      if (cleanEmail === "admin@wakheel.law" && password.trim() === "WakheelAdmin@2026") {
+        return {
+          success: true,
+          token: "dev_admin",
+          user: {
+            id: "academy_admin_root",
+            fullName: "Wakheel Academy Dean / Admin",
+            email: cleanEmail,
+            role: "admin",
+          },
+        };
+      }
+      return { success: false, message: "Backend unreachable and credentials did not match offline admin key." };
+    }
+  },
+
+  async getAdminOverview(): Promise<{
+    success: boolean;
+    overview?: AcademyAdminOverview;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/admin/overview`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.getAdminOverview offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async getAdminUsers(params?: { role?: string; search?: string }): Promise<{
+    success: boolean;
+    users: AcademyAdminUser[];
+    count?: number;
+  }> {
+    try {
+      const query = params ? "?" + new URLSearchParams(params as any).toString() : "";
+      const res = await fetch(`${API_BASE_URL}/academy/admin/users${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.users)) {
+        try {
+          localStorage.setItem("wakheel_admin_users", JSON.stringify(json.users));
+        } catch {}
+      }
+      return json;
+    } catch (e) {
+      console.warn("academyApi.getAdminUsers offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_admin_users");
+          if (s) {
+            const users = JSON.parse(s);
+            return { success: true, users, count: users.length };
+          }
+        } catch {}
+      }
+      return { success: false, users: [] };
+    }
+  },
+
+  async createAdminUser(data: {
+    fullName: string;
+    email: string;
+    role: "student" | "teacher";
+    department?: string;
+    targetProgram?: string;
+    institutionName?: string;
+  }): Promise<{ success: boolean; user?: AcademyAdminUser; message?: string }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/admin/users`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) return { success: false, message: json.message };
+      return json;
+    } catch (e: any) {
+      console.warn("academyApi.createAdminUser offline/fallback:", e);
+      return { success: false, message: e.message };
+    }
+  },
+
+  async updateAdminUserStatus(
+    id: string,
+    data: { status?: "active" | "suspended"; role?: "student" | "teacher" }
+  ): Promise<{ success: boolean; user?: AcademyAdminUser }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/admin/users/${id}/status`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.updateAdminUserStatus offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async deleteAdminUser(id: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/admin/users/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.deleteAdminUser offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async deleteMockTestPack(id: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/mock-exams/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.deleteMockTestPack offline/fallback:", e);
+      return { success: false };
     }
   },
 };

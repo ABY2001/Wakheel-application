@@ -150,6 +150,7 @@ let inMemoryMockTests = readDiskJson("dev_academy_mock_tests.json", [
   },
 ]);
 let inMemoryMockResults = readDiskJson("dev_academy_mock_results.json", []);
+let inMemoryAcademyUsers = readDiskJson("dev_academy_users.json", []);
 
 const getUserId = (req) => {
   return String(req.user?._id || req.user?.id || "");
@@ -1737,6 +1738,154 @@ export const getMockLeaderboard = async (req, res) => {
     });
   } catch (error) {
     console.error("getMockLeaderboard error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 11. ACADEMY ADMIN CONTROL MODULE (/api/academy/admin)
+// ============================================================================
+
+export const getAdminOverview = async (req, res) => {
+  try {
+    const teachersCount = inMemoryAcademyUsers.filter(
+      (u) => u.role === "teacher" || u.role === "faculty"
+    ).length;
+    const studentsCount = inMemoryAcademyUsers.filter((u) => u.role === "student").length;
+
+    res.json({
+      success: true,
+      overview: {
+        totalCourses: inMemoryCourses.length,
+        totalBooks: inMemoryBooks.length,
+        totalAssignments: inMemoryAssignments.length,
+        totalSubmissions: inMemorySubmissions.length,
+        totalLectures: inMemoryLectures.length,
+        totalNotes: inMemoryNotes.length,
+        totalMockPacks: inMemoryMockTests.length,
+        totalMockResults: inMemoryMockResults.length,
+        pendingTuition: inMemoryTuitionRequests.filter((r) => r.status === "pending").length,
+        approvedTuition: inMemoryTuitionRequests.filter((r) => r.status === "approved").length,
+        totalTeachers: teachersCount,
+        totalStudents: studentsCount,
+      },
+    });
+  } catch (error) {
+    console.error("getAdminOverview error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAdminUsers = async (req, res) => {
+  try {
+    const { role, search } = req.query;
+    let list = [...inMemoryAcademyUsers];
+    if (role && role !== "all") {
+      list = list.filter((u) =>
+        role === "teacher" ? u.role === "teacher" || u.role === "faculty" : u.role === role
+      );
+    }
+    if (search) {
+      const q = String(search).toLowerCase();
+      list = list.filter(
+        (u) =>
+          u.fullName?.toLowerCase().includes(q) ||
+          u.email?.toLowerCase().includes(q) ||
+          u.department?.toLowerCase().includes(q) ||
+          u.targetProgram?.toLowerCase().includes(q)
+      );
+    }
+    res.json({
+      success: true,
+      users: list,
+      count: list.length,
+    });
+  } catch (error) {
+    console.error("getAdminUsers error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createAdminUser = async (req, res) => {
+  try {
+    const { fullName, email, role, department, targetProgram, institutionName } = req.body;
+    if (!fullName || !email) {
+      return res.status(400).json({ success: false, message: "Full name and email are required." });
+    }
+    const cleanRole = role === "teacher" || role === "faculty" ? "teacher" : "student";
+    const normalizedEmail = email.toLowerCase().trim();
+    const exists = inMemoryAcademyUsers.find((u) => u.email === normalizedEmail);
+    if (exists) {
+      return res.status(400).json({ success: false, message: "A user with this email already exists." });
+    }
+
+    const newUser = {
+      id: `acad_usr_${Date.now()}`,
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+      role: cleanRole,
+      department: cleanRole === "teacher" ? department || "Constitutional Law" : undefined,
+      targetProgram: cleanRole === "student" ? targetProgram || "CLAT 2027 (NLUs)" : undefined,
+      institutionName: institutionName || "Wakheel Law Academy",
+      status: "active",
+      createdAt: new Date().toISOString(),
+    };
+
+    inMemoryAcademyUsers.unshift(newUser);
+    writeDiskJson("dev_academy_users.json", inMemoryAcademyUsers);
+    broadcastAcademyEvent("ACADEMY_USER_CREATED", newUser);
+
+    res.status(201).json({ success: true, user: newUser });
+  } catch (error) {
+    console.error("createAdminUser error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateAdminUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, role } = req.body;
+    const idx = inMemoryAcademyUsers.findIndex((u) => u.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (status && ["active", "suspended"].includes(status)) {
+      inMemoryAcademyUsers[idx].status = status;
+    }
+    if (role && ["student", "teacher"].includes(role)) {
+      inMemoryAcademyUsers[idx].role = role;
+    }
+
+    writeDiskJson("dev_academy_users.json", inMemoryAcademyUsers);
+    res.json({ success: true, user: inMemoryAcademyUsers[idx] });
+  } catch (error) {
+    console.error("updateAdminUserStatus error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAdminUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    inMemoryAcademyUsers = inMemoryAcademyUsers.filter((u) => u.id !== id);
+    writeDiskJson("dev_academy_users.json", inMemoryAcademyUsers);
+    res.json({ success: true, message: "User removed successfully" });
+  } catch (error) {
+    console.error("deleteAdminUser error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteMockTestPack = async (req, res) => {
+  try {
+    const { id } = req.params;
+    inMemoryMockTests = inMemoryMockTests.filter((p) => p.id !== id);
+    writeDiskJson("dev_academy_mock_tests.json", inMemoryMockTests);
+    res.json({ success: true, message: "Mock test pack deleted" });
+  } catch (error) {
+    console.error("deleteMockTestPack error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

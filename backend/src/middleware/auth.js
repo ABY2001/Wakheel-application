@@ -19,6 +19,7 @@ export const protect = async (req, res, next) => {
         token === "dev_advocate" ||
         token === "dev_student" ||
         token === "dev_teacher" ||
+        token === "dev_admin" ||
         token === "guest_token"
       ) {
         const { devStore } = await import("../utils/devStore.js");
@@ -27,7 +28,15 @@ export const protect = async (req, res, next) => {
         let defaultName = "Citizen User";
         let defaultEmail = "citizen@wakheel.com";
 
-        if (token === "dev_advocate") {
+        if (token === "dev_admin") {
+          req.user = {
+            _id: "academy_admin_root",
+            fullName: "Wakheel Academy Admin",
+            email: process.env.ACADEMY_ADMIN_EMAIL || "admin@wakheel.law",
+            role: "admin",
+          };
+          return next();
+        } else if (token === "dev_advocate") {
           role = "advocate";
           defaultName = "Adv. Sarah Jenkins";
           defaultEmail = "advocate@wakheel.com";
@@ -69,6 +78,16 @@ export const protect = async (req, res, next) => {
               email: "citizen@wakheel.com",
               role: "citizen",
             };
+        return next();
+      }
+
+      if (decoded?.role === "admin") {
+        req.user = {
+          _id: decoded.id || "academy_admin_root",
+          fullName: decoded.fullName || "Wakheel Academy Admin",
+          email: decoded.email || process.env.ACADEMY_ADMIN_EMAIL || "admin@wakheel.law",
+          role: "admin",
+        };
         return next();
       }
 
@@ -130,4 +149,14 @@ export const protect = async (req, res, next) => {
     role: "citizen",
   };
   return next();
+};
+
+export const requireAdmin = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    message: "Admin privileges required to access this resource.",
+  });
 };

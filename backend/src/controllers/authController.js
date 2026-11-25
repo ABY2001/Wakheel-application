@@ -187,6 +187,58 @@ export const registerUser = async (req, res) => {
   }
 };
 
+const getAdminConfig = () => ({
+  email: (process.env.ACADEMY_ADMIN_EMAIL || "admin@wakheel.law").toLowerCase().trim(),
+  password: process.env.ACADEMY_ADMIN_PASSWORD || "WakheelAdmin@2026",
+  fullName: "Wakheel Academy Dean / Admin",
+});
+
+// @desc    Admin portal login
+// @route   POST /api/auth/admin/login
+// @access  Public (Admin Credentials Required)
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter admin email and password.",
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanPassword = password.trim();
+    const adminCfg = getAdminConfig();
+
+    if (normalizedEmail === adminCfg.email && cleanPassword === adminCfg.password) {
+      const token = jwt.sign(
+        { id: "academy_admin_root", email: adminCfg.email, fullName: adminCfg.fullName, role: "admin" },
+        process.env.JWT_SECRET || "wakheel_secret_key",
+        { expiresIn: "30d" }
+      );
+      return res.json({
+        success: true,
+        message: "Admin authentication verified",
+        token,
+        user: {
+          id: "academy_admin_root",
+          fullName: adminCfg.fullName,
+          email: adminCfg.email,
+          role: "admin",
+        },
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid admin credentials.",
+    });
+  } catch (error) {
+    console.error("Admin Login Error:", error);
+    res.status(500).json({ success: false, message: error.message || "Admin login failed" });
+  }
+};
+
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 // @access  Public
@@ -203,6 +255,27 @@ export const loginUser = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const cleanPassword = password.trim();
+    const adminCfg = getAdminConfig();
+
+    // Smart role-based redirect if admin signs in via standard login
+    if (normalizedEmail === adminCfg.email && cleanPassword === adminCfg.password) {
+      const token = jwt.sign(
+        { id: "academy_admin_root", email: adminCfg.email, fullName: adminCfg.fullName, role: "admin" },
+        process.env.JWT_SECRET || "wakheel_secret_key",
+        { expiresIn: "30d" }
+      );
+      return res.json({
+        success: true,
+        message: "Admin credentials detected",
+        token,
+        user: {
+          id: "academy_admin_root",
+          fullName: adminCfg.fullName,
+          email: adminCfg.email,
+          role: "admin",
+        },
+      });
+    }
     const requestedRole = ["advocate", "client", "citizen", "cs", "ca", "student", "teacher", "faculty"].includes(role) ? (role === "faculty" ? "teacher" : role) : undefined;
 
     console.log(`🔑 Login attempt for: "${normalizedEmail}" (role: ${requestedRole || "any"})`);

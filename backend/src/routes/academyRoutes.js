@@ -23,6 +23,10 @@ import {
   getMootRecords,
   saveMootRecord,
   getAcademyStats,
+  getCourses,
+  getCourseById,
+  createCourse,
+  deleteCourse,
 } from "../controllers/academyController.js";
 
 const router = express.Router();
@@ -55,5 +59,9 @@ router.route("/courtroom/moot").get(protect, getMootRecords).post(protect, saveM
 
 // 7. Academy Top-Level Stats (/api/academy/stats)
 router.route("/stats").get(protect, getAcademyStats);
+
+// 8. Masterclass Law Courses & Curricula (/api/academy/courses)
+router.route("/courses").get(protect, getCourses).post(protect, createCourse);
+router.route("/courses/:id").get(protect, getCourseById).delete(protect, deleteCourse);
 
 export default router;

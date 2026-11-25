@@ -108,6 +108,7 @@ import {
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
 import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
+import academyApi, { LawCourse } from "../../lib/academyApi";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -174,58 +175,15 @@ export function TeacherDashboardView({
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
 
   // Task Management State
-  const [tasksList, setTasksList] = useState([
-    {
-      id: "task_1",
-      title: "Evaluate CLAT 2027 Mock 04: Legal Reasoning Sectional Submissions",
-      status: "In Progress",
-      type: "Assessment",
-      dueDate: "Tomorrow, 6:00 PM",
-      priority: "High",
-      assignee: "Prof. Dr. Rajesh Varma",
-      completed: false,
-    },
-    {
-      id: "task_2",
-      title: "Finalize BNS 2023 vs IPC 1860 Transition Module for Super-30 Cohort",
-      status: "Active",
-      type: "Curriculum",
-      dueDate: "Nov 22, 2026",
-      priority: "Urgent",
-      assignee: "Adv. Sunita Deshmukh",
-      completed: false,
-    },
-    {
-      id: "task_3",
-      title: "Review Regular Bail Petitions drafted under BNSS Section 480 by Distance LL.B Scholars",
-      status: "Active",
-      type: "Draft Review",
-      dueDate: "Nov 24, 2026",
-      priority: "Medium",
-      assignee: "Adv. Rohan Mehra",
-      completed: false,
-    },
-    {
-      id: "task_4",
-      title: "Author 20 Principle-Fact MCQs on Article 21 Privacy Doctrine (Puttaswamy)",
-      status: "Completed",
-      type: "CBT Authoring",
-      dueDate: "Yesterday",
-      priority: "High",
-      assignee: "Prof. Dr. Rajesh Varma",
-      completed: true,
-    },
-    {
-      id: "task_5",
-      title: "Host All-India Live Moot Orientation & Problem Briefing",
-      status: "Scheduled",
-      type: "Live Class",
-      dueDate: "Saturday, 10:00 AM",
-      priority: "Urgent",
-      assignee: "Adv. K. R. Nambiar",
-      completed: false,
-    },
-  ]);
+  const [tasksList, setTasksList] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_faculty_tasks");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Create Task Modal State
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
@@ -565,42 +523,15 @@ export function TeacherDashboardView({
   };
 
   // Doubts Hub State
-  const [doubtsList, setDoubtsList] = useState([
-    {
-      id: "d1",
-      studentName: "Advithya Sharma",
-      targetExam: "CLAT 2027",
-      subject: "Law of Contracts",
-      question:
-        "Under Section 73 of the Indian Contract Act, if a supplier delivers study material 3 days late and the student misses their scholarship exam, is the lost scholarship considered an indirect remote loss under the Hadley v. Baxendale rule?",
-      status: "unanswered",
-      timestamp: "2 hours ago",
-      replyText: "",
-    },
-    {
-      id: "d2",
-      studentName: "Priya Nair",
-      targetExam: "KLEE 2027",
-      subject: "Criminal Law (BNS)",
-      question:
-        "Does Section 103 of Bharatiya Nyaya Sanhita modify the 5 exception clauses for culpable homicide not amounting to murder compared to Section 300 IPC?",
-      status: "unanswered",
-      timestamp: "5 hours ago",
-      replyText: "",
-    },
-    {
-      id: "d3",
-      studentName: "Rahul George",
-      targetExam: "Distance LL.B",
-      subject: "Constitutional Law",
-      question:
-        "Can a distance law graduate from IGNOU or State Open University directly apply for Bar Council of India enrollment without an in-person attendance certificate?",
-      status: "answered",
-      timestamp: "1 day ago",
-      replyText:
-        "Under BCI Legal Education Rules, a law degree must involve recognized clinical legal education and minimum court attendance. Distance scholars typically fulfill this via affiliated recognized legal clinics.",
-    },
-  ]);
+  const [doubtsList, setDoubtsList] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_faculty_doubts");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Load profile from localStorage
   useEffect(() => {
@@ -667,30 +598,15 @@ export function TeacherDashboardView({
     },
   ];
 
-  const mentorshipBookings = [
-    {
-      id: "b_01",
-      studentName: "Advithya Sharma",
-      targetExam: "CLAT 2027 Aspirant",
-      dateSlot: "Today, 6:00 PM - 6:45 PM",
-      topic: "Hadley v. Baxendale Rule & CLAT Principle-Fact Breakdown",
-      fee: 499,
-      status: "Confirmed",
-      isLiveSoon: true,
-      notes: "Student is scoring 94.8% percentile, struggles with negative marking in logical reasoning.",
-    },
-    {
-      id: "b_02",
-      studentName: "Priya Nair",
-      targetExam: "KLEE 5-Year LLB",
-      dateSlot: "Tomorrow, 5:30 PM - 6:15 PM",
-      topic: "Constitutional Writs under Article 32 & 226 difference",
-      fee: 499,
-      status: "Confirmed",
-      isLiveSoon: false,
-      notes: "Targeting Govt Law College Ernakulam.",
-    },
-  ];
+  const [mentorshipBookings, setMentorshipBookings] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_faculty_mentorship");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const syllabusTracks = [
     {
@@ -771,19 +687,27 @@ export function TeacherDashboardView({
       assignee: teacherProfile.fullName,
       completed: false,
     };
-    setTasksList([newTask, ...tasksList]);
+    const updated = [newTask, ...tasksList];
+    setTasksList(updated);
+    try {
+      localStorage.setItem("wakheel_faculty_tasks", JSON.stringify(updated));
+    } catch {}
     setNewTaskTitle("");
     setShowCreateTaskModal(false);
   };
 
   const toggleTaskCompletion = (taskId: string) => {
-    setTasksList((prev) =>
-      prev.map((t) =>
+    setTasksList((prev) => {
+      const updated = prev.map((t) =>
         t.id === taskId
           ? { ...t, completed: !t.completed, status: !t.completed ? "Completed" : "In Progress" }
           : t
-      )
-    );
+      );
+      try {
+        localStorage.setItem("wakheel_faculty_tasks", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
   };
 
   // ==============================================================
@@ -807,6 +731,91 @@ export function TeacherDashboardView({
       if (books && books.length > 0) setBooksList(books);
     });
   }, []);
+
+  // ==============================================================
+  // FACULTY MASTERCLASS COURSE AUTHORING STATE
+  // ==============================================================
+  const [coursesList, setCoursesList] = useState<LawCourse[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_academy_courses");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showAuthorCourseModal, setShowAuthorCourseModal] = useState(false);
+  const [newCourseTitle, setNewCourseTitle] = useState("");
+  const [newCourseExam, setNewCourseExam] = useState("CLAT 2027 (NLUs)");
+  const [newCourseCategory, setNewCourseCategory] = useState("Constitutional Law");
+  const [newCourseInstructor, setNewCourseInstructor] = useState("Prof. Dr. Rajesh Varma");
+  const [newCourseDesc, setNewCourseDesc] = useState("");
+  const [newCourseUnits, setNewCourseUnits] = useState("10 Sections");
+  const [newCourseDuration, setNewCourseDuration] = useState("12h 00m");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCourses() {
+      try {
+        const res = await academyApi.getCourses();
+        if (isMounted && res.success && Array.isArray(res.courses)) {
+          setCoursesList(res.courses);
+        }
+      } catch (e) {
+        console.warn("Failed to load courses in teacher view:", e);
+      }
+    }
+    loadCourses();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleAuthorCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCourseTitle.trim()) return;
+
+    const coursePayload: Partial<LawCourse> = {
+      title: newCourseTitle.trim(),
+      exam: newCourseExam,
+      badge: "FACULTY VERIFIED",
+      badgeColor: "amber",
+      unitsCount: newCourseUnits,
+      description: newCourseDesc.trim() || `${newCourseTitle} structured curriculum masterclass.`,
+      instructor: newCourseInstructor.trim(),
+      totalUnits: parseInt(newCourseUnits) || 10,
+      completedUnits: 0,
+      videoDuration: newCourseDuration,
+      image: "/academy/explore-paper.png",
+      syllabus: [
+        { unit: "Unit 1: Foundational Framework & Statutory Overview", duration: "2h 30m", completed: false },
+        { unit: "Unit 2: Landmark Precedents & High Court Analysis", duration: "3h 15m", completed: false },
+        { unit: "Unit 3: Drafting & Practical Application Drills", duration: "2h 45m", completed: false },
+      ],
+      quiz: [
+        {
+          question: `What is the primary statutory foundation of ${newCourseTitle}?`,
+          options: ["Indian Contract Act", "Constitution of India", "Bharatiya Nyaya Sanhita", "Advocates Act 1961"],
+          correct: 1,
+          explanation: "Constitutional and statutory mandates govern primary procedural hierarchy.",
+        },
+      ],
+    };
+
+    const res = await academyApi.createCourse(coursePayload);
+    if (res.success && res.course) {
+      setCoursesList([res.course, ...coursesList]);
+      setShowAuthorCourseModal(false);
+      setNewCourseTitle("");
+      setNewCourseDesc("");
+    }
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    if (!confirm("Are you sure you want to unpublish and delete this masterclass?")) return;
+    await academyApi.deleteCourse(id);
+    setCoursesList(coursesList.filter((c) => c.id !== id));
+  };
 
   // Real-Time Academy WebSocket Gateway & Live Push Notifications
   const {
@@ -1402,7 +1411,18 @@ export function TeacherDashboardView({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
-                        {tasksList.map((task) => (
+                        {tasksList.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center">
+                              <div className="flex flex-col items-center justify-center space-y-2">
+                                <CheckSquare className="w-8 h-8 text-zinc-400" />
+                                <h5 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">No pending faculty tasks</h5>
+                                <p className="text-xs text-zinc-500">Click &apos;+ Create Task&apos; above to plan lessons, assignments, or grading deadlines.</p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          tasksList.map((task) => (
                           <tr
                             key={task.id}
                             className={`hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors ${
@@ -1461,7 +1481,8 @@ export function TeacherDashboardView({
                               </div>
                             </td>
                           </tr>
-                        ))}
+                        ))
+                      )}
 
                         {/* + Create task inline row */}
                         <tr>
@@ -1498,18 +1519,24 @@ export function TeacherDashboardView({
                         </span>
                       </div>
                       <div className="space-y-2">
-                        {column.tasks.map((task) => (
-                          <div key={task.id} className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800/60 space-y-2">
-                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                              {task.type}
-                            </span>
-                            <h4 className="text-xs font-bold text-zinc-900 dark:text-white leading-snug">{task.title}</h4>
-                            <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
-                              <span>Due: {task.dueDate}</span>
-                              <span className="font-bold text-rose-500">{task.priority}</span>
-                            </div>
+                        {column.tasks.length === 0 ? (
+                          <div className="p-4 rounded-2xl border border-dashed border-zinc-200/80 dark:border-zinc-800 text-center text-xs text-zinc-400">
+                            No tasks
                           </div>
-                        ))}
+                        ) : (
+                          column.tasks.map((task) => (
+                            <div key={task.id} className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/70 dark:border-zinc-800/60 space-y-2">
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                {task.type}
+                              </span>
+                              <h4 className="text-xs font-bold text-zinc-900 dark:text-white leading-snug">{task.title}</h4>
+                              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
+                                <span>Due: {task.dueDate}</span>
+                                <span className="font-bold text-rose-500">{task.priority}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   ))}
@@ -2042,16 +2069,26 @@ export function TeacherDashboardView({
               <div className="space-y-4">
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white">1-on-1 Advocate Mentorship Appointments</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {mentorshipBookings.map((b) => (
-                    <div key={b.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-xs">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold">{b.studentName}</span>
-                        <span className="font-mono text-emerald-600 font-bold">{b.status}</span>
-                      </div>
-                      <p className="text-xs text-zinc-500">{b.topic}</p>
-                      <button className="w-full py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold transition-all cursor-pointer">Open Chamber Link</button>
+                  {mentorshipBookings.length === 0 ? (
+                    <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-2 col-span-2">
+                      <UserCheck className="w-8 h-8 text-zinc-400 mx-auto" />
+                      <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">No Upcoming Mentorship Appointments</h4>
+                      <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                        1-on-1 Senior Advocate chamber consultations booked by scholars will be listed here.
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    mentorshipBookings.map((b) => (
+                      <div key={b.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-xs">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold">{b.studentName}</span>
+                          <span className="font-mono text-emerald-600 font-bold">{b.status}</span>
+                        </div>
+                        <p className="text-xs text-zinc-500">{b.topic}</p>
+                        <button className="w-full py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold transition-all cursor-pointer">Open Chamber Link</button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -2061,38 +2098,48 @@ export function TeacherDashboardView({
               <div className="space-y-4">
                 <h3 className="text-base font-bold text-zinc-900 dark:text-white">Student Doubts (Ask)</h3>
                 <div className="space-y-3">
-                  {doubtsList.map((d) => (
-                    <div key={d.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-xs">
-                      <div className="flex items-center justify-between text-xs text-zinc-400">
-                        <span>{d.studentName} • {d.subject}</span>
-                        <span>{d.timestamp}</span>
-                      </div>
-                      <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">{d.question}</p>
-                      {d.status === "answered" ? (
-                        <p className="text-xs text-emerald-600">Answer: {d.replyText}</p>
-                      ) : (
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Type answer..."
-                            className="flex-1 p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs border border-zinc-200/80 dark:border-zinc-700"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleReplyDoubt(d.id, (e.target as HTMLInputElement).value);
-                            }}
-                          />
-                          <button
-                            onClick={(e) => {
-                              const input = e.currentTarget.previousSibling as HTMLInputElement;
-                              handleReplyDoubt(d.id, input.value);
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold cursor-pointer transition-all"
-                          >
-                            Reply
-                          </button>
-                        </div>
-                      )}
+                  {doubtsList.length === 0 ? (
+                    <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-2">
+                      <MessageSquare className="w-8 h-8 text-zinc-400 mx-auto" />
+                      <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">No Pending Student Doubts</h4>
+                      <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                        All scholar queries across your cohorts are up to date. New inquiries will appear here in real time.
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    doubtsList.map((d) => (
+                      <div key={d.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-xs">
+                        <div className="flex items-center justify-between text-xs text-zinc-400">
+                          <span>{d.studentName} • {d.subject}</span>
+                          <span>{d.timestamp}</span>
+                        </div>
+                        <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">{d.question}</p>
+                        {d.status === "answered" ? (
+                          <p className="text-xs text-emerald-600">Answer: {d.replyText}</p>
+                        ) : (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Type answer..."
+                              className="flex-1 p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs border border-zinc-200/80 dark:border-zinc-700"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleReplyDoubt(d.id, (e.target as HTMLInputElement).value);
+                              }}
+                            />
+                            <button
+                              onClick={(e) => {
+                                const input = e.currentTarget.previousSibling as HTMLInputElement;
+                                handleReplyDoubt(d.id, input.value);
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold cursor-pointer transition-all"
+                            >
+                              Reply
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -2567,6 +2614,103 @@ export function TeacherDashboardView({
                       })}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* MY COURSES / MASTERCLASS AUTHORING STUDIO                      */}
+            {/* ============================================================== */}
+            {activeSection === "new_folder" && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                        Faculty Studio
+                      </span>
+                      <span className="text-xs text-zinc-500 font-mono">Masterclass Courseware</span>
+                    </div>
+                    <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">
+                      Masterclass Authoring Studio
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Author, publish, and manage legal courses, syllabi, and passage drills for student cohorts.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setShowAuthorCourseModal(true)}
+                    className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-sm cursor-pointer flex items-center gap-2 shrink-0 self-start sm:self-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Author Masterclass</span>
+                  </button>
+                </div>
+
+                {/* Courses Grid / Clean Zero-State */}
+                {coursesList.length === 0 ? (
+                  <div className="py-20 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-4 max-w-md mx-auto shadow-xs">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                      <Layers className="w-7 h-7" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-bold text-black dark:text-white">
+                        No Masterclasses Published Yet
+                      </h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                        Create structured curricula, chapter syllabi, and practice drills for your legal aspirants. Published courses instantly sync with the student portal.
+                      </p>
+                    </div>
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setShowAuthorCourseModal(true)}
+                        className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer inline-flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Author First Course</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {coursesList.map((course) => (
+                      <div
+                        key={course.id}
+                        className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                      >
+                        <div className="p-5 space-y-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase">
+                              {course.exam}
+                            </span>
+                            <span className="text-zinc-500 font-mono text-[11px]">{course.unitsCount}</span>
+                          </div>
+                          <h4 className="text-base font-bold text-black dark:text-white leading-snug">
+                            {course.title}
+                          </h4>
+                          <p className="text-xs text-zinc-500 line-clamp-2">{course.description}</p>
+                          <div className="text-xs text-zinc-400 pt-1">
+                            Instructor: <span className="text-zinc-700 dark:text-zinc-300 font-medium">{course.instructor || "Faculty"}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                          <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                            Live on Student Portal
+                          </span>
+                          <button
+                            onClick={() => handleDeleteCourse(course.id)}
+                            className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-400 transition-colors cursor-pointer"
+                            title="Unpublish Course"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </main>
@@ -3452,6 +3596,118 @@ export function TeacherDashboardView({
                 Sign Out of Faculty Studio
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* AUTHOR MASTERCLASS MODAL */}
+      {showAuthorCourseModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl relative space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowAuthorCourseModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">
+                Faculty Authoring Deck
+              </span>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Author New Masterclass</h3>
+              <p className="text-xs text-zinc-500">
+                Publish a structured legal course with syllabi and case law drills.
+              </p>
+            </div>
+
+            <form onSubmit={handleAuthorCourse} className="space-y-4 pt-2">
+              <div>
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Masterclass Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCourseTitle}
+                  onChange={(e) => setNewCourseTitle(e.target.value)}
+                  placeholder="e.g. Constitutional Law: Writs & Basic Structure"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Target Exam / Cohort
+                  </label>
+                  <select
+                    value={newCourseExam}
+                    onChange={(e) => setNewCourseExam(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option>CLAT 2027 (NLUs)</option>
+                    <option>Distance LL.B (IGNOU)</option>
+                    <option>KLEE 2027 (Kerala)</option>
+                    <option>Judicial Services</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                    Units / Sections
+                  </label>
+                  <input
+                    type="text"
+                    value={newCourseUnits}
+                    onChange={(e) => setNewCourseUnits(e.target.value)}
+                    placeholder="e.g. 15 Sections"
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Lead Instructor
+                </label>
+                <input
+                  type="text"
+                  value={newCourseInstructor}
+                  onChange={(e) => setNewCourseInstructor(e.target.value)}
+                  placeholder="e.g. Prof. Dr. Rajesh Varma"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                  Curriculum Overview &amp; Learning Objectives
+                </label>
+                <textarea
+                  rows={3}
+                  value={newCourseDesc}
+                  onChange={(e) => setNewCourseDesc(e.target.value)}
+                  placeholder="Describe the jurisprudential framework, target legal skills, and statutory depth..."
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAuthorCourseModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer"
+                >
+                  Publish Masterclass
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

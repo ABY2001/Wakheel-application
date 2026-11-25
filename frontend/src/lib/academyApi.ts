@@ -4,6 +4,39 @@ import { LectureAudio } from "../components/academy/lectureAudioData";
 import { CornellNote } from "../components/academy/cornellNotesData";
 import { MootHistoryRecord } from "../components/academy/courtroomLabData";
 
+export interface CourseSyllabusUnit {
+  unit: string;
+  duration: string;
+  completed?: boolean;
+}
+
+export interface CourseQuizQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+}
+
+export interface LawCourse {
+  id: string;
+  title: string;
+  exam: string;
+  badge?: string;
+  badgeColor?: string;
+  unitsCount?: string;
+  dateAdded?: string;
+  image?: string;
+  description: string;
+  instructor?: string;
+  completedUnits?: number;
+  totalUnits?: number;
+  videoDuration?: string;
+  currentLesson?: string;
+  syllabus?: CourseSyllabusUnit[];
+  quiz?: CourseQuizQuestion[];
+  isEnrolled?: boolean;
+}
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
@@ -503,6 +536,125 @@ export const academyApi = {
     } catch (e: any) {
       console.warn("academyApi.uploadBase64 error:", e);
       return { success: false, message: e.message };
+    }
+  },
+
+  // ==========================================================================
+  // 10. MASTERCLASS LAW COURSES
+  // ==========================================================================
+  async getCourses(params?: { exam?: string; search?: string }): Promise<{
+    success: boolean;
+    courses: LawCourse[];
+    count?: number;
+  }> {
+    try {
+      const query = params ? "?" + new URLSearchParams(params as any).toString() : "";
+      const res = await fetch(`${API_BASE_URL}/academy/courses${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.getCourses offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_academy_courses");
+          if (s) {
+            return { success: true, courses: JSON.parse(s) };
+          }
+        } catch {}
+      }
+      return { success: false, courses: [] };
+    }
+  },
+
+  async getCourseById(id: string): Promise<{ success: boolean; course?: LawCourse }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/courses/${id}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.getCourseById offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async createCourse(data: Partial<LawCourse>): Promise<{ success: boolean; course?: LawCourse }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/courses`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && json.course) {
+        try {
+          const s = localStorage.getItem("wakheel_academy_courses");
+          const list = s ? JSON.parse(s) : [];
+          localStorage.setItem("wakheel_academy_courses", JSON.stringify([json.course, ...list]));
+        } catch {}
+      }
+      return json;
+    } catch (e) {
+      console.warn("academyApi.createCourse offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_academy_courses");
+          const list = s ? JSON.parse(s) : [];
+          const newC: LawCourse = {
+            id: data.id || `course_${Date.now()}`,
+            title: data.title || "Untitled Masterclass",
+            exam: data.exam || "CLAT 2027 (NLUs)",
+            unitsCount: data.unitsCount || "10 Sections",
+            description: data.description || "",
+            instructor: data.instructor || "Faculty Advocate",
+            image: data.image || "/academy/explore-paper.png",
+            ...data,
+          } as LawCourse;
+          const updated = [newC, ...list];
+          localStorage.setItem("wakheel_academy_courses", JSON.stringify(updated));
+          return { success: true, course: newC };
+        } catch {}
+      }
+      return { success: false };
+    }
+  },
+
+  async deleteCourse(id: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/courses/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_academy_courses");
+          if (s) {
+            const list = JSON.parse(s).filter((c: any) => c.id !== id);
+            localStorage.setItem("wakheel_academy_courses", JSON.stringify(list));
+          }
+        } catch {}
+      }
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.deleteCourse offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_academy_courses");
+          if (s) {
+            const list = JSON.parse(s).filter((c: any) => c.id !== id);
+            localStorage.setItem("wakheel_academy_courses", JSON.stringify(list));
+          }
+        } catch {}
+      }
+      return { success: true };
     }
   },
 };

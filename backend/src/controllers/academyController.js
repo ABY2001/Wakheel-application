@@ -55,6 +55,7 @@ let inMemorySubmissions = readDiskJson("dev_academy_submissions.json", []);
 let inMemoryLectures = readDiskJson("dev_academy_lectures.json", [...INITIAL_ACADEMY_LECTURES]);
 let inMemoryNotes = readDiskJson("dev_academy_notes.json", []);
 let inMemoryMootRecords = readDiskJson("dev_academy_moot_records.json", []);
+let inMemoryCourses = readDiskJson("dev_academy_courses.json", []);
 
 const getUserId = (req) => {
   return String(req.user?._id || req.user?.id || "");
@@ -1086,6 +1087,89 @@ export const getAcademyStats = async (req, res) => {
     });
   } catch (error) {
     console.error("getAcademyStats error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 8. MASTERCLASS LAW COURSES & CURRICULA (/api/academy/courses)
+// ============================================================================
+
+export const getCourses = async (req, res) => {
+  try {
+    const { exam, search } = req.query;
+    let filtered = [...inMemoryCourses];
+    if (exam && exam !== "For You" && exam !== "All") {
+      filtered = filtered.filter((c) => c.exam === exam);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (c) =>
+          c.title?.toLowerCase().includes(q) ||
+          c.description?.toLowerCase().includes(q) ||
+          c.instructor?.toLowerCase().includes(q)
+      );
+    }
+    return res.json({
+      success: true,
+      courses: filtered,
+      count: filtered.length,
+    });
+  } catch (error) {
+    console.error("getCourses error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getCourseById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const course = inMemoryCourses.find((c) => c.id === id);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+    res.json({ success: true, course });
+  } catch (error) {
+    console.error("getCourseById error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createCourse = async (req, res) => {
+  try {
+    const courseData = req.body;
+    const id = courseData.id || `course_${Date.now()}`;
+    const newCourse = {
+      ...courseData,
+      id,
+      unitsCount: courseData.unitsCount || `${(courseData.syllabus || []).length || 1} Sections`,
+      completedUnits: courseData.completedUnits || 0,
+      totalUnits: courseData.totalUnits || (courseData.syllabus || []).length || 1,
+      dateAdded: courseData.dateAdded || "Just now",
+      image: courseData.image || "/academy/explore-paper.png",
+      syllabus: courseData.syllabus || [],
+      quiz: courseData.quiz || [],
+    };
+    inMemoryCourses.unshift(newCourse);
+    writeDiskJson("dev_academy_courses.json", inMemoryCourses);
+    broadcastAcademyEvent("ACADEMY_COURSE_CREATED", newCourse);
+    res.status(201).json({ success: true, course: newCourse });
+  } catch (error) {
+    console.error("createCourse error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    inMemoryCourses = inMemoryCourses.filter((c) => c.id !== id);
+    writeDiskJson("dev_academy_courses.json", inMemoryCourses);
+    broadcastAcademyEvent("ACADEMY_COURSE_DELETED", { id });
+    res.json({ success: true, message: "Course deleted successfully" });
+  } catch (error) {
+    console.error("deleteCourse error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -151,6 +151,7 @@ import {
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
 import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
+import academyApi, { LawCourse } from "../../lib/academyApi";
 
 interface StudentDashboardProps {
   initialSection?: StudentNavSection;
@@ -249,26 +250,15 @@ export function StudentDashboardView({
   const [studentWaveformLevels, setStudentWaveformLevels] = useState<number[]>([15, 28, 45, 60, 35, 20, 55, 75, 65, 42, 28, 50, 68, 85, 52, 32, 70, 88, 42, 22]);
   const [studentMootTopic, setStudentMootTopic] = useState<string>("Oral Submission: Article 19(1)(a) Free Expression in Cyber Space");
   const [studentMootDept, setStudentMootDept] = useState<string>("Constitutional Law");
-  const [studentSavedRecordings, setStudentSavedRecordings] = useState([
-    {
-      id: "rec_1",
-      title: "Moot Oral Submission: Article 19(1)(a) Free Expression in Cyber Space",
-      subject: "Constitutional Law",
-      duration: "04:32",
-      date: "Today, 10:15 AM",
-      score: "9.2/10 AI Oral Articulation",
-      audioUrl: generateSyntheticWavDataUri(8, 440),
-    },
-    {
-      id: "rec_2",
-      title: "Statutory Analysis: Hadley v Baxendale Remoteness Rule under S.73",
-      subject: "Law of Contracts",
-      duration: "03:15",
-      date: "Yesterday",
-      score: "8.8/10 AI Statutory Precision",
-      audioUrl: generateSyntheticWavDataUri(6, 480),
-    },
-  ]);
+  const [studentSavedRecordings, setStudentSavedRecordings] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_student_recordings");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
   const [recordingSavedNotice, setRecordingSavedNotice] = useState<boolean>(false);
 
   // 2. Cornell Revision Notebook & Case Brief Studio (Option 5)
@@ -300,28 +290,15 @@ export function StudentDashboardView({
   const [modalCaseInput, setModalCaseInput] = useState<string>("");
 
   // 3. Document Upload Portal
-  const [uploadedDocuments, setUploadedDocuments] = useState([
-    {
-      id: "up_1",
-      name: "Bail_Application_BNSS_Sec480_Advithya.pdf",
-      category: "Case Brief Submission",
-      size: "2.4 MB",
-      date: "Today, 11:20 AM",
-      status: "Graded",
-      score: "48 / 50",
-      facultyFeedback: "Excellent framing of statutory parity and clean bail prayer.",
-    },
-    {
-      id: "up_2",
-      name: "Kesavananda_Memorial_Draft_v2.pdf",
-      category: "Moot Memorial Draft",
-      size: "4.1 MB",
-      date: "2 days ago",
-      status: "Under Review",
-      score: "Pending",
-      facultyFeedback: "Adv. Sunita Deshmukh is currently adjudicating.",
-    },
-  ]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_student_uploads");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
   const [uploadCategory, setUploadCategory] = useState("Case Brief Submission");
   const [uploadSuccessAlert, setUploadSuccessAlert] = useState(false);
 
@@ -459,7 +436,11 @@ export function StudentDashboardView({
       score: "9.4/10 AI Oral Articulation",
       audioUrl: generateSyntheticWavDataUri(Math.min(10, Math.max(4, studentRecordSeconds)), 460),
     };
-    setStudentSavedRecordings([newMoot, ...studentSavedRecordings]);
+    const updatedRecordings = [newMoot, ...studentSavedRecordings];
+    setStudentSavedRecordings(updatedRecordings);
+    try {
+      localStorage.setItem("wakheel_student_recordings", JSON.stringify(updatedRecordings));
+    } catch {}
     setRecordingSavedNotice(true);
     setTimeout(() => {
       setRecordingSavedNotice(false);
@@ -913,26 +894,15 @@ export function StudentDashboardView({
   }));
 
   // 9. Projects
-  const studentProjects = [
-    {
-      id: "proj_1",
-      title: "National Cyber Defamation Moot Court Memorial",
-      status: "In Progress",
-      deadline: "Dec 10, 2026",
-      team: ["Advithya Sharma (Speaker 1)", "Priya Nair (Speaker 2)", "Rahul George (Researcher)"],
-      progress: "75%",
-      track: "All-India Moot 2027",
-    },
-    {
-      id: "proj_2",
-      title: "Comparative Study on Section 480 BNSS vs Section 437 CrPC",
-      status: "Draft Review",
-      deadline: "Nov 30, 2026",
-      team: ["Advithya Sharma (Lead Author)"],
-      progress: "90%",
-      track: "Chamber Clerkship Research",
-    },
-  ];
+  const [studentProjects, setStudentProjects] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_student_projects");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const toggleSidebar = () => {
     setIsSidebarExpanded((prev) => !prev);
@@ -1364,244 +1334,62 @@ export function StudentDashboardView({
   ];
 
   // ==============================================================
-  // Wakheel FEATURED MASTERCLASSES & CURRICULA (IMAGE CARDS)
+  // DYNAMIC MASTERCLASS COURSES & CURRICULA (API & LocalStorage)
   // ==============================================================
-  const masterclassCourses = [
-    {
-      id: "ai_legal_tech",
-      title: "Artificial Intelligence & Legal Tech Masterclass",
-      exam: "CLAT 2027 (NLUs)",
-      badge: "AI POWERED",
-      badgeColor: "amber",
-      unitsCount: "20 Sections",
-      dateAdded: "2 Months ago",
-      image: "/academy/explore-robot.png",
-      description: "Gemini AI Judicial Reasoning, Principle-Fact Passage Analysis, and Algorithmic Case Law Search.",
-      instructor: "Adv. Rohan Mehra (NLSIU Bengaluru Alum & Legal Tech Researcher)",
-      completedUnits: 13,
-      totalUnits: 20,
-      videoDuration: "18h 45m",
-      currentLesson: "Chapter 4: Algorithmic Bias & Manifest Arbitrariness under Article 14",
-      syllabus: [
-        { unit: "Unit 1: Foundations of Legal Prompting & Statutory Retrieval", duration: "2h 30m", completed: true },
-        { unit: "Unit 2: Automated Principle-Fact Matching for CLAT Passages", duration: "3h 15m", completed: true },
-        { unit: "Unit 3: AI Document Discovery & High Court Case Law Analytics", duration: "4h 00m", completed: true },
-        { unit: "Unit 4: Ethics of AI in Judicial Decision Making", duration: "3h 45m", completed: false },
-        { unit: "Unit 5: Capstone: Drafting a Special Leave Petition with AI Review", duration: "5h 15m", completed: false },
-      ],
-      quiz: [
-        {
-          question: "Can an AI-generated draft be submitted in an Indian Court without an enrolled Advocate's verification?",
-          options: [
-            "Yes, if licensed under the IT Act 2000",
-            "No, the Advocates Act 1961 requires exclusive verification and signature by an enrolled advocate",
-            "Yes, in District Courts but not High Courts",
-            "Only in Commercial Arbitration proceedings",
-          ],
-          correct: 1,
-          explanation: "Under Section 30 of the Advocates Act 1961, only advocates enrolled on a State Bar roll have the exclusive right of audience and filing in Indian courts.",
-        },
-        {
-          question: "Which landmark constitutional test is applied to determine if algorithmic executive action violates Article 14?",
-          options: [
-            "Doctrine of Severability",
-            "Manifest Arbitrariness and Proportionality Test",
-            "Doctrine of Eclipse",
-            "Doctrine of Pith and Substance",
-          ],
-          correct: 1,
-          explanation: "In Shayara Bano and K.S. Puttaswamy, the Supreme Court established that state action that is manifestly arbitrary or disproportionate violates Article 14.",
-        },
-      ],
-    },
-    {
-      id: "const_law_writs",
-      title: "Constitutional Law: Fundamental Rights & Writs",
-      exam: "Distance LL.B (IGNOU)",
-      badge: "BARE ACT SYLLABUS",
-      badgeColor: "amber",
-      unitsCount: "24 Units",
-      dateAdded: "2 Months ago",
-      image: "/academy/explore-paper.png",
-      description: "Constitution of India, Writs Drafting (Habeas Corpus, Mandamus, Quo Warranto), and Landmark Bench Rulings.",
-      instructor: "Adv. Sunita Deshmukh (Supreme Court Advocate-on-Record)",
-      completedUnits: 18,
-      totalUnits: 24,
-      videoDuration: "24h 10m",
-      currentLesson: "Chapter 8: Doctrine of Basic Structure (Kesavananda Bharati)",
-      syllabus: [
-        { unit: "Unit 1: Preamble, Federal Structure, and Union Territory Jurisprudence", duration: "3h 00m", completed: true },
-        { unit: "Unit 2: Article 12 'State' Definition Post-Sukhdev and Pradeep Biswas", duration: "3h 30m", completed: true },
-        { unit: "Unit 3: Article 21 Golden Triangle & Right to Privacy (Puttaswamy)", duration: "4h 30m", completed: true },
-        { unit: "Unit 4: Drafting Article 32 & 226 High Court Writ Petitions", duration: "5h 10m", completed: false },
-        { unit: "Unit 5: Emergency Provisions & Judicial Review Limits", duration: "4h 00m", completed: false },
-      ],
-      quiz: [
-        {
-          question: "Which writ literally translates to 'What is your authority?' and tests illegal public office usurpation?",
-          options: ["Mandamus", "Habeas Corpus", "Quo Warranto", "Certiorari"],
-          correct: 2,
-          explanation: "Quo Warranto is issued against a usurper of a substantive public office of a permanent nature created by statute or Constitution.",
-        },
-        {
-          question: "Under Article 32, can the Supreme Court refuse relief on the sole ground that an alternative statutory remedy exists?",
-          options: [
-            "Yes, at its discretion",
-            "No, Article 32 is itself a guaranteed Fundamental Right and cannot be denied for alternative remedy alone",
-            "Only during Financial Emergencies",
-            "Yes, if High Court rejected it under Article 226",
-          ],
-          correct: 1,
-          explanation: "Unlike Article 226 where writ jurisdiction is discretionary, Article 32 is guaranteed as a Fundamental Right under Part III.",
-        },
-      ],
-    },
-    {
-      id: "bns_transition",
-      title: "Bharatiya Nyaya Sanhita (BNS 2023) Transition",
-      exam: "KLEE 2027 (Kerala)",
-      badge: "CRIMINAL REFORMS",
-      badgeColor: "emerald",
-      unitsCount: "18 Sections",
-      dateAdded: "2 Months ago",
-      image: "/academy/explore-man.png",
-      description: "2024–2026 Criminal Law Transitions from IPC 1860, Offence Number Mappings, and High Court Rulings.",
-      instructor: "Prof. K. Narayanan (Ex-Public Prosecutor & National Law Faculty)",
-      completedUnits: 12,
-      totalUnits: 18,
-      videoDuration: "16h 20m",
-      currentLesson: "Chapter 5: Section 69 BNS (Deceitful Cohabitation & Breach of Promise)",
-      syllabus: [
-        { unit: "Unit 1: Overview of IPC 1860 Replacement & BNS Structural Architecture", duration: "2h 45m", completed: true },
-        { unit: "Unit 2: Re-codification of Murder & Culpable Homicide (Section 101-105 BNS)", duration: "3h 40m", completed: true },
-        { unit: "Unit 3: Mob Lynching & Organized Crime as Distinct Statutory Offences", duration: "3h 15m", completed: true },
-        { unit: "Unit 4: Section 69 Sexual Offences on False Promise of Employment/Marriage", duration: "3h 30m", completed: false },
-        { unit: "Unit 5: Community Service as a New Sentencing Remedy in Minor Offenses", duration: "3h 10m", completed: false },
-      ],
-      quiz: [
-        {
-          question: "Under BNS 2023, which new punishment was introduced for first-time petty offenses under Section 4?",
-          options: ["Solitary Confinement", "Community Service", "Public Shaming", "Indefinite Forfeiture"],
-          correct: 1,
-          explanation: "Section 4 of the Bharatiya Nyaya Sanhita 2023 introduced Community Service as an alternative reformative penal sanction.",
-        },
-        {
-          question: "What is the new BNS section corresponding to traditional IPC Section 420 (Cheating and Dishonestly Inducing Delivery of Property)?",
-          options: ["Section 316 BNS", "Section 318 BNS", "Section 103 BNS", "Section 289 BNS"],
-          correct: 1,
-          explanation: "Section 318(4) of the Bharatiya Nyaya Sanhita 2023 specifically maps to Cheating previously covered under Section 420 IPC.",
-        },
-      ],
-    },
-    {
-      id: "legal_reasoning_matrix",
-      title: "CLAT Legal Reasoning & Principle-Fact Analysis",
-      exam: "CLAT 2027 (NLUs)",
-      badge: "LOGICAL MATRIX",
-      badgeColor: "amber",
-      unitsCount: "20 Sections",
-      dateAdded: "2 Months ago",
-      image: "/academy/explore-robot.png",
-      description: "Deconstructing passage-based principle-fact questions with deductive logic and consortium answer keys.",
-      instructor: "Adv. Advithya Menon (NLSIU Gold Medalist)",
-      completedUnits: 14,
-      totalUnits: 20,
-      videoDuration: "14h 30m",
-      currentLesson: "Chapter 3: Strict Liability vs Absolute Liability Passages",
-      syllabus: [
-        { unit: "Unit 1: Principle-Fact Deductive Reasoning Framework", duration: "2h 30m", completed: true },
-        { unit: "Unit 2: Torts: Volenti Non Fit Injuria & Rylands v Fletcher", duration: "3h 15m", completed: true },
-        { unit: "Unit 3: Constitutional Law Principle Drills", duration: "3h 45m", completed: true },
-        { unit: "Unit 4: Criminal Law Principles & Exceptions", duration: "2h 50m", completed: false },
-        { unit: "Unit 5: Timed Passage Speed Drills", duration: "2h 10m", completed: false },
-      ],
-      quiz: [
-        {
-          question: "In CLAT principle-fact questions, if the given principle contradicts existing statute law, what must you do?",
-          options: [
-            "Apply the actual statutory law",
-            "Accept the given principle as absolute truth and apply only that",
-            "Mark the question invalid",
-            "Choose none of the above",
-          ],
-          correct: 1,
-          explanation: "In CLAT / NLU aptitude exams, the principle stated in the passage must be treated as absolute gospel truth regardless of external law.",
-        },
-      ],
-    },
-    {
-      id: "contracts_specific_relief",
-      title: "Law of Contracts & Specific Relief Compendium",
-      exam: "Distance LL.B (IGNOU)",
-      badge: "COMMERCIAL LAW",
-      badgeColor: "amber",
-      unitsCount: "20 Sections",
-      dateAdded: "2 Months ago",
-      image: "/academy/explore-paper.png",
-      description: "Offer, acceptance, promissory estoppel, and injunction jurisprudence under Specific Relief Act 1963.",
-      instructor: "Prof. Rajesh Varma (LL.M, Ph.D)",
-      completedUnits: 16,
-      totalUnits: 20,
-      videoDuration: "19h 15m",
-      currentLesson: "Chapter 6: Section 20A Infrastructure Injunction Invalidation",
-      syllabus: [
-        { unit: "Unit 1: Formation, Consideration & Privity of Contract", duration: "3h 30m", completed: true },
-        { unit: "Unit 2: Vitiating Factors: Coercion, Fraud & Misrepresentation", duration: "4h 00m", completed: true },
-        { unit: "Unit 3: Discharge & S.73 Damages (Hadley v Baxendale)", duration: "4h 15m", completed: true },
-        { unit: "Unit 4: Specific Performance Mandate Post-2018 Amendment", duration: "3h 40m", completed: false },
-        { unit: "Unit 5: Temporary & Perpetual Injunctions", duration: "3h 50m", completed: false },
-      ],
-      quiz: [
-        {
-          question: "Post the 2018 amendment to the Specific Relief Act, granting specific performance of contract is:",
-          options: [
-            "Purely discretionary for the court",
-            "Mandatory subject to limited statutory exceptions",
-            "Prohibited for private contracts",
-            "Only available before High Courts",
-          ],
-          correct: 1,
-          explanation: "The Specific Relief (Amendment) Act 2018 substituted Section 10 to make specific performance mandatory rather than discretionary.",
-        },
-      ],
-    },
-    {
-      id: "appellate_advocacy_mooting",
-      title: "High Court Appellate Advocacy & Moot Practice",
-      exam: "KLEE 2027 (Kerala)",
-      badge: "CHAMBER PRACTICE",
-      badgeColor: "emerald",
-      unitsCount: "20 Sections",
-      dateAdded: "2 Months ago",
-      image: "/academy/explore-man.png",
-      description: "Memorial drafting, oral bench arguments, citation decorum, and trial advocacy simulations.",
-      instructor: "Adv. K. R. Nambiar (Senior Advocate, High Court)",
-      completedUnits: 12,
-      totalUnits: 20,
-      videoDuration: "15h 40m",
-      currentLesson: "Chapter 5: Rebutting Bench Queries & Time Management",
-      syllabus: [
-        { unit: "Unit 1: Anatomy of an Appellate Court Memorial", duration: "3h 00m", completed: true },
-        { unit: "Unit 2: Marshalling Facts & Crafting Proposition of Law", duration: "3h 30m", completed: true },
-        { unit: "Unit 3: Oral Advocacy Decorum & Addressing the Bench", duration: "3h 10m", completed: true },
-        { unit: "Unit 4: Handling Hostile Bench Queries with Poise", duration: "3h 00m", completed: false },
-        { unit: "Unit 5: Mock High Court Appellate Hearing Simulation", duration: "3h 00m", completed: false },
-      ],
-      quiz: [
-        {
-          question: "When cited with an adverse precedent by the bench during oral arguments, the advocate's best strategy is to:",
-          options: [
-            "Argue the precedent was incorrectly decided without grounds",
-            "Distinguish the case on material facts and narrow the ratio decidendi",
-            "Ignore the query and move to the next prayer",
-            "Request adjournment immediately",
-          ],
-          correct: 1,
-          explanation: "In appellate advocacy, distinguishing the adverse case on material facts is the recognized standard for neutralizing hostile citations.",
-        },
-      ],
-    },
-  ];
+  const [coursesList, setCoursesList] = useState<LawCourse[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_academy_courses");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isLoadingCourses, setIsLoadingCourses] = useState<boolean>(false);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_enrolled_courses");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Sync courses from backend API on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadAcademyCourses() {
+      try {
+        setIsLoadingCourses(true);
+        const res = await academyApi.getCourses();
+        if (isMounted && res.success && Array.isArray(res.courses)) {
+          setCoursesList(res.courses);
+          try {
+            localStorage.setItem("wakheel_academy_courses", JSON.stringify(res.courses));
+          } catch {}
+        }
+      } catch (err) {
+        console.warn("Failed to load courses from API:", err);
+      } finally {
+        if (isMounted) setIsLoadingCourses(false);
+      }
+    }
+    loadAcademyCourses();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleToggleEnrollCourse = (courseId: string) => {
+    const next = enrolledCourseIds.includes(courseId)
+      ? enrolledCourseIds.filter((id) => id !== courseId)
+      : [...enrolledCourseIds, courseId];
+    setEnrolledCourseIds(next);
+    try {
+      localStorage.setItem("wakheel_enrolled_courses", JSON.stringify(next));
+    } catch {}
+  };
 
   // All-India Leaderboard Data
   const leaderboardAspirants = [
@@ -1663,32 +1451,15 @@ export function StudentDashboardView({
   ];
 
   // Bookmarked Items for Revision Notebook
-  const bookmarkedItems = [
-    {
-      id: "bm1",
-      type: "CBT Mock Question",
-      title: "CLAT 2027 Mock 04 • Q.38: Promissory Estoppel against Government",
-      meta: "Contract Law • Pass Pro",
-      note: "Review Pournami Oil Mills v. State of Kerala for tax incentive estoppel exception.",
-      date: "Saved 2 days ago",
-    },
-    {
-      id: "bm2",
-      type: "Bare Act Section",
-      title: "Section 69 BNS 2023: Sexual intercourse by employing deceitful means",
-      meta: "Criminal Law • BNS 2023",
-      note: "Distinguish false promise to marry from consensual breach post-engagement.",
-      date: "Saved yesterday",
-    },
-    {
-      id: "bm3",
-      type: "Landmark Judgment",
-      title: "Kesavananda Bharati v. State of Kerala (1973) 4 SCC 225",
-      meta: "Constitutional Law • Basic Structure",
-      note: "13-judge bench, 7-6 majority holding Parliament cannot alter basic structure.",
-      date: "Saved today",
-    },
-  ];
+  const [bookmarkedItems, setBookmarkedItems] = useState<any[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_student_bookmarks");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // ==============================================================
   // Wakheel LEARN SECTION DATA (11 SUB-SECTIONS, 6 SUBJECTS, 12 TOOLS)
@@ -4409,212 +4180,89 @@ export function StudentDashboardView({
           {(activeSection === "test_series" || activeSection === "home") && (
             <div className="space-y-8 animate-in fade-in duration-150">
               {/* ============================================================== */}
-              {/* Wakheel-STYLE FEATURED CURRICULA (3-COL MINIMALIST CARDS)      */}
+              {/* Wakheel DYNAMIC FEATURED CURRICULA / CLEAN ZERO-STATE          */}
               {/* ============================================================== */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {masterclassCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    onClick={() => {
-                      setSelectedCourseForPortal(course);
-                      setPortalTab("video");
-                      setPortalVideoPlaying(false);
-                      setPortalQuizAnswers({});
-                      setPortalQuizSubmitted(false);
-                    }}
-                    className="group rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 overflow-hidden shadow-2xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
-                  >
-                    {/* Top Media Image Banner */}
-                    <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                      <img
-                        src={course.image}
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+              {(() => {
+                const filteredExploreCourses = coursesList.filter((course) => {
+                  if (activeExamFilter && activeExamFilter !== "For You" && activeExamFilter !== "All") {
+                    return course.exam === activeExamFilter;
+                  }
+                  return true;
+                });
 
-                      {/* Wakheel Sections Pill: [ ≡ 20 Sections ] */}
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white text-[11px] font-medium border border-white/10 shadow-xs">
-                        <AlignLeft className="w-3.5 h-3.5 text-zinc-300" />
-                        <span>{course.unitsCount}</span>
+                if (filteredExploreCourses.length === 0) {
+                  return (
+                    <div className="py-20 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-4 max-w-md mx-auto shadow-xs">
+                      <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                        <GraduationCap className="w-7 h-7" />
                       </div>
-                    </div>
-
-                    {/* Card Body - Exactly 2 Clean Lines matching Wakheel */}
-                    <div className="p-4 sm:p-5 space-y-1">
-                      <h3 className="text-base font-bold text-black dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">
-                        {course.title}
-                      </h3>
-                      <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">
-                        {course.dateAdded}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Wakheel Pass Pro All-India Law Entrance CBT Series */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-zinc-950 text-white border border-zinc-800/80 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded bg-amber-500 text-black font-extrabold text-[10px] uppercase font-mono">
-                      WAKHEEL PASS PRO
-                    </span>
-                    <span className="text-xs text-zinc-400 font-medium">All-India Law Entrance Test Series</span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-                    Unlock 100+ CBT Full Mocks for CLAT 2027, KLEE &amp; AILET
-                  </h3>
-                  <p className="text-xs text-zinc-300 max-w-2xl">
-                    Full length timed mocks with Consortium negative marking (-0.25), all-India rank prediction, and video solutions.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right hidden sm:block">
-                    <div className="text-xs text-zinc-400 line-through">₹2,999</div>
-                    <div className="text-xl font-bold text-amber-400 font-mono">₹999 / yr</div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleOpenPurchase({
-                        type: "test_series",
-                        title: "Wakheel All-Access Law Pass Pro 2027",
-                        price: 999,
-                        originalPrice: 2999,
-                        features: [
-                          "All 35 Full Length CLAT 2027 Mock Tests with negative marking",
-                          "25 KLEE Kerala Entrance full length mocks (+3 / -1)",
-                          "15 High-difficulty AILET NLU Delhi mock tests",
-                          "40 Distance LL.B subject-wise question banks",
-                          "All-India Percentile & Rank Predictor",
-                        ],
-                      })
-                    }
-                    className="px-6 py-3 rounded-full bg-amber-500 hover:bg-white hover:text-black text-black font-bold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer"
-                  >
-                    Buy Pass Pro →
-                  </button>
-                </div>
-              </div>
-
-              {/* Section Separator */}
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-amber-500" />
-                  <h3 className="text-base font-bold text-black dark:text-white tracking-tight">
-                    Testbook-Style All-India Entrance Mock Packages
-                  </h3>
-                </div>
-                <span className="text-xs text-zinc-400 font-mono">Timed CBT Mode • Instant All-India Rank</span>
-              </div>
-
-              {/* Test Series Cards Grid (Testbook Style) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTestSeries.map((pack) => (
-                <div
-                  key={pack.id}
-                  className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    {/* Header Row: Badge & Enrolled */}
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
-                        {pack.badge}
-                      </span>
-                      <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
-                        <span className="flex items-center gap-1 font-bold text-black dark:text-white">
-                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          {pack.rating}
-                        </span>
-                        <span className="font-medium">({pack.reviewsCount})</span>
+                      <div className="space-y-1.5">
+                        <h4 className="text-base font-bold text-black dark:text-white">
+                          No courses available
+                        </h4>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                          No masterclasses found for {activeExamFilter === "For You" ? "your current track" : activeExamFilter}. Courses authored and published by faculty will appear here.
+                        </p>
                       </div>
-                    </div>
-
-                    {/* Title & Body */}
-                    <div>
-                      <h3 className="text-base font-extrabold text-black dark:text-white leading-snug">
-                        {pack.title}
-                      </h3>
-                      <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 font-medium">
-                        {pack.conductingBody}
-                      </p>
-                    </div>
-
-                    {/* Tests Highlights & Students */}
-                    <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs">
-                      <div className="font-bold text-black dark:text-white flex items-center gap-1.5">
-                        <Award className="w-4 h-4 text-amber-500" />
-                        <span>{pack.testsCount}</span>
-                      </div>
-                      <div className="text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 text-[11px] font-medium">
-                        <Users className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
-                        <span>{pack.enrolledCount}</span>
-                      </div>
-                    </div>
-
-                    {/* Features Checklist */}
-                    <ul className="space-y-1 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
-                      {pack.features.slice(0, 3).map((feat, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Pricing & Actions Footer */}
-                  <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-black text-black dark:text-white font-mono">
-                          ₹{pack.price}
-                        </span>
-                        <span className="text-xs text-zinc-400 line-through">
-                          ₹{pack.originalPrice}
-                        </span>
-                        <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                          {pack.discount}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {pack.hasFreeTest && (
-                        <button
-                          onClick={() => {
-                            setActiveSection("free_mocks");
-                            setActiveMockTest(sampleFreeMock);
-                            setSelectedAnswers({});
-                            setMockScore(null);
-                          }}
-                          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white text-black dark:text-white text-xs font-bold cursor-pointer transition-colors"
-                        >
-                          Free Mock
-                        </button>
+                      {activeExamFilter !== "For You" && (
+                        <div className="pt-2">
+                          <button
+                            onClick={() => setActiveExamFilter("For You")}
+                            className="px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-xs transition-colors cursor-pointer"
+                          >
+                            View all tracks
+                          </button>
+                        </div>
                       )}
-
-                      <button
-                        onClick={() =>
-                          handleOpenPurchase({
-                            type: "test_series",
-                            title: pack.title,
-                            price: pack.price,
-                            originalPrice: pack.originalPrice,
-                            features: pack.features,
-                          })
-                        }
-                        className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-xs"
-                      >
-                        Unlock Test Series
-                      </button>
                     </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredExploreCourses.map((course) => (
+                      <div
+                        key={course.id}
+                        onClick={() => {
+                          setSelectedCourseForPortal(course);
+                          setPortalTab("video");
+                          setPortalVideoPlaying(false);
+                          setPortalQuizAnswers({});
+                          setPortalQuizSubmitted(false);
+                        }}
+                        className="group rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 overflow-hidden shadow-2xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
+                      >
+                        {/* Top Media Image Banner */}
+                        <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                          <img
+                            src={course.image || "/academy/explore-paper.png"}
+                            alt={course.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+
+                          {/* Wakheel Sections Pill: [ ≡ 20 Sections ] */}
+                          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white text-[11px] font-medium border border-white/10 shadow-xs">
+                            <AlignLeft className="w-3.5 h-3.5 text-zinc-300" />
+                            <span>{course.unitsCount || `${course.syllabus?.length || 0} Sections`}</span>
+                          </div>
+                        </div>
+
+                        {/* Card Body - Exactly 2 Clean Lines matching Wakheel */}
+                        <div className="p-4 sm:p-5 space-y-1">
+                          <h3 className="text-base font-bold text-black dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">
+                            {course.title}
+                          </h3>
+                          <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">
+                            {course.dateAdded || course.instructor || "Active Masterclass"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                );
+              })()}
             </div>
-          </div>
         )}
 
                 {/* ============================================================== */}
@@ -4704,14 +4352,18 @@ export function StudentDashboardView({
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {learnSubjects.map((subj) => {
                       const matchedCourse =
-                        masterclassCourses.find((c) => c.id === subj.courseRefId) || masterclassCourses[0];
+                        coursesList.find((c) => c.id === subj.courseRefId) || coursesList[0] || null;
                       return (
                         <div
                           key={subj.id}
                           onClick={() => {
-                            setSelectedCourseForPortal(matchedCourse);
-                            setPortalTab("video");
-                            setPortalVideoPlaying(true);
+                            if (matchedCourse) {
+                              setSelectedCourseForPortal(matchedCourse);
+                              setPortalTab("video");
+                              setPortalVideoPlaying(true);
+                            } else {
+                              alert(`Curriculum masterclass for ${subj.title} will unlock once published by faculty.`);
+                            }
                           }}
                           className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 shadow-xs hover:shadow-md hover:border-amber-400/50 dark:hover:border-zinc-700 transition-all flex flex-col justify-between group cursor-pointer relative min-h-[175px]"
                         >
@@ -4791,9 +4443,13 @@ export function StudentDashboardView({
                     </div>
                     <button
                       onClick={() => {
-                        setSelectedCourseForPortal(masterclassCourses[1]);
-                        setPortalTab("video");
-                        setPortalVideoPlaying(true);
+                        if (coursesList.length > 0) {
+                          setSelectedCourseForPortal(coursesList[0]);
+                          setPortalTab("video");
+                          setPortalVideoPlaying(true);
+                        } else {
+                          setActiveSection("home");
+                        }
                       }}
                       className="px-5 py-2 rounded-full bg-amber-500 hover:bg-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-xs shrink-0"
                     >
@@ -4933,38 +4589,46 @@ export function StudentDashboardView({
                     </p>
                   </div>
                   <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 space-y-6 shadow-xs">
-                    {masterclassCourses[0].quiz.map((q, qIdx) => (
-                      <div key={qIdx} className="space-y-3 pb-5 border-b border-slate-100 dark:border-zinc-800">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                          Q{qIdx + 1}. {q.question}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {q.options.map((opt, oIdx) => (
-                            <button
-                              key={oIdx}
-                              onClick={() => {
-                                setPortalQuizAnswers((prev) => ({ ...prev, [qIdx]: oIdx }));
-                              }}
-                              className={`p-3 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
-                                portalQuizAnswers[qIdx] === oIdx
-                                  ? "bg-amber-500 text-black border-amber-500 font-bold"
-                                  : "border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-amber-400"
-                              }`}
-                            >
-                              {opt}
-                            </button>
-                          ))}
+                    {coursesList[0]?.quiz && coursesList[0].quiz.length > 0 ? (
+                      <>
+                        {coursesList[0].quiz.map((q, qIdx) => (
+                          <div key={qIdx} className="space-y-3 pb-5 border-b border-slate-100 dark:border-zinc-800">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                              Q{qIdx + 1}. {q.question}
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {q.options.map((opt, oIdx) => (
+                                <button
+                                  key={oIdx}
+                                  onClick={() => {
+                                    setPortalQuizAnswers((prev) => ({ ...prev, [qIdx]: oIdx }));
+                                  }}
+                                  className={`p-3 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
+                                    portalQuizAnswers[qIdx] === oIdx
+                                      ? "bg-amber-500 text-black border-amber-500 font-bold"
+                                      : "border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-amber-400"
+                                  }`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => setPortalQuizSubmitted(true)}
+                            className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer"
+                          >
+                            Submit Quiz &amp; Calculate Score
+                          </button>
                         </div>
+                      </>
+                    ) : (
+                      <div className="py-8 text-center text-xs text-zinc-500">
+                        No active quiz questions authored yet. Questions will appear when published by faculty.
                       </div>
-                    ))}
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => setPortalQuizSubmitted(true)}
-                        className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer"
-                      >
-                        Submit Quiz &amp; Calculate Score
-                      </button>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -6942,19 +6606,21 @@ export function StudentDashboardView({
                 </select>
                 <button
                   onClick={() => {
-                    setUploadedDocuments((prev) => [
-                      {
-                        id: `up_${Date.now()}`,
-                        name: `Constitutional_Memo_${Date.now().toString().slice(-4)}.pdf`,
-                        category: uploadCategory,
-                        size: "3.2 MB",
-                        date: "Just now",
-                        status: "Under Review",
-                        score: "Pending",
-                        facultyFeedback: "Evaluating against consortium rubric.",
-                      },
-                      ...prev,
-                    ]);
+                    const newDoc = {
+                      id: `up_${Date.now()}`,
+                      name: `Constitutional_Memo_${Date.now().toString().slice(-4)}.pdf`,
+                      category: uploadCategory,
+                      size: "3.2 MB",
+                      date: "Just now",
+                      status: "Under Review",
+                      score: "Pending",
+                      facultyFeedback: "Evaluating against consortium rubric.",
+                    };
+                    const updated = [newDoc, ...uploadedDocuments];
+                    setUploadedDocuments(updated);
+                    try {
+                      localStorage.setItem("wakheel_student_uploads", JSON.stringify(updated));
+                    } catch {}
                     setUploadSuccessAlert(true);
                     setTimeout(() => setUploadSuccessAlert(false), 3500);
                   }}
@@ -6979,7 +6645,20 @@ export function StudentDashboardView({
               </div>
 
               <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {uploadedDocuments.map((doc) => (
+                {uploadedDocuments.length === 0 ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h5 className="text-sm font-bold text-black dark:text-white">No documents uploaded yet</h5>
+                      <p className="text-xs text-zinc-500 max-w-sm">
+                        Upload your legal case briefs, court petitions, or study notes above to have them indexed and graded.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  uploadedDocuments.map((doc) => (
                   <div key={doc.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -7017,7 +6696,8 @@ export function StudentDashboardView({
                       </button>
                     </div>
                   </div>
-                ))}
+                ))
+              )}
               </div>
             </div>
           </div>
@@ -7520,7 +7200,20 @@ export function StudentDashboardView({
                   </div>
 
                   <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {studentSavedRecordings.map((rec) => (
+                    {studentSavedRecordings.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                          <Mic className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <h5 className="text-sm font-bold text-black dark:text-white">No oral arguments in archive</h5>
+                          <p className="text-xs text-zinc-500 max-w-sm">
+                            Record your oral submission or moot plea above to generate an audio recording and real-time AI legal appraisal.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      studentSavedRecordings.map((rec) => (
                       <div key={rec.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                         <div className="space-y-0.5">
                           <div className="font-bold text-black dark:text-white text-sm">{rec.title}</div>
@@ -7544,7 +7237,8 @@ export function StudentDashboardView({
                           </button>
                         </div>
                       </div>
-                    ))}
+                    ))
+                  )}
                   </div>
                 </div>
               </div>
@@ -8037,55 +7731,94 @@ export function StudentDashboardView({
         )}
 
         {/* ============================================================== */}
-        {/* SECTION: MY ENROLLED COURSES (Wakheel SCREENSHOT FEATURE)       */}
+        {/* SECTION: MY ENROLLED COURSES                                    */}
         {/* ============================================================== */}
         {activeSection === "my_courses" && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {masterclassCourses.map((course) => (
-                <div
-                  key={course.id}
-                  className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between"
-                >
-                  <div className="p-5 space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                        {course.badge}
-                      </span>
-                      <span className="text-zinc-500 font-mono text-[11px]">{course.unitsCount}</span>
-                    </div>
-                    <h4 className="text-base font-bold text-black dark:text-white leading-snug">{course.title}</h4>
-                    <p className="text-xs text-zinc-500 line-clamp-2">{course.description}</p>
-                    
-                    <div className="space-y-1.5 pt-2">
-                      <div className="flex justify-between text-[11px] font-mono">
-                        <span className="text-zinc-500">Progress</span>
-                        <span className="font-bold text-amber-500">{Math.round((course.completedUnits / course.totalUnits) * 100)}%</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                        <div
-                          className="h-full bg-amber-500 rounded-full"
-                          style={{ width: `${(course.completedUnits / course.totalUnits) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+            {(() => {
+              const enrolledCourses = coursesList.filter(
+                (c) => enrolledCourseIds.includes(c.id) || c.isEnrolled
+              );
 
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800">
-                    <button
-                      onClick={() => {
-                        setSelectedCourseForPortal(course);
-                        setPortalTab("video");
-                      }}
-                      className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Play className="w-3.5 h-3.5" />
-                      <span>Resume Learning Portal</span>
-                    </button>
+              if (enrolledCourses.length === 0) {
+                return (
+                  <div className="py-20 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-4 max-w-md mx-auto shadow-xs">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                      <BookOpen className="w-7 h-7" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-bold text-black dark:text-white">
+                        No enrolled courses
+                      </h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                        You have not enrolled in any masterclasses yet. Explore available courses or request tuition access from your faculty.
+                      </p>
+                    </div>
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setActiveSection("home")}
+                        className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-xs cursor-pointer inline-flex items-center gap-2"
+                      >
+                        <span>Explore Courses</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {enrolledCourses.map((course) => (
+                    <div
+                      key={course.id}
+                      className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm flex flex-col justify-between"
+                    >
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                            {course.badge || "ENROLLED"}
+                          </span>
+                          <span className="text-zinc-500 font-mono text-[11px]">{course.unitsCount}</span>
+                        </div>
+                        <h4 className="text-base font-bold text-black dark:text-white leading-snug">{course.title}</h4>
+                        <p className="text-xs text-zinc-500 line-clamp-2">{course.description}</p>
+                        
+                        <div className="space-y-1.5 pt-2">
+                          <div className="flex justify-between text-[11px] font-mono">
+                            <span className="text-zinc-500">Progress</span>
+                            <span className="font-bold text-amber-500">
+                              {course.totalUnits ? Math.round(((course.completedUnits || 0) / course.totalUnits) * 100) : 0}%
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                            <div
+                              className="h-full bg-amber-500 rounded-full"
+                              style={{
+                                width: `${course.totalUnits ? Math.round(((course.completedUnits || 0) / course.totalUnits) * 100) : 0}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800">
+                        <button
+                          onClick={() => {
+                            setSelectedCourseForPortal(course);
+                            setPortalTab("video");
+                          }}
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          <span>Resume Learning Portal</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
         )}
 
@@ -8478,43 +8211,57 @@ export function StudentDashboardView({
         {/* ============================================================== */}
         {activeSection === "projects" && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {studentProjects.map((proj) => (
-                <div
-                  key={proj.id}
-                  className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 uppercase">
-                      {proj.track}
-                    </span>
-                    <span className="text-xs font-mono text-zinc-500">Due: {proj.deadline}</span>
-                  </div>
-                  <h4 className="text-base font-bold text-black dark:text-white">{proj.title}</h4>
-                  
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-mono text-zinc-500 block">Team Members:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {proj.team.map((member, mIdx) => (
-                        <span key={mIdx} className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
-                          {member}
-                        </span>
-                      ))}
+            {studentProjects.length === 0 ? (
+              <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h5 className="text-sm font-bold text-black dark:text-white">No active research projects</h5>
+                  <p className="text-xs text-zinc-500 max-w-sm">
+                    Initiate a collaborative moot memorial, law review paper, or statutory research project with fellow scholars.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {studentProjects.map((proj) => (
+                  <div
+                    key={proj.id}
+                    className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 uppercase">
+                        {proj.track}
+                      </span>
+                      <span className="text-xs font-mono text-zinc-500">Due: {proj.deadline}</span>
+                    </div>
+                    <h4 className="text-base font-bold text-black dark:text-white">{proj.title}</h4>
+                    
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-mono text-zinc-500 block">Team Members:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {proj.team?.map((member: string, mIdx: number) => (
+                          <span key={mIdx} className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                            {member}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between text-xs">
+                      <span className="font-bold text-emerald-600">{proj.status} ({proj.progress})</span>
+                      <button
+                        onClick={() => alert(`Opening collaborative project space for: ${proj.title}`)}
+                        className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold transition-all cursor-pointer"
+                      >
+                        Open Project Room →
+                      </button>
                     </div>
                   </div>
-
-                  <div className="pt-2 flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-600">{proj.status} ({proj.progress})</span>
-                    <button
-                      onClick={() => alert(`Opening collaborative project space for: ${proj.title}`)}
-                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold transition-all cursor-pointer"
-                    >
-                      Open Project Room →
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -9447,7 +9194,20 @@ export function StudentDashboardView({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                {bookmarkedItems.map((item) => (
+                {bookmarkedItems.length === 0 ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-center space-y-3 col-span-2">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                      <Bookmark className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h5 className="text-sm font-bold text-black dark:text-white">No bookmarked precedents yet</h5>
+                      <p className="text-xs text-zinc-500 max-w-sm">
+                        Star landmark judgments, Cornell notes, or statutory sections across the platform to pin them here for rapid revision.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  bookmarkedItems.map((item) => (
                   <div
                     key={item.id}
                     className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs"
@@ -9463,7 +9223,8 @@ export function StudentDashboardView({
                       💡 {item.note}
                     </p>
                   </div>
-                ))}
+                ))
+              )}
               </div>
             </div>
           </div>
@@ -10179,15 +9940,15 @@ export function StudentDashboardView({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-black text-black dark:text-white">
-                        Curriculum Syllabus ({selectedCourseForPortal.syllabus.length} Units)
+                        Curriculum Syllabus ({selectedCourseForPortal.syllabus?.length || 0} Units)
                       </h4>
                       <span className="text-xs text-amber-600 dark:text-amber-400 font-mono font-bold">
-                        {selectedCourseForPortal.completedUnits}/{selectedCourseForPortal.totalUnits} Completed
+                        {selectedCourseForPortal.completedUnits || 0}/{selectedCourseForPortal.totalUnits || selectedCourseForPortal.syllabus?.length || 0} Completed
                       </span>
                     </div>
 
                     <div className="space-y-2">
-                      {selectedCourseForPortal.syllabus.map((syl: any, idx: number) => (
+                      {(selectedCourseForPortal.syllabus || []).map((syl: any, idx: number) => (
                         <div
                           key={idx}
                           className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs ${
@@ -10256,19 +10017,19 @@ export function StudentDashboardView({
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-black text-black dark:text-white">
-                        Diagnostic Chapter Quiz ({selectedCourseForPortal.quiz.length} Questions)
+                        Diagnostic Chapter Quiz ({selectedCourseForPortal.quiz?.length || 0} Questions)
                       </h4>
                       <p className="text-xs text-zinc-500 font-mono">Consortium CLAT Pattern • +1 for correct</p>
                     </div>
                     {portalQuizSubmitted && (
                       <span className="px-3 py-1 rounded-xl bg-amber-500 text-black font-mono font-black text-xs">
-                        Score: {Object.entries(portalQuizAnswers).filter(([idx, ans]) => selectedCourseForPortal.quiz[Number(idx)]?.correct === ans).length} / {selectedCourseForPortal.quiz.length}
+                        Score: {Object.entries(portalQuizAnswers).filter(([idx, ans]) => selectedCourseForPortal.quiz?.[Number(idx)]?.correct === ans).length} / {selectedCourseForPortal.quiz?.length || 0}
                       </span>
                     )}
                   </div>
 
                   <div className="space-y-4">
-                    {selectedCourseForPortal.quiz.map((q: any, qIdx: number) => {
+                    {(selectedCourseForPortal.quiz || []).map((q: any, qIdx: number) => {
                       const userAns = portalQuizAnswers[qIdx];
                       return (
                         <div
@@ -11109,9 +10870,13 @@ export function StudentDashboardView({
                     onClick={() => {
                       setActiveCreateModal(null);
                       if (activeCreateModal === "video") {
-                        setSelectedCourseForPortal(masterclassCourses[0]);
-                        setPortalTab("video");
-                        setPortalVideoPlaying(true);
+                        if (coursesList.length > 0) {
+                          setSelectedCourseForPortal(coursesList[0]);
+                          setPortalTab("video");
+                          setPortalVideoPlaying(true);
+                        } else {
+                          setActiveSection("home");
+                        }
                       }
                     }}
                     className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer transition-colors"

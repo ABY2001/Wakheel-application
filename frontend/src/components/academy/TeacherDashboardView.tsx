@@ -286,6 +286,89 @@ export function TeacherDashboardView({
   const [isAiGeneratingQuestion, setIsAiGeneratingQuestion] = useState(false);
   const [questionSavedSuccess, setQuestionSavedSuccess] = useState(false);
 
+  // Faculty Examination Portal State (starts clean, persisted to localStorage)
+  const [facultyExams, setFacultyExams] = useState<
+    Array<{
+      id: string;
+      title: string;
+      pattern: string;
+      durationMinutes: number;
+      totalMarks: number;
+      negativeMarking: string;
+      scheduledDate: string;
+      status: "Draft" | "Published" | "Live";
+    }>
+  >(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem("wakheel_academy_faculty_exams_v1");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showCreateExamModal, setShowCreateExamModal] = useState(false);
+  const [newExamTitle, setNewExamTitle] = useState("");
+  const [newExamPattern, setNewExamPattern] = useState("CLAT 2027 (NLUs)");
+  const [newExamDuration, setNewExamDuration] = useState(120);
+  const [newExamMarks, setNewExamMarks] = useState(120);
+  const [newExamNegative, setNewExamNegative] = useState("-0.25 per wrong answer");
+  const [newExamDate, setNewExamDate] = useState("");
+
+  const persistFacultyExams = (
+    next: Array<{
+      id: string;
+      title: string;
+      pattern: string;
+      durationMinutes: number;
+      totalMarks: number;
+      negativeMarking: string;
+      scheduledDate: string;
+      status: "Draft" | "Published" | "Live";
+    }>
+  ) => {
+    setFacultyExams(next);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("wakheel_academy_faculty_exams_v1", JSON.stringify(next));
+    }
+  };
+
+  const handleCreateExam = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newExamTitle.trim()) return;
+    const created = {
+      id: `exam_${Date.now()}`,
+      title: newExamTitle.trim(),
+      pattern: newExamPattern,
+      durationMinutes: Number(newExamDuration) || 120,
+      totalMarks: Number(newExamMarks) || 120,
+      negativeMarking: newExamNegative.trim() || "None",
+      scheduledDate: newExamDate || "Unscheduled",
+      status: "Published" as const,
+    };
+    persistFacultyExams([created, ...facultyExams]);
+    setNewExamTitle("");
+    setNewExamDate("");
+    setShowCreateExamModal(false);
+  };
+
+  const handleToggleExamStatus = (examId: string) => {
+    persistFacultyExams(
+      facultyExams.map((ex) =>
+        ex.id === examId
+          ? {
+              ...ex,
+              status: ex.status === "Draft" ? "Published" : ex.status === "Published" ? "Live" : "Draft",
+            }
+          : ex
+      )
+    );
+  };
+
+  const handleDeleteExam = (examId: string) => {
+    persistFacultyExams(facultyExams.filter((ex) => ex.id !== examId));
+  };
+
   // Upload Notes Modal State
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadSubject, setUploadSubject] = useState("Bharatiya Nyaya Sanhita (BNS 2023)");
@@ -353,10 +436,10 @@ export function TeacherDashboardView({
     setLecturesList(getStoredLectures());
 
     syncAssignmentsWithServer().then((data) => {
-      if (data && data.length > 0) setAssignmentsList(data);
+      if (Array.isArray(data)) setAssignmentsList(data);
     });
     syncSubmissionsWithServer().then((data) => {
-      if (data && data.length > 0) setSubmissionsList(data);
+      if (Array.isArray(data)) setSubmissionsList(data);
     });
     syncLecturesWithServer().then((data) => {
       if (data && data.length > 0) setLecturesList(data);
@@ -704,16 +787,6 @@ export function TeacherDashboardView({
     }
   };
 
-  const [mentorshipBookings, setMentorshipBookings] = useState<any[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const s = localStorage.getItem("wakheel_faculty_mentorship");
-      return s ? JSON.parse(s) : [];
-    } catch {
-      return [];
-    }
-  });
-
   const syllabusTracks = [
     {
       code: "CONST-101",
@@ -834,7 +907,7 @@ export function TeacherDashboardView({
   useEffect(() => {
     setBooksList(getStoredBooks());
     syncBooksWithServer().then((books) => {
-      if (books && books.length > 0) setBooksList(books);
+      if (Array.isArray(books)) setBooksList(books);
     });
   }, []);
 
@@ -2151,8 +2224,266 @@ export function TeacherDashboardView({
               </div>
             )}
 
+            {/* SECTION: EXAMINATION PORTAL */}
+            {activeSection === "test" && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                        Examination Portal
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">•</span>
+                      <span className="text-xs text-zinc-500 font-mono">Proctored CBT &amp; Mock Scheduling</span>
+                    </div>
+                    <h2 className="text-xl font-black text-zinc-900 dark:text-white mt-1">
+                      Examination &amp; Proctored CBT Studio
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Schedule timed legal examinations, configure negative marking rules, and publish mock test series to student cohorts.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <button
+                      onClick={() => setActiveSection("test_creator")}
+                      className="px-4 py-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckSquare className="w-4 h-4 text-amber-500" />
+                      <span>Open Test Studio</span>
+                    </button>
+                    <button
+                      onClick={() => setShowCreateExamModal(true)}
+                      className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Schedule Examination</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Metrics Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Total Examinations</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {facultyExams.length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Configured by faculty</p>
+                  </div>
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Live Now</span>
+                    <div className="text-2xl font-black text-emerald-500 font-mono">
+                      {facultyExams.filter((ex) => ex.status === "Live").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Active proctored sessions</p>
+                  </div>
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Published</span>
+                    <div className="text-2xl font-black text-amber-500 font-mono">
+                      {facultyExams.filter((ex) => ex.status === "Published").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Visible to student batches</p>
+                  </div>
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Drafts</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {facultyExams.filter((ex) => ex.status === "Draft").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Pending publication</p>
+                  </div>
+                </div>
+
+                {/* Inline Schedule Exam Form */}
+                {showCreateExamModal && (
+                  <form
+                    onSubmit={handleCreateExam}
+                    className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-amber-500/40 shadow-sm space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black text-zinc-900 dark:text-white">
+                        Schedule New Examination
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateExamModal(false)}
+                        className="text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Examination Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newExamTitle}
+                          onChange={(e) => setNewExamTitle(e.target.value)}
+                          placeholder="e.g., Constitutional Law Mid-Term CBT"
+                          className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Target Pattern / Cohort
+                        </label>
+                        <select
+                          value={newExamPattern}
+                          onChange={(e) => setNewExamPattern(e.target.value)}
+                          className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-xs font-semibold"
+                        >
+                          <option>CLAT 2027 (NLUs)</option>
+                          <option>KLEE 2027 (Kerala)</option>
+                          <option>AILET (NLU Delhi)</option>
+                          <option>AIBE Bar Examination</option>
+                          <option>LL.B Semester Examination</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Duration (Minutes)
+                        </label>
+                        <input
+                          type="number"
+                          min={10}
+                          value={newExamDuration}
+                          onChange={(e) => setNewExamDuration(Number(e.target.value))}
+                          className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Total Marks
+                        </label>
+                        <input
+                          type="number"
+                          min={10}
+                          value={newExamMarks}
+                          onChange={(e) => setNewExamMarks(Number(e.target.value))}
+                          className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Negative Marking Rule
+                        </label>
+                        <input
+                          type="text"
+                          value={newExamNegative}
+                          onChange={(e) => setNewExamNegative(e.target.value)}
+                          className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Scheduled Date &amp; Time
+                        </label>
+                        <input
+                          type="text"
+                          value={newExamDate}
+                          onChange={(e) => setNewExamDate(e.target.value)}
+                          placeholder="e.g., Dec 10, 2026, 10:00 AM"
+                          className="w-full p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
+                      >
+                        Publish Examination
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Examinations Grid or Clean Zero-State */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {facultyExams.length === 0 ? (
+                    <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-3 col-span-full">
+                      <Award className="w-10 h-10 text-zinc-400 mx-auto" />
+                      <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                        No Examinations Scheduled Yet
+                      </h4>
+                      <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                        Create your first timed examination or mock test paper to publish it to your student cohorts.
+                      </p>
+                      <button
+                        onClick={() => setShowCreateExamModal(true)}
+                        className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer inline-flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Schedule Examination</span>
+                      </button>
+                    </div>
+                  ) : (
+                    facultyExams.map((exam) => (
+                      <div
+                        key={exam.id}
+                        className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3 flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                              {exam.pattern}
+                            </span>
+                            <button
+                              onClick={() => handleToggleExamStatus(exam.id)}
+                              className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full cursor-pointer ${
+                                exam.status === "Live"
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                  : exam.status === "Published"
+                                  ? "bg-amber-500 text-black"
+                                  : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                              }`}
+                              title="Click to cycle status (Draft -> Published -> Live)"
+                            >
+                              {exam.status}
+                            </button>
+                          </div>
+                          <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                            {exam.title}
+                          </h4>
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-zinc-500">
+                            <span>{exam.durationMinutes} mins</span>
+                            <span>•</span>
+                            <span>{exam.totalMarks} Marks</span>
+                            <span>•</span>
+                            <span>{exam.negativeMarking}</span>
+                          </div>
+                          <div className="text-[11px] font-mono text-zinc-400">
+                            Scheduled: {exam.scheduledDate}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                          <button
+                            onClick={() => setActiveSection("test_creator")}
+                            className="text-xs font-bold text-amber-500 hover:underline cursor-pointer"
+                          >
+                            Author Questions in Test Studio →
+                          </button>
+                          <button
+                            onClick={() => handleDeleteExam(exam.id)}
+                            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-400 transition-colors cursor-pointer"
+                            title="Delete Examination"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* SECTION: ASSESSMENTS & HOMEWORK EVALUATION (OPTION 4) */}
-            {(activeSection === "assessment" || activeSection === "test") && (
+            {activeSection === "assessment" && (
               <div className="space-y-6 animate-in fade-in duration-150">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
@@ -2218,7 +2549,7 @@ export function TeacherDashboardView({
                               .reduce((acc, curr) => acc + (curr.score || 0), 0) /
                               submissionsList.filter((s) => s.score !== undefined).length
                           )} / 50`
-                        : "46 / 50"}
+                        : "—"}
                     </div>
                     <p className="text-[11px] text-emerald-500 font-semibold">Consortium Standard</p>
                   </div>
@@ -2289,13 +2620,35 @@ export function TeacherDashboardView({
                 {/* Submissions List View */}
                 {assessmentTab === "submissions" && (
                   <div className="space-y-3">
-                    {submissionsList
-                      .filter((s) => {
-                        if (submissionFilter === "pending") return s.status === "Pending Evaluation";
-                        if (submissionFilter === "graded") return s.status === "Graded";
-                        return true;
-                      })
-                      .map((sub) => (
+                    {submissionsList.filter((s) => {
+                      if (submissionFilter === "pending") return s.status === "Pending Evaluation";
+                      if (submissionFilter === "graded") return s.status === "Graded";
+                      return true;
+                    }).length === 0 ? (
+                      <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-3">
+                        <FileText className="w-10 h-10 text-zinc-400 mx-auto" />
+                        <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                          No Student Submissions Yet
+                        </h4>
+                        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                          Once scholars submit pleadings or examination briefs for your authored assignments, they will appear here for rubric evaluation.
+                        </p>
+                        <button
+                          onClick={() => setShowCreateAssignmentModal(true)}
+                          className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer inline-flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Author New Assignment</span>
+                        </button>
+                      </div>
+                    ) : (
+                      submissionsList
+                        .filter((s) => {
+                          if (submissionFilter === "pending") return s.status === "Pending Evaluation";
+                          if (submissionFilter === "graded") return s.status === "Graded";
+                          return true;
+                        })
+                        .map((sub) => (
                         <div
                           key={sub.id}
                           className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-xs space-y-3"
@@ -2356,14 +2709,33 @@ export function TeacherDashboardView({
                             </div>
                           )}
                         </div>
-                      ))}
+                      ))
+                    )}
                   </div>
                 )}
 
                 {/* Published Assignments List View */}
                 {assessmentTab === "assignments" && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {assignmentsList.map((assignment) => (
+                    {assignmentsList.length === 0 ? (
+                      <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-3 col-span-full">
+                        <ClipboardList className="w-10 h-10 text-zinc-400 mx-auto" />
+                        <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                          No Assessments or Examinations Published Yet
+                        </h4>
+                        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                          Author your first legal examination, case brief, or pleading assignment to distribute it to your student batches.
+                        </p>
+                        <button
+                          onClick={() => setShowCreateAssignmentModal(true)}
+                          className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer inline-flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Author Assessment</span>
+                        </button>
+                      </div>
+                    ) : (
+                      assignmentsList.map((assignment) => (
                       <div
                         key={assignment.id}
                         className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3 flex flex-col justify-between"
@@ -2402,36 +2774,203 @@ export function TeacherDashboardView({
                           </button>
                         </div>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 )}
               </div>
             )}
 
             {/* SECTION: 1-ON-1 TUITION */}
+            {/* SECTION: CENTRALIZED TUITION MODE & MENTORSHIP CHAMBERS */}
             {activeSection === "mentorship" && (
-              <div className="space-y-4">
-                <h3 className="text-base font-bold text-zinc-900 dark:text-white">1-on-1 Advocate Mentorship Appointments</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {mentorshipBookings.length === 0 ? (
-                    <div className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-2 col-span-2">
-                      <UserCheck className="w-8 h-8 text-zinc-400 mx-auto" />
-                      <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">No Upcoming Mentorship Appointments</h4>
-                      <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                        1-on-1 Senior Advocate chamber consultations booked by scholars will be listed here.
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                        Centralized Tuition Mode
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">•</span>
+                      <span className="text-xs text-zinc-500 font-mono">1-on-1 &amp; Chamber Access Control</span>
+                    </div>
+                    <h2 className="text-xl font-black text-zinc-900 dark:text-white mt-1">
+                      Tuition Chambers &amp; Scholar Access Requests
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Review student tuition requests, approve chamber admissions, and launch live 1-on-1 WebRTC mentorship chambers.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedBatchForClass("1-on-1 Tuition Chamber");
+                      setLiveClassTopic("Senior Advocate Mentorship & Doubt Resolution");
+                      setShowTeacherLiveChamber(true);
+                    }}
+                    className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all shadow-md cursor-pointer flex items-center gap-2 shrink-0"
+                  >
+                    <Video className="w-4 h-4" />
+                    <span>Launch Open Tuition Chamber</span>
+                  </button>
+                </div>
+
+                {/* 3 Metrics Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Pending Approvals</span>
+                    <div className="text-2xl font-black text-amber-500 font-mono">
+                      {tuitionRequestsList.filter((r) => r.status === "pending").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Awaiting faculty review</p>
+                  </div>
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Approved Scholars</span>
+                    <div className="text-2xl font-black text-emerald-500 font-mono">
+                      {tuitionRequestsList.filter((r) => r.status === "approved").length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Active tuition chamber access</p>
+                  </div>
+                  <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Total Requests</span>
+                    <div className="text-2xl font-black text-zinc-900 dark:text-white font-mono">
+                      {tuitionRequestsList.length}
+                    </div>
+                    <p className="text-[11px] text-zinc-500">Synced with Student Hub</p>
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                  <button
+                    onClick={() => setTuitionFilter("pending")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      tuitionFilter === "pending"
+                        ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    }`}
+                  >
+                    Pending ({tuitionRequestsList.filter((r) => r.status === "pending").length})
+                  </button>
+                  <button
+                    onClick={() => setTuitionFilter("approved")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      tuitionFilter === "approved"
+                        ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    }`}
+                  >
+                    Approved ({tuitionRequestsList.filter((r) => r.status === "approved").length})
+                  </button>
+                  <button
+                    onClick={() => setTuitionFilter("all")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      tuitionFilter === "all"
+                        ? "bg-black dark:bg-white text-white dark:text-black shadow-xs"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    }`}
+                  >
+                    All ({tuitionRequestsList.length})
+                  </button>
+                </div>
+
+                {/* Tuition Requests / Scholars Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tuitionRequestsList.filter((r) =>
+                    tuitionFilter === "all" ? true : r.status === tuitionFilter
+                  ).length === 0 ? (
+                    <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-3 col-span-full">
+                      <UserCheck className="w-10 h-10 text-zinc-400 mx-auto" />
+                      <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                        No {tuitionFilter === "all" ? "" : tuitionFilter} Tuition Requests
+                      </h4>
+                      <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                        When scholars request 1-on-1 Tuition Chamber admission from the Student Hub, their requests will appear here in real time.
                       </p>
                     </div>
                   ) : (
-                    mentorshipBookings.map((b) => (
-                      <div key={b.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2 shadow-xs">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold">{b.studentName}</span>
-                          <span className="font-mono text-emerald-600 font-bold">{b.status}</span>
+                    tuitionRequestsList
+                      .filter((r) => (tuitionFilter === "all" ? true : r.status === tuitionFilter))
+                      .map((req) => (
+                        <div
+                          key={req.id}
+                          className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs flex flex-col justify-between"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span
+                                className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                                  req.status === "approved"
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                    : req.status === "rejected"
+                                    ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                }`}
+                              >
+                                {req.status}
+                              </span>
+                              <span className="text-[10px] font-mono text-zinc-400">
+                                {req.requestedAt ? new Date(req.requestedAt).toLocaleDateString() : "Recent"}
+                              </span>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-black text-zinc-900 dark:text-white">{req.studentName}</h4>
+                              <p className="text-[11px] font-mono text-zinc-500">{req.studentEmail}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
+                              {req.targetExam && (
+                                <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">
+                                  {req.targetExam}
+                                </span>
+                              )}
+                              {req.studentCode && (
+                                <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
+                                  {req.studentCode}
+                                </span>
+                              )}
+                            </div>
+                            {req.reason && (
+                              <p className="text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-950 p-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 leading-relaxed">
+                                {req.reason}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
+                            {req.status === "pending" && (
+                              <>
+                                <button
+                                  onClick={() => handleApproveTuition(req.id)}
+                                  disabled={isReviewingTuitionId === req.id}
+                                  className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold transition-all cursor-pointer disabled:opacity-50"
+                                >
+                                  {isReviewingTuitionId === req.id ? "Updating..." : "Approve Access"}
+                                </button>
+                                <button
+                                  onClick={() => handleDeclineTuition(req.id)}
+                                  disabled={isReviewingTuitionId === req.id}
+                                  className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-600 dark:text-zinc-300 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                >
+                                  Decline
+                                </button>
+                              </>
+                            )}
+                            {req.status === "approved" && (
+                              <button
+                                onClick={() => {
+                                  setSelectedBatchForClass(`Tuition: ${req.studentName}`);
+                                  setLiveClassTopic(req.targetExam || "1-on-1 Legal Mentorship");
+                                  setShowTeacherLiveChamber(true);
+                                }}
+                                className="w-full py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                <Video className="w-3.5 h-3.5" />
+                                <span>Launch Live Tuition Chamber</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-xs text-zinc-500">{b.topic}</p>
-                        <button className="w-full py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black text-xs font-extrabold transition-all cursor-pointer">Open Chamber Link</button>
-                      </div>
-                    ))
+                      ))
                   )}
                 </div>
               </div>
@@ -2539,15 +3078,37 @@ export function TeacherDashboardView({
                   <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1 shadow-xs">
                     <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Active Legal Disciplines</span>
                     <div className="text-2xl font-black text-amber-500 font-mono">
-                      4 Curricula
+                      {new Set(booksList.map((b) => b.department)).size} Curricula
                     </div>
-                    <p className="text-[11px] text-zinc-500">BNS, Constitutional, Contracts, CPC</p>
+                    <p className="text-[11px] text-zinc-500">
+                      {booksList.length > 0
+                        ? Array.from(new Set(booksList.map((b) => b.department))).slice(0, 4).join(", ")
+                        : "Publish books to populate disciplines"}
+                    </p>
                   </div>
                 </div>
 
                 {/* Books Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {booksList.map((book) => (
+                  {booksList.length === 0 ? (
+                    <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-3 col-span-full">
+                      <BookOpen className="w-10 h-10 text-zinc-400 mx-auto" />
+                      <h4 className="text-sm font-black text-zinc-900 dark:text-white">
+                        No Books in Shelf Yet
+                      </h4>
+                      <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                        Upload and publish textbooks, Bare Act digests, or statutory notes to make them available in the Student Book Shelf.
+                      </p>
+                      <button
+                        onClick={() => setShowUploadBookModal(true)}
+                        className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer inline-flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Publish Book</span>
+                      </button>
+                    </div>
+                  ) : (
+                    booksList.map((book) => (
                     <div
                       key={book.id}
                       className="rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 space-y-4 flex flex-col justify-between shadow-xs hover:border-amber-400 transition-all group"
@@ -2618,7 +3179,8 @@ export function TeacherDashboardView({
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
               </div>
             )}

@@ -340,10 +340,10 @@ export function StudentDashboardView({
 
     // Background server synchronization
     syncAssignmentsWithServer().then((data) => {
-      if (data && data.length > 0) setAssignmentsList(data);
+      if (Array.isArray(data)) setAssignmentsList(data);
     });
     syncSubmissionsWithServer().then((data) => {
-      if (data && data.length > 0) setSubmissionsList(data);
+      if (Array.isArray(data)) setSubmissionsList(data);
     });
     syncNotesWithServer().then((data) => {
       if (data && data.length > 0) setStudentNotes(data);
@@ -868,7 +868,7 @@ export function StudentDashboardView({
   useEffect(() => {
     setBooksList(getStoredBooks());
     syncBooksWithServer().then((books) => {
-      if (books && books.length > 0) setBooksList(books);
+      if (Array.isArray(books)) setBooksList(books);
     });
   }, []);
 

@@ -14,7 +14,7 @@
     "fullName": "shabin",
     "email": "abyworkmail123@gmail.com",
     "password": "$2a$10$eb2U7hOcHBlJ6vehAXFKKe5y37Zwqzhh12G7fgQ.ZqQmMUbJzjeem",
-    "role": "client",
+    "role": "teacher",
     "verifyMethod": "email",
     "isVerified": false,
     "createdAt": "2026-10-12T04:07:31.046Z",
@@ -222,5 +222,15 @@
     "verifyMethod": "google",
     "isVerified": false,
     "createdAt": "2026-11-16T08:41:07.943Z"
+  },
+  {
+    "_id": "dev_1795671716033",
+    "fullName": "Prof. Google Scholar",
+    "email": "academy.teacher@gmail.com",
+    "password": "$2a$10$YZiDh/cBrJTTQDALxiUjduYZDLNX/OYvYmcUHeJIGGxraL.NpWuWy",
+    "role": "teacher",
+    "verifyMethod": "google",
+    "isVerified": false,
+    "createdAt": "2026-11-26T05:41:56.033Z"
   }
 ]

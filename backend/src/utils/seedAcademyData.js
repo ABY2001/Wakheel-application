@@ -159,18 +159,6 @@ export const INITIAL_ACADEMY_LECTURES = [
  */
 export async function seedAcademyFixtures() {
   try {
-    const bookCount = await AcademyBook.countDocuments();
-    if (bookCount === 0) {
-      await AcademyBook.insertMany(INITIAL_ACADEMY_BOOKS);
-      console.log(`[Academy Seed] Inserted ${INITIAL_ACADEMY_BOOKS.length} seed law books.`);
-    }
-
-    const assignmentCount = await AcademyAssignment.countDocuments();
-    if (assignmentCount === 0) {
-      await AcademyAssignment.insertMany(INITIAL_ACADEMY_ASSIGNMENTS);
-      console.log(`[Academy Seed] Inserted ${INITIAL_ACADEMY_ASSIGNMENTS.length} seed assignments.`);
-    }
-
     const lectureCount = await AcademyLectureAudio.countDocuments();
     if (lectureCount === 0) {
       await AcademyLectureAudio.insertMany(INITIAL_ACADEMY_LECTURES);

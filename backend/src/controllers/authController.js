@@ -594,8 +594,12 @@ export const googleLogin = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const cleanName = (name || normalizedEmail.split("@")[0] || "Google User").trim();
-    const cleanRole = ["advocate", "client", "citizen", "cs", "ca"].includes(role)
-      ? (role === "citizen" ? "client" : role)
+    const cleanRole = ["advocate", "client", "citizen", "cs", "ca", "student", "teacher", "faculty"].includes(role)
+      ? role === "citizen"
+        ? "client"
+        : role === "faculty"
+        ? "teacher"
+        : role
       : "client";
 
     let user;
@@ -630,6 +634,21 @@ export const googleLogin = async (req, res) => {
         });
         user.isVerified = true;
       }
+    }
+
+    if (user.role === "student" || user.role === "teacher" || user.role === "faculty") {
+      if (isAcademyUserSuspended(user.email)) {
+        return res.status(403).json({
+          success: false,
+          message: "Your Academy account has been suspended by the Administrator.",
+        });
+      }
+      syncAcademyDirectoryUser({
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      });
     }
 
     const token = generateToken(user._id, user.role);

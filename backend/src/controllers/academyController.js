@@ -151,6 +151,7 @@ let inMemoryMockTests = readDiskJson("dev_academy_mock_tests.json", [
 ]);
 let inMemoryMockResults = readDiskJson("dev_academy_mock_results.json", []);
 let inMemoryAcademyUsers = readDiskJson("dev_academy_users.json", []);
+let inMemoryBatches = readDiskJson("dev_academy_batches.json", []);
 
 const getUserId = (req) => {
   return String(req.user?._id || req.user?.id || "");
@@ -1937,4 +1938,70 @@ export const isAcademyUserSuspended = (email) => {
   const normalizedEmail = email.toLowerCase().trim();
   const found = inMemoryAcademyUsers.find((u) => u.email === normalizedEmail);
   return found?.status === "suspended";
+};
+
+// ============================================================================
+// 12. LIVE COHORT BATCHES (/api/academy/batches)
+// ============================================================================
+
+export const getLiveBatches = async (req, res) => {
+  try {
+    const { exam, search } = req.query;
+    let filtered = [...inMemoryBatches];
+    if (exam && exam !== "For You" && exam !== "All") {
+      filtered = filtered.filter((b) => b.exam === exam);
+    }
+    if (search) {
+      const q = String(search).toLowerCase();
+      filtered = filtered.filter(
+        (b) =>
+          b.title?.toLowerCase().includes(q) ||
+          b.faculty?.toLowerCase().includes(q) ||
+          b.exam?.toLowerCase().includes(q)
+      );
+    }
+    res.json({ success: true, batches: filtered, count: filtered.length });
+  } catch (error) {
+    console.error("getLiveBatches error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createLiveBatch = async (req, res) => {
+  try {
+    const data = req.body;
+    const newBatch = {
+      id: data.id || `batch_${Date.now()}`,
+      title: data.title || "Law Entrance Live Cohort",
+      faculty: data.faculty || req.user?.name || "Faculty Mentor",
+      exam: data.exam || "CLAT 2027 (NLUs)",
+      badge: data.badge || "OPEN ENROLLMENT",
+      startDate: data.startDate || "Starts Soon",
+      schedule: data.schedule || "Mon - Fri • 6:30 PM - 8:30 PM",
+      seatsLeft: data.seatsLeft || "Limited Seats",
+      price: Number(data.price) || 2999,
+      originalPrice: Number(data.originalPrice) || 5999,
+      discount: data.discount || "50% OFF",
+      features: Array.isArray(data.features) ? data.features : ["Live Interactive Chamber Classes"],
+    };
+    inMemoryBatches.unshift(newBatch);
+    writeDiskJson("dev_academy_batches.json", inMemoryBatches);
+    broadcastAcademyEvent("ACADEMY_BATCH_CREATED", newBatch);
+    res.status(201).json({ success: true, batch: newBatch });
+  } catch (error) {
+    console.error("createLiveBatch error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteLiveBatch = async (req, res) => {
+  try {
+    const { id } = req.params;
+    inMemoryBatches = inMemoryBatches.filter((b) => b.id !== id);
+    writeDiskJson("dev_academy_batches.json", inMemoryBatches);
+    res.json({ success: true, message: "Batch deleted" });
+  } catch (error) {
+    console.error("deleteLiveBatch error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

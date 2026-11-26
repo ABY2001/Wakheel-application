@@ -42,6 +42,9 @@ import {
   updateAdminUserStatus,
   deleteAdminUser,
   deleteMockTestPack,
+  getLiveBatches,
+  createLiveBatch,
+  deleteLiveBatch,
 } from "../controllers/academyController.js";
 
 const router = express.Router();
@@ -96,5 +99,9 @@ router.route("/admin/overview").get(protect, requireAdmin, getAdminOverview);
 router.route("/admin/users").get(protect, requireAdmin, getAdminUsers).post(protect, requireAdmin, createAdminUser);
 router.route("/admin/users/:id/status").put(protect, requireAdmin, updateAdminUserStatus);
 router.route("/admin/users/:id").delete(protect, requireAdmin, deleteAdminUser);
+
+// 12. Live Cohort Batches (/api/academy/batches)
+router.route("/batches").get(protect, getLiveBatches).post(protect, createLiveBatch);
+router.route("/batches/:id").delete(protect, deleteLiveBatch);
 
 export default router;

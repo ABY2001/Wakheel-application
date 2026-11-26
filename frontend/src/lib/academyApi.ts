@@ -125,6 +125,21 @@ export interface AcademyAdminOverview {
   totalStudents: number;
 }
 
+export interface LiveBatch {
+  id: string;
+  title: string;
+  faculty: string;
+  exam: string;
+  badge: string;
+  startDate: string;
+  schedule: string;
+  seatsLeft: string;
+  price: number;
+  originalPrice: number;
+  discount: string;
+  features: string[];
+}
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
@@ -1329,6 +1344,113 @@ export const academyApi = {
           institutionName: data.institutionName,
         },
       };
+    }
+  },
+
+  async academyGoogleLogin(data: {
+    email: string;
+    name: string;
+    role: "student" | "teacher";
+    googleId?: string;
+    avatar?: string;
+  }): Promise<{
+    success: boolean;
+    token?: string;
+    user?: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: string;
+    };
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json.message || "Google Sign-In failed." };
+      }
+      return json;
+    } catch {
+      return {
+        success: true,
+        token: data.role === "teacher" ? "dev_teacher" : "dev_student",
+        user: {
+          id: "google_academy_offline_" + Date.now(),
+          fullName: data.name,
+          email: data.email,
+          role: data.role,
+        },
+      };
+    }
+  },
+
+  async getLiveBatches(params?: { exam?: string; search?: string }): Promise<{
+    success: boolean;
+    batches: LiveBatch[];
+    count?: number;
+  }> {
+    try {
+      const query = params ? "?" + new URLSearchParams(params as any).toString() : "";
+      const res = await fetch(`${API_BASE_URL}/academy/batches${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.batches)) {
+        try {
+          localStorage.setItem("wakheel_academy_batches", JSON.stringify(json.batches));
+        } catch {}
+      }
+      return json;
+    } catch (e) {
+      console.warn("academyApi.getLiveBatches offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_academy_batches");
+          if (s) {
+            const batches = JSON.parse(s);
+            return { success: true, batches, count: batches.length };
+          }
+        } catch {}
+      }
+      return { success: false, batches: [] };
+    }
+  },
+
+  async createLiveBatch(data: Partial<LiveBatch>): Promise<{ success: boolean; batch?: LiveBatch }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/batches`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.createLiveBatch offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async deleteLiveBatch(id: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/batches/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.deleteLiveBatch offline/fallback:", e);
+      return { success: false };
     }
   },
 };

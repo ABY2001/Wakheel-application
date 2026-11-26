@@ -147,30 +147,49 @@ function AcademyAuthForm() {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setErrorMessage("");
+    setSuccessMessage("");
 
-    setTimeout(() => {
+    try {
+      const targetEmail = email.trim() || `academy.${role}@gmail.com`;
+      const targetName = fullName.trim() || (role === "teacher" ? "Prof. Google Scholar" : "Google Law Student");
+      const res = await academyApi.academyGoogleLogin({
+        email: targetEmail,
+        name: targetName,
+        role,
+      });
+
       setIsGoogleLoading(false);
-      const mockName = role === "teacher" ? "Prof. Google Scholar" : "Google Law Student";
+
+      if (!res.success || !res.user || !res.token) {
+        setErrorMessage(res.message || "Google Sign-In failed.");
+        return;
+      }
+
+      const resolvedRole = res.user.role === "faculty" ? "teacher" : res.user.role;
       const userPayload = {
-        id: "google_academy_" + Date.now(),
-        fullName: mockName,
-        email: `academy.${role}@gmail.com`,
-        role: role,
-        targetProgram: role === "student" ? targetProgram : undefined,
-        department: role === "teacher" ? department : undefined,
-        institutionName: role === "teacher" ? institutionName : undefined,
+        ...res.user,
+        role: resolvedRole,
+        targetProgram: resolvedRole === "student" ? targetProgram : undefined,
+        department: resolvedRole === "teacher" ? department : undefined,
+        institutionName: resolvedRole === "teacher" ? institutionName : undefined,
         enrolledAt: new Date().toISOString(),
       };
 
       localStorage.setItem("wakheel_academy_user", JSON.stringify(userPayload));
-      localStorage.setItem("wakheel_academy_token", "academy_google_token_" + Date.now());
-      localStorage.setItem("wakheel_academy_role", role);
+      localStorage.setItem("wakheel_academy_token", res.token);
+      localStorage.setItem("wakheel_academy_role", resolvedRole);
 
-      router.push(role === "student" ? "/student/home" : "/teacher/home");
-    }, 700);
+      setSuccessMessage(`Google Sign-In verified! Entering ${resolvedRole === "teacher" ? "Faculty Studio" : "Student Hub"}...`);
+      setTimeout(() => {
+        router.push(resolvedRole === "student" ? "/student/home" : "/teacher/home");
+      }, 500);
+    } catch (err: any) {
+      setIsGoogleLoading(false);
+      setErrorMessage(err?.message || "Google Sign-In failed.");
+    }
   };
 
   return (

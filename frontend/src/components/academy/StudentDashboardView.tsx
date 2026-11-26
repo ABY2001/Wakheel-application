@@ -157,6 +157,7 @@ import academyApi, {
   MockTestPack,
   MockExamResult,
   MockLeaderboardEntry,
+  LiveBatch,
 } from "../../lib/academyApi";
 
 interface StudentDashboardProps {
@@ -1494,56 +1495,6 @@ export function StudentDashboardView({
     } catch {}
   };
 
-  // All-India Leaderboard Data
-  const leaderboardAspirants = [
-    { rank: 1, name: "Aarav Patel", target: "NLSIU Bengaluru", percentile: "99.92%", score: 114.5, tests: 42, streak: 38, avatar: "A" },
-    { rank: 2, name: "Meera Nambiar", target: "NALSAR Hyderabad", percentile: "99.85%", score: 112.0, tests: 39, streak: 29, avatar: "M" },
-    { rank: 3, name: "Kabir Verma", target: "WBNUJS Kolkata", percentile: "99.64%", score: 109.5, tests: 36, streak: 31, avatar: "K" },
-    { rank: 4, name: "Ananya Iyer", target: "NLU Delhi (AILET)", percentile: "99.41%", score: 108.0, tests: 34, streak: 22, avatar: "A" },
-    { rank: 5, name: "Tariq Farooqui", target: "NLU Jodhpur", percentile: "99.18%", score: 106.5, tests: 30, streak: 19, avatar: "T" },
-    { rank: 6, name: "Rhea Sen", target: "GNLU Gandhinagar", percentile: "98.92%", score: 104.0, tests: 28, streak: 15, avatar: "R" },
-    { rank: 7, name: "Devansh Nair", target: "KLEE Govt Law College", percentile: "98.70%", score: 102.5, tests: 27, streak: 18, avatar: "D" },
-    { rank: 8, name: "Bhavna Rao", target: "NLU Bhopal (NLIU)", percentile: "98.45%", score: 101.0, tests: 25, streak: 14, avatar: "B" },
-    { rank: 9, name: "Vikram Malhotra", target: "MNLU Mumbai", percentile: "98.12%", score: 99.5, tests: 24, streak: 11, avatar: "V" },
-    { rank: 10, name: "Pooja Hegde", target: "RMLNLU Lucknow", percentile: "97.80%", score: 98.0, tests: 22, streak: 16, avatar: "P" },
-  ];
-
-  // Achievement Badges Data
-  const studentBadges = [
-    {
-      id: "b1",
-      title: "Constitutional Maestro",
-      level: "Level 3 Master",
-      desc: "Scored 90%+ in 5 Constitutional Law Mocks",
-      unlocked: true,
-      date: "Unlocked Nov 12",
-    },
-    {
-      id: "b2",
-      title: "BNS Criminal Code Pioneer",
-      level: "Level 2 Scholar",
-      desc: "Completed all 18 BNS 2023 transition modules",
-      unlocked: true,
-      date: "Unlocked Nov 15",
-    },
-    {
-      id: "b3",
-      title: "Speed Demon",
-      level: "Elite Tier",
-      desc: "Solved 120 questions under 105 minutes",
-      unlocked: true,
-      date: "Unlocked Nov 17",
-    },
-    {
-      id: "b4",
-      title: "High Court Chamber Ready",
-      level: "Advocate Apprentice",
-      desc: "Verified research portfolio for senior chambers",
-      unlocked: false,
-      date: "In Progress (85%)",
-    },
-  ];
-
   // Vernacular Languages
   const supportedLanguages = [
     { code: "EN", name: "English (Consortium NLU Standard)", desc: "National Law School Entrance & All-India Bar Standard", popular: true },
@@ -1563,6 +1514,42 @@ export function StudentDashboardView({
       return [];
     }
   });
+
+  // Dynamic Achievement Badges computed from real student progress
+  const studentBadges = [
+    {
+      id: "b1",
+      title: "Constitutional Maestro",
+      level: "Level 3 Master",
+      desc: "Achieve 80%+ accuracy in a CBT Diagnostic Mock",
+      unlocked: mockExamHistory.some((r) => Number(r.accuracy) >= 80),
+      date: mockExamHistory.some((r) => Number(r.accuracy) >= 80) ? "Unlocked" : "Locked",
+    },
+    {
+      id: "b2",
+      title: "CBT Mock Challenger",
+      level: "Level 2 Scholar",
+      desc: "Complete at least 1 timed CBT Diagnostic Mock",
+      unlocked: mockExamHistory.length >= 1,
+      date: mockExamHistory.length >= 1 ? `${mockExamHistory.length} Completed` : "0 / 1 Mocks",
+    },
+    {
+      id: "b3",
+      title: "Chamber Verified Scholar",
+      level: "Elite Tier",
+      desc: "Obtain Faculty Dean approval for Centralized Tuition",
+      unlocked: tuitionStatus === "approved",
+      date: tuitionStatus === "approved" ? "Verified" : "Pending Approval",
+    },
+    {
+      id: "b4",
+      title: "Moot & Research Author",
+      level: "Advocate Apprentice",
+      desc: "Initiate a research project or bookmark a precedent",
+      unlocked: studentProjects.length >= 1 || bookmarkedItems.length >= 1,
+      date: studentProjects.length >= 1 || bookmarkedItems.length >= 1 ? "Unlocked" : "Not Started",
+    },
+  ];
 
   // ==============================================================
   // Wakheel LEARN SECTION DATA (11 SUB-SECTIONS, 6 SUBJECTS, 12 TOOLS)
@@ -1907,67 +1894,29 @@ export function StudentDashboardView({
   ];
 
   // ==============================================================
-  // 2. LIVE BATCHES (BATCH JOINING) DATA
+  // 2. LIVE BATCHES (DYNAMIC FROM BACKEND API & LOCALSTORAGE)
   // ==============================================================
-  const liveBatches = [
-    {
-      id: "batch_clat_rankers",
-      title: "CLAT 2027 Super-30 Rankers Foundation Batch",
-      faculty: "Adv. Advithya Menon (NLSIU Gold Medalist) & Senior Faculty",
-      exam: "CLAT 2027 (NLUs)",
-      badge: "ADMISSIONS CLOSING SOON",
-      startDate: "Batch Starts: 1st Dec 2026",
-      schedule: "Mon - Fri • 6:30 PM - 8:30 PM (Live Interactive)",
-      seatsLeft: "12 seats remaining of 50",
-      price: 4999,
-      originalPrice: 12000,
-      discount: "58% OFF",
-      features: [
-        "250+ Hours Live Interactive Classes with 2-way audio & chat",
-        "Complete CLAT Pass Pro Test Series (35 Full Mocks) included free",
-        "Weekly 1-on-1 personalized mentor calls & doubt clearing",
-        "Hardcopy printed bare act workbooks delivered to your home",
-      ],
-    },
-    {
-      id: "batch_klee_fastrack",
-      title: "KLEE 2027 Kerala Law Entrance Weekend Crash Batch",
-      faculty: "Adv. Vishnu P. (CEE Kerala Rank 1 Mentor)",
-      exam: "KLEE 2027 (Kerala)",
-      badge: "WEEKEND BATCH",
-      startDate: "Batch Starts: 15th Dec 2026",
-      schedule: "Saturday & Sunday • 10:00 AM - 1:00 PM",
-      seatsLeft: "8 seats remaining",
-      price: 2999,
-      originalPrice: 6500,
-      discount: "54% OFF",
-      features: [
-        "100 Hours focused weekend live revision & test discussions",
-        "Last 10 Years KLEE question papers solved live in class",
-        "Full Legal Aptitude syllabus simplified in Malayalam & English",
-        "All 25 KLEE full length mock examinations included",
-      ],
-    },
-    {
-      id: "batch_distance_llb",
-      title: "Distance LL.B & Open University Semester Mentorship Batch",
-      faculty: "Prof. K. R. Sharma (Former Faculty of Law, DU)",
-      exam: "Distance LL.B (IGNOU)",
-      badge: "DISTANCE SPECIFIC",
-      startDate: "Batch Starts: Open Enrollment",
-      schedule: "Flexible Evening Sessions (Recorded + Weekly Live Q&A)",
-      seatsLeft: "Open Admissions",
-      price: 1999,
-      originalPrice: 4500,
-      discount: "55% OFF",
-      features: [
-        "Subject-by-subject breakdown of Year 1 & Year 2 university syllabi",
-        "BNS 2023, Bharatiya Nagarik Suraksha Sanhita, and CPC mastery",
-        "Guidance on high-scoring answer formatting for distance scholars",
-        "Weekly assignments evaluated by practicing advocates",
-      ],
-    },
-  ];
+  const [liveBatchesList, setLiveBatchesList] = useState<LiveBatch[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_academy_batches");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    academyApi.getLiveBatches().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.batches)) {
+        setLiveBatchesList(res.batches);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // ==============================================================
   // 3. 1-ON-1 TUTOR HIRE (PERSONAL LEGAL MENTORS) DATA
@@ -2335,9 +2284,9 @@ export function StudentDashboardView({
   });
 
   // Filtered Batches
-  const filteredBatches = liveBatches.filter((batch) => {
+  const filteredBatches = liveBatchesList.filter((batch) => {
     const matchesFilter =
-      activeExamFilter === "All Exams" || batch.exam === activeExamFilter;
+      activeExamFilter === "All Exams" || activeExamFilter === "For You" || batch.exam === activeExamFilter;
     const matchesSearch =
       !searchQuery.trim() ||
       batch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -5320,7 +5269,29 @@ export function StudentDashboardView({
 
             {/* Batch Cards Grid */}
             <div className="space-y-4">
-              {filteredBatches.map((batch) => (
+              {filteredBatches.length === 0 ? (
+                <div className="py-16 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-4 max-w-md mx-auto shadow-xs">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto">
+                    <Video className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="text-base font-bold text-black dark:text-white">
+                      No Live Batches Enrolling Yet
+                    </h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                      Live interactive cohorts published by faculty or administration will appear here. You can also switch to Centralized Tuition Mode.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleNavClick("tuition_mode")}
+                    className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <span>Open Tuition Mode</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                filteredBatches.map((batch) => (
                 <div
                   key={batch.id}
                   className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-6"
@@ -5393,7 +5364,8 @@ export function StudentDashboardView({
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         )}
@@ -10683,65 +10655,77 @@ export function StudentDashboardView({
                 <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-amber-500 text-black font-black flex items-center justify-center">
-                      {mockExamHistory.length > 0 ? `#${Math.max(1, 142 - mockExamHistory.length * 10)}` : "#142"}
+                      {mockExamHistory.length > 0 ? `#${Math.max(1, dynamicLeaderboard.findIndex((d) => d.email === studentProfile.email) + 1 || 1)}` : "—"}
                     </div>
                     <div>
                       <strong className="text-black dark:text-white block">{studentProfile.fullName} (You)</strong>
                       <span className="text-[10px] text-zinc-500 font-mono">
-                        Score: {mockExamHistory[0]?.totalScore ?? 89.5} • {mockExamHistory.length} {mockExamHistory.length === 1 ? "Mock" : "Mocks"}
+                        {mockExamHistory.length > 0
+                          ? `Latest Score: ${mockExamHistory[0].totalScore} • ${mockExamHistory.length} ${mockExamHistory.length === 1 ? "Mock" : "Mocks"}`
+                          : "0 Mocks Attempted"}
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-black text-amber-700 dark:text-amber-400 font-mono block">
-                      {mockExamHistory[0]?.percentile ? `${mockExamHistory[0].percentile}%` : "94.8%"}
+                      {mockExamHistory[0]?.percentile ? `${mockExamHistory[0].percentile}%` : "—"}
                     </span>
                     <span className="text-[10px] text-zinc-500 font-mono">Percentile</span>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  {(dynamicLeaderboard.length > 0 ? dynamicLeaderboard : leaderboardAspirants).map((asp) => (
-                    <div
-                      key={asp.rank}
-                      className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
-                          className={`w-6 text-center font-mono font-black ${
-                            asp.rank === 1
-                              ? "text-amber-500 font-black text-sm"
-                              : asp.rank === 2
-                              ? "text-zinc-400 font-bold"
-                              : asp.rank === 3
-                              ? "text-amber-700 font-bold"
-                              : "text-zinc-500 text-[11px]"
-                          }`}
-                        >
-                          #{asp.rank}
-                        </span>
-                        <div className="w-7 h-7 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold text-xs flex items-center justify-center shrink-0">
-                          {asp.avatar}
-                        </div>
-                        <div className="min-w-0">
-                          <span className="font-bold text-black dark:text-white truncate block">
-                            {asp.name}
+                {dynamicLeaderboard.length === 0 ? (
+                  <div className="py-12 px-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-2">
+                    <Trophy className="w-7 h-7 text-amber-500 mx-auto" />
+                    <h4 className="text-xs font-bold text-black dark:text-white">No Leaderboard Rankings Yet</h4>
+                    <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                      Submit a CBT Diagnostic Mock Test to record your score and appear on the live cohort leaderboard.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {dynamicLeaderboard.map((asp) => (
+                      <div
+                        key={asp.rank}
+                        className="p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className={`w-6 text-center font-mono font-black ${
+                              asp.rank === 1
+                                ? "text-amber-500 font-black text-sm"
+                                : asp.rank === 2
+                                ? "text-zinc-400 font-bold"
+                                : asp.rank === 3
+                                ? "text-amber-700 font-bold"
+                                : "text-zinc-500 text-[11px]"
+                            }`}
+                          >
+                            #{asp.rank}
                           </span>
-                          <span className="text-[10px] text-zinc-500 font-mono truncate block">
-                            {asp.target}
-                          </span>
+                          <div className="w-7 h-7 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-black dark:text-white font-bold text-xs flex items-center justify-center shrink-0">
+                            {asp.avatar}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-bold text-black dark:text-white truncate block">
+                              {asp.name}
+                            </span>
+                            <span className="text-[10px] text-zinc-500 font-mono truncate block">
+                              {asp.target}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="text-right shrink-0">
-                        <span className="font-mono font-black text-black dark:text-white block">
-                          {asp.percentile}
-                        </span>
-                        <span className="text-[10px] text-zinc-500 font-mono">{asp.tests} tests</span>
+                        <div className="text-right shrink-0">
+                          <span className="font-mono font-black text-black dark:text-white block">
+                            {asp.percentile}
+                          </span>
+                          <span className="text-[10px] text-zinc-500 font-mono">{asp.tests} tests</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

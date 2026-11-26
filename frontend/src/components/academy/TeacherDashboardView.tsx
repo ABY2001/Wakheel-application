@@ -108,7 +108,9 @@ import {
 import { useAcademyWebSocket } from "@/hooks/useAcademyWebSocket";
 import { AcademyLiveToast } from "./AcademyLiveToast";
 import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
-import academyApi, { LawCourse, TuitionAccessRequest } from "../../lib/academyApi";
+import { FacultySmartBoard, LessonPlanItem } from "./FacultySmartBoard";
+import { FacultyAiCopilot } from "./FacultyAiCopilot";
+import academyApi, { LawCourse, TuitionAccessRequest, LiveBatch } from "../../lib/academyApi";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -153,10 +155,70 @@ export function TeacherDashboardView({
     setIsSidebarExpanded((prev) => !prev);
   };
 
-  // Home Sub-Tabs: Calendars Planers, Task List, Kanban board, Lesson Planers, Projects
+  // Home Sub-Tabs: Calendars Planers, Task List, Kanban board, Lesson Planers, Projects, Uploads
   const [homeSubTab, setHomeSubTab] = useState<
-    "tasks" | "kanban" | "calendars" | "lesson_planers" | "projects"
+    "tasks" | "kanban" | "calendars" | "lesson_planers" | "projects" | "uploads"
   >("tasks");
+
+  // Permanent Faculty Code & Copy Toast
+  const facultyCode = "FAC-80200B";
+  const [copiedFacultyCode, setCopiedFacultyCode] = useState(false);
+
+  // Lesson Plans State (persisted to localStorage)
+  const [lessonPlans, setLessonPlans] = useState<LessonPlanItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_faculty_lesson_plans");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showCreateLessonModal, setShowCreateLessonModal] = useState(false);
+  const [newLessonTitle, setNewLessonTitle] = useState("");
+  const [newLessonUnit, setNewLessonUnit] = useState("Unit 1");
+  const [newLessonHours, setNewLessonHours] = useState("4 Hours");
+  const [newLessonSession, setNewLessonSession] = useState("");
+  const [newLessonObjectives, setNewLessonObjectives] = useState("");
+
+  // Content Uploads & Publishing Hub State
+  const [uploadedResources, setUploadedResources] = useState<
+    Array<{
+      id: string;
+      title: string;
+      category: string;
+      fileName: string;
+      fileSize: string;
+      status: "published" | "draft";
+      downloads: number;
+      createdAt: string;
+    }>
+  >(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_faculty_uploads");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [uploadStatusFilter, setUploadStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [uploadCategoryFilter, setUploadCategoryFilter] = useState<string>("All Categories");
+  const [showUploadResourceModal, setShowUploadResourceModal] = useState(false);
+  const [newResTitle, setNewResTitle] = useState("");
+  const [newResCategory, setNewResCategory] = useState("Lecture Slides (PPT)");
+  const [newResStatus, setNewResStatus] = useState<"published" | "draft">("published");
+
+  // Class Sections / Dynamic Batches Modal State
+  const [showCreateBatchModal, setShowCreateBatchModal] = useState(false);
+  const [newBatchTitle, setNewBatchTitle] = useState("");
+  const [newBatchExam, setNewBatchExam] = useState("CLAT 2027 (NLUs)");
+  const [newBatchSchedule, setNewBatchSchedule] = useState("Mon - Fri • 6:30 PM - 8:30 PM");
+  const [newBatchPrice, setNewBatchPrice] = useState("2999");
+
+  // SmartBoard Shortcut Modal / Room Join Code
+  const [joinRoomInput, setJoinRoomInput] = useState("");
+  const [adhocLectureTitle, setAdhocLectureTitle] = useState("");
 
   // Top Bar Filters: Department, Subject v
   const [selectedDepartment, setSelectedDepartment] = useState("Constitutional & Criminal Law");
@@ -552,51 +614,95 @@ export function TeacherDashboardView({
     } catch {}
   }, []);
 
-  // Batches, Tests, Mentorship, Rankers, Syllabi Data
-  const teacherBatches = [
-    {
-      id: "batch_clat_rankers",
-      title: "CLAT 2027 Super-30 Rankers Foundation Batch",
-      exam: "CLAT 2027 (NLUs)",
-      studentsCount: 38,
-      maxStudents: 50,
-      schedule: "Mon - Fri • 6:30 PM - 8:30 PM",
-      status: "Class Today at 6:30 PM",
-      statusColor: "amber",
-      syllabusCovered: "68% Completed (Unit 4 of 6)",
-      nextTopic: "Contract Law: S.73 Breach & Remote Losses",
-      badge: "LIVE CLASS TODAY",
-      hoursDelivered: "142 / 250 Hours",
-    },
-    {
-      id: "batch_klee_fastrack",
-      title: "KLEE 2027 Kerala Law Entrance Weekend Crash Batch",
-      exam: "KLEE 2027 (Kerala)",
-      studentsCount: 42,
-      maxStudents: 50,
-      schedule: "Sat & Sun • 10:00 AM - 1:00 PM",
-      status: "Next Class Saturday",
-      statusColor: "black",
-      syllabusCovered: "45% Completed (Unit 3 of 5)",
-      nextTopic: "Legal Aptitude: Constitution Fundamental Rights",
-      badge: "WEEKEND FAST-TRACK",
-      hoursDelivered: "48 / 100 Hours",
-    },
-    {
-      id: "batch_distance_llb",
-      title: "Distance LL.B & Open University Semester Mentorship",
-      exam: "Distance LL.B (IGNOU)",
-      studentsCount: 104,
-      maxStudents: 150,
-      schedule: "Evening Flexible + Weekly Live Q&A",
-      status: "Q&A Session Tomorrow",
-      statusColor: "black",
-      syllabusCovered: "82% Completed (Term 1 Review)",
-      nextTopic: "BNS 2023 Criminal Transition Paper Discussion",
-      badge: "OPEN UNIVERSITY",
-      hoursDelivered: "80 / 120 Hours",
-    },
-  ];
+  // Dynamic Live Batches / Class Sections (Synced with /api/academy/batches)
+  const [teacherBatches, setTeacherBatches] = useState<Array<LiveBatch & { nextTopic?: string; studentsCount?: number; maxStudents?: number }>>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = localStorage.getItem("wakheel_academy_batches");
+      return s ? JSON.parse(s) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    academyApi.getLiveBatches().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.batches)) {
+        setTeacherBatches(res.batches);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleCreateLessonPlan = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLessonTitle.trim()) return;
+    const item: LessonPlanItem = {
+      id: `lp_${Date.now()}`,
+      title: newLessonTitle.trim(),
+      unitNumber: newLessonUnit.trim() || "Unit 1",
+      estimatedHours: newLessonHours.trim() || "4 Hours",
+      firstSession: newLessonSession.trim() || "Opening Lecture & Statutory Overview",
+      objectives: newLessonObjectives.trim() || "Master core statutory principles and landmark precedents.",
+      classLabel: `${selectedDepartment} • ${selectedSubject}`,
+      createdAt: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+    };
+    const next = [item, ...lessonPlans];
+    setLessonPlans(next);
+    try {
+      localStorage.setItem("wakheel_faculty_lesson_plans", JSON.stringify(next));
+    } catch {}
+    setShowCreateLessonModal(false);
+    setNewLessonTitle("");
+    setNewLessonSession("");
+    setNewLessonObjectives("");
+  };
+
+  const handleCreateUploadResource = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newResTitle.trim()) return;
+    const item = {
+      id: `res_${Date.now()}`,
+      title: newResTitle.trim(),
+      category: newResCategory,
+      fileName: `${newResTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")}.pdf`,
+      fileSize: "1.8 MB",
+      status: newResStatus,
+      downloads: 0,
+      createdAt: new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+    };
+    const next = [item, ...uploadedResources];
+    setUploadedResources(next);
+    try {
+      localStorage.setItem("wakheel_faculty_uploads", JSON.stringify(next));
+    } catch {}
+    setShowUploadResourceModal(false);
+    setNewResTitle("");
+  };
+
+  const handleCreateBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBatchTitle.trim()) return;
+    const res = await academyApi.createLiveBatch({
+      title: newBatchTitle.trim(),
+      faculty: teacherProfile.fullName,
+      exam: newBatchExam,
+      schedule: newBatchSchedule.trim(),
+      price: Number(newBatchPrice) || 2999,
+      originalPrice: (Number(newBatchPrice) || 2999) * 2,
+      badge: "OPEN ENROLLMENT",
+      seatsLeft: "50 seats available",
+      features: ["Live Interactive Chamber Classes", "Weekly Doubt & Moot Sessions"],
+    });
+    if (res.success && res.batch) {
+      setTeacherBatches((prev) => [res.batch!, ...prev]);
+      setShowCreateBatchModal(false);
+      setNewBatchTitle("");
+    }
+  };
 
   const [mentorshipBookings, setMentorshipBookings] = useState<any[]>(() => {
     if (typeof window === "undefined") return [];
@@ -986,25 +1092,26 @@ export function TeacherDashboardView({
     }
   };
 
-  // Faculty 17-item sidebar navigation list
+  // Faculty 18-item sidebar navigation list (aligned with reference Faculty Studio)
   const facultySidebarItems: Array<{ id: TeacherNavSection; label: string; icon: any; badge?: string }> = [
     { id: "home", label: "Home", icon: Home },
-    { id: "lesson_plan", label: "Learn", icon: BookOpen },
     { id: "library", label: "Library", icon: Library },
     { id: "notebook", label: "Notebook", icon: BookText },
     { id: "upload", label: "Upload", icon: Upload },
-    { id: "recorded_classes", label: "Record", icon: Mic },
+    { id: "lesson_plan", label: "Lesson Plan", icon: BookOpen },
     { id: "batches", label: "Live Classes", icon: Video, badge: "Live" },
-    { id: "mentorship", label: "Tuition Mode", icon: UserCheck },
     { id: "calendar", label: "Calendar", icon: Calendar },
-    { id: "assessment", label: "Exam Cracker", icon: Award },
-    { id: "test", label: "Homework", icon: ClipboardList },
-    { id: "test_creator", label: "Tests", icon: CheckSquare },
+    { id: "doubts_hub", label: "Ask / Doubts", icon: MessageSquare },
+    { id: "assessment", label: "Assignments", icon: ClipboardList },
+    { id: "test_creator", label: "Test Studio", icon: CheckSquare },
+    { id: "test", label: "Examination", icon: Award },
     { id: "new_folder", label: "My Courses", icon: Layers },
-    { id: "bookshelf", label: "Book shelf", icon: BookMarked },
+    { id: "bookshelf", label: "Book Shelf", icon: BookMarked },
+    { id: "collaboration", label: "Class Sections", icon: Users },
+    { id: "recorded_classes", label: "Recorded Classes", icon: Mic },
+    { id: "smart_board", label: "Smart Board", icon: Presentation },
     { id: "projects", label: "Projects", icon: TrendingUp },
-    { id: "smart_board", label: "3D Lab", icon: Box },
-    { id: "doubts_hub", label: "Bookmarks", icon: Bookmark },
+    { id: "mentorship", label: "Tuition Mode", icon: UserCheck },
   ];
 
   // Right Studio >> Create Tools List (12 tool buttons)
@@ -1418,6 +1525,27 @@ export function TeacherDashboardView({
             </div>
 
             <button
+              onClick={() => {
+                navigator.clipboard?.writeText(facultyCode);
+                setCopiedFacultyCode(true);
+                setTimeout(() => setCopiedFacultyCode(false), 1800);
+              }}
+              className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 cursor-pointer hover:bg-amber-500 hover:text-black transition-colors"
+              title="Click to copy your permanent Faculty Code"
+            >
+              <span>{copiedFacultyCode ? "Copied!" : `FAC: ${facultyCode}`}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection("mentorship")}
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black text-white font-bold text-xs transition-colors cursor-pointer"
+              title="Open Centralized Tuition Mode"
+            >
+              <UserCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Tuition Mode</span>
+            </button>
+
+            <button
               onClick={() => setShowTuitionRequestsDrawer(true)}
               className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs transition-colors cursor-pointer"
               title="Review Student Tuition Access Requests"
@@ -1470,6 +1598,7 @@ export function TeacherDashboardView({
                     { id: "kanban", label: "Kanban board" },
                     { id: "lesson_planers", label: "Lesson Planers" },
                     { id: "projects", label: "Projects" },
+                    { id: "uploads", label: "Uploads" },
                   ].map((tab) => {
                     const isActive = homeSubTab === tab.id;
                     return (
@@ -1691,6 +1820,43 @@ export function TeacherDashboardView({
                   </div>
                 </div>
               )}
+
+              {/* VIEW: UPLOADS */}
+              {homeSubTab === "uploads" && (
+                <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 space-y-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Content Uploads &amp; Publishing</h4>
+                      <p className="text-xs text-zinc-500">{uploadedResources.length} resources uploaded</p>
+                    </div>
+                    <button
+                      onClick={() => setShowUploadResourceModal(true)}
+                      className="px-4 py-2 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
+                    >
+                      + Upload New Resource
+                    </button>
+                  </div>
+                  {uploadedResources.length === 0 ? (
+                    <div className="py-10 text-center text-xs text-zinc-500 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                      No lecture slides or handouts uploaded yet. Click &quot;Upload New Resource&quot; to publish to cohorts.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {uploadedResources.slice(0, 5).map((r) => (
+                        <div key={r.id} className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-bold block">{r.title}</span>
+                            <span className="text-[10px] text-zinc-500 font-mono">{r.category} • {r.fileSize}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${r.status === "published" ? "bg-emerald-500/15 text-emerald-500" : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500"}`}>
+                            {r.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* RIGHT SIDEBAR PANE: >> CREATE (WAKHEEL BLACK, WHITE & YELLOW PALETTE) */}
@@ -1743,7 +1909,13 @@ export function TeacherDashboardView({
                     return (
                       <div
                         key={card.id}
-                        onClick={() => setActiveCreateToolModal(card.id)}
+                        onClick={() => {
+                          if (card.id === "smartboard") {
+                            setActiveSection("smart_board");
+                          } else {
+                            setActiveCreateToolModal(card.id);
+                          }
+                        }}
                         className="bg-white dark:bg-zinc-900 rounded-2xl p-3 border border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between cursor-pointer hover:shadow-xs hover:border-amber-400 transition-all group shadow-2xs"
                       >
                         <div className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 group-hover:text-amber-500 transition-colors">
@@ -1798,31 +1970,97 @@ export function TeacherDashboardView({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {teacherBatches.map((batch) => (
-                    <div key={batch.id} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3 flex flex-col justify-between">
-                      <div className="space-y-1.5">
-                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                          {batch.badge}
-                        </span>
-                        <h3 className="text-sm font-bold text-zinc-900 dark:text-white">{batch.title}</h3>
-                        <p className="text-xs text-zinc-500">{batch.schedule}</p>
-                        <div className="text-xs font-mono font-semibold text-zinc-700 dark:text-zinc-300">
-                          {batch.studentsCount} / {batch.maxStudents} Enrolled
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setSelectedBatchForClass(batch.title);
-                          setShowLiveClassModal(true);
-                        }}
-                        className="w-full py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-xs"
-                      >
-                        Enter Classroom Studio
-                      </button>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Ad-Hoc Live Lecture Card */}
+                  <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-mono font-bold uppercase">
+                      Ad-Hoc Live Lecture
+                    </span>
+                    <h3 className="text-sm font-bold text-black dark:text-white">Launch Instant Classroom Stage</h3>
+                    <input
+                      type="text"
+                      value={adhocLectureTitle}
+                      onChange={(e) => setAdhocLectureTitle(e.target.value)}
+                      placeholder="Lecture Title (Optional) e.g. Writ Jurisdiction Q&A"
+                      className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs"
+                    />
+                    <button
+                      onClick={() => {
+                        setSelectedBatchForClass(adhocLectureTitle.trim() || "Ad-Hoc Live Law Chamber");
+                        setShowTeacherLiveChamber(true);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
+                    >
+                      Launch Classroom Stage →
+                    </button>
+                  </div>
+
+                  {/* Enter Existing Room Card */}
+                  <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-3 shadow-xs">
+                    <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-mono font-bold uppercase">
+                      Join Existing Chamber
+                    </span>
+                    <h3 className="text-sm font-bold text-black dark:text-white">Enter Existing Room</h3>
+                    <input
+                      type="text"
+                      value={joinRoomInput}
+                      onChange={(e) => setJoinRoomInput(e.target.value)}
+                      placeholder="Room Code or Session ID"
+                      className="w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        setSelectedBatchForClass(joinRoomInput.trim() || "Chamber Room");
+                        setShowTeacherLiveChamber(true);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black text-white font-extrabold text-xs transition-all cursor-pointer"
+                    >
+                      Enter Live Room
+                    </button>
+                  </div>
                 </div>
+
+                {teacherBatches.length === 0 ? (
+                  <div className="py-12 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-3">
+                    <Video className="w-8 h-8 text-amber-500 mx-auto" />
+                    <h4 className="text-sm font-bold text-black dark:text-white">No Assigned Class Sections Yet</h4>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                      Create a Class Section or Live Batch to schedule recurring cohort sessions.
+                    </p>
+                    <button
+                      onClick={() => setShowCreateBatchModal(true)}
+                      className="px-4 py-2 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer"
+                    >
+                      + Create Class / Batch
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {teacherBatches.map((batch) => (
+                      <div key={batch.id} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3 flex flex-col justify-between">
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                            {batch.badge}
+                          </span>
+                          <h3 className="text-sm font-bold text-zinc-900 dark:text-white">{batch.title}</h3>
+                          <p className="text-xs text-zinc-500">{batch.schedule}</p>
+                          <div className="text-xs font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+                            {batch.seatsLeft || "Active Cohort"}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedBatchForClass(batch.title);
+                            setShowLiveClassModal(true);
+                          }}
+                          className="w-full py-2 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer shadow-xs"
+                        >
+                          Enter Classroom Studio
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -2251,7 +2489,7 @@ export function TeacherDashboardView({
             )}
 
             {/* SECTION: FACULTY BOOK SHELF & PUBLISHING STUDIO (OPTION 3) */}
-            {(activeSection === "bookshelf" || activeSection === "upload" || activeSection === "library") && (
+            {(activeSection === "bookshelf" || activeSection === "library") && (
               <div className="space-y-6 animate-in fade-in duration-150">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
@@ -2813,6 +3051,318 @@ export function TeacherDashboardView({
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* LESSON PLANNER & CURRICULUM INGESTION                          */}
+            {/* ============================================================== */}
+            {activeSection === "lesson_plan" && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                      Curriculum Architect
+                    </span>
+                    <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">
+                      Lesson Planner &amp; Curriculum Ingestion
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Author chapter schedules, learning objectives, and sync directly to the Interactive Smart Board.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setActiveSection("smart_board")}
+                      className="px-4 py-2 rounded-full bg-zinc-900 dark:bg-zinc-800 hover:bg-amber-500 hover:text-black text-white font-bold text-xs cursor-pointer transition-all"
+                    >
+                      Open Smart Board
+                    </button>
+                    <button
+                      onClick={() => setShowCreateLessonModal(true)}
+                      className="px-5 py-2 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer transition-all flex items-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create Lesson Plan</span>
+                    </button>
+                  </div>
+                </div>
+
+                {lessonPlans.length === 0 ? (
+                  <div className="py-16 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-4 max-w-md mx-auto">
+                    <BookOpen className="w-8 h-8 text-amber-500 mx-auto" />
+                    <div className="space-y-1">
+                      <h4 className="text-base font-bold">No Lesson Plans Created Yet</h4>
+                      <p className="text-xs text-zinc-500">
+                        Create your first unit plan to structure lectures and sync objectives with the Smart Board.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowCreateLessonModal(true)}
+                      className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer"
+                    >
+                      + Create First Lesson Plan
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {lessonPlans.map((lp) => (
+                      <div key={lp.id} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                        <div className="flex items-center justify-between text-[10px] font-mono">
+                          <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold uppercase">
+                            {lp.unitNumber} • {lp.estimatedHours}
+                          </span>
+                          <span className="text-zinc-400">{lp.createdAt}</span>
+                        </div>
+                        <h4 className="text-base font-bold">{lp.title}</h4>
+                        <p className="text-xs text-zinc-500">{lp.objectives}</p>
+                        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                          <span className="text-zinc-400 font-mono truncate">{lp.firstSession}</span>
+                          <button
+                            onClick={() => setActiveSection("smart_board")}
+                            className="text-amber-500 font-bold hover:underline cursor-pointer shrink-0"
+                          >
+                            Teach on Board →
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* CONTENT UPLOADS & PUBLISHING HUB                               */}
+            {/* ============================================================== */}
+            {activeSection === "upload" && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                      Faculty Content Hub
+                    </span>
+                    <h2 className="text-2xl font-black text-black dark:text-white tracking-tight mt-1">
+                      Content Uploads &amp; Publishing
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Upload lecture slides (PPT/PDF), study handouts, bare act notes, and worksheets.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowUploadResourceModal(true)}
+                    className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Upload New Resource</span>
+                  </button>
+                </div>
+
+                {/* 4 KPI Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Total Materials", value: uploadedResources.length, sub: "All uploaded files" },
+                    { label: "Live to Students", value: uploadedResources.filter((r) => r.status === "published").length, sub: "Published & Accessible" },
+                    { label: "Drafts (Private)", value: uploadedResources.filter((r) => r.status === "draft").length, sub: "Visible only to you" },
+                    { label: "Student Accesses", value: uploadedResources.reduce((a, b) => a + b.downloads, 0), sub: "Total downloads" },
+                  ].map((kpi) => (
+                    <div key={kpi.label} className="p-4 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                      <span className="text-[10px] font-mono uppercase text-zinc-400">{kpi.label}</span>
+                      <div className="text-2xl font-black font-mono text-amber-500">{kpi.value}</div>
+                      <p className="text-[11px] text-zinc-500">{kpi.sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Filters */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    {(["all", "published", "draft"] as const).map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => setUploadStatusFilter(st)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold capitalize cursor-pointer ${
+                          uploadStatusFilter === st
+                            ? "bg-amber-500 text-black font-extrabold"
+                            : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500"
+                        }`}
+                      >
+                        {st} ({st === "all" ? uploadedResources.length : uploadedResources.filter((r) => r.status === st).length})
+                      </button>
+                    ))}
+                  </div>
+                  <select
+                    value={uploadCategoryFilter}
+                    onChange={(e) => setUploadCategoryFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs"
+                  >
+                    <option>All Categories</option>
+                    <option>Lecture Slides (PPT)</option>
+                    <option>Study Notes &amp; Handouts</option>
+                    <option>Textbook &amp; Reading Chapter</option>
+                    <option>Worksheet / Problem Set</option>
+                    <option>Syllabus &amp; Course Guide</option>
+                  </select>
+                </div>
+
+                {uploadedResources.length === 0 ? (
+                  <div className="py-16 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
+                    <Upload className="w-8 h-8 text-amber-500 mx-auto" />
+                    <h4 className="text-sm font-bold">No Resources Uploaded Yet</h4>
+                    <p className="text-xs text-zinc-500">Click &quot;Upload New Resource&quot; to share materials with your cohorts.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {uploadedResources
+                      .filter((r) => uploadStatusFilter === "all" || r.status === uploadStatusFilter)
+                      .filter((r) => uploadCategoryFilter === "All Categories" || r.category === uploadCategoryFilter)
+                      .map((r) => (
+                        <div key={r.id} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <span className="text-amber-500 font-bold uppercase">{r.category}</span>
+                            <span className="uppercase">{r.status}</span>
+                          </div>
+                          <h4 className="text-sm font-bold">{r.title}</h4>
+                          <p className="text-[11px] font-mono text-zinc-500">{r.fileName} • {r.fileSize}</p>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* CLASS SECTIONS & ENROLLED COHORT ROSTERS                       */}
+            {/* ============================================================== */}
+            {activeSection === "collaboration" && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                      Academic Cohorts
+                    </span>
+                    <h2 className="text-2xl font-black text-black dark:text-white tracking-tight mt-1">
+                      My Classes &amp; Sections
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Manage academic groups, live batches, and enrolled student rosters.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateBatchModal(true)}
+                    className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Class / Section</span>
+                  </button>
+                </div>
+
+                {teacherBatches.length === 0 ? (
+                  <div className="py-16 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-3 max-w-md mx-auto">
+                    <Users className="w-8 h-8 text-amber-500 mx-auto" />
+                    <h4 className="text-sm font-bold">No Class Sections Created</h4>
+                    <p className="text-xs text-zinc-500">Create your first class section or tuition batch to start enrolling scholars.</p>
+                    <button
+                      onClick={() => setShowCreateBatchModal(true)}
+                      className="px-5 py-2 rounded-full bg-amber-500 text-black font-extrabold text-xs cursor-pointer"
+                    >
+                      Create Class / Section
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {teacherBatches.map((b) => (
+                      <div key={b.id} className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 text-[10px] font-mono font-bold uppercase">
+                          {b.exam}
+                        </span>
+                        <h4 className="text-base font-bold">{b.title}</h4>
+                        <p className="text-xs text-zinc-500 font-mono">{b.schedule}</p>
+                        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                          <span className="text-zinc-400">{b.seatsLeft}</span>
+                          <button
+                            onClick={() => {
+                              setSelectedBatchForClass(b.title);
+                              setShowTeacherLiveChamber(true);
+                            }}
+                            className="text-amber-500 font-bold hover:underline cursor-pointer"
+                          >
+                            Launch Room →
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ============================================================== */}
+            {/* INTERACTIVE SMART BOARD                                        */}
+            {/* ============================================================== */}
+            {activeSection === "smart_board" && (
+              <FacultySmartBoard
+                lessonPlans={lessonPlans}
+                onOpenLessonPlanner={() => setActiveSection("lesson_plan")}
+              />
+            )}
+
+            {/* ============================================================== */}
+            {/* CALENDAR, PROJECTS & BENCH NOTEBOOK                            */}
+            {/* ============================================================== */}
+            {(activeSection === "calendar" || activeSection === "projects" || activeSection === "notebook") && (
+              <div className="space-y-6 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-mono font-bold uppercase">
+                      Faculty Studio
+                    </span>
+                    <h2 className="text-2xl font-black text-black dark:text-white tracking-tight mt-1">
+                      {activeSection === "calendar"
+                        ? "Calendars & Planners"
+                        : activeSection === "projects"
+                        ? "Faculty Research & Moot Projects"
+                        : "Faculty Bench Notebook"}
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      {activeSection === "calendar"
+                        ? "Manage your live class schedules, deadlines, and cohort reviews."
+                        : activeSection === "projects"
+                        ? "Track moot court memorials and group research assignments."
+                        : "Draft lesson outlines, case briefs, and bench templates."}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateTaskModal(true)}
+                    className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs cursor-pointer self-start sm:self-auto"
+                  >
+                    + Add Task / Milestone
+                  </button>
+                </div>
+
+                {tasksList.length === 0 ? (
+                  <div className="py-16 px-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-3 max-w-md mx-auto">
+                    <Calendar className="w-8 h-8 text-amber-500 mx-auto" />
+                    <h4 className="text-sm font-bold">No Scheduled Items Yet</h4>
+                    <p className="text-xs text-zinc-500">
+                      Add a task, class milestone, or research draft to populate your workspace.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {tasksList.map((t) => (
+                      <div key={t.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="text-[10px] font-mono text-amber-500 font-bold uppercase">{t.type} • {t.dueDate}</span>
+                          <h4 className="font-bold text-sm mt-0.5">{t.title}</h4>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 font-mono text-[10px] font-bold">
+                          {t.status}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -3985,6 +4535,174 @@ export function TeacherDashboardView({
           </div>
         </div>
       )}
+
+      {/* CREATE LESSON PLAN MODAL */}
+      {showCreateLessonModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4">
+            <button onClick={() => setShowCreateLessonModal(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">Lesson Planner</span>
+              <h3 className="text-lg font-bold mt-1">New Chapter Plan</h3>
+            </div>
+            <form onSubmit={handleCreateLessonPlan} className="space-y-3">
+              <input
+                type="text"
+                required
+                value={newLessonTitle}
+                onChange={(e) => setNewLessonTitle(e.target.value)}
+                placeholder="Chapter Title * (e.g. Article 32 & Writ Remedies)"
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={newLessonUnit}
+                  onChange={(e) => setNewLessonUnit(e.target.value)}
+                  placeholder="Unit Number"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+                />
+                <input
+                  type="text"
+                  value={newLessonHours}
+                  onChange={(e) => setNewLessonHours(e.target.value)}
+                  placeholder="Estimated Hours"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+                />
+              </div>
+              <input
+                type="text"
+                value={newLessonSession}
+                onChange={(e) => setNewLessonSession(e.target.value)}
+                placeholder="First Session Title"
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              />
+              <textarea
+                rows={3}
+                value={newLessonObjectives}
+                onChange={(e) => setNewLessonObjectives(e.target.value)}
+                placeholder="Learning Objectives & Landmark Precedents..."
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              />
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs uppercase cursor-pointer">
+                Save Lesson Plan
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* UPLOAD LEARNING MATERIAL MODAL */}
+      {showUploadResourceModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4">
+            <button onClick={() => setShowUploadResourceModal(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">Content Publishing</span>
+              <h3 className="text-lg font-bold mt-1">Upload Learning Material &amp; Slides</h3>
+            </div>
+            <form onSubmit={handleCreateUploadResource} className="space-y-3">
+              <input
+                type="text"
+                required
+                value={newResTitle}
+                onChange={(e) => setNewResTitle(e.target.value)}
+                placeholder="Material Title * (e.g. BNS 2023 Comparison Matrix)"
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              />
+              <select
+                value={newResCategory}
+                onChange={(e) => setNewResCategory(e.target.value)}
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              >
+                <option>Lecture Slides (PPT)</option>
+                <option>Study Notes &amp; Handouts</option>
+                <option>Textbook &amp; Reading Chapter</option>
+                <option>Worksheet / Problem Set</option>
+                <option>Syllabus &amp; Course Guide</option>
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {(["published", "draft"] as const).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setNewResStatus(st)}
+                    className={`py-2 rounded-xl text-xs font-bold capitalize cursor-pointer ${
+                      newResStatus === st ? "bg-amber-500 text-black font-extrabold" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs uppercase cursor-pointer">
+                Publish Material
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE CLASS SECTION / BATCH MODAL */}
+      {showCreateBatchModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl relative space-y-4">
+            <button onClick={() => setShowCreateBatchModal(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-black uppercase">Cohort Builder</span>
+              <h3 className="text-lg font-bold mt-1">Create New Class / Section</h3>
+            </div>
+            <form onSubmit={handleCreateBatch} className="space-y-3">
+              <input
+                type="text"
+                required
+                value={newBatchTitle}
+                onChange={(e) => setNewBatchTitle(e.target.value)}
+                placeholder="Batch / Section Title * (e.g. CLAT 2027 Morning Cohort)"
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              />
+              <select
+                value={newBatchExam}
+                onChange={(e) => setNewBatchExam(e.target.value)}
+                className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+              >
+                <option>CLAT 2027 (NLUs)</option>
+                <option>Distance LL.B (IGNOU)</option>
+                <option>KLEE 2027 (Kerala)</option>
+                <option>Judicial Services</option>
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={newBatchSchedule}
+                  onChange={(e) => setNewBatchSchedule(e.target.value)}
+                  placeholder="Schedule"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+                />
+                <input
+                  type="number"
+                  value={newBatchPrice}
+                  onChange={(e) => setNewBatchPrice(e.target.value)}
+                  placeholder="Fee (INR)"
+                  className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs"
+                />
+              </div>
+              <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-black hover:text-white text-black font-extrabold text-xs uppercase cursor-pointer">
+                Create Class Section
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Persistent Bottom-Right Faculty AI Copilot */}
+      <FacultyAiCopilot department={selectedDepartment} subject={selectedSubject} />
 
       {/* Real-time Academy WebSocket Live Push Notifications */}
       <AcademyLiveToast

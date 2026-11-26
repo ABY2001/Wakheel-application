@@ -731,7 +731,11 @@ export const devStore = {
       (u) => u.email.toLowerCase() === normalizedEmail
     );
 
-    const cleanRole = ["advocate", "client", "citizen", "cs", "ca"].includes(role) ? role : "citizen";
+    const cleanRole = ["advocate", "client", "citizen", "cs", "ca", "student", "teacher", "faculty", "admin"].includes(role)
+      ? role === "faculty"
+        ? "teacher"
+        : role
+      : "citizen";
 
     if (existingIndex !== -1) {
       users[existingIndex] = {
@@ -768,7 +772,11 @@ export const devStore = {
     const normalizedEmail = email.toLowerCase().trim();
     const idx = users.findIndex((u) => u.email.toLowerCase() === normalizedEmail);
     if (idx !== -1 && role) {
-      users[idx].role = ["advocate", "client", "citizen", "cs", "ca"].includes(role) ? role : "citizen";
+      users[idx].role = ["advocate", "client", "citizen", "cs", "ca", "student", "teacher", "faculty", "admin"].includes(role)
+        ? role === "faculty"
+          ? "teacher"
+          : role
+        : "citizen";
       writeFile("dev_users.json", users);
       return users[idx];
     }

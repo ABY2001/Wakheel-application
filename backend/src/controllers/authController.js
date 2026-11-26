@@ -3,6 +3,7 @@ import { User } from "../models/User.js";
 import { AdvocateProfile } from "../models/AdvocateProfile.js";
 import { getIsMongoConnected } from "../config/db.js";
 import { devStore } from "../utils/devStore.js";
+import { syncAcademyDirectoryUser, isAcademyUserSuspended } from "./academyController.js";
 
 // Helper function to generate JWT token
 const generateToken = (id, role) => {
@@ -153,6 +154,18 @@ export const registerUser = async (req, res) => {
       } else {
         devStore.updateCitizenProfile(user._id, citizenProfileData);
       }
+    }
+
+    if (user.role === "student" || user.role === "teacher" || user.role === "faculty") {
+      syncAcademyDirectoryUser({
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        department: req.body.department,
+        targetProgram: req.body.targetProgram,
+        institutionName: req.body.institutionName,
+      });
     }
 
     console.log(`✅ User registered/updated: ${user.email} (${user.role}) [${extraFields.accountType}]`);
@@ -347,6 +360,21 @@ export const loginUser = async (req, res) => {
         // Ensure devStore advocate profile exists
         devStore.getAdvocateProfile(user._id);
       }
+    }
+
+    if (user.role === "student" || user.role === "teacher" || user.role === "faculty") {
+      if (isAcademyUserSuspended(user.email)) {
+        return res.status(403).json({
+          success: false,
+          message: "Your Academy account has been suspended by the Administrator.",
+        });
+      }
+      syncAcademyDirectoryUser({
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      });
     }
 
     console.log(`✅ Login successful: ${user.email} (${user.role})`);

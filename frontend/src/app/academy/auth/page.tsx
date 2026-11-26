@@ -63,9 +63,10 @@ function AcademyAuthForm() {
     router.replace(`/academy/auth?role=${newRole}&mode=${authMode}`);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
+    setSuccessMessage("");
 
     if (!email.trim() || !email.includes("@")) {
       setErrorMessage("Please enter a valid email address.");
@@ -84,52 +85,66 @@ function AcademyAuthForm() {
 
     setIsSubmitting(true);
 
-    // Smart role-based redirect if admin credentials are entered on Sign In
-    if (authMode === "signin" && email.toLowerCase().trim() === "admin@wakheel.law") {
-      academyApi.adminLogin(email, password).then((res) => {
-        setIsSubmitting(false);
-        if (res.success && res.user && res.token) {
-          localStorage.setItem("wakheel_academy_user", JSON.stringify(res.user));
-          localStorage.setItem("wakheel_academy_token", res.token);
-          localStorage.setItem("wakheel_academy_role", "admin");
-          setSuccessMessage("Admin credentials detected! Launching Dean Control Center...");
-          setTimeout(() => {
-            router.push("/academy/admin");
-          }, 500);
-        } else {
-          setErrorMessage(res.message || "Invalid admin credentials.");
-        }
-      });
-      return;
-    }
+    try {
+      const res =
+        authMode === "signup"
+          ? await academyApi.academyRegister({
+              fullName: fullName.trim() || (role === "teacher" ? "Prof. Faculty Scholar" : "Law Scholar"),
+              email: email.trim(),
+              password,
+              role,
+              targetProgram: role === "student" ? targetProgram : undefined,
+              department: role === "teacher" ? department : undefined,
+              institutionName: role === "teacher" ? institutionName : undefined,
+            })
+          : await academyApi.academyLogin({
+              email: email.trim(),
+              password,
+              role: email.toLowerCase().trim() === "admin@wakheel.law" ? undefined : role,
+            });
 
-    setTimeout(() => {
       setIsSubmitting(false);
+
+      if (!res.success || !res.user || !res.token) {
+        setErrorMessage(res.message || "Authentication failed. Please check your credentials.");
+        return;
+      }
+
+      const resolvedRole = res.user.role === "faculty" ? "teacher" : res.user.role;
       const userPayload = {
-        id: "academy_" + Date.now(),
-        fullName: fullName.trim() || (role === "teacher" ? "Prof. Faculty Scholar" : "Law Scholar"),
-        email: email.trim(),
-        role: role,
-        targetProgram: role === "student" ? targetProgram : undefined,
-        department: role === "teacher" ? department : undefined,
-        institutionName: role === "teacher" ? institutionName : undefined,
+        ...res.user,
+        role: resolvedRole,
+        targetProgram: resolvedRole === "student" ? res.user.targetProgram || targetProgram : undefined,
+        department: resolvedRole === "teacher" ? res.user.department || department : undefined,
+        institutionName: resolvedRole === "teacher" ? res.user.institutionName || institutionName : undefined,
         enrolledAt: new Date().toISOString(),
       };
 
       localStorage.setItem("wakheel_academy_user", JSON.stringify(userPayload));
-      localStorage.setItem("wakheel_academy_token", "academy_token_" + Date.now());
-      localStorage.setItem("wakheel_academy_role", role);
+      localStorage.setItem("wakheel_academy_token", res.token);
+      localStorage.setItem("wakheel_academy_role", resolvedRole);
+
+      if (resolvedRole === "admin") {
+        setSuccessMessage("Admin credentials detected! Launching Dean Control Center...");
+        setTimeout(() => {
+          router.push("/academy/admin");
+        }, 500);
+        return;
+      }
 
       setSuccessMessage(
         authMode === "signup"
-          ? `Account created! Launching ${role === "teacher" ? "Faculty Studio" : "Student Hub"}...`
-          : `Signed in! Entering ${role === "teacher" ? "Faculty Studio" : "Student Hub"}...`
+          ? `Account created! Launching ${resolvedRole === "teacher" ? "Faculty Studio" : "Student Hub"}...`
+          : `Signed in! Entering ${resolvedRole === "teacher" ? "Faculty Studio" : "Student Hub"}...`
       );
 
       setTimeout(() => {
-        router.push(role === "student" ? "/student/home" : "/teacher/home");
-      }, 700);
-    }, 600);
+        router.push(resolvedRole === "student" ? "/student/home" : "/teacher/home");
+      }, 600);
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setErrorMessage(err?.message || "Authentication error.");
+    }
   };
 
   const handleGoogleSignIn = () => {

@@ -1231,6 +1231,106 @@ export const academyApi = {
       return { success: false };
     }
   },
+
+  async academyLogin(data: {
+    email: string;
+    password: string;
+    role?: "student" | "teacher";
+  }): Promise<{
+    success: boolean;
+    token?: string;
+    user?: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: string;
+      targetProgram?: string;
+      department?: string;
+      institutionName?: string;
+    };
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json.message || "Invalid credentials." };
+      }
+      return json;
+    } catch {
+      // Offline fallback if backend server is not running
+      const fallbackRole = data.role || "student";
+      return {
+        success: true,
+        token: fallbackRole === "teacher" ? "dev_teacher" : "dev_student",
+        user: {
+          id: "academy_offline_" + Date.now(),
+          fullName: data.email.split("@")[0],
+          email: data.email.trim(),
+          role: fallbackRole,
+        },
+      };
+    }
+  },
+
+  async academyRegister(data: {
+    fullName: string;
+    email: string;
+    password: string;
+    role: "student" | "teacher";
+    targetProgram?: string;
+    department?: string;
+    institutionName?: string;
+  }): Promise<{
+    success: boolean;
+    token?: string;
+    user?: {
+      id: string;
+      fullName: string;
+      email: string;
+      role: string;
+      targetProgram?: string;
+      department?: string;
+      institutionName?: string;
+    };
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          accountType: data.role,
+          verifyMethod: "email",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return { success: false, message: json.message || "Registration failed." };
+      }
+      return json;
+    } catch {
+      // Offline fallback if backend server is not running
+      return {
+        success: true,
+        token: data.role === "teacher" ? "dev_teacher" : "dev_student",
+        user: {
+          id: "academy_offline_" + Date.now(),
+          fullName: data.fullName.trim(),
+          email: data.email.trim(),
+          role: data.role,
+          targetProgram: data.targetProgram,
+          department: data.department,
+          institutionName: data.institutionName,
+        },
+      };
+    }
+  },
 };
 
 export default academyApi;

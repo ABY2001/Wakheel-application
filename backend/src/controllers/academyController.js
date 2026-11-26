@@ -1889,3 +1889,52 @@ export const deleteMockTestPack = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const syncAcademyDirectoryUser = ({
+  id,
+  fullName,
+  email,
+  role,
+  department,
+  targetProgram,
+  institutionName,
+}) => {
+  if (!email || !["student", "teacher", "faculty"].includes(role)) return null;
+  const cleanRole = role === "faculty" ? "teacher" : role;
+  const normalizedEmail = email.toLowerCase().trim();
+  const idx = inMemoryAcademyUsers.findIndex((u) => u.email === normalizedEmail);
+  if (idx >= 0) {
+    inMemoryAcademyUsers[idx] = {
+      ...inMemoryAcademyUsers[idx],
+      fullName: fullName || inMemoryAcademyUsers[idx].fullName,
+      role: cleanRole,
+      department: cleanRole === "teacher" ? department || inMemoryAcademyUsers[idx].department : undefined,
+      targetProgram: cleanRole === "student" ? targetProgram || inMemoryAcademyUsers[idx].targetProgram : undefined,
+      institutionName: institutionName || inMemoryAcademyUsers[idx].institutionName,
+    };
+    writeDiskJson("dev_academy_users.json", inMemoryAcademyUsers);
+    return inMemoryAcademyUsers[idx];
+  }
+
+  const created = {
+    id: id ? String(id) : `acad_usr_${Date.now()}`,
+    fullName: fullName || normalizedEmail.split("@")[0],
+    email: normalizedEmail,
+    role: cleanRole,
+    department: cleanRole === "teacher" ? department || "Constitutional Law" : undefined,
+    targetProgram: cleanRole === "student" ? targetProgram || "CLAT 2027 (NLUs)" : undefined,
+    institutionName: institutionName || "Wakheel Law Academy",
+    status: "active",
+    createdAt: new Date().toISOString(),
+  };
+  inMemoryAcademyUsers.unshift(created);
+  writeDiskJson("dev_academy_users.json", inMemoryAcademyUsers);
+  return created;
+};
+
+export const isAcademyUserSuspended = (email) => {
+  if (!email) return false;
+  const normalizedEmail = email.toLowerCase().trim();
+  const found = inMemoryAcademyUsers.find((u) => u.email === normalizedEmail);
+  return found?.status === "suspended";
+};

@@ -158,6 +158,7 @@ import academyApi, {
   MockExamResult,
   MockLeaderboardEntry,
   LiveBatch,
+  FacultyQuestion,
 } from "../../lib/academyApi";
 
 interface StudentDashboardProps {
@@ -1016,12 +1017,41 @@ export function StudentDashboardView({
   >([
     {
       sender: "ai",
-      text: "Namaste Advithya! I am your Wakheel Legal AI Mentor. Ask me any doubt on CLAT/KLEE entrance mocks, Bare Acts (BNS, CPC, Constitution), or legal maxims.",
+      text: "Namaste Scholar! I am your Wakheel Legal AI Mentor. Ask me any doubt on CLAT/KLEE entrance mocks, Bare Acts (BNS, CPC, Constitution), or legal maxims.",
       timestamp: "Just now",
     },
   ]);
   const [aiChatInput, setAiChatInput] = useState("");
   const [isAiThinking, setIsAiThinking] = useState(false);
+
+  // Faculty Question Bank & Live Doubts State (Synced with Backend)
+  const [facultyQuestions, setFacultyQuestions] = useState<FacultyQuestion[]>([]);
+  const [studentFacultyDoubts, setStudentFacultyDoubts] = useState<any[]>([]);
+  const [doubtSubject, setDoubtSubject] = useState("Constitutional Law");
+  const [doubtQuestion, setDoubtQuestion] = useState("");
+  const [isSubmittingDoubt, setIsSubmittingDoubt] = useState(false);
+  const [doubtSubmittedToast, setDoubtSubmittedToast] = useState(false);
+
+  const handleSubmitFacultyDoubt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!doubtQuestion.trim() || isSubmittingDoubt) return;
+    setIsSubmittingDoubt(true);
+    try {
+      const res = await academyApi.createFacultyDoubt({
+        studentName: studentProfile.fullName || "Wakheel Scholar",
+        subject: doubtSubject,
+        question: doubtQuestion.trim(),
+      });
+      if (res.success && res.doubt) {
+        setStudentFacultyDoubts((prev) => [res.doubt, ...prev]);
+        setDoubtQuestion("");
+        setDoubtSubmittedToast(true);
+        setTimeout(() => setDoubtSubmittedToast(false), 2500);
+      }
+    } finally {
+      setIsSubmittingDoubt(false);
+    }
+  };
 
   // Bare Acts State
   const [selectedBareAct, setSelectedBareAct] = useState<string>("bns");
@@ -1063,7 +1093,7 @@ export function StudentDashboardView({
   >([
     {
       sender: "ai",
-      text: "Namaste Advithya! I am your Wakheel Legal Copilot (v2.5).\n\nI specialize in CLAT/KLEE legal aptitude drills, Bharatiya Nyaya Sanhita (BNS 2023) statutory concordance, and landmark Supreme Court & High Court ratio decidendi.",
+      text: "Namaste Scholar! I am your Wakheel Legal Copilot (v2.5).\n\nI specialize in CLAT/KLEE legal aptitude drills, Bharatiya Nyaya Sanhita (BNS 2023) statutory concordance, and landmark Supreme Court & High Court ratio decidendi.",
       time: "Online",
       mode: "aptitude",
       statutes: ["BNS 2023", "BNSS 2023", "Constitution of India", "CLAT NLU Curricula"],
@@ -1902,7 +1932,7 @@ export function StudentDashboardView({
     legalRatio: string;
   }
 
-  const cbtQuestions: CbtQuestionItem[] = [
+  const baseCbtQuestions: CbtQuestionItem[] = [
     {
       id: 0,
       section: "legal",
@@ -2171,6 +2201,24 @@ export function StudentDashboardView({
     }
   ];
 
+  const cbtQuestions: CbtQuestionItem[] = [
+    ...baseCbtQuestions,
+    ...facultyQuestions.map((fq, idx) => ({
+      id: baseCbtQuestions.length + idx,
+      section: "legal" as const,
+      sectionTitle: fq.subject || "Legal Reasoning",
+      passageId: `faculty_q_${fq.id}`,
+      passageTitle: `Faculty Authored Question: ${fq.subject || "Legal Reasoning"}`,
+      passageCitation: fq.createdBy ? `Authored by ${fq.createdBy}` : "Wakheel Faculty Question Bank",
+      passageText: fq.principle,
+      question: fq.facts,
+      options: fq.options && fq.options.length > 0 ? fq.options : ["Option A", "Option B"],
+      correct: typeof fq.correctOption === "number" ? fq.correctOption : 1,
+      explanation: fq.rationale || "Refer to the statutory principle provided above.",
+      legalRatio: fq.rationale || fq.principle,
+    })),
+  ];
+
   // Backward compatibility alias for legacy mock buttons
   const sampleFreeMock = {
     title: "Consortium CLAT 2027 Full Length All-India Diagnostic CBT Mock",
@@ -2360,10 +2408,12 @@ export function StudentDashboardView({
     let isMounted = true;
     async function syncMockExamData() {
       try {
-        const [packsRes, resultsRes, lbRes] = await Promise.all([
+        const [packsRes, resultsRes, lbRes, qRes, doubtsRes] = await Promise.all([
           academyApi.getMockTestPacks(),
           academyApi.getMockExamResults(studentProfile.email || undefined),
           academyApi.getMockLeaderboard(),
+          academyApi.getQuestions(),
+          academyApi.getFacultyDoubts(),
         ]);
         if (!isMounted) return;
         if (packsRes.success && Array.isArray(packsRes.packs) && packsRes.packs.length > 0) {
@@ -2374,6 +2424,12 @@ export function StudentDashboardView({
         }
         if (lbRes.success && Array.isArray(lbRes.leaderboard)) {
           setDynamicLeaderboard(lbRes.leaderboard);
+        }
+        if (qRes.success && Array.isArray(qRes.questions)) {
+          setFacultyQuestions(qRes.questions);
+        }
+        if (doubtsRes.success && Array.isArray(doubtsRes.doubts)) {
+          setStudentFacultyDoubts(doubtsRes.doubts);
         }
       } catch (err) {
         console.warn("Failed to sync CBT mock data:", err);
@@ -2882,6 +2938,10 @@ export function StudentDashboardView({
     },
   ];
 
+  const pendingHomeworkCount = assignmentsList.filter(
+    (a) => !submissionsList.some((s) => s.assignmentId === a.id)
+  ).length;
+
   // Full 17-item Student Navigation
   const studentNavItems = [
     { id: "home" as StudentNavSection, label: "Home", icon: Home },
@@ -2894,7 +2954,7 @@ export function StudentDashboardView({
     { id: "tuition_mode" as StudentNavSection, label: "Tuition Mode", icon: UserCheck, badge: "Chamber" },
     { id: "calendar" as StudentNavSection, label: "Calendar", icon: Calendar },
     { id: "exam_cracker" as StudentNavSection, label: "Exam Cracker", icon: Sparkles, badge: "Drills" },
-    { id: "homework" as StudentNavSection, label: "Homework", icon: ClipboardList, badge: "2 Due" },
+    { id: "homework" as StudentNavSection, label: "Homework", icon: ClipboardList, badge: pendingHomeworkCount > 0 ? `${pendingHomeworkCount} Due` : undefined },
     { id: "tests" as StudentNavSection, label: "Tests", icon: CheckSquare },
     { id: "my_courses" as StudentNavSection, label: "My Courses", icon: Layers },
     { id: "bookshelf" as StudentNavSection, label: "Book shelf", icon: BookMarked },
@@ -5463,6 +5523,77 @@ export function StudentDashboardView({
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>
+
+            {/* Escalate Doubt to Faculty Doubts Hub */}
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-black text-black dark:text-white">
+                    Ask Faculty Chambers (Live Doubt Escalation)
+                  </h4>
+                  <p className="text-[11px] text-zinc-500">
+                    Submit a question directly to Faculty Doubts Hub and track their verified replies here.
+                  </p>
+                </div>
+                {doubtSubmittedToast && (
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                    Sent to Faculty Hub
+                  </span>
+                )}
+              </div>
+
+              <form onSubmit={handleSubmitFacultyDoubt} className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <select
+                  value={doubtSubject}
+                  onChange={(e) => setDoubtSubject(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-black dark:text-white"
+                >
+                  <option>Constitutional Law</option>
+                  <option>Criminal Law (BNS 2023)</option>
+                  <option>Contract &amp; Torts</option>
+                  <option>CLAT Legal Reasoning</option>
+                </select>
+                <input
+                  type="text"
+                  required
+                  value={doubtQuestion}
+                  onChange={(e) => setDoubtQuestion(e.target.value)}
+                  placeholder="Write your question for Faculty Chambers..."
+                  className="sm:col-span-2 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs text-black dark:text-white outline-none focus:border-amber-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmittingDoubt || !doubtQuestion.trim()}
+                  className="px-4 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black hover:bg-amber-500 hover:text-black text-xs font-extrabold transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingDoubt ? "Sending..." : "Ask Faculty"}
+                </button>
+              </form>
+
+              {studentFacultyDoubts.length > 0 && (
+                <div className="space-y-2 max-h-48 overflow-y-auto pt-1">
+                  {studentFacultyDoubts.map((d) => (
+                    <div
+                      key={d.id}
+                      className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 space-y-1 text-xs"
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                        <span>{d.subject}</span>
+                        <span className={d.status === "answered" ? "text-emerald-500 font-bold" : "text-amber-500 font-bold"}>
+                          {d.status === "answered" ? "Answered by Faculty" : "Pending Faculty Review"}
+                        </span>
+                      </div>
+                      <p className="font-bold text-zinc-900 dark:text-white">{d.question}</p>
+                      {d.replyText && (
+                        <p className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 p-2 rounded-lg border border-emerald-500/10">
+                          <strong>Faculty Reply:</strong> {d.replyText}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

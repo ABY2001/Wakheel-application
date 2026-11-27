@@ -757,6 +757,9 @@ export function TeacherDashboardView({
           department: parsed.department || prev.department,
           institution: parsed.institutionName || prev.institution,
         }));
+        if (parsed.fullName) {
+          setNewBookAuthor(parsed.fullName);
+        }
       }
     } catch {}
   }, []);

@@ -1450,6 +1450,24 @@ export const academyApi = {
     }
   },
 
+  async createFacultyDoubt(data: {
+    studentName: string;
+    subject: string;
+    question: string;
+  }): Promise<{ success: boolean; doubt?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/doubts`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getAuthToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  },
+
   async replyFacultyDoubt(id: string, replyText: string): Promise<{ success: boolean; doubt?: any }> {
     try {
       const res = await fetch(`${API_BASE_URL}/academy/doubts/${id}/reply`, {

@@ -1861,50 +1861,20 @@ export function StudentDashboardView({
   // ==============================================================
   // 3. 1-ON-1 TUTOR HIRE (PERSONAL LEGAL MENTORS) DATA
   // ==============================================================
-  const tutorsList = [
-    {
-      id: "tutor_nambiar",
-      name: "Adv. K. R. Nambiar",
-      title: "Senior Advocate & Bar Council Legal Educator",
-      qualification: "High Court of Kerala • 8+ Years Advocacy Experience",
-      specialties: ["CLAT Legal Aptitude", "Constitutional Law & Writs", "Courtroom Advocacy"],
-      rating: "4.9",
-      sessionsCount: "420+ Sessions",
-      hourlyRate: 499,
-      availableSlot: "Today Available • 6:00 PM & 8:00 PM",
-      badge: "SENIOR ADVOCATE",
-      avatarBg: "bg-amber-500 text-black",
-      bio: "Former government pleader with extensive experience guiding law entrance aspirants and distance LL.B scholars into top legal chambers.",
-    },
-    {
-      id: "tutor_meera",
-      name: "Adv. Meera Sen",
-      title: "NLSIU Bangalore Alum • AIR 34 CLAT Ranker",
-      qualification: "BA LL.B (Hons.), NLSIU • Corporate & IP Counsel",
-      specialties: ["Critical Legal Reasoning", "CLAT Exam Strategy", "Contract Law"],
-      rating: "5.0",
-      sessionsCount: "310+ Sessions",
-      hourlyRate: 599,
-      availableSlot: "Tomorrow Available • 5:30 PM & 7:00 PM",
-      badge: "TOPPER MENTOR",
-      avatarBg: "bg-black text-white dark:bg-white dark:text-black",
-      bio: "Secured All-India Rank 34 in CLAT. Specializes in transforming average test scores through speed reading and principle-fact breakdown techniques.",
-    },
-    {
-      id: "tutor_rajesh",
-      name: "Prof. Rajesh Varma",
-      title: "Former Law Faculty & Moot Court Adjudicator",
-      qualification: "LL.M, Ph.D in Constitutional Law • 12+ Years Teaching",
-      specialties: ["Distance LL.B Syllabus", "BNS 2023 Reforms", "Answer Writing Formats"],
-      rating: "4.8",
-      sessionsCount: "540+ Sessions",
-      hourlyRate: 449,
-      availableSlot: "Weekend Slots Available • Flexible Hours",
-      badge: "ACADEMIC EXPERT",
-      avatarBg: "bg-amber-500 text-black",
-      bio: "Dedicated mentor for open university scholars (IGNOU/State Open) navigating examinations, bare act mastery, and thesis submissions.",
-    },
-  ];
+  const tutorsList: Array<{
+    id: string;
+    name: string;
+    title: string;
+    qualification: string;
+    specialties: string[];
+    rating: string;
+    sessionsCount: string;
+    hourlyRate: number;
+    availableSlot: string;
+    badge: string;
+    avatarBg: string;
+    bio: string;
+  }> = [];
 
   // ==============================================================
   // OPTION 2: 120-MINUTE CONSORTIUM CLAT CBT MOCK EXAM DATASET
@@ -5051,7 +5021,18 @@ export function StudentDashboardView({
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {tutorsList.slice(0, 2).map((tutor) => (
+                    {tutorsList.length === 0 ? (
+                      <div className="p-10 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-2 col-span-full">
+                        <UserCheck className="w-8 h-8 text-zinc-400 mx-auto" />
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white">
+                          No Advocate Mentors Listed Yet
+                        </h4>
+                        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                          Use Tuition Mode to submit a chamber access request and connect directly with verified Wakheel Faculty.
+                        </p>
+                      </div>
+                    ) : (
+                      tutorsList.slice(0, 2).map((tutor) => (
                       <div
                         key={tutor.id}
                         className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between space-y-4"
@@ -5089,7 +5070,8 @@ export function StudentDashboardView({
                           Book 1-on-1 Chamber Slot (₹{tutor.hourlyRate}/hr)
                         </button>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </div>
               )}
@@ -5373,7 +5355,18 @@ export function StudentDashboardView({
 
             {/* Tutors Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {tutorsList.map((tutor) => (
+              {tutorsList.length === 0 ? (
+                <div className="p-12 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-2 col-span-full">
+                  <UserCheck className="w-8 h-8 text-zinc-400 mx-auto" />
+                  <h4 className="text-sm font-bold text-black dark:text-white">
+                    No 1-on-1 Advocate Tutors Listed Yet
+                  </h4>
+                  <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                    Request Tuition Chamber access from the top bar or Tuition Mode to connect with verified Wakheel faculty mentors.
+                  </p>
+                </div>
+              ) : (
+                tutorsList.map((tutor) => (
                 <div
                   key={tutor.id}
                   className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-amber-500 transition-all flex flex-col justify-between space-y-4"
@@ -5445,7 +5438,8 @@ export function StudentDashboardView({
                     </button>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         )}

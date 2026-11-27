@@ -158,13 +158,5 @@ export const INITIAL_ACADEMY_LECTURES = [
  * Seeds initial Academy documents if collections are empty
  */
 export async function seedAcademyFixtures() {
-  try {
-    const lectureCount = await AcademyLectureAudio.countDocuments();
-    if (lectureCount === 0) {
-      await AcademyLectureAudio.insertMany(INITIAL_ACADEMY_LECTURES);
-      console.log(`[Academy Seed] Inserted ${INITIAL_ACADEMY_LECTURES.length} seed audio lectures.`);
-    }
-  } catch (err) {
-    console.warn("[Academy Seed] Error seeding fixtures:", err.message);
-  }
+  // Intentionally left as a no-op so Academy starts clean without hardcoded seed cards.
 }

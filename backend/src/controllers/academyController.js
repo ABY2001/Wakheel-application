@@ -53,7 +53,7 @@ const writeDiskJson = (filename, data) => {
 let inMemoryBooks = readDiskJson("dev_academy_books.json", []);
 let inMemoryAssignments = readDiskJson("dev_academy_assignments.json", []);
 let inMemorySubmissions = readDiskJson("dev_academy_submissions.json", []);
-let inMemoryLectures = readDiskJson("dev_academy_lectures.json", [...INITIAL_ACADEMY_LECTURES]);
+let inMemoryLectures = readDiskJson("dev_academy_lectures.json", []);
 let inMemoryNotes = readDiskJson("dev_academy_notes.json", []);
 let inMemoryMootRecords = readDiskJson("dev_academy_moot_records.json", []);
 let inMemoryCourses = readDiskJson("dev_academy_courses.json", []);

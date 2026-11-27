@@ -178,153 +178,7 @@ The measure of compensation must be correlated to the magnitude and financial ca
   },
 ];
 
-export const INITIAL_CORNELL_NOTES: CornellNote[] = [
-  {
-    id: "note_const_severability",
-    title: "Doctrine of Severability & Basic Structure Inviolability",
-    subject: "Constitutional Law",
-    topic: "Article 13(2) & Judicial Review",
-    cues: [
-      "Article 13(2) Void Ab Initio",
-      "Test of Inextricability",
-      "RMDC v. Union of India (1957)",
-      "AK Gopalan v. State of Madras (1950)",
-      "Minerva Mills Harmonious Balance",
-    ],
-    content: `1. CORE STATUTORY DOCTRINE:
-Article 13(2) mandates: 'The State shall not make any law which takes away or abridges the rights conferred by this Part and any law made in contravention of this clause shall, to the extent of the contravention, be void.'
-
-2. THE SEVERABILITY FORMULATION (RMDC TEST):
-- The doctrine of severability determines whether the valid portions of an enactment can stand independently when unconstitutional clauses are excised.
-- If the valid and invalid parts are so inextricably interwoven that the legislature would not have enacted the valid part alone, the entire statute must fall.
-- In AK Gopalan (1950), Section 14 of Preventive Detention Act 1950 was severed, preserving the remainder of the enactment.
-
-3. INTERACTION WITH BASIC STRUCTURE (ART. 368):
-- While ordinary statutes are tested on legislative competence and Part III conformity, constitutional amendments are evaluated against the immutable basic features of the Constitution.
-- In Minerva Mills (1980), Clauses (4) and (5) of Article 368 inserted by 42nd Amendment were struck down as they sought to eliminate judicial review and establish unlimited parliamentary sovereignty.`,
-    summary:
-      "Severability preserves statutory intent by excising invalid clauses, provided the remainder forms a complete, workable scheme. Constitutional amendments cannot extinguish basic features.",
-    statutoryReferences: ["Article 13(2)", "Article 368", "Article 21"],
-    landmarkCases: [
-      "RMDC v. Union of India (1957) SCR 930",
-      "AK Gopalan v. State of Madras (1950) SCR 88",
-      "Minerva Mills v. Union of India (1980) 3 SCC 625",
-    ],
-    isBookmarked: true,
-    isFacultyShared: true,
-    author: "Prof. Dr. Rajesh Varma (Faculty Chair)",
-    lastEdited: "Today, 11:40 AM",
-    tags: ["High-Yield", "Appellate Review", "CLAT-PG"],
-  },
-  {
-    id: "note_bnss_bail_sec35",
-    title: "Arrest Threshold under BNSS §35 & Regular Bail Mechanics under §480",
-    subject: "Criminal Jurisprudence (BNS & BNSS)",
-    topic: "Bharatiya Nagarik Suraksha Sanhita (BNSS 2023)",
-    cues: [
-      "Section 35 BNSS Notice Protocol",
-      "Section 480 Regular Bail",
-      "Arnesh Kumar Compliance",
-      "Triple Test Protocol",
-      "Magisterial Scrutiny on Remand",
-    ],
-    content: `1. STATUTORY SHIFT FROM CrPC TO BNSS:
-BNSS 2023 Section 35 elevates the guidelines in Arnesh Kumar into explicit statutory commands. For offenses punishable with <= 7 years imprisonment:
-- Police officer shall not arrest automatically;
-- Must serve a notice of appearance directing the accused to join the probe;
-- Arrest requires detailed written reasoning demonstrating flight risk or witness intimidation.
-
-2. SECTION 480 BNSS: SESSIONS COURT POWERS:
-Section 480 confers plenary jurisdiction on High Courts and Sessions Courts to release an accused on bail with or without conditions.
-
-3. JUDICIAL SCRUTINY IN SATENDER KUMAR ANTIL:
-- The Supreme Court categorized criminal offenses into four distinct brackets (A, B, C, D) to ensure standardized bail outcomes.
-- Default to pre-trial incarceration without judicial reason is violative of Article 21.`,
-    summary:
-      "Section 35 BNSS mandates notice of appearance for offenses <= 7 years. Arrest without written necessity is illegal; Section 480 regular bail prioritizes liberty over punitive detention.",
-    statutoryReferences: ["Section 35 BNSS", "Section 480 BNSS", "Article 21 Constitution"],
-    landmarkCases: [
-      "Arnesh Kumar v. State of Bihar (2014) 8 SCC 273",
-      "Satender Kumar Antil v. CBI (2022) 10 SCC 51",
-      "Babu Singh v. State of U.P. (1978) 1 SCC 579",
-    ],
-    isBookmarked: true,
-    isFacultyShared: false,
-    author: "Advithya Sharma (Student)",
-    lastEdited: "Nov 21, 2026, 4:15 PM",
-    tags: ["Criminal Procedure", "Bail", "Bar Exam"],
-  },
-  {
-    id: "note_contracts_remoteness",
-    title: "Remoteness of Damages under Section 73 Indian Contract Act",
-    subject: "Law of Contracts",
-    topic: "Commercial Obligations & Breach",
-    cues: [
-      "Section 73 ICA 1872",
-      "Hadley v Baxendale Rule",
-      "Victoria Laundry Principle",
-      "Special Circumstances Communication",
-      "Duty of Mitigation (Explanation)",
-    ],
-    content: `1. STATUTORY CODE ANALYSIS:
-Section 73 provides: When a contract has been broken, the party who suffers by such breach is entitled to receive compensation for any loss or damage caused to him thereby, which naturally arose in the usual course of things, or which the parties knew, when they made the contract, to be likely to result from the breach.
-
-2. THE EXCLUSION CLAUSE:
-'Such compensation is not to be given for any remote and indirect loss or damage sustained by reason of the breach.'
-
-3. PRACTICAL APPLICATION (HADLEY V. BAXENDALE):
-- Mill shaft sent for repair; carrier delayed delivery; mill remained idle.
-- Mill owner sued for lost profits.
-- Held: Carrier did not know mill was stopped solely for want of the shaft. Consequential loss was too remote to be recovered.`,
-    summary:
-      "Damages under Section 73 require natural causal sequence or explicit prior notice of special business risks. Indirect and speculative losses are strictly non-recoverable.",
-    statutoryReferences: ["Section 73 Indian Contract Act 1872", "Section 74 Liquidated Damages"],
-    landmarkCases: [
-      "Hadley v. Baxendale (1854) 9 Exch 341",
-      "Victoria Laundry Ltd v. Newman Industries Ltd (1949) 2 KB 528",
-      "Karsandas H. Thacker v. Saran Engineering Co. Ltd (AIR 1965 SC 1981)",
-    ],
-    isBookmarked: false,
-    isFacultyShared: true,
-    author: "Adv. Sunita Deshmukh (Faculty)",
-    lastEdited: "Nov 19, 2026, 2:30 PM",
-    tags: ["Contracts", "Damages", "Commercial Law"],
-  },
-  {
-    id: "note_torts_absolute_liability",
-    title: "Strict vs. Absolute Liability: Enterprise Accountability in Torts",
-    subject: "Law of Torts & Environment",
-    topic: "Industrial Hazards & Tortious Liability",
-    cues: [
-      "Rylands v Fletcher 5 Exceptions",
-      "Oleum Gas Leak Ruling (1987)",
-      "Non-delegable Enterprise Obligation",
-      "Capacity-Linked Compensation",
-      "Article 32 Public Law Remedy",
-    ],
-    content: `1. COMMON LAW LIMITATIONS:
-English strict liability in Rylands v. Fletcher (1868) contained loopholes: Act of God, sabotage by stranger, statutory authority, consent. These allowed hazardous factories to evade compensation.
-
-2. DOCTRINE OF ABSOLUTE LIABILITY (MC MEHTA 1987):
-Bhagwati CJ ruled that where an enterprise engages in hazardous activities, it owes an absolute, non-delegable duty to the community. If toxic gas escapes, liability is absolute without exception.
-
-3. MEASURE OF COMPENSATION:
-The financial penalty must correlate with the scale and capacity of the enterprise to ensure true deterrence against cutting industrial safety costs.`,
-    summary:
-      "Absolute liability eliminates all traditional common law defenses for hazardous enterprises. Financial compensation scales directly with corporate capacity.",
-    statutoryReferences: ["Article 21 & 32 Constitution", "Public Liability Insurance Act 1991"],
-    landmarkCases: [
-      "MC Mehta v. Union of India AIR 1987 SC 1086",
-      "Union Carbide Corp v. Union of India (1991) 4 SCC 584",
-      "Charan Lal Sahu v. Union of India (1990) 1 SCC 613",
-    ],
-    isBookmarked: false,
-    isFacultyShared: false,
-    author: "Advithya Sharma (Student)",
-    lastEdited: "Nov 17, 2026, 9:20 AM",
-    tags: ["Torts", "Environmental Jurisprudence", "CLAT-UG"],
-  },
-];
+export const INITIAL_CORNELL_NOTES: CornellNote[] = [];
 
 const STORAGE_KEY = "wakheel_cornell_notes_v1";
 
@@ -337,7 +191,7 @@ export function getStoredCornellNotes(): CornellNote[] {
       return INITIAL_CORNELL_NOTES;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_CORNELL_NOTES;
+    return Array.isArray(parsed) ? parsed : INITIAL_CORNELL_NOTES;
   } catch (err) {
     console.error("Failed to read Cornell notes from storage:", err);
     return INITIAL_CORNELL_NOTES;
@@ -348,7 +202,7 @@ export async function syncNotesWithServer(): Promise<CornellNote[]> {
   if (typeof window === "undefined") return INITIAL_CORNELL_NOTES;
   try {
     const res = await academyApi.getNotes();
-    if (res.success && Array.isArray(res.notes) && res.notes.length > 0) {
+    if (res.success && Array.isArray(res.notes)) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(res.notes));
       window.dispatchEvent(new Event("storage"));
       return res.notes;

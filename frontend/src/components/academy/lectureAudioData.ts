@@ -147,92 +147,7 @@ export function generateSyntheticWavDataUri(durationSeconds: number = 6, freq: n
   return "data:audio/wav;base64," + btoa(binary);
 }
 
-export const INITIAL_LECTURES: LectureAudio[] = [
-  {
-    id: "lec_bnss_480",
-    title: "BNSS 2023 Section 480 Regular Bail & Section 35 Safeguards",
-    subject: "Criminal Procedure (BNSS 2023)",
-    targetBatch: "CLAT 2027 Super-30 & Distance LL.B",
-    facultyName: "Adv. Sunita Deshmukh (Supreme Court Advocate-on-Record)",
-    duration: "14:15",
-    durationSeconds: 855,
-    date: "Today, 09:30 AM",
-    audioUrl: generateSyntheticWavDataUri(10, 480),
-    statutoryNotes:
-      "Statutory threshold under BNSS §35 prohibiting mechanical arrests for offenses <= 7 years. Citing Arnesh Kumar notice requirements, triple test satisfaction before Court of Sessions under §480, and personal liberty under Article 21.",
-    keyCitations: [
-      "Arnesh Kumar v. State of Bihar (2014) 8 SCC 273",
-      "Satender Kumar Antil v. CBI (2022) 10 SCC 51",
-      "P. Chidambaram v. CBI (2020) 13 SCC 337",
-    ],
-    listensCount: 518,
-    category: "Faculty Masterclass",
-    isFeatured: true,
-  },
-  {
-    id: "lec_const_basic_structure",
-    title: "Basic Structure Doctrine & Article 368 Limits: The Kesavananda Synthesis",
-    subject: "Constitutional Law",
-    targetBatch: "KLEE 2027 & NLU Foundation",
-    facultyName: "Prof. Dr. Rajesh Varma (Dean of Constitutional Law)",
-    duration: "18:40",
-    durationSeconds: 1120,
-    date: "Yesterday, 04:15 PM",
-    audioUrl: generateSyntheticWavDataUri(12, 520),
-    statutoryNotes:
-      "Analysis of 13-Judge Constitution Bench ruling. Parliament has wide amendatory power under Article 368, but cannot alter the basic framework or identity of the Constitution. Ratio Decidendi extraction and subsequent tests in Minerva Mills.",
-    keyCitations: [
-      "Kesavananda Bharati v. State of Kerala (1973) 4 SCC 225",
-      "Minerva Mills v. Union of India (1980) 3 SCC 625",
-      "Indira Nehru Gandhi v. Raj Narain (1975) Supp SCC 1",
-    ],
-    listensCount: 342,
-    category: "Faculty Masterclass",
-    isFeatured: true,
-  },
-  {
-    id: "lec_contracts_sec73",
-    title: "Remoteness of Damages & Mitigation Rule under Section 73 Contract Act",
-    subject: "Law of Contracts",
-    targetBatch: "Bar Examination & 1st Year LL.B",
-    facultyName: "Prof. Dr. Rajesh Varma (Dean of Constitutional Law)",
-    duration: "11:50",
-    durationSeconds: 710,
-    date: "Nov 20, 2026",
-    audioUrl: generateSyntheticWavDataUri(8, 440),
-    statutoryNotes:
-      "Two limbs of Hadley v. Baxendale: natural course losses vs special contemplated losses. Statutory duty of mitigation under the Explanation to Section 73 Indian Contract Act 1872. Dissecting Victoria Laundry and Karsandas Thacker.",
-    keyCitations: [
-      "Hadley v. Baxendale (1854) 9 Exch 341",
-      "Victoria Laundry Ltd v. Newman Industries Ltd (1949) 2 KB 528",
-      "Karsandas H. Thacker v. Saran Engineering Co. Ltd (AIR 1965 SC 1981)",
-    ],
-    listensCount: 289,
-    category: "Rapid Doctrine Revision",
-    isFeatured: false,
-  },
-  {
-    id: "lec_bns_103_105",
-    title: "BNS 2023 Culpable Homicide vs Murder: S.103 vs S.105",
-    subject: "Bharatiya Nyaya Sanhita (BNS 2023)",
-    targetBatch: "Judicial Services & CLAT PG",
-    facultyName: "Adv. Rohan Mehra (Special Public Prosecutor)",
-    duration: "16:20",
-    durationSeconds: 980,
-    date: "Nov 18, 2026",
-    audioUrl: generateSyntheticWavDataUri(9, 415),
-    statutoryNotes:
-      "Degree of intention and bodily injury likely to cause death. Concentric circles doctrine from Rayavarapu Punnayya (1976). Transition from IPC 299/300 to BNS 103/105 and magisterial framing of charges.",
-    keyCitations: [
-      "State of A.P. v. Rayavarapu Punnayya (1976) 4 SCC 382",
-      "KM Nanavati v. State of Maharashtra (AIR 1962 SC 605)",
-      "Virsa Singh v. State of Punjab (AIR 1958 SC 465)",
-    ],
-    listensCount: 412,
-    category: "Oral Argument Drill",
-    isFeatured: false,
-  },
-];
+export const INITIAL_LECTURES: LectureAudio[] = [];
 
 const STORAGE_KEY = "wakheel_lecture_audio_v1";
 
@@ -245,7 +160,7 @@ export function getStoredLectures(): LectureAudio[] {
       return INITIAL_LECTURES;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_LECTURES;
+    return Array.isArray(parsed) ? parsed : INITIAL_LECTURES;
   } catch (err) {
     console.error("Failed to read lecture audio from storage:", err);
     return INITIAL_LECTURES;
@@ -256,7 +171,7 @@ export async function syncLecturesWithServer(): Promise<LectureAudio[]> {
   if (typeof window === "undefined") return INITIAL_LECTURES;
   try {
     const res = await academyApi.getLectures();
-    if (res.success && Array.isArray(res.lectures) && res.lectures.length > 0) {
+    if (res.success && Array.isArray(res.lectures)) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(res.lectures));
       window.dispatchEvent(new Event("storage"));
       return res.lectures;

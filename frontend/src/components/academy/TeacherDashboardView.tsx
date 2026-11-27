@@ -110,7 +110,7 @@ import { AcademyLiveToast } from "./AcademyLiveToast";
 import { AcademyLiveChamberModal } from "./AcademyLiveChamberModal";
 import { FacultySmartBoard, LessonPlanItem } from "./FacultySmartBoard";
 import { FacultyAiCopilot } from "./FacultyAiCopilot";
-import academyApi, { LawCourse, TuitionAccessRequest, LiveBatch } from "../../lib/academyApi";
+import academyApi, { LawCourse, TuitionAccessRequest, LiveBatch, FacultyQuestion } from "../../lib/academyApi";
 
 interface TeacherDashboardProps {
   onSwitchToStudent?: () => void;
@@ -333,17 +333,80 @@ export function TeacherDashboardView({
     }
   };
 
-  const handleCreateExam = (e: React.FormEvent) => {
+  const [questionsList, setQuestionsList] = useState<FacultyQuestion[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem("wakheel_faculty_questions_v1");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    academyApi.getMockTestPacks().then((res) => {
+      if (res.success && Array.isArray(res.packs)) {
+        const mapped = res.packs.map((p) => ({
+          id: p.id,
+          title: p.title,
+          pattern: p.exam,
+          durationMinutes: p.durationMinutes || 120,
+          totalMarks: p.totalMarks || 120,
+          negativeMarking: p.negativeMarking || "-0.25 per wrong answer",
+          scheduledDate: p.scheduledDate || "Published",
+          status: (p.status as "Draft" | "Published" | "Live") || "Published",
+        }));
+        persistFacultyExams(mapped);
+      }
+    });
+    academyApi.getQuestions().then((res) => {
+      if (res.success && Array.isArray(res.questions)) {
+        setQuestionsList(res.questions);
+      }
+    });
+  }, []);
+
+  const handleCreateExam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newExamTitle.trim()) return;
-    const created = {
-      id: `exam_${Date.now()}`,
+    const duration = Number(newExamDuration) || 120;
+    const marks = Number(newExamMarks) || 120;
+    const negative = newExamNegative.trim() || "None";
+    const scheduled = newExamDate || "Unscheduled";
+    const payload = {
       title: newExamTitle.trim(),
-      pattern: newExamPattern,
-      durationMinutes: Number(newExamDuration) || 120,
-      totalMarks: Number(newExamMarks) || 120,
-      negativeMarking: newExamNegative.trim() || "None",
-      scheduledDate: newExamDate || "Unscheduled",
+      conductingBody: teacherProfile.fullName || "Wakheel Faculty Consortium",
+      exam: newExamPattern,
+      badge: "FACULTY CBT",
+      badgeColor: "amber",
+      testsCount: `1 Timed Exam (${marks} Marks • ${duration} mins)`,
+      price: 0,
+      originalPrice: 0,
+      discount: "INCLUDED",
+      features: [
+        `${duration} Minutes Timed CBT Pattern`,
+        `Negative Marking: ${negative}`,
+        `Scheduled: ${scheduled}`,
+      ],
+      hasFreeTest: true,
+      freeTestName: newExamTitle.trim(),
+      durationMinutes: duration,
+      totalMarks: marks,
+      negativeMarking: negative,
+      scheduledDate: scheduled,
+      status: "Published" as const,
+      createdBy: teacherProfile.fullName || "Faculty",
+    };
+
+    const res = await academyApi.createMockTestPack(payload);
+    const created = {
+      id: res.pack?.id || `exam_${Date.now()}`,
+      title: payload.title,
+      pattern: payload.exam,
+      durationMinutes: duration,
+      totalMarks: marks,
+      negativeMarking: negative,
+      scheduledDate: scheduled,
       status: "Published" as const,
     };
     persistFacultyExams([created, ...facultyExams]);
@@ -367,6 +430,7 @@ export function TeacherDashboardView({
 
   const handleDeleteExam = (examId: string) => {
     persistFacultyExams(facultyExams.filter((ex) => ex.id !== examId));
+    academyApi.deleteMockTestPack(examId).catch((err) => console.warn("deleteExam remote sync:", err));
   };
 
   // Upload Notes Modal State
@@ -715,12 +779,32 @@ export function TeacherDashboardView({
         setTeacherBatches(res.batches);
       }
     });
+    academyApi.getLessonPlans().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.lessonPlans)) {
+        setLessonPlans(res.lessonPlans);
+      }
+    });
+    academyApi.getFacultyUploads().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.uploads)) {
+        setUploadedResources(res.uploads);
+      }
+    });
+    academyApi.getFacultyTasks().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.tasks)) {
+        setTasksList(res.tasks);
+      }
+    });
+    academyApi.getFacultyDoubts().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.doubts)) {
+        setDoubtsList(res.doubts);
+      }
+    });
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const handleCreateLessonPlan = (e: React.FormEvent) => {
+  const handleCreateLessonPlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLessonTitle.trim()) return;
     const item: LessonPlanItem = {
@@ -742,9 +826,10 @@ export function TeacherDashboardView({
     setNewLessonTitle("");
     setNewLessonSession("");
     setNewLessonObjectives("");
+    academyApi.createLessonPlan(item).catch((err) => console.warn("createLessonPlan remote sync:", err));
   };
 
-  const handleCreateUploadResource = (e: React.FormEvent) => {
+  const handleCreateUploadResource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newResTitle.trim()) return;
     const item = {
@@ -764,6 +849,7 @@ export function TeacherDashboardView({
     } catch {}
     setShowUploadResourceModal(false);
     setNewResTitle("");
+    academyApi.createFacultyUpload(item).catch((err) => console.warn("createFacultyUpload remote sync:", err));
   };
 
   const handleCreateBatch = async (e: React.FormEvent) => {
@@ -834,23 +920,68 @@ export function TeacherDashboardView({
     }, 600);
   };
 
-  const handleSaveQuestion = (e: React.FormEvent) => {
+  const handleSaveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newPrinciple.trim() || !newFacts.trim()) return;
+    const payload: Partial<FacultyQuestion> = {
+      subject: newQuestionSubject,
+      principle: newPrinciple.trim(),
+      facts: newFacts.trim(),
+      options: [optionA.trim(), optionB.trim(), optionC.trim(), optionD.trim()].filter(Boolean),
+      correctOption,
+      rationale: rationale.trim(),
+      createdBy: teacherProfile.fullName || "Faculty",
+    };
+    const res = await academyApi.createQuestion(payload);
+    const created: FacultyQuestion = res.question || {
+      id: `q_${Date.now()}`,
+      subject: newQuestionSubject,
+      principle: payload.principle!,
+      facts: payload.facts!,
+      options: payload.options!,
+      correctOption,
+      rationale: payload.rationale!,
+      createdBy: payload.createdBy,
+      createdAt: new Date().toISOString(),
+    };
+    const next = [created, ...questionsList];
+    setQuestionsList(next);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("wakheel_faculty_questions_v1", JSON.stringify(next));
+      } catch {}
+    }
     setQuestionSavedSuccess(true);
     setTimeout(() => {
       setQuestionSavedSuccess(false);
     }, 2000);
   };
 
+  const handleDeleteQuestion = (id: string) => {
+    const next = questionsList.filter((q) => q.id !== id);
+    setQuestionsList(next);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("wakheel_faculty_questions_v1", JSON.stringify(next));
+      } catch {}
+    }
+    academyApi.deleteQuestion(id).catch((err) => console.warn("deleteQuestion remote sync:", err));
+  };
+
   const handleReplyDoubt = (doubtId: string, reply: string) => {
     if (!reply.trim()) return;
-    setDoubtsList((prev) =>
-      prev.map((d) =>
+    setDoubtsList((prev) => {
+      const updated = prev.map((d) =>
         d.id === doubtId
           ? { ...d, status: "answered", replyText: reply.trim() }
           : d
-      )
-    );
+      );
+      try {
+        localStorage.setItem("wakheel_faculty_doubts", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    academyApi.replyFacultyDoubt(doubtId, reply.trim()).catch((err) => console.warn("replyDoubt remote sync:", err));
   };
 
   const handleAddTask = (e: React.FormEvent) => {
@@ -873,6 +1004,7 @@ export function TeacherDashboardView({
     } catch {}
     setNewTaskTitle("");
     setShowCreateTaskModal(false);
+    academyApi.createFacultyTask(newTask).catch((err) => console.warn("createTask remote sync:", err));
   };
 
   const toggleTaskCompletion = (taskId: string) => {
@@ -887,6 +1019,7 @@ export function TeacherDashboardView({
       } catch {}
       return updated;
     });
+    academyApi.toggleFacultyTask(taskId).catch((err) => console.warn("toggleTask remote sync:", err));
   };
 
   // ==============================================================
@@ -2220,6 +2353,61 @@ export function TeacherDashboardView({
                       </button>
                     </div>
                   </form>
+                </div>
+
+                {/* Published Question Bank */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-zinc-900 dark:text-white">
+                      Published CBT Question Bank ({questionsList.length})
+                    </h3>
+                  </div>
+                  {questionsList.length === 0 ? (
+                    <div className="p-8 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-2">
+                      <CheckSquare className="w-8 h-8 text-zinc-400 mx-auto" />
+                      <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
+                        No Questions in Question Bank Yet
+                      </h4>
+                      <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                        Author a principle-fact question above and click Publish to build your examination bank.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {questionsList.map((q) => (
+                        <div
+                          key={q.id}
+                          className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 shadow-xs flex flex-col justify-between"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                                {q.subject}
+                              </span>
+                              <button
+                                onClick={() => handleDeleteQuestion(q.id)}
+                                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-rose-500 hover:text-white text-zinc-400 transition-colors cursor-pointer"
+                                title="Delete Question"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <p className="text-xs text-zinc-800 dark:text-zinc-200 font-semibold line-clamp-2">
+                              <strong>Principle:</strong> {q.principle}
+                            </p>
+                            <p className="text-xs text-zinc-500 line-clamp-2">
+                              <strong>Facts:</strong> {q.facts}
+                            </p>
+                          </div>
+                          {q.options && q.options.length > 0 && (
+                            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">
+                              Correct: {q.options[q.correctOption] || q.options[0]}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

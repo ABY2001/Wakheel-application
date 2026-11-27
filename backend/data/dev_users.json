@@ -232,5 +232,41 @@
     "verifyMethod": "google",
     "isVerified": false,
     "createdAt": "2026-11-26T05:41:56.033Z"
+  },
+  {
+    "_id": "dev_1795755050944",
+    "fullName": "Prof. QA Faculty",
+    "email": "qa.faculty@wakheel.edu",
+    "password": "$2a$10$dD6OxHAI9lh9jMxyFYH8lecEZFy/b.WKz1LHQcDUN0tvD20JCHhVe",
+    "role": "teacher",
+    "verifyMethod": "email",
+    "isVerified": false,
+    "username": "qa.faculty",
+    "accountType": "teacher",
+    "barCouncilId": "",
+    "firmName": "",
+    "teamSize": "",
+    "firmRegistration": "",
+    "icsiNumber": "",
+    "icaiNumber": "",
+    "createdAt": "2026-11-27T04:50:50.944Z"
+  },
+  {
+    "_id": "dev_1795755353854",
+    "fullName": "QA Student",
+    "email": "qa.student@wakheel.edu",
+    "password": "$2a$10$E1KAW5lR/BaJJC.wMOICuegZfjz4ZvX25Bs80uaC1OvG4F5FL6Rw6",
+    "role": "student",
+    "verifyMethod": "email",
+    "isVerified": false,
+    "username": "qa.student",
+    "accountType": "student",
+    "barCouncilId": "",
+    "firmName": "",
+    "teamSize": "",
+    "firmRegistration": "",
+    "icsiNumber": "",
+    "icaiNumber": "",
+    "createdAt": "2026-11-27T04:55:53.854Z"
   }
 ]

@@ -68,6 +68,24 @@ export interface MockTestPack {
   features: string[];
   hasFreeTest?: boolean;
   freeTestName?: string;
+  durationMinutes?: number;
+  totalMarks?: number;
+  negativeMarking?: string;
+  scheduledDate?: string;
+  status?: "Draft" | "Published" | "Live";
+  createdBy?: string;
+}
+
+export interface FacultyQuestion {
+  id: string;
+  subject: string;
+  principle: string;
+  facts: string;
+  options: string[];
+  correctOption: number;
+  rationale: string;
+  createdBy?: string;
+  createdAt?: string;
 }
 
 export interface MockExamResult {
@@ -1243,6 +1261,205 @@ export const academyApi = {
       return await res.json();
     } catch (e) {
       console.warn("academyApi.deleteMockTestPack offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async getQuestions(subject?: string): Promise<{ success: boolean; questions: FacultyQuestion[] }> {
+    try {
+      const query = subject ? `?subject=${encodeURIComponent(subject)}` : "";
+      const res = await fetch(`${API_BASE_URL}/academy/questions${query}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.questions)) {
+        try {
+          localStorage.setItem("wakheel_faculty_questions_v1", JSON.stringify(json.questions));
+        } catch {}
+      }
+      return json;
+    } catch (e) {
+      console.warn("academyApi.getQuestions offline/fallback:", e);
+      if (typeof window !== "undefined") {
+        try {
+          const s = localStorage.getItem("wakheel_faculty_questions_v1");
+          if (s) return { success: true, questions: JSON.parse(s) };
+        } catch {}
+      }
+      return { success: false, questions: [] };
+    }
+  },
+
+  async createQuestion(data: Partial<FacultyQuestion>): Promise<{ success: boolean; question?: FacultyQuestion }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/questions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.createQuestion offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async deleteQuestion(id: string): Promise<{ success: boolean }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/questions/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn("academyApi.deleteQuestion offline/fallback:", e);
+      return { success: false };
+    }
+  },
+
+  async getLessonPlans(): Promise<{ success: boolean; lessonPlans: any[] }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/lesson-plans`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.lessonPlans)) {
+        try {
+          localStorage.setItem("wakheel_faculty_lesson_plans", JSON.stringify(json.lessonPlans));
+        } catch {}
+      }
+      return json;
+    } catch {
+      return { success: false, lessonPlans: [] };
+    }
+  },
+
+  async createLessonPlan(data: any): Promise<{ success: boolean; lessonPlan?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/lesson-plans`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getAuthToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  },
+
+  async getFacultyUploads(): Promise<{ success: boolean; uploads: any[] }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/uploads`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.uploads)) {
+        try {
+          localStorage.setItem("wakheel_faculty_uploads", JSON.stringify(json.uploads));
+        } catch {}
+      }
+      return json;
+    } catch {
+      return { success: false, uploads: [] };
+    }
+  },
+
+  async createFacultyUpload(data: any): Promise<{ success: boolean; upload?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/uploads`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getAuthToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  },
+
+  async getFacultyTasks(): Promise<{ success: boolean; tasks: any[] }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/tasks`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.tasks)) {
+        try {
+          localStorage.setItem("wakheel_faculty_tasks", JSON.stringify(json.tasks));
+        } catch {}
+      }
+      return json;
+    } catch {
+      return { success: false, tasks: [] };
+    }
+  },
+
+  async createFacultyTask(data: any): Promise<{ success: boolean; task?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/tasks`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getAuthToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  },
+
+  async toggleFacultyTask(id: string): Promise<{ success: boolean; task?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/tasks/${id}/toggle`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  },
+
+  async getFacultyDoubts(): Promise<{ success: boolean; doubts: any[] }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/doubts`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const json = await res.json();
+      if (typeof window !== "undefined" && Array.isArray(json.doubts)) {
+        try {
+          localStorage.setItem("wakheel_faculty_doubts", JSON.stringify(json.doubts));
+        } catch {}
+      }
+      return json;
+    } catch {
+      return { success: false, doubts: [] };
+    }
+  },
+
+  async replyFacultyDoubt(id: string, replyText: string): Promise<{ success: boolean; doubt?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/academy/doubts/${id}/reply`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${getAuthToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ replyText }),
+      });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch {
       return { success: false };
     }
   },

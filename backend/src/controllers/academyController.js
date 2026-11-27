@@ -58,100 +58,15 @@ let inMemoryNotes = readDiskJson("dev_academy_notes.json", []);
 let inMemoryMootRecords = readDiskJson("dev_academy_moot_records.json", []);
 let inMemoryCourses = readDiskJson("dev_academy_courses.json", []);
 let inMemoryTuitionRequests = readDiskJson("dev_academy_tuition_requests.json", []);
-let inMemoryMockTests = readDiskJson("dev_academy_mock_tests.json", [
-  {
-    id: "clat_pro_pass",
-    title: "CLAT 2027 All-India Pass Pro Test Series",
-    conductingBody: "Consortium of 24 National Law Universities Pattern",
-    exam: "CLAT 2027 (NLUs)",
-    badge: "MOST POPULAR",
-    badgeColor: "amber",
-    testsCount: "35 Full Mocks + 120 Chapter Tests + 10 PYQs",
-    enrolledCount: "18.4k Students Enrolled",
-    rating: "4.9",
-    reviewsCount: "1,840",
-    price: 999,
-    originalPrice: 2999,
-    discount: "66% OFF",
-    features: [
-      "120-Question Full Length Timed CBT Mocks with Negative Marking (-0.25)",
-      "All-India Rank & Percentile Predictor based on 18,000+ candidates",
-      "Section-by-section judicial ratio & legal reasoning video solutions",
-      "Includes 10 Previous Years Solved Papers (2015-2026)",
-    ],
-    hasFreeTest: true,
-    freeTestName: "Free Diagnostic Full Mock 01",
-  },
-  {
-    id: "klee_toppers_pack",
-    title: "KLEE 2027 3-Yr & 5-Yr Comprehensive Test Pack",
-    conductingBody: "Commissioner for Entrance Examinations (CEE), Kerala",
-    exam: "KLEE 2027 (Kerala)",
-    badge: "STATE TOPPER'S CHOICE",
-    badgeColor: "black",
-    testsCount: "25 Full Length Mocks + 80 Sectional Tests",
-    enrolledCount: "9.2k Students Enrolled",
-    rating: "4.8",
-    reviewsCount: "920",
-    price: 699,
-    originalPrice: 1999,
-    discount: "65% OFF",
-    features: [
-      "CEE Kerala pattern (+3 for correct, -1 for negative marking)",
-      "Legal Aptitude, General English, GK, and Mental Ability test banks",
-      "Full syllabus coverage for Govt & Private Law Colleges in Kerala",
-      "Instant scorecards & performance analysis",
-    ],
-    hasFreeTest: true,
-    freeTestName: "Free KLEE State Mock 01",
-  },
-  {
-    id: "ailet_master_series",
-    title: "AILET 2027 Dedicated BA LL.B Mock Series",
-    conductingBody: "National Law University, Delhi Dedicated Pattern",
-    exam: "AILET (NLU Delhi)",
-    badge: "HIGH DIFFICULTY",
-    badgeColor: "amber",
-    testsCount: "15 High-Difficulty Mocks + Critical Reasoning Packs",
-    enrolledCount: "6.5k Students Enrolled",
-    rating: "4.9",
-    reviewsCount: "610",
-    price: 799,
-    originalPrice: 2200,
-    discount: "63% OFF",
-    features: [
-      "High-density analytical reading passages & legal reasoning",
-      "Advanced logical puzzles & syllogisms for NLU Delhi",
-      "Sectional speed booster tests with detailed analytics",
-    ],
-    hasFreeTest: false,
-  },
-  {
-    id: "distance_llb_pack",
-    title: "Distance LL.B & Open University Semester Test Bank",
-    conductingBody: "IGNOU & State Open Universities Curricula",
-    exam: "Distance LL.B (IGNOU)",
-    badge: "DISTANCE SCHOLARS",
-    badgeColor: "black",
-    testsCount: "40 Subject Question Banks + Model Answer Guides",
-    enrolledCount: "7.8k Students Enrolled",
-    rating: "4.8",
-    reviewsCount: "740",
-    price: 499,
-    originalPrice: 1499,
-    discount: "66% OFF",
-    features: [
-      "Bharatiya Nyaya Sanhita (BNS 2023) & IPC transition question banks",
-      "Constitution of India (Writs, Fundamental Rights, Golden Triangle)",
-      "Model 20-mark answer writing templates for term-end examinations",
-    ],
-    hasFreeTest: true,
-    freeTestName: "Free Constitutional Law Test",
-  },
-]);
+let inMemoryMockTests = readDiskJson("dev_academy_mock_tests.json", []);
+let inMemoryQuestions = readDiskJson("dev_academy_questions.json", []);
 let inMemoryMockResults = readDiskJson("dev_academy_mock_results.json", []);
 let inMemoryAcademyUsers = readDiskJson("dev_academy_users.json", []);
 let inMemoryBatches = readDiskJson("dev_academy_batches.json", []);
+let inMemoryLessonPlans = readDiskJson("dev_academy_lesson_plans.json", []);
+let inMemoryUploads = readDiskJson("dev_academy_uploads.json", []);
+let inMemoryFacultyTasks = readDiskJson("dev_academy_faculty_tasks.json", []);
+let inMemoryDoubts = readDiskJson("dev_academy_doubts.json", []);
 
 const getUserId = (req) => {
   return String(req.user?._id || req.user?.id || "");
@@ -1567,6 +1482,12 @@ export const createMockTestPack = async (req, res) => {
       features: Array.isArray(data.features) ? data.features : ["Full Length Timed CBT Mock"],
       hasFreeTest: data.hasFreeTest ?? true,
       freeTestName: data.freeTestName || "Free Diagnostic Mock",
+      durationMinutes: Number(data.durationMinutes) || 120,
+      totalMarks: Number(data.totalMarks) || 120,
+      negativeMarking: data.negativeMarking || "-0.25 per wrong answer",
+      scheduledDate: data.scheduledDate || "Unscheduled",
+      status: data.status || "Published",
+      createdBy: data.createdBy || req.user?.name || "Faculty",
     };
     inMemoryMockTests.unshift(newPack);
     writeDiskJson("dev_academy_mock_tests.json", inMemoryMockTests);
@@ -2004,4 +1925,209 @@ export const deleteLiveBatch = async (req, res) => {
     console.error("deleteLiveBatch error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// ============================================================================
+// 13. FACULTY CBT QUESTION BANK (/api/academy/questions)
+// ============================================================================
+
+export const getQuestions = async (req, res) => {
+  try {
+    const { subject } = req.query;
+    let filtered = [...inMemoryQuestions];
+    if (subject && subject !== "All") {
+      filtered = filtered.filter((q) => q.subject === subject);
+    }
+    res.json({ success: true, questions: filtered, count: filtered.length });
+  } catch (error) {
+    console.error("getQuestions error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createQuestion = async (req, res) => {
+  try {
+    const data = req.body;
+    const newQuestion = {
+      id: data.id || `q_${Date.now()}`,
+      subject: data.subject || "Constitutional Law",
+      principle: data.principle || "",
+      facts: data.facts || "",
+      options: Array.isArray(data.options) ? data.options : [],
+      correctOption: typeof data.correctOption === "number" ? data.correctOption : 1,
+      rationale: data.rationale || "",
+      createdBy: data.createdBy || req.user?.name || "Faculty",
+      createdAt: new Date().toISOString(),
+    };
+    inMemoryQuestions.unshift(newQuestion);
+    writeDiskJson("dev_academy_questions.json", inMemoryQuestions);
+    broadcastAcademyEvent("ACADEMY_QUESTION_CREATED", newQuestion);
+    res.status(201).json({ success: true, question: newQuestion });
+  } catch (error) {
+    console.error("createQuestion error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    inMemoryQuestions = inMemoryQuestions.filter((q) => q.id !== id);
+    writeDiskJson("dev_academy_questions.json", inMemoryQuestions);
+    res.json({ success: true, message: "Question deleted" });
+  } catch (error) {
+    console.error("deleteQuestion error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================================================
+// 14. FACULTY STUDIO PERSISTENCE (Lesson Plans, Uploads, Tasks, Doubts)
+// ============================================================================
+
+export const getLessonPlans = async (req, res) => {
+  res.json({ success: true, lessonPlans: inMemoryLessonPlans });
+};
+
+export const createLessonPlan = async (req, res) => {
+  try {
+    const data = req.body;
+    const item = {
+      id: data.id || `lp_${Date.now()}`,
+      title: data.title || "Untitled Lesson Plan",
+      unitNumber: data.unitNumber || "Unit 1",
+      estimatedHours: data.estimatedHours || "4 Hours",
+      firstSession: data.firstSession || "Opening Lecture & Statutory Overview",
+      objectives: data.objectives || "Master core statutory principles and landmark precedents.",
+      classLabel: data.classLabel || "Constitutional Law",
+      createdAt: data.createdAt || new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+    };
+    inMemoryLessonPlans.unshift(item);
+    writeDiskJson("dev_academy_lesson_plans.json", inMemoryLessonPlans);
+    res.status(201).json({ success: true, lessonPlan: item });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteLessonPlan = async (req, res) => {
+  inMemoryLessonPlans = inMemoryLessonPlans.filter((p) => p.id !== req.params.id);
+  writeDiskJson("dev_academy_lesson_plans.json", inMemoryLessonPlans);
+  res.json({ success: true });
+};
+
+export const getFacultyUploads = async (req, res) => {
+  res.json({ success: true, uploads: inMemoryUploads });
+};
+
+export const createFacultyUpload = async (req, res) => {
+  try {
+    const data = req.body;
+    const item = {
+      id: data.id || `res_${Date.now()}`,
+      title: data.title || "Untitled Resource",
+      category: data.category || "Lecture Slides (PPT)",
+      fileName: data.fileName || "resource.pdf",
+      fileSize: data.fileSize || "1.8 MB",
+      status: data.status || "published",
+      downloads: Number(data.downloads) || 0,
+      createdAt: data.createdAt || new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
+    };
+    inMemoryUploads.unshift(item);
+    writeDiskJson("dev_academy_uploads.json", inMemoryUploads);
+    res.status(201).json({ success: true, upload: item });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteFacultyUpload = async (req, res) => {
+  inMemoryUploads = inMemoryUploads.filter((u) => u.id !== req.params.id);
+  writeDiskJson("dev_academy_uploads.json", inMemoryUploads);
+  res.json({ success: true });
+};
+
+export const getFacultyTasks = async (req, res) => {
+  res.json({ success: true, tasks: inMemoryFacultyTasks });
+};
+
+export const createFacultyTask = async (req, res) => {
+  try {
+    const data = req.body;
+    const task = {
+      id: data.id || `task_${Date.now()}`,
+      title: data.title || "Faculty Task",
+      status: data.status || "Active",
+      type: data.type || "Assessment",
+      dueDate: data.dueDate || "Tomorrow, 6:00 PM",
+      priority: data.priority || "High",
+      assignee: data.assignee || req.user?.name || "Faculty",
+      completed: Boolean(data.completed),
+    };
+    inMemoryFacultyTasks.unshift(task);
+    writeDiskJson("dev_academy_faculty_tasks.json", inMemoryFacultyTasks);
+    res.status(201).json({ success: true, task });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleFacultyTask = async (req, res) => {
+  const { id } = req.params;
+  let updatedTask = null;
+  inMemoryFacultyTasks = inMemoryFacultyTasks.map((t) => {
+    if (t.id === id) {
+      const completed = !t.completed;
+      updatedTask = { ...t, completed, status: completed ? "Completed" : "In Progress" };
+      return updatedTask;
+    }
+    return t;
+  });
+  writeDiskJson("dev_academy_faculty_tasks.json", inMemoryFacultyTasks);
+  res.json({ success: true, task: updatedTask });
+};
+
+export const deleteFacultyTask = async (req, res) => {
+  inMemoryFacultyTasks = inMemoryFacultyTasks.filter((t) => t.id !== req.params.id);
+  writeDiskJson("dev_academy_faculty_tasks.json", inMemoryFacultyTasks);
+  res.json({ success: true });
+};
+
+export const getFacultyDoubts = async (req, res) => {
+  res.json({ success: true, doubts: inMemoryDoubts });
+};
+
+export const createFacultyDoubt = async (req, res) => {
+  try {
+    const data = req.body;
+    const doubt = {
+      id: data.id || `doubt_${Date.now()}`,
+      studentName: data.studentName || req.user?.name || "Scholar",
+      subject: data.subject || "Constitutional Law",
+      question: data.question || "",
+      status: "pending",
+      replyText: "",
+      createdAt: new Date().toISOString(),
+    };
+    inMemoryDoubts.unshift(doubt);
+    writeDiskJson("dev_academy_doubts.json", inMemoryDoubts);
+    res.status(201).json({ success: true, doubt });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const replyFacultyDoubt = async (req, res) => {
+  const { id } = req.params;
+  const { replyText } = req.body;
+  let updatedDoubt = null;
+  inMemoryDoubts = inMemoryDoubts.map((d) => {
+    if (d.id === id) {
+      updatedDoubt = { ...d, status: "answered", replyText: replyText || "" };
+      return updatedDoubt;
+    }
+    return d;
+  });
+  writeDiskJson("dev_academy_doubts.json", inMemoryDoubts);
+  res.json({ success: true, doubt: updatedDoubt });
 };

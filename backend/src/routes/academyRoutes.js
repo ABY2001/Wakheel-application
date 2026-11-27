@@ -45,6 +45,22 @@ import {
   getLiveBatches,
   createLiveBatch,
   deleteLiveBatch,
+  getQuestions,
+  createQuestion,
+  deleteQuestion,
+  getLessonPlans,
+  createLessonPlan,
+  deleteLessonPlan,
+  getFacultyUploads,
+  createFacultyUpload,
+  deleteFacultyUpload,
+  getFacultyTasks,
+  createFacultyTask,
+  toggleFacultyTask,
+  deleteFacultyTask,
+  getFacultyDoubts,
+  createFacultyDoubt,
+  replyFacultyDoubt,
 } from "../controllers/academyController.js";
 
 const router = express.Router();
@@ -90,9 +106,24 @@ router.route("/tuition/requests/:id/review").put(protect, reviewTuitionRequest);
 
 // 10. CBT Mock Test Packs, Scorecards & Leaderboard (/api/academy/mock-exams)
 router.route("/mock-exams").get(protect, getMockTestPacks).post(protect, createMockTestPack);
-router.route("/mock-exams/:id").delete(protect, requireAdmin, deleteMockTestPack);
+router.route("/mock-exams/:id").delete(protect, deleteMockTestPack);
 router.route("/mock-exams/results").get(protect, getMockExamResults).post(protect, submitMockExamResult);
 router.route("/mock-exams/leaderboard").get(protect, getMockLeaderboard);
+
+// 13. Faculty CBT Question Bank (/api/academy/questions)
+router.route("/questions").get(protect, getQuestions).post(protect, createQuestion);
+router.route("/questions/:id").delete(protect, deleteQuestion);
+
+// 14. Faculty Studio Persistence (/api/academy/lesson-plans, /uploads, /tasks, /doubts)
+router.route("/lesson-plans").get(protect, getLessonPlans).post(protect, createLessonPlan);
+router.route("/lesson-plans/:id").delete(protect, deleteLessonPlan);
+router.route("/uploads").get(protect, getFacultyUploads).post(protect, createFacultyUpload);
+router.route("/uploads/:id").delete(protect, deleteFacultyUpload);
+router.route("/tasks").get(protect, getFacultyTasks).post(protect, createFacultyTask);
+router.route("/tasks/:id/toggle").put(protect, toggleFacultyTask);
+router.route("/tasks/:id").delete(protect, deleteFacultyTask);
+router.route("/doubts").get(protect, getFacultyDoubts).post(protect, createFacultyDoubt);
+router.route("/doubts/:id/reply").put(protect, replyFacultyDoubt);
 
 // 11. Academy Admin Control Module (/api/academy/admin)
 router.route("/admin/overview").get(protect, requireAdmin, getAdminOverview);

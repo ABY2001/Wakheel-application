@@ -1799,99 +1799,9 @@ export function StudentDashboardView({
   ];
 
   // ==============================================================
-  // 1. TESTBOOK-STYLE TEST SERIES DATA
+  // 1. DYNAMIC TEST SERIES & EXAMINATIONS (FROM FACULTY / BACKEND)
   // ==============================================================
-  const testSeriesPacks = [
-    {
-      id: "clat_pro_pass",
-      title: "CLAT 2027 All-India Pass Pro Test Series",
-      conductingBody: "Consortium of 24 National Law Universities Pattern",
-      exam: "CLAT 2027 (NLUs)",
-      badge: "MOST POPULAR",
-      badgeColor: "amber",
-      testsCount: "35 Full Mocks + 120 Chapter Tests + 10 PYQs",
-      enrolledCount: "18.4k Students Enrolled",
-      rating: "4.9",
-      reviewsCount: "1,840",
-      price: 999,
-      originalPrice: 2999,
-      discount: "66% OFF",
-      features: [
-        "120-Question Full Length Timed CBT Mocks with Negative Marking (-0.25)",
-        "All-India Rank & Percentile Predictor based on 18,000+ candidates",
-        "Section-by-section judicial ratio & legal reasoning video solutions",
-        "Includes 10 Previous Years Solved Papers (2015-2026)",
-      ],
-      hasFreeTest: true,
-      freeTestName: "Free Diagnostic Full Mock 01",
-    },
-    {
-      id: "klee_toppers_pack",
-      title: "KLEE 2027 3-Yr & 5-Yr Comprehensive Test Pack",
-      conductingBody: "Commissioner for Entrance Examinations (CEE), Kerala",
-      exam: "KLEE 2027 (Kerala)",
-      badge: "STATE TOPPER'S CHOICE",
-      badgeColor: "black",
-      testsCount: "25 Full Length Mocks + 80 Sectional Tests",
-      enrolledCount: "9.2k Students Enrolled",
-      rating: "4.8",
-      reviewsCount: "920",
-      price: 699,
-      originalPrice: 1999,
-      discount: "65% OFF",
-      features: [
-        "CEE Kerala pattern (+3 for correct, -1 for negative marking)",
-        "Legal Aptitude, General English, GK, and Mental Ability test banks",
-        "Full syllabus coverage for Govt & Private Law Colleges in Kerala",
-        "Instant scorecards & performance analysis",
-      ],
-      hasFreeTest: true,
-      freeTestName: "Free KLEE State Mock 01",
-    },
-    {
-      id: "ailet_master_series",
-      title: "AILET 2027 Dedicated BA LL.B Mock Series",
-      conductingBody: "National Law University, Delhi Dedicated Pattern",
-      exam: "AILET (NLU Delhi)",
-      badge: "HIGH DIFFICULTY",
-      badgeColor: "amber",
-      testsCount: "15 High-Difficulty Mocks + Critical Reasoning Packs",
-      enrolledCount: "6.5k Students Enrolled",
-      rating: "4.9",
-      reviewsCount: "610",
-      price: 799,
-      originalPrice: 2200,
-      discount: "63% OFF",
-      features: [
-        "High-density analytical reading passages & legal reasoning",
-        "Advanced logical puzzles & syllogisms for NLU Delhi",
-        "Sectional speed booster tests with detailed analytics",
-      ],
-      hasFreeTest: false,
-    },
-    {
-      id: "distance_llb_pack",
-      title: "Distance LL.B & Open University Semester Test Bank",
-      conductingBody: "IGNOU & State Open Universities Curricula",
-      exam: "Distance LL.B (IGNOU)",
-      badge: "DISTANCE SCHOLARS",
-      badgeColor: "black",
-      testsCount: "40 Subject Question Banks + Model Answer Guides",
-      enrolledCount: "7.8k Students Enrolled",
-      rating: "4.8",
-      reviewsCount: "740",
-      price: 499,
-      originalPrice: 1499,
-      discount: "66% OFF",
-      features: [
-        "Bharatiya Nyaya Sanhita (BNS 2023) & IPC transition question banks",
-        "Constitution of India (Writs, Fundamental Rights, Golden Triangle)",
-        "Model 20-mark answer writing templates for term-end examinations",
-      ],
-      hasFreeTest: true,
-      freeTestName: "Free Constitutional Law Test",
-    },
-  ];
+  const testSeriesPacks = dynamicMockPacks;
 
   // ==============================================================
   // 2. LIVE BATCHES (DYNAMIC FROM BACKEND API & LOCALSTORAGE)
@@ -4702,7 +4612,18 @@ export function StudentDashboardView({
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {testSeriesPacks.slice(0, 4).map((tPack) => (
+                    {testSeriesPacks.length === 0 ? (
+                      <div className="p-10 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-center space-y-2 col-span-full">
+                        <Award className="w-8 h-8 text-zinc-400 mx-auto" />
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white">
+                          No Examinations Published Yet
+                        </h4>
+                        <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                          Scheduled CBT examinations and mock test packs published by your faculty will appear here automatically.
+                        </p>
+                      </div>
+                    ) : (
+                      testSeriesPacks.slice(0, 4).map((tPack) => (
                       <div
                         key={tPack.id}
                         className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between space-y-4"
@@ -4737,7 +4658,8 @@ export function StudentDashboardView({
                           <span>Start Timed CBT Test</span>
                         </button>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </div>
               )}
@@ -7892,7 +7814,18 @@ export function StudentDashboardView({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {(dynamicMockPacks.length > 0 ? dynamicMockPacks : testSeriesPacks).map((pack) => (
+                {dynamicMockPacks.length === 0 ? (
+                  <div className="p-10 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center space-y-2 col-span-full">
+                    <Award className="w-8 h-8 text-zinc-400 mx-auto" />
+                    <h4 className="text-sm font-bold text-black dark:text-white">
+                      No Test Series Published Yet
+                    </h4>
+                    <p className="text-xs text-zinc-500 max-w-md mx-auto">
+                      Examinations and mock test series authored by faculty will appear here once published. You can still use the CBT Simulator above.
+                    </p>
+                  </div>
+                ) : (
+                  dynamicMockPacks.map((pack) => (
                   <div key={pack.id} className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
                     <div className="space-y-2">
                       <span className="text-[10px] font-mono font-bold text-amber-500 uppercase">{pack.badge}</span>
@@ -7912,7 +7845,8 @@ export function StudentDashboardView({
                       Unlock Test Pack (₹{pack.price})
                     </button>
                   </div>
-                ))}
+                ))
+                )}
               </div>
 
               {/* Persisted CBT Mock Scorecards & History */}

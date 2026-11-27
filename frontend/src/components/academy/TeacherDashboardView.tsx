@@ -1635,22 +1635,22 @@ export function TeacherDashboardView({
       {/* ============================================================== */}
       <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/70 dark:bg-black text-black dark:text-white min-h-screen">
         {/* Top Header Strip with Filters (Wakheel White & Amber System) */}
-        <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 h-16 flex items-center justify-between px-4 sm:px-6 gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <header className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800 min-h-16 py-2 flex flex-wrap items-center justify-between px-4 sm:px-6 gap-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className="md:hidden p-2 rounded-xl text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             {/* Department Filter Button */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowDepartmentDropdown(!showDepartmentDropdown)}
-                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors"
+                className="px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors whitespace-nowrap"
               >
-                <span>Department: {selectedDepartment.split(" ")[0]}...</span>
+                <span>Dept: {selectedDepartment.split(" ")[0]}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
               </button>
 
@@ -1673,10 +1673,10 @@ export function TeacherDashboardView({
             </div>
 
             {/* Subject Dropdown */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowSubjectDropdown(!showSubjectDropdown)}
-                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors"
+                className="px-3 py-1.5 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-zinc-200/80 dark:border-zinc-800 shadow-2xs transition-colors whitespace-nowrap"
               >
                 <span>Subject: {selectedSubject}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
@@ -1702,23 +1702,23 @@ export function TeacherDashboardView({
           </div>
 
           {/* Right Header Actions: Globe, Search, Trophy, Avatar */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Language">
+          <div className="flex items-center gap-2 shrink-0">
+            <button className="hidden sm:inline-flex p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Language">
               <Globe className="w-4 h-4 text-amber-500" />
             </button>
 
-            <div className="relative w-44 sm:w-60">
+            <div className="relative w-36 sm:w-44 2xl:w-56">
               <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tasks, rosters, statutes..."
+                placeholder="Search tasks, rosters..."
                 className="w-full pl-8 pr-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs text-black dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs"
               />
             </div>
 
-            <button className="p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Rankings">
+            <button className="hidden sm:inline-flex p-2 rounded-full text-zinc-500 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" title="Rankings">
               <Trophy className="w-4 h-4 text-amber-500" />
             </button>
 

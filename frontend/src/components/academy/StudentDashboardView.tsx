@@ -4044,8 +4044,8 @@ export function StudentDashboardView({
         {/* ============================================================== */}
         <div className="sticky top-0 z-20 w-full bg-slate-50/90 dark:bg-zinc-950 border-b border-zinc-200/80 dark:border-zinc-800 shadow-xs">
           {/* Row 1: Top Announcement Strip matching Wakheel reference */}
-          <div className="bg-[#0f172a] text-white px-4 sm:px-6 lg:px-8 py-2 border-b border-zinc-800/80 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
+          <div className="bg-zinc-950 text-white px-4 sm:px-6 lg:px-8 py-2 border-b border-zinc-800/80 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+            <div className="flex items-center flex-wrap gap-2 sm:gap-2.5 min-w-0">
               <div className="flex items-center gap-1.5 shrink-0">
                 <GraduationCap className="w-4 h-4 text-amber-400" />
                 <span className="font-extrabold text-white tracking-tight">Wakheel Centralized Tuition</span>

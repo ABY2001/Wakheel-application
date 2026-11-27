@@ -49,7 +49,6 @@ import { advocateApi, AdvocateNotificationItem, copilotApi } from "@/lib/api";
 import {
   FirmProfile,
   ActiveWorkspace,
-  DEFAULT_DEMO_FIRM,
 } from "@/components/firm/firmTypes";
 import { JoinFirmModal } from "@/components/firm/JoinFirmModal";
 import { WorkspaceSwitcher } from "@/components/firm/WorkspaceSwitcher";
@@ -201,7 +200,7 @@ export function AdvocateWorkspaceView() {
   const [activeWorkspace, setActiveWorkspace] = useState<ActiveWorkspace>({
     type: "chamber",
   });
-  const [userFirms, setUserFirms] = useState<FirmProfile[]>([DEFAULT_DEMO_FIRM]);
+  const [userFirms, setUserFirms] = useState<FirmProfile[]>([]);
   const [joinFirmModalOpen, setJoinFirmModalOpen] = useState(false);
 
   // Indian Legal Research Engine State
@@ -326,8 +325,7 @@ export function AdvocateWorkspaceView() {
       if (storedFirms) {
         setUserFirms(JSON.parse(storedFirms));
       } else {
-        localStorage.setItem("wakheel_user_firms", JSON.stringify([DEFAULT_DEMO_FIRM]));
-        setUserFirms([DEFAULT_DEMO_FIRM]);
+        setUserFirms([]);
       }
 
       const storedWorkspace = localStorage.getItem("wakheel_active_workspace");
